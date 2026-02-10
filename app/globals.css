@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #f97316; /* Orange for Gopalpur */
+  --color-primary-foreground: #111827;
+
+  --color-background: #f9fafb;
+  --color-background-muted: #e5e7eb;
+
+  --color-border: #d1d5db;
+
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
+
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.dark {
+  --color-primary: #fb923c;
+  --color-primary-foreground: #020617;
+
+  --color-background: #020617;
+  --color-background-muted: #111827;
+
+  --color-border: #1f2937;
+
+  --color-text: #e5e7eb;
+  --color-text-muted: #9ca3af;
+}
+
+body {
+  @apply bg-background text-text;
+  font-family: var(--font-sans);
+}
+
+.page-container {
+  @apply min-h-screen flex flex-col bg-background;
+}
+
+.page-content {
+  @apply flex-1 flex flex-col md:flex-row;
+}
+
