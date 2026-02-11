@@ -1,11 +1,12 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://api:8000';
+// Use relative /api so Next.js rewrites can proxy to backend (works with localhost or Docker).
+const API_BASE_URL = '';
 
 interface ApiError {
   detail: string;
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const url = `${API_BASE_URL}${path}`;
+  const url = path.startsWith('http') ? path : `${API_BASE_URL || ''}${path}`;
 
   const resp = await fetch(url, {
     ...init,
@@ -49,6 +50,7 @@ export interface Organization {
   latitude?: number | null;
   longitude?: number | null;
   address?: string | null;
+  attributes?: Record<string, string | number | null> | null;
 }
 
 export const departmentsApi = {
