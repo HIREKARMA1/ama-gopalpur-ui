@@ -2,7 +2,7 @@
 
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { authApi, departmentsApi, organizationsApi, clearToken, Organization, User } from '../../../services/api';
+import { authApi, organizationsApi, clearToken, Organization, User } from '../../../services/api';
 import { Loader } from '../../../components/common/Loader';
 
 export default function DepartmentAdminPage() {
@@ -12,6 +12,17 @@ export default function DepartmentAdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newOrg, setNewOrg] = useState({
+    ulb_block: '',
+    gp_name: '',
+    ward_village: '',
+    sector: '',
+    awc_name: '',
+    latitude: '',
+    longitude: '',
+    lgd_code: '',
+  });
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -122,6 +133,145 @@ export default function DepartmentAdminPage() {
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4">
         {error && <p className="text-xs text-red-500">{error}</p>}
+
+        <section className="rounded-lg border border-border bg-background p-4">
+          <h2 className="text-sm font-semibold text-text">Manual AWC entry</h2>
+          <p className="mt-1 text-xs text-text-muted">
+            Add a single ICDS AWC manually. Fields mirror the CSV columns.
+          </p>
+          <form
+            className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!me?.department_id) {
+                setError('Department is not set for this admin user.');
+                return;
+              }
+              if (!newOrg.awc_name || !newOrg.latitude || !newOrg.longitude) {
+                setError('AWC Name, Latitude and Longitude are required.');
+                return;
+              }
+              setCreating(true);
+              setError(null);
+              try {
+                const lat = Number(newOrg.latitude);
+                const lng = Number(newOrg.longitude);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                  throw new Error('Latitude and Longitude must be valid numbers.');
+                }
+                const addressParts = [newOrg.gp_name, newOrg.ward_village].filter(Boolean);
+                const created = await organizationsApi.create({
+                  department_id: me.department_id,
+                  name: newOrg.awc_name,
+                  type: 'AWC',
+                  latitude: lat,
+                  longitude: lng,
+                  description: newOrg.sector ? `Sector: ${newOrg.sector}` : undefined,
+                  address: addressParts.length ? addressParts.join(', ') : undefined,
+                  attributes: {
+                    ulb_block: newOrg.ulb_block,
+                    gp_name: newOrg.gp_name,
+                    ward_village: newOrg.ward_village,
+                    sector: newOrg.sector,
+                    lgd_code: newOrg.lgd_code,
+                  },
+                });
+                setOrgs((prev) => [created, ...prev]);
+                setNewOrg({
+                  ulb_block: '',
+                  gp_name: '',
+                  ward_village: '',
+                  sector: '',
+                  awc_name: '',
+                  latitude: '',
+                  longitude: '',
+                  lgd_code: '',
+                });
+              } catch (err: any) {
+                setError(err.message || 'Failed to create organization');
+              } finally {
+                setCreating(false);
+              }
+            }}
+          >
+            <div className="space-y-1">
+              <label className="block text-text">ULB / Block Name</label>
+              <input
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                value={newOrg.ulb_block}
+                onChange={(e) => setNewOrg((s) => ({ ...s, ulb_block: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">GP Name</label>
+              <input
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                value={newOrg.gp_name}
+                onChange={(e) => setNewOrg((s) => ({ ...s, gp_name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">Ward / Village Name</label>
+              <input
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                value={newOrg.ward_village}
+                onChange={(e) => setNewOrg((s) => ({ ...s, ward_village: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">Sector</label>
+              <input
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                value={newOrg.sector}
+                onChange={(e) => setNewOrg((s) => ({ ...s, sector: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">AWC Name</label>
+              <input
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                value={newOrg.awc_name}
+                onChange={(e) => setNewOrg((s) => ({ ...s, awc_name: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">LGD Code</label>
+              <input
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                value={newOrg.lgd_code}
+                onChange={(e) => setNewOrg((s) => ({ ...s, lgd_code: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">Latitude</label>
+              <input
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                value={newOrg.latitude}
+                onChange={(e) => setNewOrg((s) => ({ ...s, latitude: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">Longitude</label>
+              <input
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                value={newOrg.longitude}
+                onChange={(e) => setNewOrg((s) => ({ ...s, longitude: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="md:col-span-2">
+              <button
+                type="submit"
+                disabled={creating}
+                className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+              >
+                {creating ? 'Saving...' : 'Save AWC'}
+              </button>
+            </div>
+          </form>
+        </section>
 
         <section className="rounded-lg border border-border bg-background p-4">
           <h2 className="text-sm font-semibold text-text">Bulk CSV upload</h2>

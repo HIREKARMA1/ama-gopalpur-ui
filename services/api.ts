@@ -104,6 +104,20 @@ export const organizationsApi = {
   get: (id: number) => apiFetch<Organization>(`/api/v1/organizations/${id}`),
   delete: (id: number) =>
     apiFetch<void>(`/api/v1/organizations/${id}`, { method: 'DELETE' }),
+  create: (payload: {
+    department_id: number;
+    name: string;
+    type: string;
+    latitude: number;
+    longitude: number;
+    description?: string;
+    address?: string;
+    attributes?: Record<string, string | number | null>;
+  }) =>
+    apiFetch<Organization>('/api/v1/organizations', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 };
 
 export const authApi = {
