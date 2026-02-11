@@ -6,17 +6,22 @@ interface OrganizationListProps {
   }[];
   selectedId?: number;
   onSelect: (id: number) => void;
+  /** When true, a department is selected but has no organizations (or none loaded yet). */
+  departmentSelected?: boolean;
 }
 
 export function OrganizationList({
   organizations,
   selectedId,
   onSelect,
+  departmentSelected = false,
 }: OrganizationListProps) {
   if (!organizations.length) {
     return (
       <div className="px-4 py-3 text-sm text-text-muted">
-        Select a department to see organizations.
+        {departmentSelected
+          ? "No organizations in this department yet, or none with location data. Department admin can add them."
+          : "Select a department to see organizations."}
       </div>
     );
   }

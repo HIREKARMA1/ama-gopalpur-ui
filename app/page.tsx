@@ -58,8 +58,19 @@ export default function HomePage() {
             </p>
           </div>
         </header>
-        <div className="flex flex-1 flex-col">
-          <ConstituencyMap selectedDepartmentName={selectedDept?.label} />
+        <div className="flex flex-1 flex-col gap-3">
+          <ConstituencyMap
+            selectedDepartmentCode={selectedDept?.code}
+            organizations={organizations}
+            onSelectOrganization={setSelectedOrgId}
+          />
+          {!loading && selectedDept && organizations.length > 0 && (
+            <p className="px-2 text-xs text-text-muted">
+              {organizations.filter((o) => o.latitude != null && o.longitude != null).length} of{' '}
+              {organizations.length} organizations on map. Organizations without a location can be
+              added by the department admin with a custom pin.
+            </p>
+          )}
           {loading ? (
             <Loader />
           ) : (
@@ -67,6 +78,7 @@ export default function HomePage() {
               organizations={organizations}
               selectedId={selectedOrgId}
               onSelect={setSelectedOrgId}
+              departmentSelected={!!selectedDept}
             />
           )}
         </div>
