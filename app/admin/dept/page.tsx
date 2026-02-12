@@ -2,7 +2,7 @@
 
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { authApi, organizationsApi, clearToken, Organization, User } from '../../../services/api';
+import { authApi, organizationsApi, clearToken, getToken, Organization, User } from '../../../services/api';
 import { Loader } from '../../../components/common/Loader';
 
 export default function DepartmentAdminPage() {
@@ -84,9 +84,11 @@ export default function DepartmentAdminPage() {
       const formData = new FormData();
       formData.append('file', file);
       // department_id is enforced by backend for dept admin; no need to send.
+      const token = getToken();
       const resp = await fetch('/api/v1/organizations/bulk_csv', {
         method: 'POST',
         body: formData,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       if (!resp.ok) {
         const data = await resp.json().catch(() => ({}));
@@ -107,6 +109,23 @@ export default function DepartmentAdminPage() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleDownloadTemplate = () => {
+    const header =
+      'S.No.,ULB/Block Name,GP Name,Ward/Village Name,Sector,AWC Name,Latitude,Longitude,LGD Code\n';
+    const example =
+      '1,RANGEILUNDA,BADAKUSASTHALLI,BADAGUMULA,BADAKUSHASTALI,EXAMPLE AWC,19.250000,84.850000,412600\n';
+    const csvContent = `${header}${example}`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'icds_awc_template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -305,21 +324,30 @@ export default function DepartmentAdminPage() {
             Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this
             department will be replaced.
           </p>
-          <form className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center" onSubmit={handleUpload}>
-            <input
-              type="file"
-              name="file"
-              accept=".csv,text/csv"
-              className="text-xs"
-            />
+          <div className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center md:justify-between">
             <button
-              type="submit"
-              disabled={uploading}
-              className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+              type="button"
+              className="inline-flex items-center justify-center rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text hover:bg-gray-50"
+              onClick={handleDownloadTemplate}
             >
-              {uploading ? 'Uploading...' : 'Upload CSV'}
+              Download CSV template
             </button>
-          </form>
+            <form className="flex flex-col gap-2 md:flex-row md:items-center" onSubmit={handleUpload}>
+              <input
+                type="file"
+                name="file"
+                accept=".csv,text/csv"
+                className="text-xs"
+              />
+              <button
+                type="submit"
+                disabled={uploading}
+                className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+              >
+                {uploading ? 'Uploading...' : 'Upload CSV'}
+              </button>
+            </form>
+          </div>
         </section>
 
         <section className="rounded-lg border border-border bg-background p-4">
