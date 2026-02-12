@@ -1,4 +1,4 @@
-# Map setup – Google Maps (Rangeilunda block)
+# Map setup – Google Maps (Gopalpur constituency)
 
 ## API key
 
@@ -15,7 +15,7 @@ If the key is missing, the app shows a short message instead of the map.
 
 ## Behaviour
 
-- **Area**: The map is restricted to **Rangeilunda block** (Ganjam, Odisha). Center and bounds are in `lib/mapConfig.ts`; you can adjust them there.
+- **Area**: The map is restricted to the **Gopalpur Assembly constituency**, covering **Rangeilunda**, **Kukudakhandi** and **Berhampur Urban-I** blocks (Ganjam, Odisha). Center and bounds are in `lib/mapConfig.ts`; you can adjust them there.
 - **Departments**: When you click a department in the sidebar, the app fetches that department’s organizations and shows them as pins. Currently only **Education** has distinct pin colours; other departments use a single default pin.
 - **Education pin colours** (in `lib/mapConfig.ts`):
   - Primary School – red  

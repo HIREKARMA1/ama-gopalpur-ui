@@ -8,8 +8,8 @@ import {
   InfoWindow,
 } from '@react-google-maps/api';
 import {
-  RANGEILUNDA_BOUNDS,
-  RANGEILUNDA_CENTER,
+  GOPALPUR_BOUNDS,
+  GOPALPUR_CENTER,
   DEFAULT_ZOOM,
   EDUCATION_MARKER_ICONS,
   EDUCATION_TYPE_LABELS,
@@ -63,15 +63,15 @@ export function ConstituencyMap({
     [organizations]
   );
 
-  /** Restrict map to Rangeilunda block only; hide Google's default POIs so only our org pins show */
+  /** Restrict map to Gopalpur constituency (Rangeilunda, Kukudakhandi, Berhampur Urban-I) only; hide Google's default POIs so only our org pins show */
   const mapOptions = useMemo(
     () => ({
       restriction: {
         latLngBounds: {
-          south: RANGEILUNDA_BOUNDS.south,
-          west: RANGEILUNDA_BOUNDS.west,
-          north: RANGEILUNDA_BOUNDS.north,
-          east: RANGEILUNDA_BOUNDS.east,
+          south: GOPALPUR_BOUNDS.south,
+          west: GOPALPUR_BOUNDS.west,
+          north: GOPALPUR_BOUNDS.north,
+          east: GOPALPUR_BOUNDS.east,
         },
         strictBounds: true,
       },
@@ -143,7 +143,7 @@ export function ConstituencyMap({
     <div className="relative h-full w-full min-h-[200px] overflow-hidden">
       <GoogleMap
         mapContainerStyle={MAP_CONTAINER_STYLE}
-        center={RANGEILUNDA_CENTER}
+        center={GOPALPUR_CENTER}
         zoom={DEFAULT_ZOOM}
         options={mapOptions}
       >
