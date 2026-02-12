@@ -108,7 +108,7 @@ export function ConstituencyMap({
 
   if (!apiKey) {
     return (
-      <div className="relative flex h-[320px] md:min-h-[400px] w-full items-center justify-center rounded-lg border border-border bg-background-muted">
+      <div className="relative flex h-full min-h-[200px] w-full items-center justify-center bg-background-muted">
         <div className="max-w-md rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
           <p className="font-medium">Google Maps API key missing</p>
           <p className="mt-1 text-xs">
@@ -122,7 +122,7 @@ export function ConstituencyMap({
 
   if (loadError) {
     return (
-      <div className="relative flex h-[320px] md:min-h-[400px] w-full items-center justify-center rounded-lg border border-border bg-background-muted">
+      <div className="relative flex h-full min-h-[200px] w-full items-center justify-center bg-background-muted">
         <div className="max-w-md rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
           <p className="font-medium">Map failed to load</p>
           <p className="mt-1 text-xs">{String(loadError)}</p>
@@ -133,14 +133,14 @@ export function ConstituencyMap({
 
   if (!isLoaded) {
     return (
-      <div className="relative flex h-[320px] md:min-h-[400px] w-full items-center justify-center rounded-lg border border-border bg-background-muted">
+      <div className="relative flex h-full min-h-[200px] w-full items-center justify-center bg-background-muted">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="relative h-[320px] w-full md:min-h-[400px] overflow-hidden rounded-lg border border-border">
+    <div className="relative h-full w-full min-h-[200px] overflow-hidden">
       <GoogleMap
         mapContainerStyle={MAP_CONTAINER_STYLE}
         center={RANGEILUNDA_CENTER}

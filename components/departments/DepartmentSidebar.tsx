@@ -44,14 +44,17 @@ interface DepartmentSidebarProps {
 export function DepartmentSidebar({ selectedCode, onSelect }: DepartmentSidebarProps) {
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-text">Departments</h2>
-        <p className="mt-1 text-xs text-text-muted">
-          Tap a department to see all organizations on the map.
+      {/* Google Maps-style: compact header + list */}
+      <div className="shrink-0 border-b border-border bg-white px-3 py-3 dark:bg-gray-900">
+        <p className="text-xs font-medium uppercase tracking-wide text-text-muted">
+          Departments
+        </p>
+        <p className="mt-0.5 text-[11px] text-text-muted">
+          Select to show on map
         </p>
       </div>
-      <nav className="flex-1 overflow-y-auto">
-        <ul className="space-y-1 px-2 py-3">
+      <nav className="flex-1 overflow-y-auto py-2">
+        <ul className="space-y-0.5 px-2">
           {DEPARTMENTS.map((dept) => {
             const isActive = dept.code === selectedCode;
             return (
@@ -59,13 +62,13 @@ export function DepartmentSidebar({ selectedCode, onSelect }: DepartmentSidebarP
                 <button
                   type="button"
                   onClick={() => onSelect(dept)}
-                  className={`w-full rounded-md px-3 py-2 text-left text-sm transition
+                  className={`flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition
                     ${isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-background-muted text-text'
+                      ? 'bg-primary/15 text-primary font-medium dark:bg-primary/20'
+                      : 'text-text hover:bg-gray-100 dark:hover:bg-gray-800'
                     }`}
                 >
-                  {dept.label}
+                  <span className="truncate">{dept.label}</span>
                 </button>
               </li>
             );
