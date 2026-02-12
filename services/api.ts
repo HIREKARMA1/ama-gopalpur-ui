@@ -118,6 +118,21 @@ export const organizationsApi = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  update: (
+    id: number,
+    payload: {
+      name?: string;
+      latitude?: number;
+      longitude?: number;
+      description?: string;
+      address?: string;
+      attributes?: Record<string, string | number | null>;
+    },
+  ) =>
+    apiFetch<Organization>(`/api/v1/organizations/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
 };
 
 export const authApi = {

@@ -13,6 +13,7 @@ export default function DepartmentAdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [editingOrgId, setEditingOrgId] = useState<number | null>(null);
   const [newOrg, setNewOrg] = useState({
     ulb_block: '',
     gp_name: '',
@@ -160,10 +161,8 @@ export default function DepartmentAdminPage() {
                   throw new Error('Latitude and Longitude must be valid numbers.');
                 }
                 const addressParts = [newOrg.gp_name, newOrg.ward_village].filter(Boolean);
-                const created = await organizationsApi.create({
-                  department_id: me.department_id,
+                const basePayload = {
                   name: newOrg.awc_name,
-                  type: 'AWC',
                   latitude: lat,
                   longitude: lng,
                   description: newOrg.sector ? `Sector: ${newOrg.sector}` : undefined,
@@ -174,9 +173,22 @@ export default function DepartmentAdminPage() {
                     ward_village: newOrg.ward_village,
                     sector: newOrg.sector,
                     lgd_code: newOrg.lgd_code,
-                  },
-                });
-                setOrgs((prev) => [created, ...prev]);
+                  } as Record<string, string | number | null>,
+                };
+
+                let updated: Organization;
+                if (editingOrgId) {
+                  updated = await organizationsApi.update(editingOrgId, basePayload);
+                  setOrgs((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+                } else {
+                  const created = await organizationsApi.create({
+                    department_id: me.department_id,
+                    type: 'AWC',
+                    ...basePayload,
+                  });
+                  updated = created;
+                  setOrgs((prev) => [created, ...prev]);
+                }
                 setNewOrg({
                   ulb_block: '',
                   gp_name: '',
@@ -187,6 +199,7 @@ export default function DepartmentAdminPage() {
                   longitude: '',
                   lgd_code: '',
                 });
+                setEditingOrgId(null);
               } catch (err: any) {
                 setError(err.message || 'Failed to create organization');
               } finally {
@@ -267,7 +280,7 @@ export default function DepartmentAdminPage() {
                 disabled={creating}
                 className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
               >
-                {creating ? 'Saving...' : 'Save AWC'}
+                {creating ? 'Saving...' : editingOrgId ? 'Update AWC' : 'Save AWC'}
               </button>
             </div>
           </form>
@@ -306,10 +319,14 @@ export default function DepartmentAdminPage() {
             <table className="min-w-full border-collapse text-xs">
               <thead>
                 <tr className="border-b border-border bg-background-muted">
-                  <th className="px-2 py-1 text-left font-medium text-text">Name</th>
-                  <th className="px-2 py-1 text-left font-medium text-text">Type</th>
-                  <th className="px-2 py-1 text-left font-medium text-text">Address</th>
-                  <th className="px-2 py-1 text-left font-medium text-text">Sector / LGD</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">AWC Name</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">ULB / Block</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">GP Name</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">Ward / Village</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">Sector</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">LGD Code</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">Latitude</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">Longitude</th>
                   <th className="px-2 py-1 text-left font-medium text-text">Actions</th>
                 </tr>
               </thead>
@@ -317,13 +334,48 @@ export default function DepartmentAdminPage() {
                 {orgs.map((o) => (
                   <tr key={o.id} className="border-b border-border/60">
                     <td className="px-2 py-1">{o.name}</td>
-                    <td className="px-2 py-1 text-text-muted">{o.type}</td>
-                    <td className="px-2 py-1 text-text-muted">{o.address || '—'}</td>
                     <td className="px-2 py-1 text-text-muted">
-                      {o.attributes?.sector ? `Sector: ${o.attributes.sector}` : ''}
-                      {o.attributes?.lgd_code ? ` · LGD: ${o.attributes.lgd_code}` : ''}
+                      {o.attributes?.ulb_block ?? '—'}
                     </td>
-                    <td className="px-2 py-1">
+                    <td className="px-2 py-1 text-text-muted">
+                      {o.attributes?.gp_name ?? '—'}
+                    </td>
+                    <td className="px-2 py-1 text-text-muted">
+                      {o.attributes?.ward_village ?? '—'}
+                    </td>
+                    <td className="px-2 py-1 text-text-muted">
+                      {o.attributes?.sector ?? '—'}
+                    </td>
+                    <td className="px-2 py-1 text-text-muted">
+                      {o.attributes?.lgd_code ?? '—'}
+                    </td>
+                    <td className="px-2 py-1 text-text-muted">
+                      {o.latitude != null ? o.latitude.toFixed(6) : '—'}
+                    </td>
+                    <td className="px-2 py-1 text-text-muted">
+                      {o.longitude != null ? o.longitude.toFixed(6) : '—'}
+                    </td>
+                    <td className="px-2 py-1 space-x-1">
+                      <button
+                        type="button"
+                        className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                        onClick={() => {
+                          setEditingOrgId(o.id);
+                          setNewOrg({
+                            ulb_block: String(o.attributes?.ulb_block ?? ''),
+                            gp_name: String(o.attributes?.gp_name ?? ''),
+                            ward_village: String(o.attributes?.ward_village ?? ''),
+                            sector: String(o.attributes?.sector ?? ''),
+                            awc_name: o.name,
+                            latitude: o.latitude != null ? String(o.latitude) : '',
+                            longitude: o.longitude != null ? String(o.longitude) : '',
+                            lgd_code: String(o.attributes?.lgd_code ?? ''),
+                          });
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                      >
+                        Edit
+                      </button>
                       <button
                         type="button"
                         className="rounded border border-red-500 px-2 py-0.5 text-[11px] text-red-600 hover:bg-red-50"
@@ -336,7 +388,7 @@ export default function DepartmentAdminPage() {
                 ))}
                 {!orgs.length && (
                   <tr>
-                    <td className="px-2 py-2 text-xs text-text-muted" colSpan={5}>
+                    <td className="px-2 py-2 text-xs text-text-muted" colSpan={9}>
                       No organizations yet for your department.
                     </td>
                   </tr>
