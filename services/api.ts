@@ -99,8 +99,13 @@ export const departmentsApi = {
 };
 
 export const organizationsApi = {
-  listByDepartment: (departmentId: number) =>
-    apiFetch<Organization[]>(`/api/v1/organizations?department_id=${departmentId}`),
+  listByDepartment: (departmentId: number, opts?: { skip?: number; limit?: number }) => {
+    const params = new URLSearchParams();
+    params.append('department_id', String(departmentId));
+    if (opts?.skip != null) params.append('skip', String(opts.skip));
+    if (opts?.limit != null) params.append('limit', String(opts.limit));
+    return apiFetch<Organization[]>(`/api/v1/organizations?${params.toString()}`);
+  },
   get: (id: number) => apiFetch<Organization>(`/api/v1/organizations/${id}`),
   delete: (id: number) =>
     apiFetch<void>(`/api/v1/organizations/${id}`, { method: 'DELETE' }),

@@ -24,6 +24,9 @@ export default function DepartmentAdminPage() {
     longitude: '',
     lgd_code: '',
   });
+  const PAGE_SIZE = 25;
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -35,8 +38,13 @@ export default function DepartmentAdminPage() {
         }
         setMe(user);
         if (user.department_id) {
-          const list = await organizationsApi.listByDepartment(user.department_id);
+          const list = await organizationsApi.listByDepartment(user.department_id, {
+            skip: 0,
+            limit: PAGE_SIZE,
+          });
           setOrgs(list);
+          setPage(0);
+          setHasMore(list.length === PAGE_SIZE);
         } else {
           setError('Department is not set for this admin user.');
         }
@@ -85,8 +93,13 @@ export default function DepartmentAdminPage() {
         throw new Error(data.detail || `Upload failed with status ${resp.status}`);
       }
       if (me?.department_id) {
-        const list = await organizationsApi.listByDepartment(me.department_id);
+        const list = await organizationsApi.listByDepartment(me.department_id, {
+          skip: 0,
+          limit: PAGE_SIZE,
+        });
         setOrgs(list);
+        setPage(0);
+        setHasMore(list.length === PAGE_SIZE);
       }
       (form.elements.namedItem('file') as HTMLInputElement).value = '';
     } catch (err: any) {
@@ -319,6 +332,7 @@ export default function DepartmentAdminPage() {
             <table className="min-w-full border-collapse text-xs">
               <thead>
                 <tr className="border-b border-border bg-background-muted">
+                  <th className="px-2 py-1 text-left font-medium text-text">Sl. No.</th>
                   <th className="px-2 py-1 text-left font-medium text-text">AWC Name</th>
                   <th className="px-2 py-1 text-left font-medium text-text">ULB / Block</th>
                   <th className="px-2 py-1 text-left font-medium text-text">GP Name</th>
@@ -331,8 +345,11 @@ export default function DepartmentAdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {orgs.map((o) => (
+                {orgs.map((o, idx) => (
                   <tr key={o.id} className="border-b border-border/60">
+                    <td className="px-2 py-1 text-text-muted">
+                      {page * PAGE_SIZE + idx + 1}
+                    </td>
                     <td className="px-2 py-1">{o.name}</td>
                     <td className="px-2 py-1 text-text-muted">
                       {o.attributes?.ulb_block ?? '—'}
@@ -388,13 +405,54 @@ export default function DepartmentAdminPage() {
                 ))}
                 {!orgs.length && (
                   <tr>
-                    <td className="px-2 py-2 text-xs text-text-muted" colSpan={9}>
+                    <td className="px-2 py-2 text-xs text-text-muted" colSpan={10}>
                       No organizations yet for your department.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
+            <div className="mt-3 flex items-center justify-between text-xs text-text-muted">
+              <span>Page {page + 1}</span>
+              <div className="space-x-2">
+                <button
+                  type="button"
+                  disabled={page === 0 || !me?.department_id}
+                  className="rounded border border-border px-2 py-1 text-[11px] hover:bg-gray-50 disabled:opacity-50"
+                  onClick={async () => {
+                    if (!me?.department_id || page === 0) return;
+                    const newPage = page - 1;
+                    const list = await organizationsApi.listByDepartment(me.department_id, {
+                      skip: newPage * PAGE_SIZE,
+                      limit: PAGE_SIZE,
+                    });
+                    setOrgs(list);
+                    setPage(newPage);
+                    setHasMore(list.length === PAGE_SIZE);
+                  }}
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  disabled={!hasMore || !me?.department_id}
+                  className="rounded border border-border px-2 py-1 text-[11px] hover:bg-gray-50 disabled:opacity-50"
+                  onClick={async () => {
+                    if (!me?.department_id || !hasMore) return;
+                    const newPage = page + 1;
+                    const list = await organizationsApi.listByDepartment(me.department_id, {
+                      skip: newPage * PAGE_SIZE,
+                      limit: PAGE_SIZE,
+                    });
+                    setOrgs(list);
+                    setPage(newPage);
+                    setHasMore(list.length === PAGE_SIZE);
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         </section>
       </main>
