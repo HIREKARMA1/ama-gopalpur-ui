@@ -1,17 +1,17 @@
 /**
- * Map configuration for Rangeilunda block, Ganjam district, Odisha.
- * Map is restricted to this block only (not the entire world).
+ * Map configuration for Gopalpur Assembly constituency (Rangeilunda, Kukudakhandi, Berhampur Urban-I).
+ * Map is restricted to the overall constituency area (not the entire world).
  */
 
-/** Center of Rangeilunda block (approx.) */
-export const RANGEILUNDA_CENTER = { lat: 19.28, lng: 84.88 };
+/** Approximate center of Gopalpur constituency (covering Rangeilunda, Kukudakhandi, Berhampur Urban-I) */
+export const GOPALPUR_CENTER = { lat: 19.28, lng: 84.86 };
 
-/** Bounds to restrict the map to Rangeilunda block (SW and NE corners) */
-export const RANGEILUNDA_BOUNDS = {
-  south: 19.20,
-  west: 84.80,
-  north: 19.36,
-  east: 84.96,
+/** Bounds to restrict the map to the Gopalpur constituency (SW and NE corners) */
+export const GOPALPUR_BOUNDS = {
+  south: 19.18,
+  west: 84.75,
+  north: 19.40,
+  east: 84.98,
 };
 
 /** Default zoom level so the block fills the map */
