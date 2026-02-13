@@ -2,7 +2,7 @@
 
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { authApi, organizationsApi, clearToken, Organization, User } from '../../../services/api';
+import { authApi, organizationsApi, clearToken, getToken, Organization, User } from '../../../services/api';
 import { Loader } from '../../../components/common/Loader';
 
 export default function DepartmentAdminPage() {
@@ -13,6 +13,7 @@ export default function DepartmentAdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [editingOrgId, setEditingOrgId] = useState<number | null>(null);
   const [newOrg, setNewOrg] = useState({
     ulb_block: '',
     gp_name: '',
@@ -23,6 +24,9 @@ export default function DepartmentAdminPage() {
     longitude: '',
     lgd_code: '',
   });
+  const PAGE_SIZE = 25;
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -34,8 +38,13 @@ export default function DepartmentAdminPage() {
         }
         setMe(user);
         if (user.department_id) {
-          const list = await organizationsApi.listByDepartment(user.department_id);
+          const list = await organizationsApi.listByDepartment(user.department_id, {
+            skip: 0,
+            limit: PAGE_SIZE,
+          });
           setOrgs(list);
+          setPage(0);
+          setHasMore(list.length === PAGE_SIZE);
         } else {
           setError('Department is not set for this admin user.');
         }
@@ -75,17 +84,24 @@ export default function DepartmentAdminPage() {
       const formData = new FormData();
       formData.append('file', file);
       // department_id is enforced by backend for dept admin; no need to send.
+      const token = getToken();
       const resp = await fetch('/api/v1/organizations/bulk_csv', {
         method: 'POST',
         body: formData,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       if (!resp.ok) {
         const data = await resp.json().catch(() => ({}));
         throw new Error(data.detail || `Upload failed with status ${resp.status}`);
       }
       if (me?.department_id) {
-        const list = await organizationsApi.listByDepartment(me.department_id);
+        const list = await organizationsApi.listByDepartment(me.department_id, {
+          skip: 0,
+          limit: PAGE_SIZE,
+        });
         setOrgs(list);
+        setPage(0);
+        setHasMore(list.length === PAGE_SIZE);
       }
       (form.elements.namedItem('file') as HTMLInputElement).value = '';
     } catch (err: any) {
@@ -93,6 +109,23 @@ export default function DepartmentAdminPage() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleDownloadTemplate = () => {
+    const header =
+      'S.No.,ULB/Block Name,GP Name,Ward/Village Name,Sector,AWC Name,Latitude,Longitude,LGD Code\n';
+    const example =
+      '1,RANGEILUNDA,BADAKUSASTHALLI,BADAGUMULA,BADAKUSHASTALI,EXAMPLE AWC,19.250000,84.850000,412600\n';
+    const csvContent = `${header}${example}`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'icds_awc_template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -160,10 +193,8 @@ export default function DepartmentAdminPage() {
                   throw new Error('Latitude and Longitude must be valid numbers.');
                 }
                 const addressParts = [newOrg.gp_name, newOrg.ward_village].filter(Boolean);
-                const created = await organizationsApi.create({
-                  department_id: me.department_id,
+                const basePayload = {
                   name: newOrg.awc_name,
-                  type: 'AWC',
                   latitude: lat,
                   longitude: lng,
                   description: newOrg.sector ? `Sector: ${newOrg.sector}` : undefined,
@@ -174,9 +205,22 @@ export default function DepartmentAdminPage() {
                     ward_village: newOrg.ward_village,
                     sector: newOrg.sector,
                     lgd_code: newOrg.lgd_code,
-                  },
-                });
-                setOrgs((prev) => [created, ...prev]);
+                  } as Record<string, string | number | null>,
+                };
+
+                let updated: Organization;
+                if (editingOrgId) {
+                  updated = await organizationsApi.update(editingOrgId, basePayload);
+                  setOrgs((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+                } else {
+                  const created = await organizationsApi.create({
+                    department_id: me.department_id,
+                    type: 'AWC',
+                    ...basePayload,
+                  });
+                  updated = created;
+                  setOrgs((prev) => [created, ...prev]);
+                }
                 setNewOrg({
                   ulb_block: '',
                   gp_name: '',
@@ -187,6 +231,7 @@ export default function DepartmentAdminPage() {
                   longitude: '',
                   lgd_code: '',
                 });
+                setEditingOrgId(null);
               } catch (err: any) {
                 setError(err.message || 'Failed to create organization');
               } finally {
@@ -267,7 +312,7 @@ export default function DepartmentAdminPage() {
                 disabled={creating}
                 className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
               >
-                {creating ? 'Saving...' : 'Save AWC'}
+                {creating ? 'Saving...' : editingOrgId ? 'Update AWC' : 'Save AWC'}
               </button>
             </div>
           </form>
@@ -279,21 +324,30 @@ export default function DepartmentAdminPage() {
             Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this
             department will be replaced.
           </p>
-          <form className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center" onSubmit={handleUpload}>
-            <input
-              type="file"
-              name="file"
-              accept=".csv,text/csv"
-              className="text-xs"
-            />
+          <div className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center md:justify-between">
             <button
-              type="submit"
-              disabled={uploading}
-              className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+              type="button"
+              className="inline-flex items-center justify-center rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text hover:bg-gray-50"
+              onClick={handleDownloadTemplate}
             >
-              {uploading ? 'Uploading...' : 'Upload CSV'}
+              Download CSV template
             </button>
-          </form>
+            <form className="flex flex-col gap-2 md:flex-row md:items-center" onSubmit={handleUpload}>
+              <input
+                type="file"
+                name="file"
+                accept=".csv,text/csv"
+                className="text-xs"
+              />
+              <button
+                type="submit"
+                disabled={uploading}
+                className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+              >
+                {uploading ? 'Uploading...' : 'Upload CSV'}
+              </button>
+            </form>
+          </div>
         </section>
 
         <section className="rounded-lg border border-border bg-background p-4">
@@ -306,24 +360,67 @@ export default function DepartmentAdminPage() {
             <table className="min-w-full border-collapse text-xs">
               <thead>
                 <tr className="border-b border-border bg-background-muted">
-                  <th className="px-2 py-1 text-left font-medium text-text">Name</th>
-                  <th className="px-2 py-1 text-left font-medium text-text">Type</th>
-                  <th className="px-2 py-1 text-left font-medium text-text">Address</th>
-                  <th className="px-2 py-1 text-left font-medium text-text">Sector / LGD</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">Sl. No.</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">AWC Name</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">ULB / Block</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">GP Name</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">Ward / Village</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">Sector</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">LGD Code</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">Latitude</th>
+                  <th className="px-2 py-1 text-left font-medium text-text">Longitude</th>
                   <th className="px-2 py-1 text-left font-medium text-text">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {orgs.map((o) => (
+                {orgs.map((o, idx) => (
                   <tr key={o.id} className="border-b border-border/60">
-                    <td className="px-2 py-1">{o.name}</td>
-                    <td className="px-2 py-1 text-text-muted">{o.type}</td>
-                    <td className="px-2 py-1 text-text-muted">{o.address || '—'}</td>
                     <td className="px-2 py-1 text-text-muted">
-                      {o.attributes?.sector ? `Sector: ${o.attributes.sector}` : ''}
-                      {o.attributes?.lgd_code ? ` · LGD: ${o.attributes.lgd_code}` : ''}
+                      {page * PAGE_SIZE + idx + 1}
                     </td>
-                    <td className="px-2 py-1">
+                    <td className="px-2 py-1">{o.name}</td>
+                    <td className="px-2 py-1 text-text-muted">
+                      {o.attributes?.ulb_block ?? '—'}
+                    </td>
+                    <td className="px-2 py-1 text-text-muted">
+                      {o.attributes?.gp_name ?? '—'}
+                    </td>
+                    <td className="px-2 py-1 text-text-muted">
+                      {o.attributes?.ward_village ?? '—'}
+                    </td>
+                    <td className="px-2 py-1 text-text-muted">
+                      {o.attributes?.sector ?? '—'}
+                    </td>
+                    <td className="px-2 py-1 text-text-muted">
+                      {o.attributes?.lgd_code ?? '—'}
+                    </td>
+                    <td className="px-2 py-1 text-text-muted">
+                      {o.latitude != null ? o.latitude.toFixed(6) : '—'}
+                    </td>
+                    <td className="px-2 py-1 text-text-muted">
+                      {o.longitude != null ? o.longitude.toFixed(6) : '—'}
+                    </td>
+                    <td className="px-2 py-1 space-x-1">
+                      <button
+                        type="button"
+                        className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                        onClick={() => {
+                          setEditingOrgId(o.id);
+                          setNewOrg({
+                            ulb_block: String(o.attributes?.ulb_block ?? ''),
+                            gp_name: String(o.attributes?.gp_name ?? ''),
+                            ward_village: String(o.attributes?.ward_village ?? ''),
+                            sector: String(o.attributes?.sector ?? ''),
+                            awc_name: o.name,
+                            latitude: o.latitude != null ? String(o.latitude) : '',
+                            longitude: o.longitude != null ? String(o.longitude) : '',
+                            lgd_code: String(o.attributes?.lgd_code ?? ''),
+                          });
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                      >
+                        Edit
+                      </button>
                       <button
                         type="button"
                         className="rounded border border-red-500 px-2 py-0.5 text-[11px] text-red-600 hover:bg-red-50"
@@ -336,13 +433,54 @@ export default function DepartmentAdminPage() {
                 ))}
                 {!orgs.length && (
                   <tr>
-                    <td className="px-2 py-2 text-xs text-text-muted" colSpan={5}>
+                    <td className="px-2 py-2 text-xs text-text-muted" colSpan={10}>
                       No organizations yet for your department.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
+            <div className="mt-3 flex items-center justify-between text-xs text-text-muted">
+              <span>Page {page + 1}</span>
+              <div className="space-x-2">
+                <button
+                  type="button"
+                  disabled={page === 0 || !me?.department_id}
+                  className="rounded border border-border px-2 py-1 text-[11px] hover:bg-gray-50 disabled:opacity-50"
+                  onClick={async () => {
+                    if (!me?.department_id || page === 0) return;
+                    const newPage = page - 1;
+                    const list = await organizationsApi.listByDepartment(me.department_id, {
+                      skip: newPage * PAGE_SIZE,
+                      limit: PAGE_SIZE,
+                    });
+                    setOrgs(list);
+                    setPage(newPage);
+                    setHasMore(list.length === PAGE_SIZE);
+                  }}
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  disabled={!hasMore || !me?.department_id}
+                  className="rounded border border-border px-2 py-1 text-[11px] hover:bg-gray-50 disabled:opacity-50"
+                  onClick={async () => {
+                    if (!me?.department_id || !hasMore) return;
+                    const newPage = page + 1;
+                    const list = await organizationsApi.listByDepartment(me.department_id, {
+                      skip: newPage * PAGE_SIZE,
+                      limit: PAGE_SIZE,
+                    });
+                    setOrgs(list);
+                    setPage(newPage);
+                    setHasMore(list.length === PAGE_SIZE);
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         </section>
       </main>
