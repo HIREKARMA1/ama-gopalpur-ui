@@ -15,6 +15,8 @@ import {
   EDUCATION_TYPE_LABELS,
   AWC_MARKER_ICON,
   AWC_TYPE_LABEL,
+  HEALTH_MARKER_ICONS,
+  HEALTH_TYPE_LABELS,
 } from '../../lib/mapConfig';
 
 export interface MapOrganization {
@@ -92,10 +94,14 @@ export function ConstituencyMap({
   );
 
   const getIconUrl = useCallback((type: string) => {
-    if (selectedDepartmentCode === 'EDUCATION') {
+    const code = selectedDepartmentCode?.toUpperCase();
+    if (code === 'EDUCATION') {
       return EDUCATION_MARKER_ICONS[type] || EDUCATION_MARKER_ICONS.PRIMARY_SCHOOL;
     }
-    if (selectedDepartmentCode === 'AWC_ICDS' || type === 'AWC') {
+    if (code === 'HEALTH') {
+      return HEALTH_MARKER_ICONS[type] || HEALTH_MARKER_ICONS.HEALTH_CENTRE;
+    }
+    if (code === 'AWC_ICDS' || code === 'ICDS' || type === 'AWC') {
       return AWC_MARKER_ICON;
     }
     return 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
@@ -103,8 +109,10 @@ export function ConstituencyMap({
 
   const getTypeLabel = useCallback((type: string) => {
     if (type === 'AWC') return AWC_TYPE_LABEL;
+    const code = selectedDepartmentCode?.toUpperCase();
+    if (code === 'HEALTH') return HEALTH_TYPE_LABELS[type] || type.replace(/_/g, ' ');
     return EDUCATION_TYPE_LABELS[type] || type.replace(/_/g, ' ');
-  }, []);
+  }, [selectedDepartmentCode]);
 
   if (!apiKey) {
     return (
@@ -199,7 +207,7 @@ export function ConstituencyMap({
           </InfoWindow>
         )}
       </GoogleMap>
-      {selectedDepartmentCode === 'EDUCATION' && orgsWithLocation.length > 0 && (
+      {selectedDepartmentCode?.toUpperCase() === 'EDUCATION' && orgsWithLocation.length > 0 && (
         <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[200px]">
           <p className="font-medium text-text">Legend</p>
           <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-text-muted">
@@ -228,13 +236,32 @@ export function ConstituencyMap({
           </ul>
         </div>
       )}
-      {selectedDepartmentCode === 'AWC_ICDS' && orgsWithLocation.length > 0 && (
+      {(selectedDepartmentCode?.toUpperCase() === 'AWC_ICDS' || selectedDepartmentCode?.toUpperCase() === 'ICDS') && orgsWithLocation.length > 0 && (
         <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[200px]">
           <p className="font-medium text-text">Legend</p>
           <p className="mt-1 flex items-center gap-1 text-text-muted">
             <span className="inline-block h-2 w-2 rounded-full bg-pink-500" />
             {AWC_TYPE_LABEL}
           </p>
+        </div>
+      )}
+      {selectedDepartmentCode?.toUpperCase() === 'HEALTH' && orgsWithLocation.length > 0 && (
+        <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[200px]">
+          <p className="font-medium text-text">Legend</p>
+          <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-text-muted">
+            {Object.entries(HEALTH_TYPE_LABELS).map(([type, label]) => (
+              <li key={type} className="flex items-center gap-1">
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{
+                    backgroundColor:
+                      type === 'HOSPITAL' ? '#ea4335' : type === 'HEALTH_CENTRE' ? '#4285f4' : '#34a853',
+                  }}
+                />
+                {label}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

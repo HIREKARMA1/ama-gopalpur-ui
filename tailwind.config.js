@@ -7,7 +7,11 @@ module.exports = {
       colors: {
         primary: {
           DEFAULT: 'var(--color-primary)',
+          dark: 'var(--color-primary-dark)',
           foreground: 'var(--color-primary-foreground)',
+        },
+        sidebar: {
+          selected: 'var(--color-sidebar-selected)',
         },
         background: {
           DEFAULT: 'var(--color-background)',
