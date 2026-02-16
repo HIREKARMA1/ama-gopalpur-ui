@@ -2,9 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Figma design tokens */
 :root {
-  --color-primary: #f97316; /* Orange for Gopalpur */
+  --color-primary: #f97316;
+  --color-primary-dark: #ea580c;
   --color-primary-foreground: #111827;
+  --color-navbar: #EA580C;
+  --color-sidebar: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+  --color-sidebar-solid: #f97316;
+  --color-selected: #166534; /* Green for selected department card */
 
   --color-background: #f9fafb;
   --color-background-muted: #e5e7eb;

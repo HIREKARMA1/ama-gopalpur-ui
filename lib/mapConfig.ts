@@ -56,3 +56,17 @@ export const AWC_MARKER_ICON = `${PIN_BASE}/pink-dot.png`;
 
 /** Label for AWC org type */
 export const AWC_TYPE_LABEL = 'Anganwadi Centre (AWC)';
+
+/** Health organization types → marker icon (reuse pin colors) */
+export const HEALTH_MARKER_ICONS: Record<string, string> = {
+  HOSPITAL: MARKER_COLORS.red,
+  HEALTH_CENTRE: MARKER_COLORS.blue,
+  OTHER: MARKER_COLORS.green,
+};
+
+/** Human-readable labels for Health types */
+export const HEALTH_TYPE_LABELS: Record<string, string> = {
+  HOSPITAL: 'Hospital',
+  HEALTH_CENTRE: 'Health Centre',
+  OTHER: 'Other',
+};
