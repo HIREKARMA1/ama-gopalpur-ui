@@ -26,6 +26,7 @@ import {
   HEALTH_PROFILE_KEYS,
 } from '../../../lib/profileLabels';
 import { Loader } from '../../../components/common/Loader';
+import { AwcPortfolioDashboard } from '../../../components/organization/AwcPortfolioDashboard';
 
 const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
@@ -247,9 +248,11 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
 
   if (loading) {
     return (
-      <div className="page-container items-center justify-center">
+      <div className="page-container">
         <Navbar />
-        <Loader />
+        <main className="flex flex-1 items-center justify-center p-4">
+          <Loader size="lg" />
+        </main>
       </div>
     );
   }
@@ -268,6 +271,25 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
     : deptCode === 'HEALTH'
       ? (HEALTH_TYPE_LABELS[org.type] ?? org.type.replace(/_/g, ' '))
       : org.type === 'AWC' ? 'Anganwadi Centre (AWC)' : org.type.replace(/_/g, ' ');
+
+  // ICDS/AWC: professional portfolio dashboard with image slider
+  const isAwc = deptCode === 'ICDS' || deptCode === 'AWC_ICDS' || org.type === 'AWC';
+  if (isAwc) {
+    const galleryImages = Array.isArray((awcProfile as Record<string, unknown>)?.gallery_images)
+      ? ((awcProfile as Record<string, unknown>).gallery_images as string[]).filter((u): u is string => typeof u === 'string')
+      : [];
+    return (
+      <div className="page-container">
+        <Navbar />
+        <AwcPortfolioDashboard
+          org={org}
+          awcProfile={awcProfile}
+          departmentName={departments.find((d) => d.id === org.department_id)?.name}
+          images={galleryImages}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
@@ -300,25 +322,6 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
       </header>
 
       <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto">
-        {/* Organization portfolio: ICDS/AWC — always show table (template with NA when no data) */}
-        {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS' || org.type === 'AWC') && (
-          <section className="space-y-3">
-            <h2 className="text-base font-semibold text-text">Organization portfolio</h2>
-            <ProfileTable
-              rows={AWC_PORTFOLIO_ROWS.map(({ attribute, key }) => {
-                let value: string | number | null | undefined;
-                if (key.startsWith('org.')) {
-                  const k = key.slice(4) as keyof Organization;
-                  value = org ? (org[k] as string | number | null | undefined) : undefined;
-                } else {
-                  value = awcProfile ? (awcProfile[key as keyof CenterProfile] as string | number | null | undefined) : undefined;
-                }
-                return { attribute, value };
-              })}
-            />
-          </section>
-        )}
-
         {/* Education */}
         {deptCode === 'EDUCATION' && (
           <>
