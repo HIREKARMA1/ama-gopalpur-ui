@@ -115,7 +115,10 @@ export function DepartmentSidebar({
           <p className="text-sm text-white/80">{t('sidebar.loading', language)}</p>
         ) : (
           <ul className="space-y-3">
-            {departments.map((dept) => {
+            {departments
+              // Hide extra aggregate ICDS (Anganwadi) department entry
+              .filter((dept) => dept.name !== 'ICDS (Anganwadi)')
+              .map((dept) => {
               const isSelected = dept.id === selectedId;
               const count = countByDepartmentId[dept.id];
               const Icon = getDepartmentIcon(dept.code, dept.name);

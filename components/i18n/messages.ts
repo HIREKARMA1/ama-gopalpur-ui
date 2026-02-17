@@ -20,7 +20,27 @@ export type MessageKey =
   | 'awc.stat.studentStrength'
   | 'awc.stat.cpdoName'
   | 'awc.stat.supervisorName'
-  | 'awc.stat.awwName';
+  | 'awc.stat.awwName'
+  | 'edu.badge'
+  | 'edu.schoolProfileTitle'
+  | 'edu.schoolProfileSubtitle'
+  | 'edu.infraTitle'
+  | 'edu.infraSubtitle'
+  | 'edu.stat.students'
+  | 'edu.stat.teachers'
+  | 'edu.stat.classrooms'
+  | 'edu.stat.smartClassrooms'
+  | 'health.badge'
+  | 'health.facilityProfileTitle'
+  | 'health.facilityProfileSubtitle'
+  | 'health.infraTitle'
+  | 'health.infraSubtitle'
+  | 'health.stat.opd'
+  | 'health.stat.ipd'
+  | 'health.stat.beds'
+  | 'health.stat.icuBeds'
+  | 'health.staffTitle'
+  | 'health.staffSubtitle';
 
 const messages: Record<MessageKey, { en: string; or: string }> = {
   'govBar.title': {
@@ -98,6 +118,86 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'awc.stat.awwName': {
     en: 'AWW name',
     or: 'AWW ନାମ',
+  },
+  'edu.badge': {
+    en: 'Education · School',
+    or: 'ଶିକ୍ଷା ବିଭାଗ · ବିଦ୍ୟାଳୟ',
+  },
+  'edu.schoolProfileTitle': {
+    en: 'School profile',
+    or: 'ବିଦ୍ୟାଳୟ ପ୍ରୋଫାଇଲ୍',
+  },
+  'edu.schoolProfileSubtitle': {
+    en: 'Basic information about this school.',
+    or: 'ଏହି ବିଦ୍ୟାଳୟ ସମ୍ପର୍କିତ ମୂଳ ତଥ୍ୟ।',
+  },
+  'edu.infraTitle': {
+    en: 'Infrastructure',
+    or: 'ଅବକାଠା',
+  },
+  'edu.infraSubtitle': {
+    en: 'Key infrastructure and facilities available at this school.',
+    or: 'ଏହି ବିଦ୍ୟାଳୟର ମୁଖ୍ୟ ଅବକାଠା ଏବଂ ସୁବିଧା।',
+  },
+  'edu.stat.students': {
+    en: 'Students',
+    or: 'ଛାତ୍ରଛାତ୍ରୀ',
+  },
+  'edu.stat.teachers': {
+    en: 'Teachers',
+    or: 'ଶିକ୍ଷକମଣ୍ଡଳୀ',
+  },
+  'edu.stat.classrooms': {
+    en: 'Classrooms',
+    or: 'ଶ୍ରେଣୀକକ୍ଷ',
+  },
+  'edu.stat.smartClassrooms': {
+    en: 'Smart classrooms',
+    or: 'ସ୍ମାର୍ଟ କ୍ଲାସ୍',
+  },
+  'health.badge': {
+    en: 'Health facility',
+    or: 'ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର',
+  },
+  'health.facilityProfileTitle': {
+    en: 'Facility profile',
+    or: 'ସଂସ୍ଥା ପ୍ରୋଫାଇଲ୍',
+  },
+  'health.facilityProfileSubtitle': {
+    en: 'Basic information about this health facility.',
+    or: 'ଏହି ସ୍ୱାସ୍ଥ୍ୟ ସଂସ୍ଥା ସମ୍ପର୍କିତ ମୂଳ ତଥ୍ୟ।',
+  },
+  'health.infraTitle': {
+    en: 'Infrastructure',
+    or: 'ଅବକାଠା',
+  },
+  'health.infraSubtitle': {
+    en: 'Beds, ICU and key clinical facilities.',
+    or: 'ବେଡ୍, ICU ଏବଂ ପ୍ରମୁଖ ଚିକିତ୍ସା ସୁବିଧା।',
+  },
+  'health.stat.opd': {
+    en: 'OPD (monthly)',
+    or: 'OPD (ମାସିକ)',
+  },
+  'health.stat.ipd': {
+    en: 'IPD (monthly)',
+    or: 'IPD (ମାସିକ)',
+  },
+  'health.stat.beds': {
+    en: 'Total beds',
+    or: 'ମୋଟ ବେଡ୍',
+  },
+  'health.stat.icuBeds': {
+    en: 'ICU beds',
+    or: 'ICU ବେଡ୍',
+  },
+  'health.staffTitle': {
+    en: 'Key staff',
+    or: 'ମୁଖ୍ୟ କର୍ମଚାରୀ',
+  },
+  'health.staffSubtitle': {
+    en: 'Medical officers, nurses and support staff.',
+    or: 'ଚିକିତ୍ସା ଅଧିକାରୀ, ନର୍ସ ଏବଂ ସହାୟକ କର୍ମଚାରୀ।',
   },
 };
 
