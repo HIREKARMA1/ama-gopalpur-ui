@@ -44,16 +44,22 @@ export function Navbar() {
               />
             </div>
             <div className="min-w-0">
-              <span className="block truncate text-lg font-bold tracking-tight text-white">AMA Gopalpur</span>
-              <span className="hidden truncate text-sm text-white/80 sm:block">Constituency Dashboard</span>
+              <span className="block truncate text-xl font-extrabold tracking-tight text-white sm:text-2xl">
+                AMA GOPALPUR
+              </span>
+              <span className="hidden truncate text-sm font-semibold text-orange-100 sm:text-base sm:block">
+                Constituency Dashboard
+              </span>
             </div>
           </Link>
           <div className="flex min-w-0 shrink items-center gap-2 sm:gap-4">
             <div className="flex min-w-0 shrink items-center gap-2 px-2 py-1.5 sm:gap-4 sm:px-4 sm:py-2">
               <div className="hidden min-w-0 shrink text-right sm:block">
-                <p className="truncate text-base font-bold leading-tight text-white">Bibhuti Bhusan Jena</p>
-                <p className="truncate text-sm leading-tight text-white/80">
-                Cabinet Minister, Odisha
+                <p className="truncate text-lg font-extrabold leading-tight text-white sm:text-xl">
+                  Bibhuti Bhusan Jena
+                </p>
+                <p className="truncate text-sm font-semibold leading-tight text-orange-100 sm:text-base">
+                  Cabinet Minister, Odisha
                 </p>
               </div>
               {/* Rectangular minister image - contained, no overflow */}
