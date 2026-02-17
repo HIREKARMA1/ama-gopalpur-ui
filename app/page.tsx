@@ -13,7 +13,6 @@ export default function HomePage() {
   const [selectedDept, setSelectedDept] = useState<Department | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(false);
-  /** Count of organizations per department (updated when we load a department) */
   const [countByDepartmentId, setCountByDepartmentId] = useState<Record<number, number>>({});
 
   useEffect(() => {
@@ -47,25 +46,14 @@ export default function HomePage() {
         />
       }
     >
-      <section className="relative flex h-full flex-col min-h-0">
-        {/* Optional: small loading indicator above map */}
+      <section className="relative flex h-full min-h-0 flex-col">
         {loading && (
-          <div className="absolute left-4 top-2 z-[1] flex items-center gap-2 rounded-md bg-white/95 px-3 py-1.5 text-sm shadow">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--color-primary)] border-t-transparent" />
+          <div className="absolute left-4 top-4 z-[1] flex items-center gap-2 rounded-lg bg-white/95 px-4 py-2.5 text-sm font-medium text-slate-700 shadow-md backdrop-blur-sm">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
             Loading…
           </div>
         )}
-        {/* View larger map link - top left on map */}
-        {/* <a
-          href="https://www.google.com/maps"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute left-2 top-2 z-[1] rounded bg-white/95 px-3 py-1.5 text-sm font-medium text-gray-700 shadow hover:bg-white"
-        >
-          View larger map
-        </a> */}
-        {/* Map fills remaining space */}
-        <div className="flex-1 min-h-0 relative">
+        <div className="relative flex-1 min-h-0 rounded-tl-lg bg-slate-200 shadow-inner">
           <ConstituencyMap
             selectedDepartmentCode={selectedDept?.code}
             organizations={organizations}
