@@ -28,6 +28,7 @@ export default function DepartmentAdminPage() {
   const [editingOrgId, setEditingOrgId] = useState<number | null>(null);
   const [orgProfiles, setOrgProfiles] = useState<Record<number, CenterProfile | null>>({});
   const [healthProfiles, setHealthProfiles] = useState<Record<number, Record<string, unknown>>>({});
+  const [educationProfiles, setEducationProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [newOrg, setNewOrg] = useState({
     ulb_block: '',
     gp_name: '',
@@ -67,6 +68,21 @@ export default function DepartmentAdminPage() {
     no_of_anm: '', no_of_health_worker: '', no_of_pathology: '', no_of_clerk: '', no_of_sweeper: '', no_of_nw: '',
     no_of_bed: '', no_of_icu: '', x_ray_availabilaty: '', ct_scan_availability: '', availability_of_pathology_testing: '', description: '',
   });
+
+  const [editingEducationId, setEditingEducationId] = useState<number | null>(null);
+  const emptyEducationOrg = () => ({
+    block_ulb: '', gp_ward: '', village: '', name_of_school: '', school_id: '', esst_year: '', category: '',
+    class_i: '', class_ii: '', class_iii: '', class_iv: '', class_v: '', class_vi: '', class_vii: '', class_viii: '', class_ix: '', class_x: '',
+    deo_name: '', deo_contact: '', beo_name: '', beo_contact: '', brcc_name: '', brcc_contact: '', crcc_name: '', crcc_contact: '',
+    name_of_hm: '', contact_of_hm: '', no_of_ts: '', no_of_nts: '', no_of_tgp_pcm: '', no_of_tgp_cbz: '', no_of_tgt_arts: '',
+    building_status: '', no_of_rooms: '', no_of_smart_class_rooms: '', science_lab: '', toilet_m: '', toilet_f: '',
+    ramp: '', meeting_hall: '', staff_common_room: '', ncc: '', nss: '', jrc: '', eco_club: '', library: '',
+    icc_head_name: '', icc_head_contact: '', play_ground: '', cycle_stand: '',
+    drinking_water_tw: '', drinking_water_tap: '', drinking_water_overhead_tap: '', drinking_water_aquaguard: '',
+    latitude: '', longitude: '', description: '',
+  });
+  const [newEducationOrg, setNewEducationOrg] = useState(emptyEducationOrg());
+
   const _n = (s: string) => (s.trim() ? (Number(s) || undefined) : undefined);
   const _s = (s: string) => (s.trim() || undefined);
 
@@ -134,6 +150,23 @@ export default function DepartmentAdminPage() {
         })
       );
       if (!cancelled) setHealthProfiles(profiles);
+    })();
+    return () => { cancelled = true; };
+  }, [deptCode, orgs]);
+
+  useEffect(() => {
+    if (deptCode !== 'EDUCATION' || orgs.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const profiles: Record<number, Record<string, unknown>> = {};
+      await Promise.all(
+        orgs.map(async (o) => {
+          if (cancelled) return;
+          const p = await educationApi.getProfile(o.id);
+          profiles[o.id] = p && typeof p === 'object' ? p : {};
+        })
+      );
+      if (!cancelled) setEducationProfiles(profiles);
     })();
     return () => { cancelled = true; };
   }, [deptCode, orgs]);
@@ -446,6 +479,190 @@ export default function DepartmentAdminPage() {
         </section>
         )}
 
+        {deptCode === 'EDUCATION' && (
+        <section className="rounded-lg border border-border bg-background p-4">
+          <h2 className="text-sm font-semibold text-text">Manual School entry</h2>
+          <p className="mt-1 text-xs text-text-muted">
+            Add a single school manually. Fields mirror the Education CSV columns.
+          </p>
+          <form
+            className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!me?.department_id) {
+                setError('Department is not set for this admin user.');
+                return;
+              }
+              if (!newEducationOrg.name_of_school?.trim() || !newEducationOrg.latitude?.trim() || !newEducationOrg.longitude?.trim()) {
+                setError('Name of School, Latitude and Longitude are required.');
+                return;
+              }
+              setCreating(true);
+              setError(null);
+              try {
+                const lat = Number(newEducationOrg.latitude);
+                const lng = Number(newEducationOrg.longitude);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                  throw new Error('Latitude and Longitude must be valid numbers.');
+                }
+                const addressParts = [newEducationOrg.block_ulb, newEducationOrg.gp_ward, newEducationOrg.village].filter(Boolean);
+                const basePayload = {
+                  name: newEducationOrg.name_of_school.trim(),
+                  latitude: lat,
+                  longitude: lng,
+                  address: addressParts.length ? addressParts.join(', ') : undefined,
+                  attributes: {
+                    ulb_block: newEducationOrg.block_ulb || null,
+                    gp_name: newEducationOrg.gp_ward || null,
+                    ward_village: newEducationOrg.village || null,
+                    sector: newEducationOrg.category || null,
+                  } as Record<string, string | number | null>,
+                };
+                let updated: Organization;
+                if (editingEducationId) {
+                  updated = await organizationsApi.update(editingEducationId, basePayload);
+                  setOrgs((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+                } else {
+                  const created = await organizationsApi.create({
+                    department_id: me.department_id,
+                    type: 'PRIMARY_SCHOOL',
+                    ...basePayload,
+                  });
+                  updated = created;
+                  setOrgs((prev) => [created, ...prev]);
+                }
+                const profileData: Record<string, unknown> = {
+                  block_ulb: _s(newEducationOrg.block_ulb),
+                  gp_ward: _s(newEducationOrg.gp_ward),
+                  village: _s(newEducationOrg.village),
+                  name_of_school: newEducationOrg.name_of_school.trim(),
+                  school_id: _s(newEducationOrg.school_id),
+                  esst_year: _n(newEducationOrg.esst_year),
+                  category: _s(newEducationOrg.category),
+                  class_i: _n(newEducationOrg.class_i), class_ii: _n(newEducationOrg.class_ii), class_iii: _n(newEducationOrg.class_iii),
+                  class_iv: _n(newEducationOrg.class_iv), class_v: _n(newEducationOrg.class_v), class_vi: _n(newEducationOrg.class_vi),
+                  class_vii: _n(newEducationOrg.class_vii), class_viii: _n(newEducationOrg.class_viii), class_ix: _n(newEducationOrg.class_ix), class_x: _n(newEducationOrg.class_x),
+                  deo_name: _s(newEducationOrg.deo_name), deo_contact: _s(newEducationOrg.deo_contact),
+                  beo_name: _s(newEducationOrg.beo_name), beo_contact: _s(newEducationOrg.beo_contact),
+                  brcc_name: _s(newEducationOrg.brcc_name), brcc_contact: _s(newEducationOrg.brcc_contact),
+                  crcc_name: _s(newEducationOrg.crcc_name), crcc_contact: _s(newEducationOrg.crcc_contact),
+                  name_of_hm: _s(newEducationOrg.name_of_hm), contact_of_hm: _s(newEducationOrg.contact_of_hm),
+                  no_of_ts: _n(newEducationOrg.no_of_ts), no_of_nts: _n(newEducationOrg.no_of_nts),
+                  no_of_tgp_pcm: _n(newEducationOrg.no_of_tgp_pcm), no_of_tgp_cbz: _n(newEducationOrg.no_of_tgp_cbz), no_of_tgt_arts: _n(newEducationOrg.no_of_tgt_arts),
+                  building_status: _s(newEducationOrg.building_status), no_of_rooms: _n(newEducationOrg.no_of_rooms), no_of_smart_class_rooms: _n(newEducationOrg.no_of_smart_class_rooms),
+                  science_lab: _s(newEducationOrg.science_lab), toilet_m: _s(newEducationOrg.toilet_m), toilet_f: _s(newEducationOrg.toilet_f),
+                  ramp: _s(newEducationOrg.ramp), meeting_hall: _s(newEducationOrg.meeting_hall), staff_common_room: _s(newEducationOrg.staff_common_room),
+                  ncc: _s(newEducationOrg.ncc), nss: _s(newEducationOrg.nss), jrc: _s(newEducationOrg.jrc), eco_club: _s(newEducationOrg.eco_club), library: _s(newEducationOrg.library),
+                  icc_head_name: _s(newEducationOrg.icc_head_name), icc_head_contact: _s(newEducationOrg.icc_head_contact),
+                  play_ground: _s(newEducationOrg.play_ground), cycle_stand: _s(newEducationOrg.cycle_stand),
+                  drinking_water_tw: _s(newEducationOrg.drinking_water_tw), drinking_water_tap: _s(newEducationOrg.drinking_water_tap),
+                  drinking_water_overhead_tap: _s(newEducationOrg.drinking_water_overhead_tap), drinking_water_aquaguard: _s(newEducationOrg.drinking_water_aquaguard),
+                  latitude: lat, longitude: lng, description: _s(newEducationOrg.description),
+                };
+                await educationApi.putProfile(updated.id, profileData);
+                setEducationProfiles((prev) => ({ ...prev, [updated.id]: profileData }));
+                setNewEducationOrg(emptyEducationOrg());
+                setEditingEducationId(null);
+              } catch (err: any) {
+                setError(err.message || 'Failed to save school');
+              } finally {
+                setCreating(false);
+              }
+            }}
+          >
+            <div className="space-y-1">
+              <label className="block text-text">Block / ULB</label>
+              <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.block_ulb} onChange={(e) => setNewEducationOrg((s) => ({ ...s, block_ulb: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">GP / Ward</label>
+              <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.gp_ward} onChange={(e) => setNewEducationOrg((s) => ({ ...s, gp_ward: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">Village</label>
+              <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.village} onChange={(e) => setNewEducationOrg((s) => ({ ...s, village: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">Name of School</label>
+              <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.name_of_school} onChange={(e) => setNewEducationOrg((s) => ({ ...s, name_of_school: e.target.value }))} required />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">School ID</label>
+              <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.school_id} onChange={(e) => setNewEducationOrg((s) => ({ ...s, school_id: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">ESST Year</label>
+              <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.esst_year} onChange={(e) => setNewEducationOrg((s) => ({ ...s, esst_year: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">Category</label>
+              <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.category} onChange={(e) => setNewEducationOrg((s) => ({ ...s, category: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">Latitude</label>
+              <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.latitude} onChange={(e) => setNewEducationOrg((s) => ({ ...s, latitude: e.target.value }))} required />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">Longitude</label>
+              <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.longitude} onChange={(e) => setNewEducationOrg((s) => ({ ...s, longitude: e.target.value }))} required />
+            </div>
+            <div className="space-y-1"><label className="block text-text">Class I</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_i} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_i: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Class II</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_ii} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_ii: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Class III</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_iii} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_iii: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Class IV</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_iv} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_iv: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Class V</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_v} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_v: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Class VI</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_vi} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_vi: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Class VII</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_vii} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_vii: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Class VIII</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_viii} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_viii: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Class IX</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_ix} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_ix: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Class X</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_x} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_x: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">DEO Name</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.deo_name} onChange={(e) => setNewEducationOrg((s) => ({ ...s, deo_name: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">DEO Contact</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.deo_contact} onChange={(e) => setNewEducationOrg((s) => ({ ...s, deo_contact: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">BEO Name</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.beo_name} onChange={(e) => setNewEducationOrg((s) => ({ ...s, beo_name: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">BEO Contact</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.beo_contact} onChange={(e) => setNewEducationOrg((s) => ({ ...s, beo_contact: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">BRCC Name</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.brcc_name} onChange={(e) => setNewEducationOrg((s) => ({ ...s, brcc_name: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">BRCC Contact</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.brcc_contact} onChange={(e) => setNewEducationOrg((s) => ({ ...s, brcc_contact: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">CRCC Name</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.crcc_name} onChange={(e) => setNewEducationOrg((s) => ({ ...s, crcc_name: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">CRCC Contact</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.crcc_contact} onChange={(e) => setNewEducationOrg((s) => ({ ...s, crcc_contact: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Name of HM</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.name_of_hm} onChange={(e) => setNewEducationOrg((s) => ({ ...s, name_of_hm: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Contact of HM</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.contact_of_hm} onChange={(e) => setNewEducationOrg((s) => ({ ...s, contact_of_hm: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">No of TS</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.no_of_ts} onChange={(e) => setNewEducationOrg((s) => ({ ...s, no_of_ts: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">No of NTS</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.no_of_nts} onChange={(e) => setNewEducationOrg((s) => ({ ...s, no_of_nts: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">No of TGP (PCM)</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.no_of_tgp_pcm} onChange={(e) => setNewEducationOrg((s) => ({ ...s, no_of_tgp_pcm: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">No of TGP (CBZ)</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.no_of_tgp_cbz} onChange={(e) => setNewEducationOrg((s) => ({ ...s, no_of_tgp_cbz: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">No of TGT (Arts)</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.no_of_tgt_arts} onChange={(e) => setNewEducationOrg((s) => ({ ...s, no_of_tgt_arts: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Building Status</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.building_status} onChange={(e) => setNewEducationOrg((s) => ({ ...s, building_status: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">No of Rooms</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.no_of_rooms} onChange={(e) => setNewEducationOrg((s) => ({ ...s, no_of_rooms: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">No of Smart Class Rooms</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.no_of_smart_class_rooms} onChange={(e) => setNewEducationOrg((s) => ({ ...s, no_of_smart_class_rooms: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Science Lab</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.science_lab} onChange={(e) => setNewEducationOrg((s) => ({ ...s, science_lab: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Toilet (M)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.toilet_m} onChange={(e) => setNewEducationOrg((s) => ({ ...s, toilet_m: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Toilet (F)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.toilet_f} onChange={(e) => setNewEducationOrg((s) => ({ ...s, toilet_f: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Ramp</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.ramp} onChange={(e) => setNewEducationOrg((s) => ({ ...s, ramp: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Meeting Hall</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.meeting_hall} onChange={(e) => setNewEducationOrg((s) => ({ ...s, meeting_hall: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Staff Common Room</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.staff_common_room} onChange={(e) => setNewEducationOrg((s) => ({ ...s, staff_common_room: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">NCC</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.ncc} onChange={(e) => setNewEducationOrg((s) => ({ ...s, ncc: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">NSS</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.nss} onChange={(e) => setNewEducationOrg((s) => ({ ...s, nss: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">JRC</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.jrc} onChange={(e) => setNewEducationOrg((s) => ({ ...s, jrc: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Eco Club</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.eco_club} onChange={(e) => setNewEducationOrg((s) => ({ ...s, eco_club: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Library</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.library} onChange={(e) => setNewEducationOrg((s) => ({ ...s, library: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">ICC Head Name</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.icc_head_name} onChange={(e) => setNewEducationOrg((s) => ({ ...s, icc_head_name: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">ICC Head Contact</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.icc_head_contact} onChange={(e) => setNewEducationOrg((s) => ({ ...s, icc_head_contact: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Play Ground</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.play_ground} onChange={(e) => setNewEducationOrg((s) => ({ ...s, play_ground: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Cycle Stand</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.cycle_stand} onChange={(e) => setNewEducationOrg((s) => ({ ...s, cycle_stand: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Drinking Water (TW)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.drinking_water_tw} onChange={(e) => setNewEducationOrg((s) => ({ ...s, drinking_water_tw: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Drinking Water (Tap)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.drinking_water_tap} onChange={(e) => setNewEducationOrg((s) => ({ ...s, drinking_water_tap: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Drinking Water (Overhead Tap)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.drinking_water_overhead_tap} onChange={(e) => setNewEducationOrg((s) => ({ ...s, drinking_water_overhead_tap: e.target.value }))} /></div>
+            <div className="space-y-1"><label className="block text-text">Drinking Water (Aquaguard)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.drinking_water_aquaguard} onChange={(e) => setNewEducationOrg((s) => ({ ...s, drinking_water_aquaguard: e.target.value }))} /></div>
+            <div className="space-y-1 md:col-span-2"><label className="block text-text">Description</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.description} onChange={(e) => setNewEducationOrg((s) => ({ ...s, description: e.target.value }))} /></div>
+            <div className="md:col-span-2">
+              <button type="submit" disabled={creating} className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60">
+                {creating ? 'Saving...' : editingEducationId ? 'Update School' : 'Save School'}
+              </button>
+            </div>
+          </form>
+        </section>
+        )}
+
         {deptCode === 'HEALTH' && (
         <section className="rounded-lg border border-border bg-background p-4">
           <h2 className="text-sm font-semibold text-text">Manual Health facility entry</h2>
@@ -715,10 +932,58 @@ export default function DepartmentAdminPage() {
                   {deptCode === 'EDUCATION' && (
                     <>
                       <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
-                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP Name</th>
-                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Ward / Village</th>
-                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Sector</th>
-                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">LGD Code</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Village</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">School ID</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ESST Year</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Category</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">I</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">II</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">III</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">IV</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">V</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">VI</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">VII</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">VIII</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">IX</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">X</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">DEO Name</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">DEO Contact</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">BEO Name</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">BEO Contact</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">BRCC Name</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">BRCC Contact</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">CRCC Name</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">CRCC Contact</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">HM Name</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">HM Contact</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">No of TS</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">No of NTS</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">TGP(PCM)</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">TGP(CBZ)</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">TGT(Arts)</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Building Status</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">No of Rooms</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Smart Class</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Science Lab</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Toilet(M)</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Toilet(F)</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Ramp</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Meeting Hall</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Staff Room</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">NCC</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">NSS</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">JRC</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Eco Club</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Library</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ICC Head</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ICC Contact</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Play Ground</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Cycle Stand</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">DW(TW)</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">DW(Tap)</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">DW(Overhead)</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">DW(Aquaguard)</th>
                       <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Latitude</th>
                       <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Longitude</th>
                     </>
@@ -757,6 +1022,7 @@ export default function DepartmentAdminPage() {
                 {orgs.map((o, idx) => {
                   const prof = orgProfiles[o.id];
                   const hp = healthProfiles[o.id];
+                  const ep = educationProfiles[o.id];
                   const _ = (v: string | number | null | undefined) => (v != null && String(v).trim() !== '' ? String(v) : '—');
                   return (
                   <tr key={o.id} className="border-b border-border/60">
@@ -786,11 +1052,59 @@ export default function DepartmentAdminPage() {
                     )}
                     {deptCode === 'EDUCATION' && (
                       <>
-                        <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ulb_block)}</td>
-                        <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_name)}</td>
-                        <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ward_village)}</td>
-                        <td className="px-2 py-1 text-text-muted">{_(o.attributes?.sector)}</td>
-                        <td className="px-2 py-1 text-text-muted">{_(o.attributes?.lgd_code)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.block_ulb ?? o.attributes?.ulb_block)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.gp_ward ?? o.attributes?.gp_name)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.village ?? o.attributes?.ward_village)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.school_id)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.esst_year)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.category)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.class_i)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.class_ii)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.class_iii)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.class_iv)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.class_v)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.class_vi)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.class_vii)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.class_viii)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.class_ix)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.class_x)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.deo_name)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.deo_contact)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.beo_name)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.beo_contact)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.brcc_name)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.brcc_contact)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.crcc_name)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.crcc_contact)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.name_of_hm)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.contact_of_hm)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_ts)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_nts)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_tgp_pcm)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_tgp_cbz)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_tgt_arts)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.building_status)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_rooms)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_smart_class_rooms)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.science_lab)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.toilet_m)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.toilet_f)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.ramp)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.meeting_hall)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.staff_common_room)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.ncc)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.nss)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.jrc)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.eco_club)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.library)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.icc_head_name)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.icc_head_contact)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.play_ground)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.cycle_stand)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.drinking_water_tw)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.drinking_water_tap)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.drinking_water_overhead_tap)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(ep?.drinking_water_aquaguard)}</td>
                         <td className="px-2 py-1 text-text-muted">{o.latitude != null ? o.latitude.toFixed(6) : '—'}</td>
                         <td className="px-2 py-1 text-text-muted">{o.longitude != null ? o.longitude.toFixed(6) : '—'}</td>
                       </>
@@ -859,6 +1173,50 @@ export default function DepartmentAdminPage() {
                         Edit
                       </button>
                       )}
+                      {deptCode === 'EDUCATION' && (
+                      <button
+                        type="button"
+                        className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                        onClick={async () => {
+                          setEditingEducationId(o.id);
+                          const p = await educationApi.getProfile(o.id) as Record<string, unknown> | undefined;
+                          const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
+                          setNewEducationOrg({
+                            block_ulb: v(p?.block_ulb ?? o.attributes?.ulb_block),
+                            gp_ward: v(p?.gp_ward ?? o.attributes?.gp_name),
+                            village: v(p?.village ?? o.attributes?.ward_village),
+                            name_of_school: v(p?.name_of_school ?? o.name),
+                            school_id: v(p?.school_id),
+                            esst_year: v(p?.esst_year),
+                            category: v(p?.category ?? o.attributes?.sector),
+                            class_i: v(p?.class_i), class_ii: v(p?.class_ii), class_iii: v(p?.class_iii),
+                            class_iv: v(p?.class_iv), class_v: v(p?.class_v), class_vi: v(p?.class_vi),
+                            class_vii: v(p?.class_vii), class_viii: v(p?.class_viii), class_ix: v(p?.class_ix), class_x: v(p?.class_x),
+                            deo_name: v(p?.deo_name), deo_contact: v(p?.deo_contact),
+                            beo_name: v(p?.beo_name), beo_contact: v(p?.beo_contact),
+                            brcc_name: v(p?.brcc_name), brcc_contact: v(p?.brcc_contact),
+                            crcc_name: v(p?.crcc_name), crcc_contact: v(p?.crcc_contact),
+                            name_of_hm: v(p?.name_of_hm), contact_of_hm: v(p?.contact_of_hm),
+                            no_of_ts: v(p?.no_of_ts), no_of_nts: v(p?.no_of_nts),
+                            no_of_tgp_pcm: v(p?.no_of_tgp_pcm), no_of_tgp_cbz: v(p?.no_of_tgp_cbz), no_of_tgt_arts: v(p?.no_of_tgt_arts),
+                            building_status: v(p?.building_status), no_of_rooms: v(p?.no_of_rooms), no_of_smart_class_rooms: v(p?.no_of_smart_class_rooms),
+                            science_lab: v(p?.science_lab), toilet_m: v(p?.toilet_m), toilet_f: v(p?.toilet_f),
+                            ramp: v(p?.ramp), meeting_hall: v(p?.meeting_hall), staff_common_room: v(p?.staff_common_room),
+                            ncc: v(p?.ncc), nss: v(p?.nss), jrc: v(p?.jrc), eco_club: v(p?.eco_club), library: v(p?.library),
+                            icc_head_name: v(p?.icc_head_name), icc_head_contact: v(p?.icc_head_contact),
+                            play_ground: v(p?.play_ground), cycle_stand: v(p?.cycle_stand),
+                            drinking_water_tw: v(p?.drinking_water_tw), drinking_water_tap: v(p?.drinking_water_tap),
+                            drinking_water_overhead_tap: v(p?.drinking_water_overhead_tap), drinking_water_aquaguard: v(p?.drinking_water_aquaguard),
+                            latitude: o.latitude != null ? String(o.latitude) : '',
+                            longitude: o.longitude != null ? String(o.longitude) : '',
+                            description: v(p?.description),
+                          });
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                      >
+                        Edit
+                      </button>
+                      )}
                       {deptCode === 'HEALTH' && (
                       <button
                         type="button"
@@ -913,7 +1271,7 @@ export default function DepartmentAdminPage() {
                 })}
                 {!orgs.length && (
                   <tr>
-                    <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 21 : deptCode === 'HEALTH' ? 26 : 10}>
+                    <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 21 : deptCode === 'HEALTH' ? 26 : deptCode === 'EDUCATION' ? 61 : 10}>
                       No organizations yet for your department.
                     </td>
                   </tr>
