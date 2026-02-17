@@ -1,6 +1,7 @@
 import './globals.css';
 import { ReactNode } from 'react';
 import { ThemeProvider } from 'next-themes';
+import { LanguageProvider } from '../components/i18n/LanguageContext';
 
 export const metadata = {
   title: 'AMA Gopalpur Constituency Dashboard',
@@ -12,7 +13,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-          <div className="page-container">{children}</div>
+          <LanguageProvider>
+            <div className="page-container">{children}</div>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

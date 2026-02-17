@@ -1,6 +1,8 @@
 'use client';
 
 import { Department } from '../../services/api';
+import { useLanguage } from '../i18n/LanguageContext';
+import { t } from '../i18n/messages';
 
 /** Icon component: medical cross */
 function IconHealthcare({ className }: { className?: string }) {
@@ -94,71 +96,84 @@ export function DepartmentSidebar({
   countLabel = 'Total',
   onSelect,
 }: DepartmentSidebarProps) {
+  const { language } = useLanguage();
+
   return (
     <div className="flex h-full flex-col">
-      {/* Header - white text on orange */}
-      <div className="shrink-0 px-4 py-5">
-        <h2 className="text-lg font-semibold text-white">Departments</h2>
-        <p className="mt-1 text-sm text-white/90">
-          Select a department to visualize assets on the map.
+      {/* Header */}
+      <div className="shrink-0 border-b border-orange-500/40 px-4 py-5">
+        <h2 className="text-xl font-semibold tracking-tight text-white">
+          {t('sidebar.title', language)}
+        </h2>
+        <p className="mt-1.5 text-[13px] text-white/90">
+          {t('sidebar.subtitle', language)}
         </p>
       </div>
 
-      {/* Department cards - scrollable */}
-      <nav className="flex-1 overflow-y-auto px-3 pb-4">
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
         {departments.length === 0 ? (
-          <p className="text-sm text-white/80">Loading departments…</p>
+          <p className="text-sm text-white/80">{t('sidebar.loading', language)}</p>
         ) : (
-        <ul className="space-y-2">
-          {departments.map((dept) => {
-            const isSelected = dept.id === selectedId;
-            const count = countByDepartmentId[dept.id];
-            const Icon = getDepartmentIcon(dept.code, dept.name);
+          <ul className="space-y-3">
+            {departments
+              // Hide extra aggregate ICDS (Anganwadi) department entry
+              .filter((dept) => dept.name !== 'ICDS (Anganwadi)')
+              .map((dept) => {
+              const isSelected = dept.id === selectedId;
+              const count = countByDepartmentId[dept.id];
+              const Icon = getDepartmentIcon(dept.code, dept.name);
 
-            return (
-              <li key={dept.id}>
-                <button
-                  type="button"
-                  onClick={() => onSelect(dept)}
-                  className={`flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left transition ${
-                    isSelected
-                      ? 'border-[var(--color-selected)] bg-[var(--color-selected)] text-white shadow'
-                      : 'border-gray-200 bg-white text-[var(--color-primary)] hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <span
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-                      isSelected ? 'bg-white/20' : 'bg-orange-100'
+              return (
+                <li key={dept.id}>
+                  <button
+                    type="button"
+                    onClick={() => onSelect(dept)}
+                    className={`flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left shadow-sm transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-emerald-600 text-white shadow-md'
+                        : 'bg-white/95 text-orange-800 hover:bg-white hover:shadow-md'
                     }`}
                   >
-                    <Icon className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-[var(--color-primary)]'}`} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className={`font-medium ${isSelected ? 'text-white' : 'text-gray-900'}`}>
-                      {dept.name}
-                    </p>
-                    <p className={`text-sm ${isSelected ? 'text-white/90' : 'text-gray-500'}`}>
-                      {count != null ? `${count} ${countLabel}` : '–'}
-                    </p>
-                  </div>
-                  {isSelected ? (
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/30">
-                      <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    <span
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                        isSelected ? 'bg-white/20' : 'bg-orange-100'
+                      }`}
+                    >
+                      <Icon className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-orange-600'}`} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-slate-900'}`}>
+                        {dept.name}
+                      </p>
+                      {count != null && (
+                        <p className={`mt-0.5 text-xs ${isSelected ? 'text-emerald-50' : 'text-slate-500'}`}>
+                          {count} {countLabel}
+                        </p>
+                      )}
+                    </div>
+                    {count != null && (
+                      <span
+                        className={`ml-1 inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                          isSelected ? 'bg-white/20 text-white' : 'bg-orange-50 text-orange-700'
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    )}
+                    <span className={isSelected ? 'text-emerald-50' : 'text-slate-400'}>
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </span>
-                  ) : (
-                    <span className="text-gray-400">
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </span>
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </nav>
     </div>
