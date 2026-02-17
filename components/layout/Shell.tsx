@@ -2,6 +2,8 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import { Navbar } from './Navbar';
+import { useLanguage } from '../i18n/LanguageContext';
+import { t } from '../i18n/messages';
 
 interface ShellProps {
   sidebar: ReactNode;
@@ -13,6 +15,7 @@ const SIDEBAR_WIDTH = 300;
 export function Shell({ sidebar, children }: ShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const { language } = useLanguage();
 
   useEffect(() => {
     setMounted(true);
@@ -32,10 +35,10 @@ export function Shell({ sidebar, children }: ShellProps) {
       <Navbar />
 
       <div className="relative flex min-h-0 flex-1">
-        {/* Sidebar: desktop = collapsible rail; mobile = fixed overlay drawer (below full navbar) */}
+        {/* Sidebar: desktop = collapsible rail; mobile = fixed overlay drawer (below full navbar + top bar) */}
         <aside
           className={`flex shrink-0 flex-col overflow-hidden bg-[var(--color-sidebar-solid)] transition-all duration-200 ease-out ${
-            sidebarAsOverlay ? 'fixed left-0 top-24 z-30 h-[calc(100vh-6rem)] shadow-xl' : 'md:relative'
+            sidebarAsOverlay ? 'fixed left-0 top-32 z-30 h-[calc(100vh-8rem)] shadow-xl' : 'md:relative'
           }`}
           style={{
             width: sidebarOpen ? (sidebarAsOverlay ? 'min(300px, 90vw)' : SIDEBAR_WIDTH) : 0,
@@ -82,9 +85,9 @@ export function Shell({ sidebar, children }: ShellProps) {
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="fixed left-0 top-24 z-10 flex items-center gap-2 rounded-r-lg bg-[var(--color-sidebar-solid)] px-3 py-2.5 text-sm font-medium text-white shadow-lg"
+            className="fixed left-0 top-32 z-10 flex items-center gap-2 rounded-r-lg bg-[var(--color-sidebar-solid)] px-3 py-2.5 text-sm font-medium text-white shadow-lg"
           >
-            Departments
+            {t('shell.departmentsTab', language)}
           </button>
         )}
 
