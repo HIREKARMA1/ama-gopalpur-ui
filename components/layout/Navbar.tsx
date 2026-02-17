@@ -16,7 +16,7 @@ export function Navbar() {
       {/* Top government bar */}
       <div className="flex h-8 items-center justify-between bg-neutral-800 px-3 text-[11px] text-neutral-100 sm:px-6 lg:px-10">
         <div className="flex items-center gap-2">
-          <span className="font-medium tracking-wide">Government of Odisha</span>
+          <span className="font-medium tracking-wide">Government of Odisha</span>  
           <span className="hidden text-neutral-300 sm:inline">ଓଡ଼ିଶା ସରକାର</span>
         </div>
         <button
@@ -46,7 +46,7 @@ export function Navbar() {
             </div>
             <div className="min-w-0">
               <span className="block truncate text-xl font-extrabold tracking-tight text-white sm:text-2xl">
-                AMA GOPALPUR
+                {t('navbar.title', language)}
               </span>
               <span className="hidden truncate text-sm font-semibold text-orange-100 sm:text-base sm:block">
                 {t('navbar.tagline', language)}
@@ -57,7 +57,7 @@ export function Navbar() {
             <div className="flex min-w-0 shrink items-center gap-2 px-2 py-1.5 sm:gap-4 sm:px-4 sm:py-2">
               <div className="hidden min-w-0 shrink text-right sm:block">
                 <p className="truncate text-lg font-extrabold leading-tight text-white sm:text-xl">
-                  Bibhuti Bhusan Jena
+                  {t('navbar.ministerName', language)}
                 </p>
                 <p className="truncate text-sm font-semibold leading-tight text-orange-100 sm:text-base">
                   {t('navbar.ministerSubtitle', language)}

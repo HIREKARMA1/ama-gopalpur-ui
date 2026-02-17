@@ -4,7 +4,9 @@ import type { Language } from './LanguageContext';
 export type MessageKey =
   | 'govBar.title'
   | 'govBar.subtitle'
+  | 'navbar.title'
   | 'navbar.tagline'
+  | 'navbar.ministerName'
   | 'navbar.ministerSubtitle'
   | 'sidebar.title'
   | 'sidebar.subtitle'
@@ -29,9 +31,17 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     en: 'Odisha Government',
     or: 'ଓଡିଶା ସରକାର',
   },
+  'navbar.title': {
+    en: 'AMA GOPALPUR',
+    or: 'ଆମ ଗୋପାଳପୁର',
+  },
   'navbar.tagline': {
     en: 'Constituency Dashboard',
     or: 'ବିଧାନସଭା କ୍ଷେତ୍ର ଡ୍ୟାସବୋର୍ଡ',
+  },
+  'navbar.ministerName': {
+    en: 'Bibhuti Bhusan Jena',
+    or: 'ବିଭୂତି ଭୂଷଣ ଜେନା',
   },
   'navbar.ministerSubtitle': {
     en: 'Cabinet Minister, Odisha',
