@@ -1,6 +1,8 @@
 'use client';
 import { Organization, CenterProfile } from '../../services/api';
 import { ImageSlider } from './ImageSlider';
+import { useLanguage } from '../i18n/LanguageContext';
+import { t } from '../i18n/messages';
 
 // Logical groups for portfolio tables – strictly from ICDS CSV
 const PROFILE_ROWS: { attribute: string; key: string }[] = [
@@ -58,15 +60,16 @@ export function AwcPortfolioDashboard({
   departmentName,
   images = [],
 }: AwcPortfolioDashboardProps) {
+  const { language } = useLanguage();
   const locationLine = [org.address, org.latitude != null && org.longitude != null ? `${org.latitude.toFixed(5)}, ${org.longitude.toFixed(5)}` : null]
     .filter(Boolean)
     .join(' · ') || null;
 
   const stats = [
-    { label: 'Student strength', value: getValue(org, awcProfile, 'student_strength') },
-    { label: 'CPDO name', value: getValue(org, awcProfile, 'cpdo_name') },
-    { label: 'Supervisor name', value: getValue(org, awcProfile, 'supervisor_name') },
-    { label: 'AWW name', value: getValue(org, awcProfile, 'worker_name') },
+    { label: t('awc.stat.studentStrength', language), value: getValue(org, awcProfile, 'student_strength') },
+    { label: t('awc.stat.cpdoName', language), value: getValue(org, awcProfile, 'cpdo_name') },
+    { label: t('awc.stat.supervisorName', language), value: getValue(org, awcProfile, 'supervisor_name') },
+    { label: t('awc.stat.awwName', language), value: getValue(org, awcProfile, 'worker_name') },
   ];
 
   return (
@@ -82,7 +85,7 @@ export function AwcPortfolioDashboard({
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-700">
-                Anganwadi Centre · AWC (ICDS)
+                {t('awc.badge', language)}
               </p>
               <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                 {org.name}
@@ -128,10 +131,10 @@ export function AwcPortfolioDashboard({
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 px-4 py-3">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
-                Centre profile
+                {t('awc.centreProfileTitle', language)}
               </h2>
               <p className="mt-0.5 text-xs text-slate-500">
-                Basic information about this Anganwadi centre.
+                {t('awc.centreProfileSubtitle', language)}
               </p>
             </div>
             <div className="overflow-x-auto">
@@ -159,10 +162,10 @@ export function AwcPortfolioDashboard({
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 px-4 py-3">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
-                Staff & contact
+                {t('awc.staffContactTitle', language)}
               </h2>
               <p className="mt-0.5 text-xs text-slate-500">
-                Key staff members and contact details for this centre.
+                {t('awc.staffContactSubtitle', language)}
               </p>
             </div>
             <div className="overflow-x-auto">

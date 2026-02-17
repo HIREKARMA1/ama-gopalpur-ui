@@ -1,6 +1,8 @@
 'use client';
 
 import { Department } from '../../services/api';
+import { useLanguage } from '../i18n/LanguageContext';
+import { t } from '../i18n/messages';
 
 /** Icon component: medical cross */
 function IconHealthcare({ className }: { className?: string }) {
@@ -94,18 +96,22 @@ export function DepartmentSidebar({
   countLabel = 'Total',
   onSelect,
 }: DepartmentSidebarProps) {
+  const { language } = useLanguage();
+
   return (
     <div className="flex h-full flex-col">
       <div className="shrink-0 border-b border-orange-600/30 px-4 py-5">
-        <h2 className="text-lg font-semibold tracking-tight text-white">Departments</h2>
+        <h2 className="text-lg font-semibold tracking-tight text-white">
+          {t('sidebar.title', language)}
+        </h2>
         <p className="mt-1.5 text-sm text-white/90">
-          Select a department to see its assets on the map.
+          {t('sidebar.subtitle', language)}
         </p>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         {departments.length === 0 ? (
-          <p className="text-sm text-white/80">Loading departments…</p>
+          <p className="text-sm text-white/80">{t('sidebar.loading', language)}</p>
         ) : (
         <ul className="space-y-2">
           {departments.map((dept) => {

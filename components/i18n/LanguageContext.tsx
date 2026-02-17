@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-type Language = 'en' | 'or';
+export type Language = 'en' | 'or';
 
 interface LanguageContextValue {
   language: Language;
@@ -29,6 +29,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLanguageState(lang);
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(STORAGE_KEY, lang);
+      window.location.reload();
     }
   };
 

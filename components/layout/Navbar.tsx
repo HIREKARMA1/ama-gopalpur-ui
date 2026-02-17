@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '../i18n/LanguageContext';
+import { t } from '../i18n/messages';
 
 const MINISTER_IMAGE_URL = 'https://ama-gopalpur.s3.ap-south-1.amazonaws.com/Bibhuti_Bhusan_Jena.png';
 
@@ -16,7 +17,7 @@ export function Navbar() {
       <div className="flex h-8 items-center justify-between bg-neutral-800 px-3 text-[11px] text-neutral-100 sm:px-6 lg:px-10">
         <div className="flex items-center gap-2">
           <span className="font-medium tracking-wide">Government of Odisha</span>
-          <span className="hidden text-neutral-300 sm:inline">| ଓଡିଶା ସରକାର</span>
+          <span className="hidden text-neutral-300 sm:inline">ଓଡ଼ିଶା ସରକାର</span>
         </div>
         <button
           type="button"
@@ -48,7 +49,7 @@ export function Navbar() {
                 AMA GOPALPUR
               </span>
               <span className="hidden truncate text-sm font-semibold text-orange-100 sm:text-base sm:block">
-                Constituency Dashboard
+                {t('navbar.tagline', language)}
               </span>
             </div>
           </Link>
@@ -59,7 +60,7 @@ export function Navbar() {
                   Bibhuti Bhusan Jena
                 </p>
                 <p className="truncate text-sm font-semibold leading-tight text-orange-100 sm:text-base">
-                  Cabinet Minister, Odisha
+                  {t('navbar.ministerSubtitle', language)}
                 </p>
               </div>
               {/* Rectangular minister image - contained, no overflow */}
