@@ -96,16 +96,14 @@ export function DepartmentSidebar({
 }: DepartmentSidebarProps) {
   return (
     <div className="flex h-full flex-col">
-      {/* Header - white text on orange */}
-      <div className="shrink-0 px-4 py-5">
-        <h2 className="text-lg font-semibold text-white">Departments</h2>
-        <p className="mt-1 text-sm text-white/90">
-          Select a department to visualize assets on the map.
+      <div className="shrink-0 border-b border-orange-600/30 px-4 py-5">
+        <h2 className="text-lg font-semibold tracking-tight text-white">Departments</h2>
+        <p className="mt-1.5 text-sm text-white/90">
+          Select a department to see its assets on the map.
         </p>
       </div>
 
-      {/* Department cards - scrollable */}
-      <nav className="flex-1 overflow-y-auto px-3 pb-4">
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
         {departments.length === 0 ? (
           <p className="text-sm text-white/80">Loading departments…</p>
         ) : (
@@ -120,10 +118,10 @@ export function DepartmentSidebar({
                 <button
                   type="button"
                   onClick={() => onSelect(dept)}
-                  className={`flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left transition ${
+                  className={`flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-all duration-200 ${
                     isSelected
-                      ? 'border-[var(--color-selected)] bg-[var(--color-selected)] text-white shadow'
-                      : 'border-gray-200 bg-white text-[var(--color-primary)] hover:border-gray-300 hover:bg-gray-50'
+                      ? 'border-emerald-600 bg-emerald-600 text-white shadow-md'
+                      : 'border-white/30 bg-white/95 text-orange-700 hover:border-white hover:bg-white hover:shadow'
                   }`}
                 >
                   <span
@@ -131,7 +129,7 @@ export function DepartmentSidebar({
                       isSelected ? 'bg-white/20' : 'bg-orange-100'
                     }`}
                   >
-                    <Icon className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-[var(--color-primary)]'}`} />
+                    <Icon className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-orange-600'}`} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className={`font-medium ${isSelected ? 'text-white' : 'text-gray-900'}`}>
