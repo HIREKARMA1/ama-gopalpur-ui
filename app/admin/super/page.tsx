@@ -147,11 +147,13 @@ export default function SuperAdminPage() {
                 }
               >
                 <option value="">Select department</option>
-                {departments.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name} ({d.code})
-                  </option>
-                ))}
+                {departments
+                  .filter((d) => d.code !== 'ICDS')
+                  .map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name} ({d.code})
+                    </option>
+                  ))}
               </select>
             </div>
           </div>
