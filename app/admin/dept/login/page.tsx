@@ -2,10 +2,14 @@
 
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import { Navbar } from '../../../../components/layout/Navbar';
+import { useLanguage } from '../../../../components/i18n/LanguageContext';
+import { t } from '../../../../components/i18n/messages';
 import { authApi, setToken, clearToken } from '../../../../services/api';
 
 export default function DeptAdminLoginPage() {
   const router = useRouter();
+  const { language } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -22,56 +26,77 @@ export default function DeptAdminLoginPage() {
       const me = await authApi.me();
       if (me.role !== 'DEPT_ADMIN') {
         clearToken();
-        setError('This login is only for department admins. Use super admin login instead.');
+        setError(t('login.error.deptOnly', language));
         return;
       }
       router.push('/admin/dept');
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t('login.error.failed', language));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="page-container items-center justify-center">
-      <div className="w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-sm">
-        <h1 className="text-lg font-semibold text-text">Department admin login</h1>
-        <p className="mt-1 text-xs text-text-muted">
-          Use your department admin credentials to manage organizations for your department.
-        </p>
-        <form className="mt-4 space-y-3" onSubmit={onSubmit}>
-          <div className="space-y-1 text-sm">
-            <label className="block text-text">Email</label>
-            <input
-              type="email"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <Navbar />
+      <main className="flex flex-1 flex-col items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md">
+          <div className="rounded-2xl border border-orange-200/80 bg-orange-500/5 shadow-lg overflow-hidden">
+            <div className="border-b border-orange-200/60 bg-orange-500/10 px-6 py-4">
+              <h1 className="text-xl font-bold text-orange-900">
+                {t('login.dept.title', language)}
+              </h1>
+              <p className="mt-1 text-sm text-slate-600">
+                {t('login.dept.subtitle', language)}
+              </p>
+            </div>
+            <form className="p-6 space-y-4" onSubmit={onSubmit}>
+              <div className="space-y-2">
+                <label htmlFor="dept-login-email" className="block text-sm font-medium text-slate-700">
+                  {t('login.email', language)}
+                </label>
+                <input
+                  id="dept-login-email"
+                  type="email"
+                  autoComplete="email"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+                  placeholder="admin@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="dept-login-password" className="block text-sm font-medium text-slate-700">
+                  {t('login.password', language)}
+                </label>
+                <input
+                  id="dept-login-password"
+                  type="password"
+                  autoComplete="current-password"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {error && (
+                <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 border border-red-200/80">
+                  {error}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-2 w-full rounded-xl bg-orange-600 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-60 disabled:pointer-events-none"
+              >
+                {loading ? t('login.signingIn', language) : t('login.signIn', language)}
+              </button>
+            </form>
           </div>
-          <div className="space-y-1 text-sm">
-            <label className="block text-text">Password</label>
-            <input
-              type="password"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          {error && <p className="text-xs text-red-500">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-2 w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
-

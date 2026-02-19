@@ -56,7 +56,15 @@ export type MessageKey =
   | 'health.stat.beds'
   | 'health.stat.icuBeds'
   | 'health.staffTitle'
-  | 'health.staffSubtitle';
+  | 'health.staffSubtitle'
+  | 'login.dept.title'
+  | 'login.dept.subtitle'
+  | 'login.email'
+  | 'login.password'
+  | 'login.signIn'
+  | 'login.signingIn'
+  | 'login.error.deptOnly'
+  | 'login.error.failed';
 
 const messages: Record<MessageKey, { en: string; or: string }> = {
   'govBar.title': {
@@ -219,7 +227,7 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   },
   'health.infraTitle': {
     en: 'Infrastructure',
-    or: 'ଅବକାଠା',
+    or: 'ଭିତ୍ତି ସଂରଚନା',
   },
   'health.infraSubtitle': {
     en: 'Beds, ICU and key clinical facilities.',
@@ -248,6 +256,38 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'health.staffSubtitle': {
     en: 'Medical officers, nurses and support staff.',
     or: 'ଚିକିତ୍ସା ଅଧିକାରୀ, ନର୍ସ ଏବଂ ସହାୟକ କର୍ମଚାରୀ।',
+  },
+  'login.dept.title': {
+    en: 'Department admin login',
+    or: 'ବିଭାଗ ପ୍ରଶାସକ ଲଗଇନ୍',
+  },
+  'login.dept.subtitle': {
+    en: 'Use your department admin credentials to manage organizations for your department.',
+    or: 'ଆପଣଙ୍କ ବିଭାଗର ସଂସ୍ଥାଗୁଡିକ ପରିଚାଳନା କରିବାକୁ ବିଭାଗ ପ୍ରଶାସକ ପ୍ରମାଣପତ୍ର ବ୍ୟବହାର କରନ୍ତୁ।',
+  },
+  'login.email': {
+    en: 'Email',
+    or: 'ଇମେଲ୍',
+  },
+  'login.password': {
+    en: 'Password',
+    or: 'ପାସୱାର୍ଡ',
+  },
+  'login.signIn': {
+    en: 'Sign in',
+    or: 'ସାଇନ୍ ଇନ୍ କରନ୍ତୁ',
+  },
+  'login.signingIn': {
+    en: 'Signing in…',
+    or: 'ସାଇନ୍ ଇନ୍ ହେଉଛି…',
+  },
+  'login.error.deptOnly': {
+    en: 'This login is only for department admins. Use super admin login instead.',
+    or: 'ଏହା କେବଳ ବିଭାଗ ପ୍ରଶାସକଙ୍କ ପାଇଁ। ବଦଳରେ ସୁପର ଆଡମିନ୍ ଲଗଇନ୍ ବ୍ୟବହାର କରନ୍ତୁ।',
+  },
+  'login.error.failed': {
+    en: 'Login failed',
+    or: 'ଲଗଇନ୍ ବିଫଳ ହେଲା',
   },
 };
 
