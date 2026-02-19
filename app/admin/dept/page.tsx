@@ -13,7 +13,7 @@ const ICDS_CSV_HEADER =
 const EDUCATION_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF SCHOOL,SCHOOL ID,ESST YEAR,CATEGORY,I,II,III,IV,V,VI,VII,VIII,IX,X,DEO NAME,DEO CONTACT,BEO NAME,BEO CONTACT,BRCC NAME,BRCC CONTACT,CRCC NAME,CRCC CONTACT,NAME OF HM,CONTACT OF HM,NO OF TS,NO OF NTS,NO OF TGP(PCM),NO OF TGP(CBZ),NO OF TGT(ARTS),BUILDING STATUS,NO OF ROOMS,NO OF SMART CLASS ROOMS,SCIENCE LAB,TOILET(M),TOILET(F),RAMP,MEETING HALL,STAFF COMMON ROOM,NCC,NSS,JRC,ECO CLUB,LIBRARY,ICC HEAD NAME,ICC HEAD CONTACT,PLAY GROUND,CYCLE STAND,DRINKING WATER(TW),DRINKING WATER(TAP),DRINKING WATER(OVERHEAD TAP),DRINKING WATER(AQUAGUARD),LATITUDE,LONGITUDE,DESCRIPTION\n';
 const HEALTH_CSV_HEADER =
-  'BLOCK/ULB,GP/WARD,VILLAGE,LATITUDE,LONGITUDE,NAME,CATEGORY,INST HEAD NAME,INST HEAD CONTACT,NO OF TS,NO OF NTS,NO OF MO,NO OF PHARMACIST,NO OF ANM,NO OF HEALTH WORKER,NO OF PATHOLOGY,NO OF CLERK,NO OF SWEEPER,NO OF NW,NO OF BED,NO OF ICU,X-RAY AVAILABILTY,CT-SCAN AVAILABILITY,AVAILABILITY OF PATHOLOGY TESTING,DESCRIPTION\n';
+  'BLOCK/ULB,GP/WARD,VILLAGE,LATITUDE,LONGITUDE,NAME,INSTITUTION ID,CATEGORY,INST HEAD NAME,INST HEAD CONTACT,NO OF TS,NO OF NTS,NO OF MO,NO OF PHARMACIST,NO OF ANM,NO OF HEALTH WORKER,NO OF PATHOLOGY,NO OF CLERK,NO OF SWEEPER,NO OF NW,NO OF BED,NO OF ICU,X-RAY AVAILABILTY,CT-SCAN AVAILABILITY,AVAILABILITY OF PATHOLOGY TESTING,DESCRIPTION\n';
 
 export default function DepartmentAdminPage() {
   const router = useRouter();
@@ -63,7 +63,7 @@ export default function DepartmentAdminPage() {
     no_of_bed: '', no_of_icu: '', x_ray_availabilaty: '', ct_scan_availability: '', availability_of_pathology_testing: '', description: '',
   });
   const emptyHealthOrg = () => ({
-    block_ulb: '', gp_ward: '', village: '', latitude: '', longitude: '', name: '', category: '',
+    block_ulb: '', gp_ward: '', village: '', latitude: '', longitude: '', name: '', institution_id: '', category: '',
     inst_head_name: '', inst_head_contact: '', no_of_ts: '', no_of_nts: '', no_of_mo: '', no_of_pharmacist: '',
     no_of_anm: '', no_of_health_worker: '', no_of_pathology: '', no_of_clerk: '', no_of_sweeper: '', no_of_nw: '',
     no_of_bed: '', no_of_icu: '', x_ray_availabilaty: '', ct_scan_availability: '', availability_of_pathology_testing: '', description: '',
@@ -721,6 +721,7 @@ export default function DepartmentAdminPage() {
                   latitude: lat,
                   longitude: lng,
                   name: newHealthOrg.name.trim(),
+                  institution_id: _s(newHealthOrg.institution_id),
                   category: _s(newHealthOrg.category),
                   inst_head_name: _s(newHealthOrg.inst_head_name),
                   inst_head_contact: _s(newHealthOrg.inst_head_contact),
@@ -766,6 +767,10 @@ export default function DepartmentAdminPage() {
             <div className="space-y-1">
               <label className="block text-text">Name</label>
               <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.name} onChange={(e) => setNewHealthOrg((s) => ({ ...s, name: e.target.value }))} required />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-text">Institution ID</label>
+              <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.institution_id} onChange={(e) => setNewHealthOrg((s) => ({ ...s, institution_id: e.target.value }))} />
             </div>
             <div className="space-y-1">
               <label className="block text-text">Latitude</label>
@@ -993,6 +998,7 @@ export default function DepartmentAdminPage() {
                       <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
                       <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
                       <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Village</th>
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Institution ID</th>
                       <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Category</th>
                       <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Inst Head Name</th>
                       <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Inst Head Contact</th>
@@ -1114,6 +1120,7 @@ export default function DepartmentAdminPage() {
                         <td className="px-2 py-1 text-text-muted">{_(hp?.block_ulb ?? o.attributes?.ulb_block)}</td>
                         <td className="px-2 py-1 text-text-muted">{_(hp?.gp_ward ?? o.attributes?.gp_name)}</td>
                         <td className="px-2 py-1 text-text-muted">{_(hp?.village ?? o.attributes?.ward_village)}</td>
+                        <td className="px-2 py-1 text-text-muted">{_(hp?.institution_id)}</td>
                         <td className="px-2 py-1 text-text-muted">{_(hp?.category)}</td>
                         <td className="px-2 py-1 text-text-muted">{_(hp?.inst_head_name)}</td>
                         <td className="px-2 py-1 text-text-muted">{_(hp?.inst_head_contact)}</td>
@@ -1232,6 +1239,7 @@ export default function DepartmentAdminPage() {
                             latitude: o.latitude != null ? String(o.latitude) : '',
                             longitude: o.longitude != null ? String(o.longitude) : '',
                             name: v(p?.name ?? o.name),
+                            institution_id: v(p?.institution_id),
                             category: v(p?.category),
                             inst_head_name: v(p?.inst_head_name),
                             inst_head_contact: v(p?.inst_head_contact),
@@ -1271,7 +1279,7 @@ export default function DepartmentAdminPage() {
                 })}
                 {!orgs.length && (
                   <tr>
-                    <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 21 : deptCode === 'HEALTH' ? 26 : deptCode === 'EDUCATION' ? 61 : 10}>
+                    <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 21 : deptCode === 'HEALTH' ? 27 : deptCode === 'EDUCATION' ? 61 : 10}>
                       No organizations yet for your department.
                     </td>
                   </tr>
