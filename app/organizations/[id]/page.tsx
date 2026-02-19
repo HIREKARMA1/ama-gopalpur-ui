@@ -284,6 +284,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
     const galleryImages = Array.isArray((educationProfile as any)?.gallery_images)
       ? ((educationProfile as any).gallery_images as string[])
       : [];
+    const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
     return (
       <div className="page-container">
         <Navbar />
@@ -293,7 +294,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           infra={eduInfra}
           educationProfile={educationProfile}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
-          images={galleryImages}
+          images={images}
         />
       </div>
     );
@@ -303,6 +304,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
     const galleryImages = Array.isArray((healthProfile as any)?.gallery_images)
       ? ((healthProfile as any).gallery_images as string[])
       : [];
+    const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
     return (
       <div className="page-container">
         <Navbar />
@@ -313,7 +315,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           healthProfile={healthProfile}
           staff={healthStaff}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
-          images={galleryImages}
+          images={images}
         />
       </div>
     );
@@ -323,6 +325,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
     const galleryImages = Array.isArray((awcProfile as Record<string, unknown>)?.gallery_images)
       ? ((awcProfile as Record<string, unknown>).gallery_images as string[]).filter((u): u is string => typeof u === 'string')
       : [];
+    const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
     return (
       <div className="page-container">
         <Navbar />
@@ -330,7 +333,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           org={org}
           awcProfile={awcProfile}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
-          images={galleryImages}
+          images={images}
         />
       </div>
     );

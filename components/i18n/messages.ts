@@ -11,7 +11,23 @@ export type MessageKey =
   | 'sidebar.title'
   | 'sidebar.subtitle'
   | 'sidebar.loading'
+  | 'sidebar.total'
+  | 'dept.education'
+  | 'dept.health'
+  | 'dept.icds'
   | 'shell.departmentsTab'
+  | 'map.legend'
+  | 'map.viewProfile'
+  | 'map.edu.primarySchool'
+  | 'map.edu.upperPrimarySchool'
+  | 'map.edu.highSchool'
+  | 'map.edu.higherSecondary'
+  | 'map.edu.college'
+  | 'map.edu.university'
+  | 'map.health.hospital'
+  | 'map.health.healthCentre'
+  | 'map.health.other'
+  | 'map.awc.label'
   | 'awc.badge'
   | 'awc.centreProfileTitle'
   | 'awc.centreProfileSubtitle'
@@ -79,6 +95,40 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     en: 'Loading departments…',
     or: 'ବିଭାଗ ଲୋଡ୍ ହେଉଛି…',
   },
+  'sidebar.total': {
+    en: 'Total',
+    or: 'ମୋଟ',
+  },
+  'dept.education': {
+    en: 'Education',
+    or: 'ଶିକ୍ଷା',
+  },
+  'dept.health': {
+    en: 'Health',
+    or: 'ସ୍ୱାସ୍ଥ୍ୟ',
+  },
+  'dept.icds': {
+    en: 'ICDS',
+    or: 'ଆଇ.ସି.ଡି.ଏସ୍',
+  },
+  'map.legend': {
+    en: 'Legend',
+    or: 'ସୂଚନା',
+  },
+  'map.viewProfile': {
+    en: 'View profile',
+    or: 'ପ୍ରୋଫାଇଲ୍ ଦେଖନ୍ତୁ',
+  },
+  'map.edu.primarySchool': { en: 'Primary School', or: 'ପ୍ରାଥମିକ ବିଦ୍ୟାଳୟ' },
+  'map.edu.upperPrimarySchool': { en: 'Upper Primary School', or: 'ଉଚ୍ଚ ପ୍ରାଥମିକ ବିଦ୍ୟାଳୟ' },
+  'map.edu.highSchool': { en: 'High School', or: 'ହାଇସ୍କୁଲ୍' },
+  'map.edu.higherSecondary': { en: 'Higher Secondary', or: 'ଉଚ୍ଚ ମାଧ୍ୟମିକ' },
+  'map.edu.college': { en: 'College', or: 'ମହାବିଦ୍ୟାଳୟ' },
+  'map.edu.university': { en: 'University', or: 'ବିଶ୍ୱବିଦ୍ୟାଳୟ' },
+  'map.health.hospital': { en: 'Hospital', or: 'ଡାକ୍ତରଖାନା' },
+  'map.health.healthCentre': { en: 'Health Centre', or: 'ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
+  'map.health.other': { en: 'Other', or: 'ଅନ୍ୟ' },
+  'map.awc.label': { en: 'Anganwadi Centre (AWC)', or: 'ଆଙ୍ଗନୱାଡି କେନ୍ଦ୍ର (AWC)' },
   'shell.departmentsTab': {
     en: 'Departments',
     or: 'ବିଭାଗ',

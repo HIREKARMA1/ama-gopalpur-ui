@@ -92,6 +92,8 @@ export interface Organization {
   longitude?: number | null;
   address?: string | null;
   attributes?: Record<string, string | number | null> | null;
+  /** Public URL of cover/profile image, when set */
+  cover_image_key?: string | null;
 }
 
 export const departmentsApi = {
@@ -137,6 +139,18 @@ export const organizationsApi = {
     apiFetch<Organization>(`/api/v1/organizations/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(payload),
+    }),
+  uploadCoverImage: (id: number, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<Organization>(`/api/v1/organizations/${id}/cover-image`, {
+      method: 'POST',
+      body: form,
+    });
+  },
+  deleteCoverImage: (id: number) =>
+    apiFetch<Organization>(`/api/v1/organizations/${id}/cover-image`, {
+      method: 'DELETE',
     }),
 };
 
