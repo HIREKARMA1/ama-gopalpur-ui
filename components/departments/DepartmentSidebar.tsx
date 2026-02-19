@@ -1,8 +1,21 @@
 'use client';
 
+import type { MessageKey } from '../i18n/messages';
 import { Department } from '../../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
+
+const DEPT_MESSAGE_KEYS: Record<string, MessageKey> = {
+  EDUCATION: 'dept.education',
+  HEALTH: 'dept.health',
+  ICDS: 'dept.icds',
+  AWC_ICDS: 'dept.icds',
+};
+
+function getDepartmentLabel(dept: Department, language: 'en' | 'or'): string {
+  const key = DEPT_MESSAGE_KEYS[dept.code?.toUpperCase() ?? ''];
+  return key ? t(key, language) : dept.name;
+}
 
 /** Icon component: medical cross */
 function IconHealthcare({ className }: { className?: string }) {
@@ -143,11 +156,11 @@ export function DepartmentSidebar({
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-slate-900'}`}>
-                        {dept.name}
+                        {getDepartmentLabel(dept, language)}
                       </p>
                       {count != null && (
                         <p className={`mt-0.5 text-xs ${isSelected ? 'text-emerald-50' : 'text-slate-500'}`}>
-                          {count} {countLabel}
+                          {count} {language === 'or' ? t('sidebar.total', language) : countLabel}
                         </p>
                       )}
                     </div>

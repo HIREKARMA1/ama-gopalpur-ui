@@ -14,10 +14,26 @@ import {
   EDUCATION_MARKER_ICONS,
   EDUCATION_TYPE_LABELS,
   AWC_MARKER_ICON,
-  AWC_TYPE_LABEL,
   HEALTH_MARKER_ICONS,
   HEALTH_TYPE_LABELS,
 } from '../../lib/mapConfig';
+import type { MessageKey } from '../i18n/messages';
+import { useLanguage } from '../i18n/LanguageContext';
+import { t } from '../i18n/messages';
+
+const EDUCATION_TYPE_KEYS: Record<string, MessageKey> = {
+  PRIMARY_SCHOOL: 'map.edu.primarySchool',
+  UPPER_PRIMARY_SCHOOL: 'map.edu.upperPrimarySchool',
+  HIGH_SCHOOL: 'map.edu.highSchool',
+  HIGHER_SECONDARY: 'map.edu.higherSecondary',
+  COLLEGE: 'map.edu.college',
+  UNIVERSITY: 'map.edu.university',
+};
+const HEALTH_TYPE_KEYS: Record<string, MessageKey> = {
+  HOSPITAL: 'map.health.hospital',
+  HEALTH_CENTRE: 'map.health.healthCentre',
+  OTHER: 'map.health.other',
+};
 
 export interface MapOrganization {
   id: number;
@@ -45,11 +61,20 @@ export function ConstituencyMap({
   organizations = [],
   onSelectOrganization,
 }: ConstituencyMapProps) {
+  const { language } = useLanguage();
   const [infoWindowOrg, setInfoWindowOrg] = useState<MapOrganization | null>(null);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
+  /** Load map in Odia when user has selected Odia. Read from localStorage so we use Odia on first paint after reload (context updates only in useEffect). Fixed at first mount so useJsApiLoader is never called with different options. */
+  const [mapLanguage] = useState<'en' | 'or'>(() => {
+    if (typeof window === 'undefined') return 'en';
+    const stored = window.localStorage.getItem('ama_gopalpur_language');
+    return stored === 'or' ? 'or' : 'en';
+  });
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: apiKey,
+    language: mapLanguage,
+    region: 'IN',
   });
 
   /** Only organizations with valid coordinates */
@@ -107,12 +132,19 @@ export function ConstituencyMap({
     return 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
   }, [selectedDepartmentCode]);
 
-  const getTypeLabel = useCallback((type: string) => {
-    if (type === 'AWC') return AWC_TYPE_LABEL;
-    const code = selectedDepartmentCode?.toUpperCase();
-    if (code === 'HEALTH') return HEALTH_TYPE_LABELS[type] || type.replace(/_/g, ' ');
-    return EDUCATION_TYPE_LABELS[type] || type.replace(/_/g, ' ');
-  }, [selectedDepartmentCode]);
+  const getTypeLabel = useCallback(
+    (type: string, lang: 'en' | 'or' = language) => {
+      if (type === 'AWC') return t('map.awc.label', lang);
+      const code = selectedDepartmentCode?.toUpperCase();
+      if (code === 'HEALTH') {
+        const key = HEALTH_TYPE_KEYS[type];
+        return key ? t(key, lang) : HEALTH_TYPE_LABELS[type] || type.replace(/_/g, ' ');
+      }
+      const eduKey = EDUCATION_TYPE_KEYS[type];
+      return eduKey ? t(eduKey, lang) : EDUCATION_TYPE_LABELS[type] || type.replace(/_/g, ' ');
+    },
+    [selectedDepartmentCode, language]
+  );
 
   if (!apiKey) {
     return (
@@ -178,7 +210,7 @@ export function ConstituencyMap({
             <div className="min-w-[180px] max-w-[260px] py-1">
               <p className="font-semibold text-gray-900">{infoWindowOrg.name}</p>
               <p className="text-xs text-gray-600">
-                {getTypeLabel(infoWindowOrg.type)}
+                {getTypeLabel(infoWindowOrg.type, language)}
               </p>
               {infoWindowOrg.type === 'AWC' && infoWindowOrg.attributes && (
                 <p className="mt-1 text-xs text-gray-500">
@@ -200,7 +232,7 @@ export function ConstituencyMap({
                     setInfoWindowOrg(null);
                   }}
                 >
-                  View profile
+                  {t('map.viewProfile', language)}
                 </button>
               )}
             </div>
@@ -209,9 +241,9 @@ export function ConstituencyMap({
       </GoogleMap>
       {selectedDepartmentCode?.toUpperCase() === 'EDUCATION' && orgsWithLocation.length > 0 && (
         <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[200px]">
-          <p className="font-medium text-text">Legend</p>
+          <p className="font-medium text-text">{t('map.legend', language)}</p>
           <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-text-muted">
-            {Object.entries(EDUCATION_TYPE_LABELS).map(([type, label]) => (
+            {Object.entries(EDUCATION_TYPE_LABELS).map(([type]) => (
               <li key={type} className="flex items-center gap-1">
                 <span
                   className="inline-block h-2 w-2 rounded-full"
@@ -230,7 +262,7 @@ export function ConstituencyMap({
                                 : '#f9ab00',
                   }}
                 />
-                {label}
+                {getTypeLabel(type, language)}
               </li>
             ))}
           </ul>
@@ -238,18 +270,18 @@ export function ConstituencyMap({
       )}
       {(selectedDepartmentCode?.toUpperCase() === 'AWC_ICDS' || selectedDepartmentCode?.toUpperCase() === 'ICDS') && orgsWithLocation.length > 0 && (
         <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[200px]">
-          <p className="font-medium text-text">Legend</p>
+          <p className="font-medium text-text">{t('map.legend', language)}</p>
           <p className="mt-1 flex items-center gap-1 text-text-muted">
             <span className="inline-block h-2 w-2 rounded-full bg-pink-500" />
-            {AWC_TYPE_LABEL}
+            {t('map.awc.label', language)}
           </p>
         </div>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'HEALTH' && orgsWithLocation.length > 0 && (
         <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[200px]">
-          <p className="font-medium text-text">Legend</p>
+          <p className="font-medium text-text">{t('map.legend', language)}</p>
           <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-text-muted">
-            {Object.entries(HEALTH_TYPE_LABELS).map(([type, label]) => (
+            {Object.entries(HEALTH_TYPE_LABELS).map(([type]) => (
               <li key={type} className="flex items-center gap-1">
                 <span
                   className="inline-block h-2 w-2 rounded-full"
@@ -258,7 +290,7 @@ export function ConstituencyMap({
                       type === 'HOSPITAL' ? '#ea4335' : type === 'HEALTH_CENTRE' ? '#4285f4' : '#34a853',
                   }}
                 />
-                {label}
+                {getTypeLabel(type, language)}
               </li>
             ))}
           </ul>
