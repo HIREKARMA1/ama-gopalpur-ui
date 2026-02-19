@@ -80,11 +80,11 @@ export function AwcPortfolioDashboard({
       </section>
 
       {/* Header: title + meta */}
-      <header className="border-b border-slate-200 bg-white px-4 pb-4 pt-6 shadow-sm sm:px-6 lg:px-10">
+      <header className="border-b border-slate-200/80 bg-white/80 px-4 pb-4 pt-6 shadow-sm backdrop-blur-sm sm:px-6 lg:px-10">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-700">
+              <p className="inline-flex items-center rounded-full bg-orange-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-700">
                 {t('awc.badge', language)}
               </p>
               <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
@@ -98,8 +98,8 @@ export function AwcPortfolioDashboard({
               )}
             </div>
             {awcProfile?.center_code && (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                <div className="font-semibold text-slate-700">Centre code</div>
+              <div className="rounded-xl border border-amber-200/80 bg-amber-500/10 px-3 py-2 text-xs text-slate-600 shadow-sm">
+                <div className="font-semibold text-amber-800/90">Centre code</div>
                 <div className="mt-0.5 text-sm font-mono text-slate-900">
                   {awcProfile.center_code}
                 </div>
@@ -109,31 +109,39 @@ export function AwcPortfolioDashboard({
         </div>
       </header>
 
-      {/* Stats cards */}
+      {/* Stats cards – each with a distinct transparent tint */}
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-10">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {stats.map(({ label, value }) => (
-            <div
-              key={label}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow"
-            >
-              <p className="text-2xl font-bold text-slate-900">{formatVal(value)}</p>
-              <p className="mt-0.5 text-xs font-medium text-slate-600">{label}</p>
-            </div>
-          ))}
+          {stats.map(({ label, value }, i) => {
+            const tints = [
+              'border-amber-200/80 bg-amber-500/10 hover:bg-amber-500/15',
+              'border-emerald-200/80 bg-emerald-500/10 hover:bg-emerald-500/15',
+              'border-sky-200/80 bg-sky-500/10 hover:bg-sky-500/15',
+              'border-violet-200/80 bg-violet-500/10 hover:bg-violet-500/15',
+            ];
+            return (
+              <div
+                key={label}
+                className={`rounded-xl border p-4 shadow-sm transition ${tints[i % tints.length]}`}
+              >
+                <p className="text-2xl font-bold text-slate-900">{formatVal(value)}</p>
+                <p className="mt-0.5 text-xs font-medium text-slate-600">{label}</p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      {/* Portfolio details: grouped tables */}
+      {/* Portfolio details: grouped tables with distinct transparent sections */}
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-10">
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Profile table */}
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 px-4 py-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
+          {/* Centre profile – teal tint */}
+          <div className="rounded-xl border border-teal-200/80 bg-teal-500/5 shadow-sm overflow-hidden">
+            <div className="border-b border-teal-200/60 bg-teal-500/10 px-4 py-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-teal-800">
                 {t('awc.centreProfileTitle', language)}
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-xs text-slate-600">
                 {t('awc.centreProfileSubtitle', language)}
               </p>
             </div>
@@ -143,7 +151,7 @@ export function AwcPortfolioDashboard({
                   {PROFILE_ROWS.map(({ attribute, key }) => {
                     const value = getValue(org, awcProfile, key);
                     return (
-                      <tr key={key} className="border-b border-slate-100 last:border-0">
+                      <tr key={key} className="border-b border-slate-200/50 last:border-0 hover:bg-white/30 transition-colors">
                         <td className="w-1/3 px-4 py-2 font-medium text-slate-600">
                           {attribute}
                         </td>
@@ -158,13 +166,13 @@ export function AwcPortfolioDashboard({
             </div>
           </div>
 
-          {/* Contact & staff table */}
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 px-4 py-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
+          {/* Staff & contact – indigo tint */}
+          <div className="rounded-xl border border-indigo-200/80 bg-indigo-500/5 shadow-sm overflow-hidden">
+            <div className="border-b border-indigo-200/60 bg-indigo-500/10 px-4 py-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-800">
                 {t('awc.staffContactTitle', language)}
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-xs text-slate-600">
                 {t('awc.staffContactSubtitle', language)}
               </p>
             </div>
@@ -174,7 +182,7 @@ export function AwcPortfolioDashboard({
                   {CONTACT_ROWS.map(({ attribute, key }) => {
                     const value = getValue(org, awcProfile, key);
                     return (
-                      <tr key={key} className="border-b border-slate-100 last:border-0">
+                      <tr key={key} className="border-b border-slate-200/50 last:border-0 hover:bg-white/30 transition-colors">
                         <td className="w-1/3 px-4 py-2 font-medium text-slate-600">
                           {attribute}
                         </td>

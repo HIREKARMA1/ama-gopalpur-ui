@@ -65,11 +65,11 @@ export function EducationPortfolioDashboard({
       </section>
 
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white px-4 pb-4 pt-6 shadow-sm sm:px-6 lg:px-10">
+      <header className="border-b border-slate-200/80 bg-white/80 px-4 pb-4 pt-6 shadow-sm backdrop-blur-sm sm:px-6 lg:px-10">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-700">
+              <p className="inline-flex items-center rounded-full bg-orange-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-700">
                 {t('edu.badge', language)}
               </p>
               <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
@@ -83,8 +83,8 @@ export function EducationPortfolioDashboard({
               )}
             </div>
             {schoolMaster?.udise_code && (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                <div className="font-semibold text-slate-700">UDISE code</div>
+              <div className="rounded-xl border border-amber-200/80 bg-amber-500/10 px-3 py-2 text-xs text-slate-600 shadow-sm">
+                <div className="font-semibold text-amber-800/90">UDISE code</div>
                 <div className="mt-0.5 text-sm font-mono text-slate-900">
                   {schoolMaster.udise_code}
                 </div>
@@ -94,80 +94,88 @@ export function EducationPortfolioDashboard({
         </div>
       </header>
 
-      {/* Stats */}
+      {/* Stats – each card with a distinct transparent tint */}
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-10">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {stats.map(({ label, value }) => (
-            <div
-              key={label}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow"
-            >
-              <p className="text-2xl font-bold text-slate-900">{formatVal(value)}</p>
-              <p className="mt-0.5 text-xs font-medium text-slate-600">{label}</p>
-            </div>
-          ))}
+          {stats.map(({ label, value }, i) => {
+            const tints = [
+              'border-amber-200/80 bg-amber-500/10 hover:bg-amber-500/15',
+              'border-emerald-200/80 bg-emerald-500/10 hover:bg-emerald-500/15',
+              'border-sky-200/80 bg-sky-500/10 hover:bg-sky-500/15',
+              'border-violet-200/80 bg-violet-500/10 hover:bg-violet-500/15',
+            ];
+            return (
+              <div
+                key={label}
+                className={`rounded-xl border p-4 shadow-sm transition ${tints[i % tints.length]}`}
+              >
+                <p className="text-2xl font-bold text-slate-900">{formatVal(value)}</p>
+                <p className="mt-0.5 text-xs font-medium text-slate-600">{label}</p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      {/* Details */}
+      {/* Details – distinct transparent sections */}
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-10">
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* School profile */}
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 px-4 py-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
+          {/* School profile – teal tint */}
+          <div className="rounded-xl border border-teal-200/80 bg-teal-500/5 shadow-sm overflow-hidden">
+            <div className="border-b border-teal-200/60 bg-teal-500/10 px-4 py-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-teal-800">
                 {t('edu.schoolProfileTitle', language)}
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-xs text-slate-600">
                 {t('edu.schoolProfileSubtitle', language)}
               </p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse text-xs">
                 <tbody>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/3 px-4 py-2 font-medium text-slate-600">School type</td>
                     <td className="px-4 py-2 text-slate-900">
                       {formatVal(schoolMaster?.school_type)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Board</td>
                     <td className="px-4 py-2 text-slate-900">
                       {formatVal(schoolMaster?.board)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Medium</td>
                     <td className="px-4 py-2 text-slate-900">
                       {formatVal(schoolMaster?.medium)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Management</td>
                     <td className="px-4 py-2 text-slate-900">
                       {formatVal(schoolMaster?.management_type)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/3 px-4 py-2 font-medium text-slate-600">District</td>
                     <td className="px-4 py-2 text-slate-900">
                       {formatVal(schoolMaster?.district)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Block</td>
                     <td className="px-4 py-2 text-slate-900">
                       {formatVal(schoolMaster?.block)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Village</td>
                     <td className="px-4 py-2 text-slate-900">
                       {formatVal(schoolMaster?.village)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/3 px-4 py-2 font-medium text-slate-600">
                       Established year
                     </td>
@@ -175,7 +183,7 @@ export function EducationPortfolioDashboard({
                       {formatVal(schoolMaster?.established_year)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 last:border-0 hover:bg-white/30 transition-colors">
                     <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Status</td>
                     <td className="px-4 py-2 text-slate-900">
                       {formatVal(schoolMaster?.school_status)}
@@ -186,24 +194,24 @@ export function EducationPortfolioDashboard({
             </div>
           </div>
 
-          {/* Infrastructure */}
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 px-4 py-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
+          {/* Infrastructure – indigo tint */}
+          <div className="rounded-xl border border-indigo-200/80 bg-indigo-500/5 shadow-sm overflow-hidden">
+            <div className="border-b border-indigo-200/60 bg-indigo-500/10 px-4 py-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-800">
                 {t('edu.infraTitle', language)}
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-xs text-slate-600">
                 {t('edu.infraSubtitle', language)}
               </p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse text-xs">
                 <tbody>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/2 px-4 py-2 font-medium text-slate-600">Classrooms</td>
                     <td className="px-4 py-2 text-slate-900">{formatVal(infra?.classrooms)}</td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
                       Smart classrooms
                     </td>
@@ -211,19 +219,19 @@ export function EducationPortfolioDashboard({
                       {formatVal(infra?.smart_classrooms)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/2 px-4 py-2 font-medium text-slate-600">Science labs</td>
                     <td className="px-4 py-2 text-slate-900">
                       {formatVal(infra?.labs_science)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/2 px-4 py-2 font-medium text-slate-600">Computer labs</td>
                     <td className="px-4 py-2 text-slate-900">
                       {formatVal(infra?.labs_computer)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
                       Library books
                     </td>
@@ -231,7 +239,7 @@ export function EducationPortfolioDashboard({
                       {formatVal(infra?.library_books)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
                       Toilets (boys)
                     </td>
@@ -239,7 +247,7 @@ export function EducationPortfolioDashboard({
                       {formatVal(infra?.toilets_boys)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
                       Toilets (girls)
                     </td>
@@ -247,7 +255,7 @@ export function EducationPortfolioDashboard({
                       {formatVal(infra?.toilets_girls)}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
                       Sports ground
                     </td>
@@ -255,7 +263,7 @@ export function EducationPortfolioDashboard({
                       {infra?.sports_ground ? 'Yes' : 'No'}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
                       Drinking water
                     </td>
@@ -263,7 +271,7 @@ export function EducationPortfolioDashboard({
                       {infra?.drinking_water ? 'Yes' : 'No'}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
                     <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
                       Electricity
                     </td>
@@ -271,7 +279,7 @@ export function EducationPortfolioDashboard({
                       {infra?.electricity ? 'Yes' : 'No'}
                     </td>
                   </tr>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-200/50 last:border-0 hover:bg-white/30 transition-colors">
                     <td className="w-1/2 px-4 py-2 font-medium text-slate-600">Internet</td>
                     <td className="px-4 py-2 text-slate-900">
                       {infra?.internet ? 'Yes' : 'No'}
