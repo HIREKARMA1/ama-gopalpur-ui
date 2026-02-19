@@ -64,7 +64,10 @@ export type MessageKey =
   | 'login.signIn'
   | 'login.signingIn'
   | 'login.error.deptOnly'
-  | 'login.error.failed';
+  | 'login.error.failed'
+  | 'login.super.title'
+  | 'login.super.subtitle'
+  | 'login.error.superOnly';
 
 const messages: Record<MessageKey, { en: string; or: string }> = {
   'govBar.title': {
@@ -288,6 +291,18 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'login.error.failed': {
     en: 'Login failed',
     or: 'ଲଗଇନ୍ ବିଫଳ ହେଲା',
+  },
+  'login.super.title': {
+    en: 'Super admin login',
+    or: 'ସୁପର ଆଡମିନ୍ ଲଗଇନ୍',
+  },
+  'login.super.subtitle': {
+    en: 'Use the super admin credentials to manage departments and department admins.',
+    or: 'ବିଭାଗ ଏବଂ ବିଭାଗ ପ୍ରଶାସକଙ୍କୁ ପରିଚାଳନା କରିବାକୁ ସୁପର ଆଡମିନ୍ ପ୍ରମାଣପତ୍ର ବ୍ୟବହାର କରନ୍ତୁ।',
+  },
+  'login.error.superOnly': {
+    en: 'This login is only for super admin. Use department admin login instead.',
+    or: 'ଏହା କେବଳ ସୁପର ଆଡମିନ୍ ପାଇଁ। ବଦଳରେ ବିଭାଗ ପ୍ରଶାସକ ଲଗଇନ୍ ବ୍ୟବହାର କରନ୍ତୁ।',
   },
 };
 
