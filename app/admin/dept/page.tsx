@@ -4,6 +4,9 @@ import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authApi, organizationsApi, departmentsApi, profileApi, clearToken, getToken, educationApi, healthApi, Organization, User, Department, CenterProfile } from '../../../services/api';
+import { SuperAdminDashboardLayout } from '../../../components/layout/SuperAdminDashboardLayout';
+import { useLanguage } from '../../../components/i18n/LanguageContext';
+import { t } from '../../../components/i18n/messages';
 import { Loader } from '../../../components/common/Loader';
 
 /** ICDS minister CSV: all attributes for AWC profile (no SL NO; use system-generated org id). */
@@ -17,6 +20,7 @@ const HEALTH_CSV_HEADER =
 
 export default function DepartmentAdminPage() {
   const router = useRouter();
+  const { language } = useLanguage();
   const [me, setMe] = useState<User | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [deptCode, setDeptCode] = useState<string | null>(null);
@@ -89,7 +93,7 @@ export default function DepartmentAdminPage() {
       try {
         const [user, deptList] = await Promise.all([authApi.me(), departmentsApi.list()]);
         if (user.role !== 'DEPT_ADMIN') {
-          router.replace('/admin/login');
+          router.replace('/');
           return;
         }
         setMe(user);
@@ -110,7 +114,7 @@ export default function DepartmentAdminPage() {
       } catch (err: any) {
         setError(err.message || 'Failed to load department admin data');
         clearToken();
-        router.replace('/admin/login');
+        router.replace('/');
       } finally {
         setLoading(false);
       }
@@ -256,43 +260,27 @@ export default function DepartmentAdminPage() {
     URL.revokeObjectURL(url);
   };
 
-  if (loading) {
-    return (
-      <div className="page-container items-center justify-center">
-        <Loader />
-      </div>
-    );
-  }
-
-  if (!me) return null;
+  if (!me && !loading) return null;
 
   return (
-    <div className="page-container">
-      <header className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div>
-          <h1 className="text-base font-semibold text-text">Department admin panel</h1>
-          <p className="mt-1 text-xs text-text-muted">
-            Manage organizations and bulk upload CSV for your department.
-          </p>
-        </div>
-        <div className="flex items-center gap-3 text-xs text-text-muted">
-          <div className="text-right">
-            <div>{me.full_name}</div>
-            <div className="text-[11px]">{me.email}</div>
+    <SuperAdminDashboardLayout
+      user={me}
+      isUserLoading={loading && !me}
+      panelTitle={t('login.dept.title', language)}
+      sectionLabel={t('super.sidebar.dashboard', language)}
+      navItems={[{ href: '/admin/dept', labelKey: 'super.sidebar.dashboard' }]}
+      onLogout={() => {
+        clearToken();
+        router.push('/');
+      }}
+    >
+      <div className="mx-auto max-w-6xl space-y-4">
+        {loading && !me ? (
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <Loader />
           </div>
-          <button
-            type="button"
-            className="rounded-md border border-border px-2 py-1 text-[11px] text-text hover:border-primary"
-            onClick={() => {
-              clearToken();
-              router.push('/admin/login');
-            }}
-          >
-            Logout
-          </button>
-        </div>
-      </header>
-      <main className="flex flex-1 flex-col gap-4 p-4">
+        ) : (
+          <>
         {error && <p className="text-xs text-red-500">{error}</p>}
 
         {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && (
@@ -1361,8 +1349,10 @@ export default function DepartmentAdminPage() {
             </div>
           </div>
         </section>
-      </main>
-    </div>
+          </>
+        )}
+      </div>
+    </SuperAdminDashboardLayout>
   );
 }
 

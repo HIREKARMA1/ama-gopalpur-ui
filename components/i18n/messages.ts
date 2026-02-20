@@ -56,7 +56,43 @@ export type MessageKey =
   | 'health.stat.beds'
   | 'health.stat.icuBeds'
   | 'health.staffTitle'
-  | 'health.staffSubtitle';
+  | 'health.staffSubtitle'
+  | 'login.dept.title'
+  | 'login.dept.subtitle'
+  | 'login.email'
+  | 'login.password'
+  | 'login.signIn'
+  | 'login.signingIn'
+  | 'login.error.deptOnly'
+  | 'login.error.failed'
+  | 'login.super.title'
+  | 'login.super.subtitle'
+  | 'login.error.superOnly'
+  | 'super.panel.title'
+  | 'super.panel.subtitle'
+  | 'super.sidebar.dashboard'
+  | 'super.sidebar.menu'
+  | 'super.sidebar.close'
+  | 'super.logout'
+  | 'super.create.title'
+  | 'super.create.subtitle'
+  | 'super.create.fullName'
+  | 'super.create.department'
+  | 'super.create.selectDepartment'
+  | 'super.create.button'
+  | 'super.create.creating'
+  | 'super.create.errorRequired'
+  | 'super.create.errorFailed'
+  | 'super.admins.title'
+  | 'super.admins.subtitle'
+  | 'super.admins.name'
+  | 'super.admins.email'
+  | 'super.admins.department'
+  | 'super.admins.status'
+  | 'super.admins.active'
+  | 'super.admins.inactive'
+  | 'super.admins.empty'
+  | 'super.error.loadFailed';
 
 const messages: Record<MessageKey, { en: string; or: string }> = {
   'govBar.title': {
@@ -219,7 +255,7 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   },
   'health.infraTitle': {
     en: 'Infrastructure',
-    or: 'ଅବକାଠା',
+    or: 'ଭିତ୍ତି ସଂରଚନା',
   },
   'health.infraSubtitle': {
     en: 'Beds, ICU and key clinical facilities.',
@@ -248,6 +284,150 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'health.staffSubtitle': {
     en: 'Medical officers, nurses and support staff.',
     or: 'ଚିକିତ୍ସା ଅଧିକାରୀ, ନର୍ସ ଏବଂ ସହାୟକ କର୍ମଚାରୀ।',
+  },
+  'login.dept.title': {
+    en: 'Department admin login',
+    or: 'ବିଭାଗ ପ୍ରଶାସକ ଲଗଇନ୍',
+  },
+  'login.dept.subtitle': {
+    en: 'Use your department admin credentials to manage organizations for your department.',
+    or: 'ଆପଣଙ୍କ ବିଭାଗର ସଂସ୍ଥାଗୁଡିକ ପରିଚାଳନା କରିବାକୁ ବିଭାଗ ପ୍ରଶାସକ ପ୍ରମାଣପତ୍ର ବ୍ୟବହାର କରନ୍ତୁ।',
+  },
+  'login.email': {
+    en: 'Email',
+    or: 'ଇମେଲ୍',
+  },
+  'login.password': {
+    en: 'Password',
+    or: 'ପାସୱାର୍ଡ',
+  },
+  'login.signIn': {
+    en: 'Sign in',
+    or: 'ସାଇନ୍ ଇନ୍ କରନ୍ତୁ',
+  },
+  'login.signingIn': {
+    en: 'Signing in…',
+    or: 'ସାଇନ୍ ଇନ୍ ହେଉଛି…',
+  },
+  'login.error.deptOnly': {
+    en: 'This login is only for department admins. Use super admin login instead.',
+    or: 'ଏହା କେବଳ ବିଭାଗ ପ୍ରଶାସକଙ୍କ ପାଇଁ। ବଦଳରେ ସୁପର ଆଡମିନ୍ ଲଗଇନ୍ ବ୍ୟବହାର କରନ୍ତୁ।',
+  },
+  'login.error.failed': {
+    en: 'Login failed',
+    or: 'ଲଗଇନ୍ ବିଫଳ ହେଲା',
+  },
+  'login.super.title': {
+    en: 'Super admin login',
+    or: 'ସୁପର ଆଡମିନ୍ ଲଗଇନ୍',
+  },
+  'login.super.subtitle': {
+    en: 'Use the super admin credentials to manage departments and department admins.',
+    or: 'ବିଭାଗ ଏବଂ ବିଭାଗ ପ୍ରଶାସକଙ୍କୁ ପରିଚାଳନା କରିବାକୁ ସୁପର ଆଡମିନ୍ ପ୍ରମାଣପତ୍ର ବ୍ୟବହାର କରନ୍ତୁ।',
+  },
+  'login.error.superOnly': {
+    en: 'This login is only for super admin. Use department admin login instead.',
+    or: 'ଏହା କେବଳ ସୁପର ଆଡମିନ୍ ପାଇଁ। ବଦଳରେ ବିଭାଗ ପ୍ରଶାସକ ଲଗଇନ୍ ବ୍ୟବହାର କରନ୍ତୁ।',
+  },
+  'super.panel.title': {
+    en: 'Super admin panel',
+    or: 'ସୁପର ଆଡମିନ୍ ପ୍ୟାନେଲ୍',
+  },
+  'super.panel.subtitle': {
+    en: 'Manage department admins and high-level configuration.',
+    or: 'ବିଭାଗ ପ୍ରଶାସକଙ୍କୁ ଏବଂ ଉଚ୍ଚ ସ୍ତରୀୟ ସେଟିଂ ପରିଚାଳନା କରନ୍ତୁ।',
+  },
+  'super.sidebar.dashboard': {
+    en: 'Dashboard',
+    or: 'ଡ୍ୟାସବୋର୍ଡ',
+  },
+  'super.sidebar.menu': {
+    en: 'Menu',
+    or: 'ମେନୁ',
+  },
+  'super.sidebar.close': {
+    en: 'Close',
+    or: 'ବନ୍ଦ କରନ୍ତୁ',
+  },
+  'super.logout': {
+    en: 'Logout',
+    or: 'ଲଗଆଉଟ୍',
+  },
+  'super.create.title': {
+    en: 'Create department admin',
+    or: 'ବିଭାଗ ପ୍ରଶାସକ ସୃଷ୍ଟି କରନ୍ତୁ',
+  },
+  'super.create.subtitle': {
+    en: 'Super admin can create department admins. There is no direct signup.',
+    or: 'ସୁପର ଆଡମିନ୍ ବିଭାଗ ପ୍ରଶାସକ ସୃଷ୍ଟି କରିପାରିବେ। ପ୍ରତ୍ୟକ୍ଷ ସାଇନଅପ୍ ନାହିଁ।',
+  },
+  'super.create.fullName': {
+    en: 'Full name',
+    or: 'ପୂର୍ଣ୍ଣ ନାମ',
+  },
+  'super.create.department': {
+    en: 'Department',
+    or: 'ବିଭାଗ',
+  },
+  'super.create.selectDepartment': {
+    en: 'Select department',
+    or: 'ବିଭାଗ ଚୟନ କରନ୍ତୁ',
+  },
+  'super.create.button': {
+    en: 'Create admin',
+    or: 'ପ୍ରଶାସକ ସୃଷ୍ଟି କରନ୍ତୁ',
+  },
+  'super.create.creating': {
+    en: 'Creating…',
+    or: 'ସୃଷ୍ଟି ହେଉଛି…',
+  },
+  'super.create.errorRequired': {
+    en: 'All fields are required to create a department admin.',
+    or: 'ବିଭାଗ ପ୍ରଶାସକ ସୃଷ୍ଟି କରିବାକୁ ସମସ୍ତ କ୍ଷେତ୍ର ଆବଶ୍ୟକ।',
+  },
+  'super.create.errorFailed': {
+    en: 'Failed to create admin',
+    or: 'ପ୍ରଶାସକ ସୃଷ୍ଟି ବିଫଳ ହେଲା',
+  },
+  'super.admins.title': {
+    en: 'Department admins',
+    or: 'ବିଭାଗ ପ୍ରଶାସକଗଣ',
+  },
+  'super.admins.subtitle': {
+    en: 'Existing department admins (ICDS, Education, etc.).',
+    or: 'ବିଦ୍ୟମାନ ବିଭାଗ ପ୍ରଶାସକଗଣ (ICDS, ଶିକ୍ଷା ଇତ୍ୟାଦି)।',
+  },
+  'super.admins.name': {
+    en: 'Name',
+    or: 'ନାମ',
+  },
+  'super.admins.email': {
+    en: 'Email',
+    or: 'ଇମେଲ୍',
+  },
+  'super.admins.department': {
+    en: 'Department',
+    or: 'ବିଭାଗ',
+  },
+  'super.admins.status': {
+    en: 'Status',
+    or: 'ସ୍ଥିତି',
+  },
+  'super.admins.active': {
+    en: 'Active',
+    or: 'ସକ୍ରିୟ',
+  },
+  'super.admins.inactive': {
+    en: 'Inactive',
+    or: 'ନିଷ୍କ୍ରିୟ',
+  },
+  'super.admins.empty': {
+    en: 'No department admins yet.',
+    or: 'ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ବିଭାଗ ପ୍ରଶାସକ ନାହିଁ।',
+  },
+  'super.error.loadFailed': {
+    en: 'Failed to load admin data',
+    or: 'ପ୍ରଶାସକ ତଥ୍ୟ ଲୋଡ୍ ବିଫଳ ହେଲା',
   },
 };
 
