@@ -7,6 +7,7 @@ import {
   organizationsApi,
   departmentsApi,
   profileApi,
+  icdsApi,
   educationApi,
   healthApi,
   Organization,
@@ -159,6 +160,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [healthMonthly, setHealthMonthly] = useState<Awaited<ReturnType<typeof healthApi.listMonthlyReport>>>([]);
   const [educationProfile, setEducationProfile] = useState<Record<string, unknown>>({});
   const [healthProfile, setHealthProfile] = useState<Record<string, unknown>>({});
+  const [snpDailyStock, setSnpDailyStock] = useState<Awaited<ReturnType<typeof icdsApi.listSnpDailyStock>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -235,12 +237,17 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
         } else {
-          // AWC / ICDS or other: try center profile
+          // AWC / ICDS or other: try center profile and SNP daily stock
           try {
-            const profile = await profileApi.getCenterProfile(id);
-            setAwcProfile(profile);
+            const [profile, snp] = await Promise.all([
+              profileApi.getCenterProfile(id),
+              icdsApi.listSnpDailyStock(id),
+            ]);
+            setAwcProfile(profile ?? null);
+            setSnpDailyStock(Array.isArray(snp) ? snp : []);
           } catch {
             setAwcProfile(null);
+            setSnpDailyStock([]);
           }
         }
       } catch (e: unknown) {
@@ -334,6 +341,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           awcProfile={awcProfile}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
+          snpDailyStock={snpDailyStock}
         />
       </div>
     );
