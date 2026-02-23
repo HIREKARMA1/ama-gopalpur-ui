@@ -155,12 +155,12 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     or: 'ବିଧାନସଭା କ୍ଷେତ୍ର ଡ୍ୟାସବୋର୍ଡ',
   },
   'navbar.ministerName': {
-    en: 'Bibhuti Bhusan Jena',
-    or: 'ବିଭୂତି ଭୂଷଣ ଜେନା',
+    en: 'Shri Bibhuti Bhusan Jena',
+    or: 'ଶ୍ରୀ ବିଭୂତି ଭୂଷଣ ଜେନା',
   },
   'navbar.ministerSubtitle': {
-    en: 'Cabinet Minister, Odisha',
-    or: 'ମନ୍ତ୍ରୀ, ଓଡିଶା ସରକାର',
+    en: 'Honourable Cabinet Minister, Odisha',
+    or: 'ମାନ୍ୟବର ମନ୍ତ୍ରୀ, ଓଡିଶା ସରକାର',
   },
   'sidebar.title': {
     en: 'Departments',
