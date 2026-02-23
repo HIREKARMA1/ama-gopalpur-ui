@@ -153,9 +153,7 @@ export default function SuperAdminPage() {
                   }
                 >
                   <option value="">{t('super.create.selectDepartment', language)}</option>
-                  {departments
-                    .filter((d) => d.code !== 'ICDS')
-                    .map((d) => (
+                  {departments.map((d) => (
                       <option key={d.id} value={d.id}>
                         {d.name} ({d.code})
                       </option>
