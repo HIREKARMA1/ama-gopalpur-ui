@@ -15,6 +15,7 @@ export type MessageKey =
   | 'dept.education'
   | 'dept.health'
   | 'dept.icds'
+  | 'dept.roads'
   | 'shell.departmentsTab'
   | 'map.legend'
   | 'map.viewProfile'
@@ -37,6 +38,47 @@ export type MessageKey =
   | 'awc.stat.cpdoName'
   | 'awc.stat.supervisorName'
   | 'awc.stat.awwName'
+  | 'awc.snp.title'
+  | 'awc.snp.subtitle'
+  | 'awc.snp.slNo'
+  | 'awc.snp.date'
+  | 'awc.snp.openingBalance'
+  | 'awc.snp.received'
+  | 'awc.snp.totalStock'
+  | 'awc.snp.exp'
+  | 'awc.snp.bal'
+  | 'awc.snp.filterByDate'
+  | 'awc.snp.allDates'
+  | 'awc.snp.showingRows'
+  | 'awc.snp.prev'
+  | 'awc.snp.next'
+  | 'awc.snp.addFormTitle'
+  | 'awc.snp.addFormDescription'
+  | 'awc.snp.awcLabel'
+  | 'awc.snp.selectAwc'
+  | 'awc.snp.openingBalanceKg'
+  | 'awc.snp.receivedKg'
+  | 'awc.snp.expKg'
+  | 'awc.snp.placeholderOpening'
+  | 'awc.snp.placeholderReceived'
+  | 'awc.snp.placeholderExp'
+  | 'awc.snp.addButton'
+  | 'awc.snp.addingButton'
+  | 'awc.snp.organization'
+  | 'awc.snp.actions'
+  | 'awc.snp.edit'
+  | 'awc.snp.delete'
+  | 'awc.snp.save'
+  | 'awc.snp.cancel'
+  | 'awc.snp.noEntriesYet'
+  | 'awc.snp.saving'
+  | 'awc.snp.bulkUploadTitle'
+  | 'awc.snp.bulkUploadDescription'
+  | 'awc.snp.downloadTemplate'
+  | 'awc.snp.chooseFile'
+  | 'awc.snp.uploadCsv'
+  | 'awc.snp.uploading'
+  | 'awc.snp.noMatches'
   | 'edu.badge'
   | 'edu.schoolProfileTitle'
   | 'edu.schoolProfileSubtitle'
@@ -71,6 +113,7 @@ export type MessageKey =
   | 'super.panel.title'
   | 'super.panel.subtitle'
   | 'super.sidebar.dashboard'
+  | 'super.sidebar.snp'
   | 'super.sidebar.menu'
   | 'super.sidebar.close'
   | 'super.logout'
@@ -147,6 +190,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     en: 'ICDS',
     or: 'ଆଇ.ସି.ଡି.ଏସ୍',
   },
+  'dept.roads': {
+    en: 'Roads',
+    or: 'ରାସ୍ତା',
+  },
   'map.legend': {
     en: 'Legend',
     or: 'ସୂଚନା',
@@ -204,6 +251,170 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'awc.stat.awwName': {
     en: 'AWW name',
     or: 'AWW ନାମ',
+  },
+  'awc.snp.title': {
+    en: 'SNP (Supplementary Nutrition Programme)',
+    or: 'ଅନୁପୂରକ ପୋଷଣ କାର୍ଯ୍ୟକ୍ରମ',
+  },
+  'awc.snp.subtitle': {
+    en: 'Daily stock – date-wise',
+    or: 'ଦୈନିକ ଷ୍ଟକ୍ – ତାରିଖ ଅନୁସାରେ',
+  },
+  'awc.snp.slNo': {
+    en: 'Sl No',
+    or: 'କ୍ରମିକ ସଂଖ୍ୟା',
+  },
+  'awc.snp.date': {
+    en: 'Date',
+    or: 'ତାରିଖ',
+  },
+  'awc.snp.openingBalance': {
+    en: 'Opening balance',
+    or: 'ଆରମ୍ଭିକ ବାକି',
+  },
+  'awc.snp.received': {
+    en: 'Received',
+    or: 'ପ୍ରାପ୍ତ',
+  },
+  'awc.snp.totalStock': {
+    en: 'Total Stock',
+    or: 'ମୋଟ ଷ୍ଟକ୍',
+  },
+  'awc.snp.exp': {
+    en: 'Expended',
+    or: 'ବ୍ୟବହୃତ',
+  },
+  'awc.snp.bal': {
+    en: 'Balance',
+    or: 'ବାକି',
+  },
+  'awc.snp.filterByDate': {
+    en: 'Filter by date',
+    or: 'ତାରିଖ ଦ୍ୱାରା ଫିଲ୍ଟର କରନ୍ତୁ',
+  },
+  'awc.snp.allDates': {
+    en: 'All dates',
+    or: 'ସମସ୍ତ ତାରିଖ',
+  },
+  'awc.snp.showingRows': {
+    en: 'Showing %1-%2 of %3 rows',
+    or: '%3 ଧାଡି ମଧ୍ୟରୁ %1-%2 ଦେଖାଯାଉଛି',
+  },
+  'awc.snp.prev': {
+    en: 'Previous',
+    or: 'ପୂର୍ବବର୍ତ୍ତୀ',
+  },
+  'awc.snp.next': {
+    en: 'Next',
+    or: 'ପରବର୍ତ୍ତୀ',
+  },
+  'awc.snp.addFormTitle': {
+    en: 'Supplementary Nutrition Programme(SNP) – Daily Stock',
+    or: 'ଅନୁପୂରକ ପୋଷଣ କାର୍ଯ୍ୟକ୍ରମ – ଦୈନିକ ଷ୍ଟକ୍',
+  },
+  'awc.snp.addFormDescription': {
+    en: 'Add daily stock data for an AWC. Total Stock = Opening + Received; Bal = Total − Exp.',
+    or: 'ଏକ ଅଙ୍ଗନୱାଡି ପାଇଁ ଦୈନିକ ଷ୍ଟକ୍ ତଥ୍ୟ ଯୋଡନ୍ତୁ। ମୋଟ ଷ୍ଟକ୍ = ଆରମ୍ଭିକ ବାକି + ପ୍ରାପ୍ତ; ବାକି = ମୋଟ − ବ୍ୟବହୃତ।',
+  },
+  'awc.snp.awcLabel': {
+    en: 'AWC',
+    or: 'ଅଙ୍ଗନୱାଡି କେନ୍ଦ୍ର',
+  },
+  'awc.snp.selectAwc': {
+    en: 'Select AWC',
+    or: 'ଅଙ୍ଗନୱାଡି କେନ୍ଦ୍ର ଚୟନ କରନ୍ତୁ',
+  },
+  'awc.snp.noMatches': {
+    en: 'No matches',
+    or: 'କୌଣସି ମିଳିଲା ନାହିଁ',
+  },
+  'awc.snp.openingBalanceKg': {
+    en: 'Opening balance (Kg)',
+    or: 'ଆରମ୍ଭିକ ବାକି (କି.ଗ୍ରା.)',
+  },
+  'awc.snp.receivedKg': {
+    en: 'Received (Kg)',
+    or: 'ପ୍ରାପ୍ତ (କି.ଗ୍ରା.)',
+  },
+  'awc.snp.expKg': {
+    en: 'Exp (Kg)',
+    or: 'ବ୍ୟବହୃତ (କି.ଗ୍ରା.)',
+  },
+  'awc.snp.placeholderOpening': {
+    en: 'e.g. 10',
+    or: 'ଯେପରିକି ୧୦',
+  },
+  'awc.snp.placeholderReceived': {
+    en: 'e.g. 5',
+    or: 'ଯେପରିକି ୫',
+  },
+  'awc.snp.placeholderExp': {
+    en: 'e.g. 7',
+    or: 'ଯେପରିକି ୭',
+  },
+  'awc.snp.addButton': {
+    en: 'Add SNP daily stock',
+    or: 'SNP ଦୈନିକ ଷ୍ଟକ୍ ଯୋଡନ୍ତୁ',
+  },
+  'awc.snp.addingButton': {
+    en: 'Adding...',
+    or: 'ଯୋଡୁଛି...',
+  },
+  'awc.snp.organization': {
+    en: 'Organization',
+    or: 'ଅଙ୍ଗନୱାଡି କେନ୍ଦ୍ର',
+  },
+  'awc.snp.actions': {
+    en: 'Actions',
+    or: 'କାର୍ଯ୍ୟ',
+  },
+  'awc.snp.edit': {
+    en: 'Edit',
+    or: 'ସଂପାଦନ କରନ୍ତୁ',
+  },
+  'awc.snp.delete': {
+    en: 'Delete',
+    or: 'ବିଲୋପ କରନ୍ତୁ',
+  },
+  'awc.snp.save': {
+    en: 'Save',
+    or: 'ସେଭ୍ କରନ୍ତୁ',
+  },
+  'awc.snp.cancel': {
+    en: 'Cancel',
+    or: 'ବାତିଲ୍ କରନ୍ତୁ',
+  },
+  'awc.snp.noEntriesYet': {
+    en: 'No SNP entries yet. Add one above.',
+    or: 'ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି SNP ଏଣ୍ଟ୍ରି ନାହିଁ। ଉପରେ ଗୋଟିଏ ଯୋଡନ୍ତୁ।',
+  },
+  'awc.snp.saving': {
+    en: 'Saving...',
+    or: 'ସେଭ୍ ହେଉଛି...',
+  },
+  'awc.snp.bulkUploadTitle': {
+    en: 'Bulk upload (CSV)',
+    or: 'ବଲ୍କ ଅପଲୋଡ୍ (CSV)',
+  },
+  'awc.snp.bulkUploadDescription': {
+    en: 'Upload a CSV with columns: organization_id, record_date, opening_balance_kg, received_kg, exp_kg. Date format: YYYY-MM-DD.',
+    or: 'organization_id, record_date, opening_balance_kg, received_kg, exp_kg ସ୍ତମ୍ବ ସହିତ ଏକ CSV ଅପଲୋଡ୍ କରନ୍ତୁ। ତାରିଖ ଫର୍ମାଟ୍: YYYY-MM-DD।',
+  },
+  'awc.snp.downloadTemplate': {
+    en: 'Download CSV template',
+    or: 'CSV ଟେମ୍ପଲେଟ୍ ଡାଉନଲୋଡ୍ କରନ୍ତୁ',
+  },
+  'awc.snp.chooseFile': {
+    en: 'Choose file',
+    or: 'ଫାଇଲ୍ ଚୟନ କରନ୍ତୁ',
+  },
+  'awc.snp.uploadCsv': {
+    en: 'Upload CSV',
+    or: 'CSV ଅପଲୋଡ୍ କରନ୍ତୁ',
+  },
+  'awc.snp.uploading': {
+    en: 'Uploading...',
+    or: 'ଅପଲୋଡ୍ ହେଉଛି...',
   },
   'edu.badge': {
     en: 'Education · School',
@@ -348,6 +559,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'super.sidebar.close': {
     en: 'Close',
     or: 'ବନ୍ଦ କରନ୍ତୁ',
+  },
+  'super.sidebar.snp': {
+    en: 'SNP Daily Stock',
+    or: 'ଦୈନିକ ଷ୍ଟକ୍',
   },
   'super.logout': {
     en: 'Logout',

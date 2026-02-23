@@ -4,15 +4,23 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shell } from '../components/layout/Shell';
 import { ConstituencyMap } from '../components/map/ConstituencyMap';
+import type { RoadFeature } from '../components/map/ConstituencyMap';
 import { DepartmentSidebar, getDepartmentIcon } from '../components/departments/DepartmentSidebar';
 import { useLanguage } from '../components/i18n/LanguageContext';
 import { departmentsApi, organizationsApi, Department, Organization } from '../services/api';
+
+const ROADS_DATA_PATHS = [
+  '/data/roads/kukudakhandi.json',
+  '/data/roads/berhampur_urban.json',
+  '/data/roads/rangailunda.json',
+] as const;
 
 export default function HomePage() {
   const router = useRouter();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDept, setSelectedDept] = useState<Department | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [roads, setRoads] = useState<RoadFeature[]>([]);
   const [loading, setLoading] = useState(false);
   const [countByDepartmentId, setCountByDepartmentId] = useState<Record<number, number>>({});
   const { language } = useLanguage();
@@ -26,14 +34,34 @@ export default function HomePage() {
 
   const handleSelectDepartment = (dept: Department) => {
     setSelectedDept(dept);
+    const isRoads = dept.code?.toUpperCase() === 'ROADS';
     setLoading(true);
-    organizationsApi
-      .listByDepartment(dept.id, { limit: 1000 })
-      .then((data) => {
-        setOrganizations(data);
-        setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: data.length }));
-      })
-      .finally(() => setLoading(false));
+    if (isRoads) {
+      Promise.all(
+        ROADS_DATA_PATHS.map((path) =>
+          fetch(path).then((r) => (r.ok ? r.json() : { type: 'FeatureCollection', features: [] }))
+        )
+      )
+        .then((collections) => {
+          const all: RoadFeature[] = [];
+          collections.forEach((fc) => {
+            if (fc?.features?.length) all.push(...fc.features);
+          });
+          setRoads(all);
+          setOrganizations([]);
+          setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: all.length }));
+        })
+        .finally(() => setLoading(false));
+    } else {
+      organizationsApi
+        .listByDepartment(dept.id, { limit: 1000 })
+        .then((data) => {
+          setOrganizations(data);
+          setRoads([]);
+          setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: data.length }));
+        })
+        .finally(() => setLoading(false));
+    }
   };
 
   return (
@@ -102,6 +130,7 @@ export default function HomePage() {
           <ConstituencyMap
             selectedDepartmentCode={selectedDept?.code}
             organizations={organizations}
+            roads={roads}
             onSelectOrganization={(id) => router.push(`/organizations/${id}`)}
           />
         </div>

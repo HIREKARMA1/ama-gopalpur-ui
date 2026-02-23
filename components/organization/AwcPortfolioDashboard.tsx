@@ -1,8 +1,11 @@
 'use client';
-import { Organization, CenterProfile } from '../../services/api';
+import { useMemo, useState } from 'react';
+import { Organization, CenterProfile, SnpDailyStock } from '../../services/api';
 import { ImageSlider } from './ImageSlider';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
+
+const SNP_ROWS_PER_PAGE = 10;
 
 // Logical groups for portfolio tables – strictly from ICDS CSV
 const PROFILE_ROWS: { attribute: string; key: string }[] = [
@@ -52,6 +55,13 @@ export interface AwcPortfolioDashboardProps {
   departmentName?: string | null;
   /** Gallery image URLs (admin can add later). */
   images?: string[];
+  /** SNP (Supplementary Nutrition Programme) daily stock – date-wise. */
+  snpDailyStock?: SnpDailyStock[];
+}
+
+function snpKg(v: number | null | undefined): string {
+  if (v == null || !Number.isFinite(v)) return '—';
+  return `${v} Kg`;
 }
 
 export function AwcPortfolioDashboard({
@@ -59,8 +69,31 @@ export function AwcPortfolioDashboard({
   awcProfile,
   departmentName,
   images = [],
+  snpDailyStock = [],
 }: AwcPortfolioDashboardProps) {
   const { language } = useLanguage();
+  const [snpDateFilter, setSnpDateFilter] = useState('');
+  const [snpPage, setSnpPage] = useState(1);
+
+  const snpFiltered = useMemo(() => {
+    if (!snpDailyStock.length) return [];
+    if (!snpDateFilter.trim()) return snpDailyStock;
+    return snpDailyStock.filter((row) => {
+      const d = row.record_date;
+      if (!d) return false;
+      const rowDate = typeof d === 'string' ? d.slice(0, 10) : new Date(d).toISOString().slice(0, 10);
+      return rowDate === snpDateFilter;
+    });
+  }, [snpDailyStock, snpDateFilter]);
+
+  const snpTotalRows = snpFiltered.length;
+  const snpTotalPages = Math.max(1, Math.ceil(snpTotalRows / SNP_ROWS_PER_PAGE));
+  const snpPageClamped = Math.min(Math.max(1, snpPage), snpTotalPages);
+  const snpStart = (snpPageClamped - 1) * SNP_ROWS_PER_PAGE;
+  const snpPaginated = snpFiltered.slice(snpStart, snpStart + SNP_ROWS_PER_PAGE);
+  const snpShowStart = snpTotalRows === 0 ? 0 : snpStart + 1;
+  const snpShowEnd = Math.min(snpStart + SNP_ROWS_PER_PAGE, snpTotalRows);
+
   const locationLine = [org.address, org.latitude != null && org.longitude != null ? `${org.latitude.toFixed(5)}, ${org.longitude.toFixed(5)}` : null]
     .filter(Boolean)
     .join(' · ') || null;
@@ -197,6 +230,116 @@ export function AwcPortfolioDashboard({
             </div>
           </div>
         </div>
+
+        {/* SNP (Supplementary Nutrition Programme) – daily stock date-wise */}
+        {snpDailyStock.length > 0 && (
+          <div className="mt-8 rounded-xl border border-amber-200/80 bg-amber-500/5 shadow-sm overflow-hidden">
+            <div className="border-b border-amber-200/60 bg-amber-500/10 px-4 py-3">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-800">
+                    {t('awc.snp.title', language)}
+                  </h2>
+                  <p className="mt-0.5 text-xs text-slate-600">
+                    {t('awc.snp.subtitle', language)}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="text-xs font-medium text-slate-700">
+                    {t('awc.snp.filterByDate', language)}
+                  </label>
+                  <input
+                    type="date"
+                    value={snpDateFilter}
+                    onChange={(e) => {
+                      setSnpDateFilter(e.target.value);
+                      setSnpPage(1);
+                    }}
+                    className="rounded-md border border-amber-300 bg-white px-2 py-1.5 text-xs text-slate-800 shadow-sm"
+                  />
+                  {snpDateFilter && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSnpDateFilter('');
+                        setSnpPage(1);
+                      }}
+                      className="rounded-md border border-amber-300 bg-amber-50 px-2 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100"
+                    >
+                      {t('awc.snp.allDates', language)}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-amber-500/10">
+                    <th className="px-4 py-2.5 text-center font-semibold text-slate-700">{t('awc.snp.slNo', language)}</th>
+                    <th className="px-4 py-2.5 text-center font-semibold text-slate-700">{t('awc.snp.date', language)}</th>
+                    <th className="px-4 py-2.5 text-center font-semibold text-slate-700">{t('awc.snp.openingBalance', language)}</th>
+                    <th className="px-4 py-2.5 text-center font-semibold text-slate-700">{t('awc.snp.received', language)}</th>
+                    <th className="px-4 py-2.5 text-center font-semibold text-slate-700">{t('awc.snp.totalStock', language)}</th>
+                    <th className="px-4 py-2.5 text-center font-semibold text-slate-700">{t('awc.snp.exp', language)}</th>
+                    <th className="px-4 py-2.5 text-center font-semibold text-slate-700">{t('awc.snp.bal', language)}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {snpPaginated.map((row, index) => {
+                    const slNo = snpStart + index + 1;
+                    const opening = row.opening_balance_kg ?? 0;
+                    const received = row.received_kg ?? 0;
+                    const exp = row.exp_kg ?? 0;
+                    const totalStock = opening + received;
+                    const bal = totalStock - exp;
+                    const dateStr = row.record_date ? new Date(row.record_date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+                    return (
+                      <tr key={row.id} className="border-b border-slate-200/50 last:border-0 hover:bg-white/30 transition-colors">
+                        <td className="px-4 py-2 text-center font-medium text-slate-700">{slNo}</td>
+                        <td className="px-4 py-2 text-center font-medium text-slate-700">{dateStr}</td>
+                        <td className="px-4 py-2 text-center text-slate-900">{snpKg(row.opening_balance_kg)}</td>
+                        <td className="px-4 py-2 text-center text-slate-900">{snpKg(row.received_kg)}</td>
+                        <td className="px-4 py-2 text-center text-slate-900">{snpKg(totalStock)}</td>
+                        <td className="px-4 py-2 text-center text-slate-900">{snpKg(row.exp_kg)}</td>
+                        <td className="px-4 py-2 text-center text-slate-900">{snpKg(bal)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-amber-200/60 bg-amber-500/5 px-4 py-2">
+              <p className="text-xs text-slate-600">
+                {t('awc.snp.showingRows', language)
+                  .replace('%1', String(snpShowStart))
+                  .replace('%2', String(snpShowEnd))
+                  .replace('%3', String(snpTotalRows))}
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={snpPageClamped <= 1}
+                  onClick={() => setSnpPage((p) => Math.max(1, p - 1))}
+                  className="rounded border border-amber-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {t('awc.snp.prev', language)}
+                </button>
+                <span className="px-2 text-xs text-slate-600">
+                  {snpPageClamped} / {snpTotalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={snpPageClamped >= snpTotalPages}
+                  onClick={() => setSnpPage((p) => Math.min(snpTotalPages, p + 1))}
+                  className="rounded border border-amber-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {t('awc.snp.next', language)}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );

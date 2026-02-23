@@ -215,6 +215,58 @@ export const profileApi = {
     }),
 };
 
+// ----- ICDS: SNP (Supplementary Nutrition Programme) daily stock -----
+export interface SnpDailyStock {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  opening_balance_kg?: number | null;
+  received_kg?: number | null;
+  exp_kg?: number | null;
+  created_at: string;
+}
+const icdsBase = (orgId: number) => `/api/v1/icds/organizations/${orgId}`;
+export const icdsApi = {
+  listSnpDailyStock: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<SnpDailyStock[]>(
+      `${icdsBase(orgId)}/snp-daily-stock?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 200}`,
+    ).catch(() => []),
+  /** List all SNP entries for the current department (admin panel). */
+  listSnpForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.organization_id != null) p.set('organization_id', String(params.organization_id));
+    p.set('skip', String(params?.skip ?? 0));
+    p.set('limit', String(params?.limit ?? 500));
+    return apiFetch<SnpDailyStock[]>(`/api/v1/icds/snp-daily-stock?${p}`);
+  },
+  createSnpDailyStock: (payload: {
+    organization_id: number;
+    record_date: string;
+    opening_balance_kg?: number | null;
+    received_kg?: number | null;
+    exp_kg?: number | null;
+  }) =>
+    apiFetch<SnpDailyStock>('/api/v1/icds/snp-daily-stock', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  updateSnpDailyStock: (id: number, payload: Partial<Pick<SnpDailyStock, 'record_date' | 'opening_balance_kg' | 'received_kg' | 'exp_kg'>>) =>
+    apiFetch<SnpDailyStock>(`/api/v1/icds/snp-daily-stock/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  deleteSnpDailyStock: (id: number) =>
+    apiFetch<void>(`/api/v1/icds/snp-daily-stock/${id}`, { method: 'DELETE' }),
+  bulkSnpCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/icds/snp-daily-stock/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+};
+
 // ----- Education (organizations under Education department) -----
 const educationBase = (orgId: number) => `/api/v1/education/organizations/${orgId}`;
 export const educationApi = {
