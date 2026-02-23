@@ -6,9 +6,8 @@ import { useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
 
-const MINISTER_IMAGE_URL = process.env.NEXT_PUBLIC_STATIC_ASSETS_ORIGIN
-  ? `${process.env.NEXT_PUBLIC_STATIC_ASSETS_ORIGIN.replace(/\/$/, '')}/Bibhuti_Bhusan_Jena.png`
-  : '';
+// Local images (public/images) while S3 is unavailable; switch back to NEXT_PUBLIC_STATIC_ASSETS_ORIGIN when ready
+const MINISTER_IMAGE_URL = '/images/Bibhuti_Bhusan_Jena.png';
 
 function HamburgerIcon({ open }: { open: boolean }) {
   return (
@@ -54,7 +53,7 @@ export function Navbar() {
           >
             <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-lg backdrop-blur-sm">
               <Image
-                src={process.env.NEXT_PUBLIC_STATIC_ASSETS_ORIGIN ? `${process.env.NEXT_PUBLIC_STATIC_ASSETS_ORIGIN.replace(/\/$/, '')}/logo-odisha.png` : '/logo-odisha.png'}
+                src="/images/logo-odisha.png"
                 alt="Government of Odisha emblem"
                 fill
                 className="object-contain"
