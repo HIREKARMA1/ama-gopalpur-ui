@@ -10,6 +10,7 @@ const DEPT_MESSAGE_KEYS: Record<string, MessageKey> = {
   HEALTH: 'dept.health',
   ICDS: 'dept.icds',
   AWC_ICDS: 'dept.icds',
+  ROADS: 'dept.roads',
 };
 
 function getDepartmentLabel(dept: Department, language: 'en' | 'or'): string {

@@ -15,6 +15,7 @@ export type MessageKey =
   | 'dept.education'
   | 'dept.health'
   | 'dept.icds'
+  | 'dept.roads'
   | 'shell.departmentsTab'
   | 'map.legend'
   | 'map.viewProfile'
@@ -188,6 +189,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'dept.icds': {
     en: 'ICDS',
     or: 'ଆଇ.ସି.ଡି.ଏସ୍',
+  },
+  'dept.roads': {
+    en: 'Roads',
+    or: 'ରାସ୍ତା',
   },
   'map.legend': {
     en: 'Legend',

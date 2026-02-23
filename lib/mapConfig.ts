@@ -70,3 +70,32 @@ export const HEALTH_TYPE_LABELS: Record<string, string> = {
   HEALTH_CENTRE: 'Health Centre',
   OTHER: 'Other',
 };
+
+/** Road types derived from name/code (NH, PWD, RD, etc.) for coloring */
+export type RoadTypeKey = 'NH' | 'PWD' | 'RD' | 'OTHER';
+
+export const ROAD_TYPE_COLORS: Record<RoadTypeKey, string> = {
+  NH: '#ea4335',   // red – National Highway
+  PWD: '#1967d2',  // blue – PWD/R&B
+  RD: '#34a853',   // green – Rural / Village (RD, RR, VR)
+  OTHER: '#9e6700', // amber – other
+};
+
+export const ROAD_TYPE_LABELS: Record<RoadTypeKey, string> = {
+  NH: 'National Highway',
+  PWD: 'PWD / R&B',
+  RD: 'Rural / Village Road',
+  OTHER: 'Other',
+};
+
+/**
+ * Derive road type from road name or code for map coloring.
+ */
+export function getRoadType(name: string, code: string): RoadTypeKey {
+  const n = (name || '').toUpperCase();
+  const c = (code || '').toUpperCase();
+  if (/\bNH[- ]?\d+/i.test(n) || /\bN\.?H\.?/i.test(n) || /^NH/i.test(c)) return 'NH';
+  if (/\bPWD\b/i.test(n) || /\bR&B\b/i.test(n) || /PWD|R&B/i.test(c)) return 'PWD';
+  if (/\bRD\s+road\b/i.test(n) || /\bRR\b/i.test(n) || /\bVR\b/i.test(n) || /^RR\(|^VR/i.test(c)) return 'RD';
+  return 'OTHER';
+}
