@@ -17,8 +17,8 @@ export const GOPALPUR_BOUNDS = {
 /** Default zoom level so the block fills the map */
 export const DEFAULT_ZOOM = 12;
 
-/** Google Maps colored marker icons (standard mapfiles) */
-const PIN_BASE = 'https://maps.google.com/mapfiles/ms/icons';
+/** Google Maps colored marker icons (base URL from env) */
+const PIN_BASE = process.env.NEXT_PUBLIC_MAP_ICONS_BASE_URL ?? '';
 export const MARKER_COLORS = {
   red: `${PIN_BASE}/red-dot.png`,
   blue: `${PIN_BASE}/blue-dot.png`,

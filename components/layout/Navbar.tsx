@@ -6,7 +6,9 @@ import { useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
 
-const MINISTER_IMAGE_URL = 'https://ama-gopalpur.s3.ap-south-1.amazonaws.com/Bibhuti_Bhusan_Jena.png';
+const MINISTER_IMAGE_URL = process.env.NEXT_PUBLIC_STATIC_ASSETS_ORIGIN
+  ? `${process.env.NEXT_PUBLIC_STATIC_ASSETS_ORIGIN.replace(/\/$/, '')}/Bibhuti_Bhusan_Jena.png`
+  : '';
 
 function HamburgerIcon({ open }: { open: boolean }) {
   return (
@@ -52,7 +54,7 @@ export function Navbar() {
           >
             <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-lg backdrop-blur-sm">
               <Image
-                src="https://ama-gopalpur.s3.ap-south-1.amazonaws.com/logo-odisha.png"
+                src={process.env.NEXT_PUBLIC_STATIC_ASSETS_ORIGIN ? `${process.env.NEXT_PUBLIC_STATIC_ASSETS_ORIGIN.replace(/\/$/, '')}/logo-odisha.png` : '/logo-odisha.png'}
                 alt="Government of Odisha emblem"
                 fill
                 className="object-contain"
@@ -81,16 +83,18 @@ export function Navbar() {
                   {t('navbar.ministerSubtitle', language)}
                 </p>
               </div>
-              <div className="relative h-14 w-11 shrink-0 overflow-hidden rounded-sm sm:h-20 sm:w-16 md:h-24 md:w-20">
-                <Image
-                  src={MINISTER_IMAGE_URL}
-                  alt="Bibhuti Bhusan Jena, Minister of Commerce, Transport, Steel & Mine, Government of Odisha"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 44px, (max-width: 768px) 64px, 80px"
-                  unoptimized
-                />
-              </div>
+              {MINISTER_IMAGE_URL ? (
+                <div className="relative h-14 w-11 shrink-0 overflow-hidden rounded-sm sm:h-20 sm:w-16 md:h-24 md:w-20">
+                  <Image
+                    src={MINISTER_IMAGE_URL}
+                    alt="Bibhuti Bhusan Jena, Minister of Commerce, Transport, Steel & Mine, Government of Odisha"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 44px, (max-width: 768px) 64px, 80px"
+                    unoptimized
+                  />
+                </div>
+              ) : null}
             </div>
             <button
               type="button"
@@ -108,16 +112,18 @@ export function Navbar() {
         {mobileMenuOpen && (
           <div className="border-t border-white/10 md:hidden">
             <div className="mx-auto flex min-h-[88px] max-w-[1920px] items-center gap-4 px-3 py-4 sm:px-6 sm:py-5">
-              <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-md sm:h-24 sm:w-20">
-                <Image
-                  src={MINISTER_IMAGE_URL}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes="80px"
-                  unoptimized
-                />
-              </div>
+              {MINISTER_IMAGE_URL ? (
+                <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-md sm:h-24 sm:w-20">
+                  <Image
+                    src={MINISTER_IMAGE_URL}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                    unoptimized
+                  />
+                </div>
+              ) : null}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base font-extrabold leading-tight text-white sm:text-lg">
                   {t('navbar.ministerName', language)}
