@@ -148,7 +148,7 @@ export default function DepartmentAdminPage() {
         orgs.map(async (o) => {
           if (cancelled) return;
           const p = await healthApi.getProfile(o.id);
-          profiles[o.id] = p && typeof p === 'object' ? p : {};
+          profiles[o.id] = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
         })
       );
       if (!cancelled) setHealthProfiles(profiles);
@@ -165,7 +165,7 @@ export default function DepartmentAdminPage() {
         orgs.map(async (o) => {
           if (cancelled) return;
           const p = await educationApi.getProfile(o.id);
-          profiles[o.id] = p && typeof p === 'object' ? p : {};
+          profiles[o.id] = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
         })
       );
       if (!cancelled) setEducationProfiles(profiles);
@@ -1056,7 +1056,7 @@ export default function DepartmentAdminPage() {
                       const prof = orgProfiles[o.id];
                       const hp = healthProfiles[o.id];
                       const ep = educationProfiles[o.id];
-                      const _ = (v: string | number | null | undefined) => (v != null && String(v).trim() !== '' ? String(v) : '—');
+                      const _ = (v: string | number | null | undefined | unknown) => (v != null && String(v).trim() !== '' ? String(v) : '—');
                       return (
                         <tr key={o.id} className="border-b border-border/60">
                           <td className="px-2 py-1 text-text-muted">{page * PAGE_SIZE + idx + 1}</td>
