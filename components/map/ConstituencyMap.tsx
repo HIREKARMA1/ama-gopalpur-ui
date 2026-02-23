@@ -15,6 +15,7 @@ import {
   EDUCATION_MARKER_ICONS,
   EDUCATION_TYPE_LABELS,
   AWC_MARKER_ICON,
+  MARKER_COLORS,
   HEALTH_MARKER_ICONS,
   HEALTH_TYPE_LABELS,
   getRoadType,
@@ -156,7 +157,7 @@ export function ConstituencyMap({
     if (code === 'AWC_ICDS' || code === 'ICDS' || type === 'AWC') {
       return AWC_MARKER_ICON;
     }
-    return 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+    return MARKER_COLORS.red;
   }, [selectedDepartmentCode]);
 
   const getTypeLabel = useCallback(
