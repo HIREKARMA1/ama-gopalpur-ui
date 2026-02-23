@@ -82,9 +82,7 @@ export default function HomePage() {
           <div className="mx-auto flex max-w-md items-center gap-2 rounded-t-2xl bg-slate-900/95 px-3 py-2 shadow-[0_-4px_12px_rgba(15,23,42,0.85)] backdrop-blur">
             <div className="flex-1 overflow-x-auto">
               <div className="flex items-center gap-3">
-                {departments
-                  .filter((dept) => dept.name !== 'ICDS (Anganwadi)')
-                  .map((dept) => {
+                {departments.map((dept) => {
                     const Icon = getDepartmentIcon(dept.code, dept.name);
                     const isSelected = selectedDept?.id === dept.id;
                     return (
