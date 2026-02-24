@@ -206,10 +206,11 @@ export default function DepartmentAdminPage() {
           setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
         }
       } else {
+        // ICDS / AWC: bulk upload center profiles (minister CSV) for existing organizations
         const formData = new FormData();
         formData.append('file', file);
         const token = getToken();
-        const resp = await fetch('/api/v1/organizations/bulk_csv', {
+        const resp = await fetch('/api/v1/organizations/profiles/bulk_csv', {
           method: 'POST',
           body: formData,
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
