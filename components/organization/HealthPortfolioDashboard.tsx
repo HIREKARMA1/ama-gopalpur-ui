@@ -46,18 +46,21 @@ export function HealthPortfolioDashboard({
       .filter(Boolean)
       .join(' · ') || null;
 
+  const toStatVal = (v: unknown): string | number | null | undefined =>
+    v == null ? null : typeof v === 'object' ? undefined : (v as string | number);
+
   // OPD / IPD: only show when explicitly provided (do not approximate with staff counts)
-  const totalOpd = (healthProfile.total_opd as number | string | undefined) ?? null;
-  const totalIpd = (healthProfile.total_ipd as number | string | undefined) ?? null;
+  const totalOpd = toStatVal(healthProfile.total_opd);
+  const totalIpd = toStatVal(healthProfile.total_ipd);
   const beds =
-    healthProfile.no_of_bed ??
+    toStatVal(healthProfile.no_of_bed) ??
     facilityMaster?.num_beds ??
     infra?.beds_total ??
     null;
   const icuBeds =
-    healthProfile.no_of_icu ?? infra?.icu_beds ?? null;
+    toStatVal(healthProfile.no_of_icu) ?? infra?.icu_beds ?? null;
 
-  const stats = [
+  const stats: { label: string; value: string | number | null | undefined }[] = [
     { label: t('health.stat.opd', language), value: totalOpd },
     { label: t('health.stat.ipd', language), value: totalIpd },
     { label: t('health.stat.beds', language), value: beds },
