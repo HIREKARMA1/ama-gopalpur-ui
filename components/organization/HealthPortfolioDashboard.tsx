@@ -9,6 +9,7 @@ import {
 import { ImageSlider } from './ImageSlider';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
+import { getHealthProfileLabel, HEALTH_PROFILE_KEYS } from '../../lib/profileLabels';
 
 function formatVal(v: string | number | null | undefined): string {
   if (v == null || String(v).trim() === '') return '—';
@@ -45,10 +46,16 @@ export function HealthPortfolioDashboard({
       .filter(Boolean)
       .join(' · ') || null;
 
-  const totalOpd = (healthProfile.total_opd as number | undefined) ?? null;
-  const totalIpd = (healthProfile.total_ipd as number | undefined) ?? null;
-  const beds = facilityMaster?.num_beds ?? infra?.beds_total ?? null;
-  const icuBeds = infra?.icu_beds ?? null;
+  // OPD / IPD: only show when explicitly provided (do not approximate with staff counts)
+  const totalOpd = (healthProfile.total_opd as number | string | undefined) ?? null;
+  const totalIpd = (healthProfile.total_ipd as number | string | undefined) ?? null;
+  const beds =
+    healthProfile.no_of_bed ??
+    facilityMaster?.num_beds ??
+    infra?.beds_total ??
+    null;
+  const icuBeds =
+    healthProfile.no_of_icu ?? infra?.icu_beds ?? null;
 
   const stats = [
     { label: t('health.stat.opd', language), value: totalOpd },
@@ -119,160 +126,60 @@ export function HealthPortfolioDashboard({
         </div>
       </section>
 
-      {/* Details – distinct transparent sections */}
+      {/* Profile fields – only keys that exist in CSV/DB */}
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-10">
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Facility profile – teal tint */}
-          <div className="rounded-xl border border-teal-200/80 bg-teal-500/5 shadow-sm overflow-hidden">
-            <div className="border-b border-teal-200/60 bg-teal-500/10 px-4 py-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-teal-800">
-                {t('health.facilityProfileTitle', language)}
-              </h2>
-              <p className="mt-0.5 text-xs text-slate-600">
-                {t('health.facilityProfileSubtitle', language)}
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse text-xs">
-                <tbody>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">
-                      Facility type
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(facilityMaster?.facility_type)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">District</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(facilityMaster?.district)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Block</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(facilityMaster?.block)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Village</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(facilityMaster?.village)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">
-                      Established year
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(facilityMaster?.established_year)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">
-                      Registration no.
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(facilityMaster?.registration_number)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">
-                      Contact phone
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(facilityMaster?.contact_phone)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Email</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(facilityMaster?.email)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">
-                      Operating hours
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(facilityMaster?.operating_hours)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 last:border-0 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">
-                      Facility status
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(facilityMaster?.facility_status)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Infrastructure – indigo tint */}
-          <div className="rounded-xl border border-indigo-200/80 bg-indigo-500/5 shadow-sm overflow-hidden">
-            <div className="border-b border-indigo-200/60 bg-indigo-500/10 px-4 py-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-800">
-                {t('health.infraTitle', language)}
-              </h2>
-              <p className="mt-0.5 text-xs text-slate-600">
-                {t('health.infraSubtitle', language)}
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse text-xs">
-                <tbody>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">Total beds</td>
-                    <td className="px-4 py-2 text-slate-900">{formatVal(infra?.beds_total)}</td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">ICU beds</td>
-                    <td className="px-4 py-2 text-slate-900">{formatVal(infra?.icu_beds)}</td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
-                      Operation theatre
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(infra?.operation_theatre)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">Lab available</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {infra?.lab_available ? 'Yes' : 'No'}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
-                      Pharmacy available
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {infra?.pharmacy_available ? 'Yes' : 'No'}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
-                      Ambulance available
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {infra?.ambulance_available ? 'Yes' : 'No'}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 last:border-0 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">Blood bank</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {infra?.blood_bank ? 'Yes' : 'No'}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+          {Object.entries(healthProfile || {})
+            .filter(([, v]) => v != null && String(v).trim() !== '')
+            .sort(([aKey], [bKey]) => {
+              const ia = HEALTH_PROFILE_KEYS.indexOf(aKey);
+              const ib = HEALTH_PROFILE_KEYS.indexOf(bKey);
+              if (ia === -1 && ib === -1) return aKey.localeCompare(bKey);
+              if (ia === -1) return 1;
+              if (ib === -1) return -1;
+              return ia - ib;
+            })
+            .reduce<[Array<[string, unknown]>, Array<[string, unknown]>]>(
+              (cols, entry, idx) => {
+                cols[idx % 2].push(entry);
+                return cols;
+              },
+              [[], []],
+            )
+            .map((colEntries, colIdx) => (
+              <div
+                key={colIdx}
+                className="rounded-xl border border-teal-200/80 bg-teal-500/5 shadow-sm overflow-hidden"
+              >
+                <div className="border-b border-teal-200/60 bg-teal-500/10 px-4 py-3">
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+                    {t('health.facilityProfileTitle', language)}
+                  </h2>
+                  <p className="mt-0.5 text-xs text-slate-600">
+                    {t('health.facilityProfileSubtitle', language)}
+                  </p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse text-xs">
+                    <tbody>
+                      {colEntries.map(([key, value]) => (
+                        <tr
+                          key={key}
+                          className="border-b border-slate-200/50 last:border-0 hover:bg-white/30 transition-colors"
+                        >
+                          <td className="w-1/3 px-4 py-2 font-medium text-slate-600">
+                            {getHealthProfileLabel(key)}
+                          </td>
+                          <td className="px-4 py-2 text-slate-900">
+                            {formatVal(value as string | number | null | undefined)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
         </div>
 
         {/* Staff table full width – rose tint */}
