@@ -4,6 +4,7 @@ import { Organization, EducationSchoolMaster, EducationInfrastructure } from '..
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
 import { ImageSlider } from './ImageSlider';
+import { getEducationProfileLabel, EDUCATION_PROFILE_KEYS } from '../../lib/profileLabels';
 
 function formatVal(v: string | number | null | undefined): string {
   if (v == null || String(v).trim() === '') return '—';
@@ -39,16 +40,48 @@ export function EducationPortfolioDashboard({
       .filter(Boolean)
       .join(' · ') || null;
 
+  const toNumber = (v: unknown): number | null => {
+    if (v == null) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  // Total students = sum of class-wise counts when available; otherwise use any total_* fields
+  const classKeys = [
+    'class_i',
+    'class_ii',
+    'class_iii',
+    'class_iv',
+    'class_v',
+    'class_vi',
+    'class_vii',
+    'class_viii',
+    'class_ix',
+    'class_x',
+  ] as const;
+
+  const summedByClass = classKeys.reduce<number | null>((acc, key) => {
+    const v = toNumber((educationProfile as any)[key]);
+    if (v == null) return acc;
+    return (acc ?? 0) + v;
+  }, null);
+
   const totalStudents =
-    (educationProfile.students_enrolled as number | undefined) ??
-    (educationProfile.total_students as number | undefined) ??
-    null;
+    summedByClass ??
+    toNumber((educationProfile as any).students_enrolled) ??
+    toNumber((educationProfile as any).total_students);
+
   const totalTeachers =
-    (educationProfile.no_of_ts as number | undefined) ??
-    (educationProfile.total_teachers as number | undefined) ??
+    toNumber((educationProfile as any).no_of_ts) ??
+    toNumber((educationProfile as any).total_teachers);
+
+  // Classrooms and smart classrooms from CSV profile (no_of_rooms / no_of_smart_class_rooms)
+  const classrooms =
+    toNumber((educationProfile as any).no_of_rooms) ?? infra?.classrooms ?? null;
+  const smartClassrooms =
+    toNumber((educationProfile as any).no_of_smart_class_rooms) ??
+    infra?.smart_classrooms ??
     null;
-  const classrooms = infra?.classrooms ?? null;
-  const smartClassrooms = infra?.smart_classrooms ?? null;
 
   const stats = [
     { label: t('edu.stat.students', language), value: totalStudents },
@@ -117,178 +150,60 @@ export function EducationPortfolioDashboard({
         </div>
       </section>
 
-      {/* Details – distinct transparent sections */}
+      {/* Details – show only Education CSV / OrganizationProfile.data fields */}
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-10">
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* School profile – teal tint */}
-          <div className="rounded-xl border border-teal-200/80 bg-teal-500/5 shadow-sm overflow-hidden">
-            <div className="border-b border-teal-200/60 bg-teal-500/10 px-4 py-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-teal-800">
-                {t('edu.schoolProfileTitle', language)}
-              </h2>
-              <p className="mt-0.5 text-xs text-slate-600">
-                {t('edu.schoolProfileSubtitle', language)}
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse text-xs">
-                <tbody>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">School type</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(schoolMaster?.school_type)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Board</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(schoolMaster?.board)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Medium</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(schoolMaster?.medium)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Management</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(schoolMaster?.management_type)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">District</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(schoolMaster?.district)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Block</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(schoolMaster?.block)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Village</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(schoolMaster?.village)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">
-                      Established year
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(schoolMaster?.established_year)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 last:border-0 hover:bg-white/30 transition-colors">
-                    <td className="w-1/3 px-4 py-2 font-medium text-slate-600">Status</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(schoolMaster?.school_status)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Infrastructure – indigo tint */}
-          <div className="rounded-xl border border-indigo-200/80 bg-indigo-500/5 shadow-sm overflow-hidden">
-            <div className="border-b border-indigo-200/60 bg-indigo-500/10 px-4 py-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-800">
-                {t('edu.infraTitle', language)}
-              </h2>
-              <p className="mt-0.5 text-xs text-slate-600">
-                {t('edu.infraSubtitle', language)}
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse text-xs">
-                <tbody>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">Classrooms</td>
-                    <td className="px-4 py-2 text-slate-900">{formatVal(infra?.classrooms)}</td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
-                      Smart classrooms
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(infra?.smart_classrooms)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">Science labs</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(infra?.labs_science)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">Computer labs</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(infra?.labs_computer)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
-                      Library books
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(infra?.library_books)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
-                      Toilets (boys)
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(infra?.toilets_boys)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
-                      Toilets (girls)
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {formatVal(infra?.toilets_girls)}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
-                      Sports ground
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {infra?.sports_ground ? 'Yes' : 'No'}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
-                      Drinking water
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {infra?.drinking_water ? 'Yes' : 'No'}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">
-                      Electricity
-                    </td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {infra?.electricity ? 'Yes' : 'No'}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200/50 last:border-0 hover:bg-white/30 transition-colors">
-                    <td className="w-1/2 px-4 py-2 font-medium text-slate-600">Internet</td>
-                    <td className="px-4 py-2 text-slate-900">
-                      {infra?.internet ? 'Yes' : 'No'}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+          {Object.entries(educationProfile || {})
+            .filter(([, v]) => v != null && String(v).trim() !== '')
+            .sort(([aKey], [bKey]) => {
+              const ia = EDUCATION_PROFILE_KEYS.indexOf(aKey);
+              const ib = EDUCATION_PROFILE_KEYS.indexOf(bKey);
+              if (ia === -1 && ib === -1) return aKey.localeCompare(bKey);
+              if (ia === -1) return 1;
+              if (ib === -1) return -1;
+              return ia - ib;
+            })
+            .reduce<[Array<[string, unknown]>, Array<[string, unknown]>]>(
+              (cols, entry, idx) => {
+                cols[idx % 2].push(entry);
+                return cols;
+              },
+              [[], []],
+            )
+            .map((colEntries, colIdx) => (
+              <div
+                key={colIdx}
+                className="rounded-xl border border-teal-200/80 bg-teal-500/5 shadow-sm overflow-hidden"
+              >
+                <div className="border-b border-teal-200/60 bg-teal-500/10 px-4 py-3">
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+                    {t('edu.schoolProfileTitle', language)}
+                  </h2>
+                  <p className="mt-0.5 text-xs text-slate-600">
+                    {t('edu.schoolProfileSubtitle', language)}
+                  </p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse text-xs">
+                    <tbody>
+                      {colEntries.map(([key, value]) => (
+                        <tr
+                          key={key}
+                          className="border-b border-slate-200/50 last:border-0 hover:bg-white/30 transition-colors"
+                        >
+                          <td className="w-1/3 px-4 py-2 font-medium text-slate-600">
+                            {getEducationProfileLabel(key)}
+                          </td>
+                          <td className="px-4 py-2 text-slate-900">
+                            {formatVal(value as string | number | null | undefined)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
         </div>
       </section>
     </div>
