@@ -133,30 +133,25 @@ export function AwcPortfolioDashboard({
 
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
 
-            {/* Left side: Selector Title & Dropdown */}
-            <div className="w-full lg:w-[380px] shrink-0">
-              <h2 className="text-[11px] font-bold text-[#64748b] uppercase tracking-widest mb-3">Select Facility</h2>
-              <div className="group flex w-full items-center justify-between rounded-xl bg-slate-50 hover:bg-[#fff9f0] transition-all duration-200 px-4 py-3.5 cursor-pointer border border-[#8D8989]/30 hover:border-orange-300 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="bg-orange-100 p-1.5 rounded-lg text-orange-600 shadow-sm">
-                    <MapPin size={18} strokeWidth={2.5} />
-                  </div>
-                  <span className="text-[15px] font-extrabold text-[#0f172a]">{org.name}</span>
-                </div>
-                <div className="bg-white rounded p-1 shadow-sm border border-[#8D8989]/20 group-hover:border-orange-200 transition-colors">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-slate-500 group-hover:text-orange-500 transition-colors" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
-            </div>
 
             {/* Divider for mobile, vertical rule for desktop */}
-            <div className="hidden lg:block w-px h-16 bg-[#8D8989] opacity-20"></div>
-            <div className="block lg:hidden h-px w-full bg-[#8D8989] opacity-20 my-1"></div>
+            {/* <div className="hidden lg:block w-px h-16 bg-[#8D8989] opacity-20"></div>
+            <div className="block lg:hidden h-px w-full bg-[#8D8989] opacity-20 my-1"></div> */}
 
             {/* Right side: Summary Stats */}
-            <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8">
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+
+              <div className="flex gap-4 items-center">
+                <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                  <Building size={18} strokeWidth={2} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Org Name</p>
+                  <p className="text-[15px] font-bold text-[#0f172a] tracking-tight">{formatVal(org.name)}</p>
+                </div>
+              </div>
+
+
               <div className="flex gap-4 items-center">
                 <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-100">
                   <Building size={18} strokeWidth={2} />
@@ -189,11 +184,11 @@ export function AwcPortfolioDashboard({
             </div>
 
           </div>
-        </div>
-      </section>
+        </div >
+      </section >
 
       {/* Top Main KPIs */}
-      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+      < section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8" >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Enrollment */}
           <div className="rounded-xl border border-[#8D8989] bg-white p-6 shadow-sm flex justify-between items-center h-full">
@@ -252,10 +247,10 @@ export function AwcPortfolioDashboard({
             </div>
           </div>
         </div>
-      </section>
+      </section >
 
       {/* Map & Resource Shortage Section */}
-      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+      < section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8" >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Left Column: Map & Infra Summary */}
@@ -506,10 +501,10 @@ export function AwcPortfolioDashboard({
             </div>
           </div>
         </div>
-      </section>
+      </section >
 
       {/* Month-over-Month Metrics Comparison */}
-      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+      < section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8" >
         <div className="rounded-xl border border-[#8D8989] bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold text-[#0f172a]">Month-over-Month Metrics Comparison</h2>
           <p className="text-[13px] text-[#64748b] mt-1 mb-6">Performance metrics showing improvement trends from previous month</p>
@@ -647,69 +642,71 @@ export function AwcPortfolioDashboard({
             </div>
           </div>
         </div>
-      </section>
+      </section >
 
       {/* Grid for Centre Profile & Contact Information (Original Static Data) */}
-      <section className="mx-auto max-w-[1920px] px-4 pb-8 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-2">
+      < section className="mx-auto max-w-[1920px] px-4 pb-12 sm:px-6 lg:px-8" >
+        <div className="grid gap-6 lg:grid-cols-2">
 
           {/* Centre Profile Directory */}
-          <div className="rounded-2xl border border-[#8D8989] bg-white p-6 shadow-sm">
-            <div className="mb-6 flex items-center gap-3 border-b border-[#8D8989] pb-4">
-              <div className="rounded-lg bg-teal-100 p-2 text-teal-600">
-                <Building size={20} />
+          <div className="rounded-xl border border-[#8D8989] bg-white p-6 md:p-8 shadow-sm">
+            <div className="mb-6 flex items-center gap-4 pb-6 border-b border-[#8D8989]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#ccfbf1]/50 text-[#14b8a6]">
+                <Building size={24} strokeWidth={2} />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-800">{t('awc.centreProfileTitle', language) || 'CENTRE PROFILE'}</h2>
-                <p className="text-xs text-slate-500">{t('awc.centreProfileSubtitle', language) || 'Basic information about this Anganwadi centre.'}</p>
+                <h2 className="text-[17px] font-bold text-[#0f172a] tracking-tight">{t('awc.centreProfileTitle', language) || 'Centre profile'}</h2>
+                <p className="mt-0.5 text-[12px] text-[#64748b]">{t('awc.centreProfileSubtitle', language) || 'Basic information about this Anganwadi centre.'}</p>
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-xl">
-              <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full min-w-full text-left text-sm relative">
-                  <tbody className="divide-y divide-slate-100 bg-white">
-                    {PROFILE_ROWS.map(({ attribute, key }) => {
-                      const value = getValue(org, awcProfile, key);
-                      return (
-                        <tr key={key} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-6 py-4 w-1/3 bg-[#f8f9fa] border-r border-[#8D8989]">
-                            <span className="font-semibold text-slate-700 text-xs uppercase tracking-wider">{attribute}</span>
-                          </td>
-                          <td className="px-6 py-4 text-slate-800 font-medium break-words">{formatVal(value)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+            <div className="w-full relative">
+              <table className="w-full text-left text-sm whitespace-nowrap lg:whitespace-normal">
+                <tbody className="divide-y divide-slate-100">
+                  {PROFILE_ROWS.map(({ attribute, key }) => {
+                    const value = getValue(org, awcProfile, key);
+                    return (
+                      <tr key={key} className="hover:bg-slate-50/50 transition-colors group">
+                        <td className="py-4 pr-6 w-1/3 align-top">
+                          <span className="font-bold text-[#475569] text-[11px] uppercase tracking-wider">{attribute}</span>
+                        </td>
+                        <td className="py-4 pl-0 lg:pl-4 text-[#0f172a] font-semibold text-[13px] break-words">
+                          {formatVal(value)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
 
           {/* Contact Directory */}
-          <div className="rounded-2xl border border-[#8D8989] bg-white p-6 shadow-sm">
-            <div className="mb-6 flex items-center gap-3 border-b border-[#8D8989] pb-4">
-              <div className="rounded-lg bg-indigo-100 p-2 text-indigo-600">
-                <Contact size={20} />
+          <div className="rounded-xl border border-[#8D8989] bg-white p-6 md:p-8 shadow-sm">
+            <div className="mb-6 flex items-center gap-4 pb-6 border-b border-[#8D8989]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#e0e7ff]/50 text-[#6366f1]">
+                <Contact size={24} strokeWidth={2} />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-800">{t('awc.staffContactTitle', language) || 'STAFF & CONTACT'}</h2>
-                <p className="text-xs text-slate-500">{t('awc.staffContactSubtitle', language) || 'Key staff members and contact details for this centre.'}</p>
+                <h2 className="text-[17px] font-bold text-[#0f172a] tracking-tight">{t('awc.staffContactTitle', language) || 'Staff & contact'}</h2>
+                <p className="mt-0.5 text-[12px] text-[#64748b]">{t('awc.staffContactSubtitle', language) || 'Key staff members and contact details for this centre.'}</p>
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-[#8D8989]">
-              <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full min-w-full text-left text-sm relative">
-                  <tbody className="divide-y divide-slate-100 bg-white">
+            <div className="w-full relative">
+              <div className="rounded-xl border border-[#8D8989] px-6 py-2 overflow-hidden">
+                <table className="w-full text-left text-sm whitespace-nowrap lg:whitespace-normal">
+                  <tbody className="divide-y divide-slate-100">
                     {CONTACT_ROWS.map(({ attribute, key }) => {
                       const value = getValue(org, awcProfile, key);
                       return (
-                        <tr key={key} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-6 py-4 w-1/3 bg-[#f8f9fa] border-r border-[#8D8989]">
-                            <span className="font-semibold text-slate-700 text-xs uppercase tracking-wider">{attribute}</span>
+                        <tr key={key} className="hover:bg-slate-50/50 transition-colors group">
+                          <td className="py-4 pr-6 w-1/3 align-top">
+                            <span className="font-bold text-[#475569] text-[11px] uppercase tracking-wider">{attribute}</span>
                           </td>
-                          <td className="px-6 py-4 text-slate-800 font-medium break-words">{formatVal(value)}</td>
+                          <td className="py-4 pl-0 lg:pl-4 text-[#0f172a] font-semibold text-[13px] break-words">
+                            {formatVal(value)}
+                          </td>
                         </tr>
                       );
                     })}
@@ -720,8 +717,8 @@ export function AwcPortfolioDashboard({
           </div>
 
         </div>
-      </section>
+      </section >
 
-    </div>
+    </div >
   );
 }
