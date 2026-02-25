@@ -91,6 +91,7 @@ export interface Organization {
   latitude?: number | null;
   longitude?: number | null;
   address?: string | null;
+  sub_department?: string | null;
   attributes?: Record<string, string | number | null> | null;
   /** Public URL of cover/profile image, when set */
   cover_image_key?: string | null;
@@ -101,11 +102,15 @@ export const departmentsApi = {
 };
 
 export const organizationsApi = {
-  listByDepartment: (departmentId: number, opts?: { skip?: number; limit?: number }) => {
+  listByDepartment: (
+    departmentId: number,
+    opts?: { skip?: number; limit?: number; sub_department?: string | null },
+  ) => {
     const params = new URLSearchParams();
     params.append('department_id', String(departmentId));
     if (opts?.skip != null) params.append('skip', String(opts.skip));
     if (opts?.limit != null) params.append('limit', String(opts.limit));
+    if (opts?.sub_department) params.append('sub_department', opts.sub_department);
     return apiFetch<Organization[]>(`/api/v1/organizations?${params.toString()}`);
   },
   get: (id: number) => apiFetch<Organization>(`/api/v1/organizations/${id}`),
@@ -119,6 +124,7 @@ export const organizationsApi = {
     longitude: number;
     description?: string;
     address?: string;
+    sub_department?: string | null;
     attributes?: Record<string, string | number | null>;
   }) =>
     apiFetch<Organization>('/api/v1/organizations', {
@@ -133,6 +139,7 @@ export const organizationsApi = {
       longitude?: number;
       description?: string;
       address?: string;
+      sub_department?: string | null;
       attributes?: Record<string, string | number | null>;
     },
   ) =>
@@ -316,6 +323,38 @@ export const educationApi = {
     const form = new FormData();
     form.append('file', file);
     return apiFetch<{ imported: number; errors: string[] }>('/api/v1/education/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+  bulkEngineeringCollegesCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/education/bulk-csv/engineering-colleges', {
+      method: 'POST',
+      body: form,
+    });
+  },
+  bulkItiCollegesCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/education/bulk-csv/iti-colleges', {
+      method: 'POST',
+      body: form,
+    });
+  },
+  bulkUniversitiesCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/education/bulk-csv/universities', {
+      method: 'POST',
+      body: form,
+    });
+  },
+  bulkDiplomaCollegesCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/education/bulk-csv/diploma-colleges', {
       method: 'POST',
       body: form,
     });
