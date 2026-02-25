@@ -30,6 +30,22 @@ export function EducationPortfolioDashboard({
   images = [],
 }: EducationPortfolioDashboardProps) {
   const { language } = useLanguage();
+  const prettySubDepartment =
+    org.sub_department === 'ENGINEERING_COLLEGE'
+      ? 'ENGINEERING COLLEGE'
+      : org.sub_department === 'DIPLOMA_COLLEGE'
+      ? 'DIPLOMA COLLEGE'
+      : org.sub_department === 'UNIVERSITY'
+      ? 'UNIVERSITY'
+      : org.sub_department === 'ITI'
+      ? 'ITI'
+      : org.sub_department === 'SCHOOL'
+      ? 'SCHOOL'
+      : null;
+
+  const departmentBadgeText =
+    [departmentName?.toUpperCase(), prettySubDepartment]?.filter(Boolean).join(' - ') ||
+    t('edu.badge', language);
   const locationLine =
     [
       org.address,
@@ -83,12 +99,95 @@ export function EducationPortfolioDashboard({
     infra?.smart_classrooms ??
     null;
 
-  const stats = [
-    { label: t('edu.stat.students', language), value: totalStudents },
-    { label: t('edu.stat.teachers', language), value: totalTeachers },
-    { label: t('edu.stat.classrooms', language), value: classrooms },
-    { label: t('edu.stat.smartClassrooms', language), value: smartClassrooms },
-  ];
+  type Stat = { label: string; value: number | string | null; sourceKey?: string };
+
+  let stats: Stat[];
+
+  if (org.sub_department === 'ENGINEERING_COLLEGE') {
+    const btechBranches = toNumber((educationProfile as any)['b.tech_branches_count']);
+    const mtechProgrammes = toNumber((educationProfile as any)['m.tech_programmes_count']);
+    const highestPackageLpa =
+      (educationProfile as any).highest_package_lpa ??
+      (educationProfile as any)['highest_package_lpa'] ??
+      null;
+    const placementPercent = (educationProfile as any)['placement_percentage_last_year'] ?? null;
+
+    stats = [
+      { label: 'B.Tech branches', value: btechBranches, sourceKey: 'b.tech_branches_count' },
+      { label: 'M.Tech programmes', value: mtechProgrammes, sourceKey: 'm.tech_programmes_count' },
+      { label: 'Highest Package (LPA)', value: highestPackageLpa, sourceKey: 'highest_package_lpa' },
+      { label: 'Placement % (last year)', value: placementPercent, sourceKey: 'placement_percentage_last_year' },
+    ];
+  } else if (org.sub_department === 'UNIVERSITY') {
+    const naacGrade =
+      (educationProfile as any).naac_grade ??
+      (educationProfile as any).naac ??
+      null;
+    const placementPct =
+      (educationProfile as any)['placement_percent_last_year'] ??
+      (educationProfile as any).placement_percentage_last_year ??
+      (educationProfile as any)['placement_%_last_year'] ??
+      null;
+    const totalDepts = toNumber((educationProfile as any).total_departments);
+    const totalAffiliated = toNumber((educationProfile as any).total_affiliated_colleges);
+
+    stats = [
+      { label: 'NAAC Grade', value: naacGrade, sourceKey: 'naac_grade' },
+      { label: 'Placement % (last year)', value: placementPct, sourceKey: 'placement_percent_last_year' },
+      { label: 'Total Departments', value: totalDepts, sourceKey: 'total_departments' },
+      { label: 'Total Affiliated Colleges', value: totalAffiliated, sourceKey: 'total_affiliated_colleges' },
+    ];
+  } else if (org.sub_department === 'ITI') {
+    const totalSeatsAllTrades = toNumber((educationProfile as any).total_seats_all_trades);
+    const totalInstructors = toNumber((educationProfile as any).total_instructors);
+    const placementPctIti =
+      (educationProfile as any).placement_percentage_last_year ??
+      (educationProfile as any)['placement_percentage_last_year'] ??
+      null;
+    const highestSalaryMonthly =
+      toNumber((educationProfile as any).highest_salary_monthly_rs) ??
+      toNumber((educationProfile as any)['highest_salary_monthly_rs']);
+
+    stats = [
+      { label: 'Total Seats (all trades)', value: totalSeatsAllTrades, sourceKey: 'total_seats_all_trades' },
+      { label: 'Total Instructors', value: totalInstructors, sourceKey: 'total_instructors' },
+      { label: 'Placement % (last year)', value: placementPctIti, sourceKey: 'placement_percentage_last_year' },
+      { label: 'Highest Salary (monthly Rs)', value: highestSalaryMonthly, sourceKey: 'highest_salary_monthly_rs' },
+    ];
+  } else {
+    stats = [
+      { label: t('edu.stat.students', language), value: totalStudents, sourceKey: 'total_students' },
+      { label: t('edu.stat.teachers', language), value: totalTeachers, sourceKey: 'total_teachers' },
+      { label: t('edu.stat.classrooms', language), value: classrooms, sourceKey: 'no_of_rooms' },
+      { label: t('edu.stat.smartClassrooms', language), value: smartClassrooms, sourceKey: 'no_of_smart_class_rooms' },
+    ];
+  }
+
+  // Build final stats: only real data, and if any of the preferred metrics are missing,
+  // fill remaining slots with other numeric attributes from the profile.
+  const hasValue = (v: number | string | null) =>
+    v != null && v !== '' && String(v).trim() !== '';
+
+  let finalStats: Stat[] = stats.filter((s) => hasValue(s.value));
+
+  if (finalStats.length < 4) {
+    const numericEntries = Object.entries(educationProfile || {}).filter(([key, v]) => {
+      if (key === 'latitude' || key === 'longitude') return false;
+      return toNumber(v) != null;
+    });
+
+    for (const [key, v] of numericEntries) {
+      if (finalStats.length >= 4) break;
+      if (finalStats.some((s) => s.sourceKey === key)) continue;
+      const num = toNumber(v);
+      if (num == null) continue;
+      finalStats.push({
+        label: getEducationProfileLabel(key),
+        value: num,
+        sourceKey: key,
+      });
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -103,7 +202,7 @@ export function EducationPortfolioDashboard({
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="inline-flex items-center rounded-full bg-orange-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-700">
-                {t('edu.badge', language)}
+                {departmentBadgeText}
               </p>
               <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                 {org.name}
@@ -127,28 +226,30 @@ export function EducationPortfolioDashboard({
         </div>
       </header>
 
-      {/* Stats – each card with a distinct transparent tint */}
-      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-10">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {stats.map(({ label, value }, i) => {
-            const tints = [
-              'border-amber-200/80 bg-amber-500/10 hover:bg-amber-500/15',
-              'border-emerald-200/80 bg-emerald-500/10 hover:bg-emerald-500/15',
-              'border-sky-200/80 bg-sky-500/10 hover:bg-sky-500/15',
-              'border-violet-200/80 bg-violet-500/10 hover:bg-violet-500/15',
-            ];
-            return (
-              <div
-                key={label}
-                className={`rounded-xl border p-4 shadow-sm transition ${tints[i % tints.length]}`}
-              >
-                <p className="text-2xl font-bold text-slate-900">{formatVal(value)}</p>
-                <p className="mt-0.5 text-xs font-medium text-slate-600">{label}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+      {/* Stats – show up to four cards, always backed by real data */}
+      {finalStats.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-10">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {finalStats.map(({ label, value }, i) => {
+              const tints = [
+                'border-amber-200/80 bg-amber-500/10 hover:bg-amber-500/15',
+                'border-emerald-200/80 bg-emerald-500/10 hover:bg-emerald-500/15',
+                'border-sky-200/80 bg-sky-500/10 hover:bg-sky-500/15',
+                'border-violet-200/80 bg-violet-500/10 hover:bg-violet-500/15',
+              ];
+              return (
+                <div
+                  key={label}
+                  className={`rounded-xl border p-4 shadow-sm transition ${tints[i % tints.length]}`}
+                >
+                  <p className="text-2xl font-bold text-slate-900">{formatVal(value)}</p>
+                  <p className="mt-0.5 text-xs font-medium text-slate-600">{label}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Details – show only Education CSV / OrganizationProfile.data fields */}
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-10">
