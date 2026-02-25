@@ -38,10 +38,9 @@ export function ImageSlider({
   const showPlaceholder = images.length === 0;
 
   return (
-    <div className={`relative w-full overflow-hidden rounded-xl bg-slate-200 ${className}`}>
+    <div className={`relative w-full h-full overflow-hidden bg-slate-200 ${className}`}>
       <div
-        className="relative aspect-[3/1] w-full min-h-[120px] max-h-[280px] bg-gradient-to-br from-orange-50 to-amber-50"
-        style={{ aspectRatio: '3/1' }}
+        className="relative w-full h-full min-h-[120px] bg-gradient-to-br from-orange-50 to-amber-50"
       >
         {showPlaceholder ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 text-center">
@@ -111,9 +110,8 @@ export function ImageSlider({
               key={i}
               type="button"
               onClick={() => setIndex(i)}
-              className={`h-2 rounded-full transition-all ${
-                i === index ? 'w-6 bg-white' : 'w-2 bg-white/60 hover:bg-white/80'
-              }`}
+              className={`h-2 rounded-full transition-all ${i === index ? 'w-6 bg-white' : 'w-2 bg-white/60 hover:bg-white/80'
+                }`}
               aria-label={`Go to image ${i + 1}`}
             />
           ))}

@@ -99,7 +99,7 @@ export function EducationPortfolioDashboard({
 
       {/* Header */}
       <header className="border-b border-slate-200/80 bg-white/80 px-4 pb-4 pt-6 shadow-sm backdrop-blur-sm sm:px-6 lg:px-10">
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-[1920px]">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="inline-flex items-center rounded-full bg-orange-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-700">
@@ -128,7 +128,7 @@ export function EducationPortfolioDashboard({
       </header>
 
       {/* Stats – each card with a distinct transparent tint */}
-      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-10">
+      <section className="mx-auto max-w-[1920px] px-4 py-6 sm:px-6 lg:px-10">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {stats.map(({ label, value }, i) => {
             const tints = [
@@ -151,7 +151,7 @@ export function EducationPortfolioDashboard({
       </section>
 
       {/* Details – show only Education CSV / OrganizationProfile.data fields */}
-      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-10">
+      <section className="mx-auto max-w-[1920px] px-4 pb-12 sm:px-6 lg:px-10">
         <div className="grid gap-6 lg:grid-cols-2">
           {Object.entries(educationProfile || {})
             .filter(([, v]) => v != null && String(v).trim() !== '')
