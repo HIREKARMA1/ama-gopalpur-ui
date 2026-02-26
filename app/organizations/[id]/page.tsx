@@ -158,6 +158,9 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [healthMedicines, setHealthMedicines] = useState<Awaited<ReturnType<typeof healthApi.listMedicinesStock>>>([]);
   const [healthSchemes, setHealthSchemes] = useState<Awaited<ReturnType<typeof healthApi.listSchemes>>>([]);
   const [healthMonthly, setHealthMonthly] = useState<Awaited<ReturnType<typeof healthApi.listMonthlyReport>>>([]);
+  const [healthDailyAttendance, setHealthDailyAttendance] = useState<Awaited<ReturnType<typeof healthApi.listDailyAttendance>>>([]);
+  const [healthDailyMedicineStock, setHealthDailyMedicineStock] = useState<Awaited<ReturnType<typeof healthApi.listDailyMedicineStock>>>([]);
+  const [healthDailyExtraData, setHealthDailyExtraData] = useState<Awaited<ReturnType<typeof healthApi.listDailyExtraData>>>([]);
   const [educationProfile, setEducationProfile] = useState<Record<string, unknown>>({});
   const [healthProfile, setHealthProfile] = useState<Record<string, unknown>>({});
   const [snpDailyStock, setSnpDailyStock] = useState<Awaited<ReturnType<typeof icdsApi.listSnpDailyStock>>>([]);
@@ -212,7 +215,21 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
         } else if (code === 'HEALTH') {
-          const [master, infra, staff, equipment, patient, immunisation, medicines, schemes, monthly, profile] = await Promise.all([
+          const [
+            master,
+            infra,
+            staff,
+            equipment,
+            patient,
+            immunisation,
+            medicines,
+            schemes,
+            monthly,
+            profile,
+            dailyAtt,
+            dailyMed,
+            dailyExtra
+          ] = await Promise.all([
             healthApi.getFacilityMaster(id),
             healthApi.getInfrastructure(id),
             healthApi.listStaff(id),
@@ -223,6 +240,9 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
             healthApi.listSchemes(id),
             healthApi.listMonthlyReport(id),
             healthApi.getProfile(id),
+            healthApi.listDailyAttendance(id),
+            healthApi.listDailyMedicineStock(id),
+            healthApi.listDailyExtraData(id),
           ]);
           setHealthMaster(master ?? null);
           setHealthInfra(infra ?? null);
@@ -236,6 +256,9 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           setHealthProfile(
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
+          setHealthDailyAttendance(dailyAtt ?? []);
+          setHealthDailyMedicineStock(dailyMed ?? []);
+          setHealthDailyExtraData(dailyExtra ?? []);
         } else {
           // AWC / ICDS or other: try center profile and SNP daily stock
           try {
@@ -327,6 +350,9 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           medicines={healthMedicines}
           schemes={healthSchemes}
           monthly={healthMonthly}
+          dailyAttendance={healthDailyAttendance}
+          dailyMedicineStock={healthDailyMedicineStock}
+          dailyExtraData={healthDailyExtraData}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
         />
