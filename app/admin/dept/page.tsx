@@ -18,12 +18,52 @@ const EDUCATION_CSV_HEADER =
 const HEALTH_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,LATITUDE,LONGITUDE,NAME,INSTITUTION ID,CATEGORY,INST HEAD NAME,INST HEAD CONTACT,NO OF TS,NO OF NTS,NO OF MO,NO OF PHARMACIST,NO OF ANM,NO OF HEALTH WORKER,NO OF PATHOLOGY,NO OF CLERK,NO OF SWEEPER,NO OF NW,NO OF BED,NO OF ICU,X-RAY AVAILABILTY,CT-SCAN AVAILABILITY,AVAILABILITY OF PATHOLOGY TESTING,DESCRIPTION\n';
 
+const EDUCATION_ENGINEERING_CSV_HEADER =
+  'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF COLLEGE,INSTITUTION ID,ESTABLISHED YEAR,CAMPUS AREA (ACRES),AFFILIATING UNIVERSITY,AUTONOMOUS (YES/NO),AUTONOMOUS SINCE YEAR,COLLEGE TYPE,PIN CODE,LATITUDE,LONGITUDE,PRINCIPAL NAME,PRINCIPAL CONTACT,PRINCIPAL EMAIL,COLLEGE PHONE,COLLEGE EMAIL,WEBSITE,AICTE APPROVAL(YES/NO),NAAC,NBA,NIRF RANKING,AARIIA-ATAL RANKING,B.TECH BRANCHES COUNT,M.TECH PROGRAMMES COUNT,PH.D. (YES/NO),DEPARTMENTS (COMMA SEPARATED),TOTAL INTAKE UG AUTOMOBILE ENGINEERING,TOTAL INTAKE UG CHEMICAL ENGINEERING,TOTAL INTAKE UG CIVIL ENGINEERING,TOTAL INTAKE UG COMPUTER SCIENCE ENGINEERING,TOTAL INTAKE UG ELECTRICAL ENGINEERING,TOTAL INTAKE UG ELECTRONICS & TELECOMMUNICATION ENGINEERING,TOTAL INTAKE UG MECHANICAL ENGINEERING,TOTAL INTAKE UG METALLURGICAL AND MATERIALS ENGINEERING,TOTAL INTAKE UG PRODUCTION ENGINEERING,TOTAL INTAKE PG DEPARTMENTS WISE (COMMA SEPARATED),TOTAL NO OF FACULTY AUTOMOBILE ENGINEERING,TOTAL NO OF FACULTY CHEMICAL ENGINEERING,TOTAL NO OF FACULTY CIVIL ENGINEERING,TOTAL NO OF FACULTY COMPUTER SCIENCE ENGINEERING,TOTAL NO OF FACULTY ELECTRICAL ENGINEERING,TOTAL NO OF FACULTY ELECTRONICS & TELECOMMUNICATION ENGINEERING,TOTAL NO OF FACULTY MECHANICAL ENGINEERING,TOTAL NO OF FACULTY METALLURGICAL AND MATERIALS ENGINEERING,TOTAL NO OF FACULTY PRODUCTION ENGINEERING,TOTAL NO OF FACULTY BASIC SCIENCE,TOTAL NO OF FACULTY HUMANITIES AND SOCIAL SCIENCE,NO OF CLASSROOMS,NO OF LABS BRACH WISE(COMMA SEPARATED),NO OF SMART CLASSROOMS,WORKSHOP,HOSTEL,HOSTEL CAPACITY BOYS,HOSTEL CAPACITY GIRLS,GUEST HOUSE,BANKING,CANTEEN,GYMNASIUM,WIFI AVAILABILITY,PLAYGROUND,GARDEN,TRANSPORT FASCILITY,PARKING FASCILITY,STAFF ACCOMMODATION,SECURITY,CCTV,RAMP (ACCESSIBILITY),DRINKING WATER,ELECTRICITY,NSS,NCC,IQAC,ICC,ICC HEAD NAME,ICC HEAD CONTACT,GRIEVANCE CELL HEAD,GRIEVANCE CELL HEAD CONTACT,ANTI-RAGGING CELL HEAD,ANTI-RAGGING CELL HEAD CONTACT,INNOVATION AND STARTUP FASCILITY,ROBOTICS CLUB,CULTURAL CLUBS,SPORTS AND ATHLETICS FASCILITY,E-MAGAZINE,TEQIP,RESEARCH PROJECTS COUNT,PATENTS COUNT,MOU COUNT,CENTRE OF EXCELLENCE(COMMA SEPARATED),INCUBATION CENTRE(AVAILABILITY),PLACEMENT CELL,PLACEMENT OFFICER NAME,PLACEMENT OFFICER CONTACT,PLACEMENT PERCENTAGE (LAST YEAR),HIGHEST PACKAGE (LPA),INTERNSHIP,NAME OF DEANS/PIC/FIC/OIC/REGISTRAR,SCHORLASHIP FASCILITY,NOTABLE AWARDS OR ACHIEVEMENTS,DESCRIPTION\n';
+
+const EDUCATION_ITI_CSV_HEADER =
+  'ITI NAME,ITI CODE,STATE,DISTRICT,BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,OWNERSHIP (GOVT/PRIVATE/AIDED),AFFILIATION,AFFILIATING BODY,ESTABLISHED YEAR,PIN CODE,LATITUDE,LONGITUDE,PRINCIPAL/SUPERINTENDENT NAME,PRINCIPAL CONTACT,PRINCIPAL EMAIL,ITI PHONE,ITI EMAIL,WEBSITE,TOTAL TRADES (COUNT),TRADES OFFERED (LIST COMMA SEPARATED),TOTAL SEATS (ALL TRADES),TRADE-WISE SEATS (LIST COMMA SEPARATED),TOTAL TRAINEES ENROLLED,MALE TRAINEES,FEMALE TRAINEES,SC TRAINEES,ST TRAINEES,OBC TRAINEES,EWS TRAINEES,GENERAL TRAINEES,MINORITY TRAINEES,PWD TRAINEES,HOST STATE TRAINEES,OTHER STATE TRAINEES,ADMISSION MODE (MERIT/ENTRANCE/OTHER),MINIMUM ENTRY QUALIFICATION (8TH/10TH/12TH),TUITION/COURSE FEE PER YEAR (Rs),GOVT SCHOLARSHIPS (YES/NO),INSTITUTIONAL SCHOLARSHIPS (YES/NO),TOTAL INSTRUCTORS,TOTAL INSTRUCTORS REGULAR,TOTAL INSTRUCTORS CONTRACT,TOTAL INSTRUCTORS WITH CITS,TOTAL INSTRUCTORS WITH NAC/NTC & ITI,TOTAL INSTRUCTORS WITH INDUSTRY EXPERIENCE,TOTAL NON-TEACHING STAFF,TOTAL WORKSHOP STAFF (INSTRUCTORS/ASSISTANTS),CENTRAL LIBRARY/READING ROOM (YES/NO),LIBRARY BOOKS (COUNT),DIGITAL LEARNING MATERIALS (YES/NO),COMPUTER LAB (YES/NO),TOTAL COMPUTERS,WIFI CAMPUS (YES/NO),NO OF THEORY CLASSROOMS,NO OF WORKSHOPS,EQUIPMENT AS PER NCVT NORMS (YES/NO),SAFETY EQUIPMENT AVAILABLE (YES/NO),POWER SUPPLY (YES/NO),POWER BACKUP (GENERATOR/INVERTER) (YES/NO),HOSTEL (YES/NO),HOSTEL CAPACITY BOYS,HOSTEL CAPACITY GIRLS,CANTEEN (YES/NO),DRINKING WATER (YES/NO),TOILETS (M/F/PH) (DETAILS),RAMP/ACCESSIBILITY (YES/NO),FACILITIES FOR PWD (LIST),PLAYGROUND (YES/NO),INDOOR GAMES (YES/NO),GYMNASIUM (YES/NO),FIRST AID/HEALTH ROOM (YES/NO),FIRE SAFETY SYSTEM (YES/NO),CCTV (YES/NO),SECURITY (YES/NO),INDUSTRY PARTNER (YES/NO),INDUSTRY PARTNERS (LIST),MoUs WITH INDUSTRY (COUNT),CAREER GUIDANCE CELL (YES/NO),TRAINING & PLACEMENT CELL (YES/NO),TPO NAME,TPO CONTACT,ON-JOB TRAINING/OJT MANDATORY (YES/NO),TRAINEES COMPLETING LAST YEAR (%),CAMPUS INTERVIEWS HELD LAST YEAR (COUNT),COMPANIES VISITED LAST YEAR,TRAINEES PLACED LAST YEAR(COUNT),PLACEMENT PERCENTAGE (LAST YEAR),AVERAGE SALARY (MONTHLY Rs),HIGHEST SALARY (MONTHLY Rs),TRAINEES STARTING SELF-EMPLOYMENT (COUNT),TRAINEES GOING FOR HIGHER STUDIES/POLYTECHNIC (COUNT),NCC(YES?NO),NSS(YES?NO),CLUBS (LIST),SOFT SKILLS/EMPLOYABILITY TRAINING (YES/NO),DIGITAL/ICT TRAINING (YES/NO),VALUE ADDED/SHORT TERM COURSES (LIST),AWARDS/RECOGNITION (STATE/NATIONAL),SPECIAL INITIATIVES (PMKVY/DDU-GKY/OTHER SCHEMES),REMARKS/DESCRIPTION\n';
+
+const EDUCATION_DIPLOMA_CSV_HEADER =
+  'COLLEGE NAME,COLLEGE CODE/AFFILIATION CODE,STATE,DISTRICT,BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,OWNERSHIP (GOVT/PRIVATE/AIDED),INSTITUTION TYPE (POLYTECHNIC/ITI/OTHER),APPROVAL AUTHORITY (AICTE/NCVT/STATE COUNCIL),AFFILIATING BODY (e.g. SCTE&VT),ESTABLISHED YEAR,FULL ADDRESS,PIN CODE,LATITUDE,LONGITUDE,PRINCIPAL/HEAD NAME,PRINCIPAL CONTACT,PRINCIPAL EMAIL,COLLEGE PHONE,COLLEGE EMAIL,WEBSITE,TOTAL DIPLOMA PROGRAMMES (COUNT),DIPLOMA PROGRAMMES (LIST BRANCH-WISE),PROGRAM DURATION (YEARS),TOTAL SANCTIONED INTAKE (ALL YEARS),YEAR-WISE SANCTIONED INTAKE (1ST YEAR),TOTAL STUDENT ENROLMENT (ALL YEARS),STUDENTS ENROLLED 1ST YEAR,STUDENTS ENROLLED 2ND YEAR,STUDENTS ENROLLED 3RD YEAR,MALE STUDENTS, FEMALE STUDENTS,SC STUDENTS,ST STUDENTS,OBC STUDENTS,EWS STUDENTS,GENERAL STUDENTS,MINORITY STUDENTS,PWD STUDENTS,TUITION FEE PER YEAR (Rs),GOVT SCHOLARSHIPS (YES/NO),INSTITUTIONAL SCHOLARSHIPS (YES/NO),TOTAL TEACHING STAFF,TEACHING STAFF PERMANENT,TEACHING STAFF CONTRACT/GUEST,TEACHERS WITH B.TECH/BE,TEACHERS WITH M.TECH,TEACHERS WITH INDUSTRY EXPERIENCE (COUNT),NON-TEACHING STAFF,WORKSHOP INSTRUCTORS (COUNT),CENTRAL LIBRARY (YES/NO),LIBRARY BOOKS (COUNT),LIBRARY JOURNALS (COUNT),DIGITAL LIBRARY (YES/NO),COMPUTER CENTRE (YES/NO),TOTAL COMPUTERS,INTERNET BANDWIDTH (MBPS),WIFI CAMPUS (YES/NO),NO OF CLASSROOMS,NO OF LABS/WORKSHOPS,SMART CLASSROOMS (COUNT),LAB EQUIPMENT ADEQUATE (YES/NO),HOSTEL (YES/NO),HOSTEL CAPACITY BOYS,HOSTEL CAPACITY GIRLS,CANTEEN (YES/NO),HEALTH CENTRE/FIRST AID (YES/NO),PLAYGROUND (YES/NO),GYMNASIUM (YES/NO),TRANSPORT (COLLEGE BUS) (YES/NO),PARKING (YES/NO),RAMP/ACCESSIBILITY (YES/NO),FACILITIES FOR PWD (LIST),DRINKING WATER (YES/NO),ELECTRICITY (YES/NO),POWER BACKUP (YES/NO),NSS/NCC/CLUBS (LIST),ANTI-RAGGING CELL (YES/NO),GRIEVANCE CELL (YES/NO),TRAINING & PLACEMENT CELL (YES/NO),TPO NAME,TPO CONTACT,INDUSTRIAL VISITS PER YEAR,INDUSTRIAL TRAINING/INTERNSHIP MANDATORY (YES/NO),STUDENTS COMPLETING INTERNSHIP LAST YEAR (%),COMPANIES VISITED LAST YEAR,STUDENTS PLACED LAST YEAR,PLACEMENT PERCENTAGE (LAST YEAR),MEDIAN SALARY (ANNUAL Rs),HIGHEST SALARY (ANNUAL Rs),STUDENTS GOING FOR HIGHER STUDIES (COUNT),VALUE-ADDED/SHORT-TERM COURSES (LIST),MOOCs/SWAYAM/NPTEL USED (YES/NO),NOTABLE INDUSTRY PARTNERS/MoUs,NOTABLE AWARDS/ACHIEVEMENTS,REMARKS/DESCRIPTION\n';
+
+const EDUCATION_UNIVERSITY_CSV_HEADER =
+  'UNIVERSITY NAME,UNIVERSITY TYPE (STATE/CENTRAL/PRIVATE/DEEMED),TEACHING-CUM-AFFILIATING (YES/NO),ESTABLISHED YEAR,OWNERSHIP (GOVT/PRIVATE),NAAC GRADE,UGC 2(F) (YES/NO),UGC 12(B) (YES/NO),AISHE CODE,NIRF UNIVERSITY RANK,NIRF YEAR,STATE,DISTRICT,BLOCK/ULB,GP/WARD,VILLAGE,PIN CODE,LATITUDE,LONGITUDE,WEBSITE,UNIVERSITY EMAIL,PHONE NUMBER,CHANCELLOR NAME,VICE-CHANCELLOR NAME,REGISTRAR NAME,FINANCE OFFICER NAME,CONTROLLER OF EXAMS NAME,IQAC COORDINATOR NAME,NODAL OFFICER (AISHE) NAME,NODAL OFFICER CONTACT,CAMPUS AREA (ACRES),NO OF CAMPUSES/UNITS,OFF-CAMPUS CENTRES (COUNT),OFF-CAMPUS LOCATIONS (LIST),DISTANCE EDUCATION (YES/NO),ONLINE PROGRAMMES (YES/NO),TOTAL FACULTIES,TOTAL DEPARTMENTS,DEPARTMENTS (COMMA SEPARATED),TOTAL RESEARCH CENTRES,RESEARCH CENTRES (COMMA SEPARATED),TOTAL CENTRES OF EXCELLENCE,CENTRES OF EXCELLENCE (COMMA SEPARARTED),TOTAL CONSTITUENT COLLEGES,TOTAL AFFILIATED COLLEGES,TOTAL UG PROGRAMMES,UG PROGRAMMES (COMMA SEPARATED),TOTAL PG PROGRAMMES,PG PROGRAMMES (COMMA SEPARATED),TOTAL INTEGRATED PROGRAMMES,INTEGRATED PROGRAMMES (COMMA SEPARATED),TOTAL DIPLOMA/CERTIFICATE PROGRAMMES,DIPLOMA/CERTIFICATE PROGRAMMES (COMMA SEPARATED),TOTAL PH.D. PROGRAMMES,PH.D. PROGRAMMES (COMMA SEPARATED),D.LITT./D.SC. (YES/NO),D.LITT./D.SC. (COMMA SEPARATED),TOTAL SANCTIONED STUDENT INTAKE UG,TOTAL SANCTIONED STUDENT INTAKE PG,ADMISSION MODE (ENTRANCE/MERIT/BOTH),ENTRANCE TEST NAME,ACADEMIC YEAR SYSTEM (SEMESTER/TRIMESTER/ANNUAL),RESULT DECLARATION TIMELINE,ACADEMIC CALENDAR (URL),EXAMINATION CELL (YES/NO),UG COMPLETION RATE (%),PG COMPLETION RATE (%),TOTAL STUDENT ENROLLMENT,UG STUDENT ENROLLMENT,PG STUDENT ENROLLMENT,PH.D. STUDENT ENROLLMENT,STUDENTS FROM OTHER STATES (%),FEMALE STUDENTS (%),SC STUDENTS (COUNT),ST STUDENTS (COUNT),OBC STUDENTS (COUNT),EWS STUDENTS (COUNT),GENERAL STUDENTS (COUNT),MINORITY STUDENTS (COUNT),PWD STUDENTS (COUNT),SCHOLARSHIPS (GOVT) (YES/NO),SCHOLARSHIPS (INSTITUTIONAL) (YES/NO),TOTAL TEACHING STAFF,TOTAL PERMANENT TEACHING STAFF,TOTAL CONTRACT/GUEST FACULTY,TOTAL TEACHING STAFF (PROF),TOTAL TEACHING STAFF (ASSOC PROF),TOTAL TEACHING STAFF (ASST PROF),TOTAL TEACHERS WITH PH.D. (COUNT),TOTAL TEACHERS WITH NET/SET (COUNT),STUDENT-TEACHER RATIO,NON-TEACHING STAFF (COUNT),TECHNICAL STAFF (COUNT),LIBRARY (YES/NO),CENTRAL LIBRARY NAME,LIBRARY BOOKS (COUNT),LIBRARY JOURNALS (COUNT),E-JOURNALS (YES/NO),E-BOOKS (YES/NO),LIBRARY SOFTWARE (KOHA/RFID/OTHER),DIGITAL LIBRARY (YES/NO),COMPUTER CENTRE (YES/NO),TOTAL COMPUTERS,WIFI CAMPUS (YES/NO),NKN CONNECTIVITY (YES/NO),SMART CLASSROOMS (COUNT),SEMINAR HALLS (COUNT),AUDITORIUM (YES/NO),LABORATORIES (COUNT),MAJOR EQUIPMENT/INSTRUMENTATION (LIST COMMA SEPARATED),WORKSHOPS (COUNT),HOSTELS (YES/NO),HOSTEL COUNT,HOSTEL CAPACITY BOYS,HOSTEL CAPACITY GIRLS,STAFF QUARTERS (YES/NO),GUEST HOUSE (YES/NO),HEALTH CENTRE (YES/NO),CANTEEN (YES/NO),BANK/ATM (YES/NO),SPORTS FACILITIES (YES/NO),PLAYGROUND (YES/NO),GYMNASIUM (YES/NO),TRANSPORT FACILITY (YES/NO),PARKING (YES/NO),SECURITY (YES/NO),CCTV (YES/NO),FIRE SAFETY (YES/NO),RAMP/ACCESSIBILITY (YES/NO),FACILITIES FOR PWD (LIST),DRINKING WATER (YES/NO),ELECTRICITY (YES/NO),POWER BACKUP (YES/NO),SOLAR (YES/NO),IQAC (YES/NO),GRIEVANCE CELL (YES/NO),ANTI-RAGGING CELL (YES/NO),ICC HEAD NAME,ICC HEAD CONTACT,ALUMNI ASSOCIATION (YES/NO),NSS (YES/NO),NCC (YES/NO),STUDENT CLUBS (LIST COMMA SEPARATED),CULTURAL ACTIVITIES (YES/NO),TECHNICAL FEST/EVENTS (LIST COMMA SEPARATED),INDUSTRY COLLABORATION (MoUs) (COUNT),MoUs (LIST COMMA SEPARATED),RESEARCH PROJECTS (COUNT),PUBLICATIONS (LAST YEAR),PATENTS FILED,PATENTS GRANTED,STARTUPS/INCUBATION (YES/NO),INCUBATION CENTRE NAME(LIST COMMA SEPARATED),PLACEMENT CELL (YES/NO),PLACEMENT OFFICER NAME,PLACEMENT OFFICER CONTACT,PLACEMENT % (LAST YEAR),MEDIAN SALARY (LPA),HIGHEST PACKAGE (LPA),STUDENTS TO HIGHER STUDIES (COUNT),MOOCs/SWAYAM/NPTEL (YES/NO),VALUE-ADDED COURSES (COUNT),NOTABLE AWARDS/ACHIEVEMENTS,DESCRIPTION\n';
+
+const splitHeader = (header: string): string[] =>
+  header.trim().replace(/\n$/, '').split(',').map((h) => h.trim());
+
+const snakeFromHeader = (label: string): string =>
+  label
+    .trim()
+    .replace(/[-\s/]+/g, '_')
+    .replace(/[()]/g, '')
+    .replace(/[?]/g, '')
+    .toLowerCase()
+    .replace(/^_+|_+$/g, '');
+
+const getEducationHeadersForSubDept = (subDept: string): string[] => {
+  switch (subDept) {
+    case 'ENGINEERING_COLLEGE':
+      return splitHeader(EDUCATION_ENGINEERING_CSV_HEADER);
+    case 'ITI':
+      return splitHeader(EDUCATION_ITI_CSV_HEADER);
+    case 'DIPLOMA_COLLEGE':
+      return splitHeader(EDUCATION_DIPLOMA_CSV_HEADER);
+    case 'UNIVERSITY':
+      return splitHeader(EDUCATION_UNIVERSITY_CSV_HEADER);
+    default:
+      return [];
+  }
+};
+
 export default function DepartmentAdminPage() {
   const router = useRouter();
   const { language } = useLanguage();
   const [me, setMe] = useState<User | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [deptCode, setDeptCode] = useState<string | null>(null);
+  const [educationSubDept, setEducationSubDept] = useState<string>('SCHOOL');
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,6 +125,10 @@ export default function DepartmentAdminPage() {
   });
   const [newEducationOrg, setNewEducationOrg] = useState(emptyEducationOrg());
 
+  // Generic form values for non-school Education sub-departments (engineering, ITI, diploma, university)
+  // Keys are snake_case versions of CSV column headers.
+  const [eduFormValues, setEduFormValues] = useState<Record<string, string>>({});
+
   const _n = (s: string) => (s.trim() ? (Number(s) || undefined) : undefined);
   const _s = (s: string) => (s.trim() || undefined);
 
@@ -104,6 +148,7 @@ export default function DepartmentAdminPage() {
           const list = await organizationsApi.listByDepartment(user.department_id, {
             skip: 0,
             limit: PAGE_SIZE,
+            sub_department: dept?.code === 'EDUCATION' ? educationSubDept : null,
           });
           setOrgs(list);
           setPage(0);
@@ -138,6 +183,13 @@ export default function DepartmentAdminPage() {
     })();
     return () => { cancelled = true; };
   }, [deptCode, orgs]);
+
+  // Reset generic Education form when switching sub-departments
+  useEffect(() => {
+    if (deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL') {
+      setEduFormValues({});
+    }
+  }, [deptCode, educationSubDept]);
 
   useEffect(() => {
     if (deptCode !== 'HEALTH' || orgs.length === 0) return;
@@ -196,7 +248,20 @@ export default function DepartmentAdminPage() {
     setError(null);
     try {
       if (deptCode === 'EDUCATION') {
-        const result = await educationApi.bulkCsv(file);
+        let result;
+        if (educationSubDept === 'SCHOOL') {
+          result = await educationApi.bulkCsv(file);
+        } else if (educationSubDept === 'ENGINEERING_COLLEGE') {
+          result = await educationApi.bulkEngineeringCollegesCsv(file);
+        } else if (educationSubDept === 'ITI') {
+          result = await educationApi.bulkItiCollegesCsv(file);
+        } else if (educationSubDept === 'UNIVERSITY') {
+          result = await educationApi.bulkUniversitiesCsv(file);
+        } else if (educationSubDept === 'DIPLOMA_COLLEGE') {
+          result = await educationApi.bulkDiplomaCollegesCsv(file);
+        } else {
+          result = await educationApi.bulkCsv(file);
+        }
         if (result.errors?.length) {
           setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
         }
@@ -224,6 +289,7 @@ export default function DepartmentAdminPage() {
         const list = await organizationsApi.listByDepartment(me.department_id, {
           skip: 0,
           limit: PAGE_SIZE,
+          sub_department: deptCode === 'EDUCATION' ? educationSubDept : null,
         });
         setOrgs(list);
         setPage(0);
@@ -241,8 +307,25 @@ export default function DepartmentAdminPage() {
     let csvContent: string;
     let filename: string;
     if (deptCode === 'EDUCATION') {
-      csvContent = EDUCATION_CSV_HEADER;
-      filename = 'education_template.csv';
+      if (educationSubDept === 'SCHOOL') {
+        csvContent = EDUCATION_CSV_HEADER;
+        filename = 'education_schools_template.csv';
+      } else if (educationSubDept === 'ENGINEERING_COLLEGE') {
+        csvContent = EDUCATION_ENGINEERING_CSV_HEADER;
+        filename = 'education_engineering_colleges_template.csv';
+      } else if (educationSubDept === 'ITI') {
+        csvContent = EDUCATION_ITI_CSV_HEADER;
+        filename = 'education_iti_colleges_template.csv';
+      } else if (educationSubDept === 'UNIVERSITY') {
+        csvContent = EDUCATION_UNIVERSITY_CSV_HEADER;
+        filename = 'education_universities_template.csv';
+      } else if (educationSubDept === 'DIPLOMA_COLLEGE') {
+        csvContent = EDUCATION_DIPLOMA_CSV_HEADER;
+        filename = 'education_diploma_colleges_template.csv';
+      } else {
+        csvContent = EDUCATION_CSV_HEADER;
+        filename = 'education_template.csv';
+      }
     } else if (deptCode === 'HEALTH') {
       csvContent = HEALTH_CSV_HEADER;
       filename = 'health_template.csv';
@@ -290,6 +373,41 @@ export default function DepartmentAdminPage() {
         ) : (
           <>
             {error && <p className="text-xs text-red-500">{error}</p>}
+
+            {deptCode === 'EDUCATION' && (
+              <section className="rounded-lg border border-border bg-background p-3 text-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-text">Education sub-department:</span>
+                  <select
+                    className="rounded-md border border-border bg-background px-2 py-1 text-xs outline-none focus:border-primary"
+                    value={educationSubDept}
+                    onChange={async (e) => {
+                      const value = e.target.value;
+                      setEducationSubDept(value);
+                      if (me?.department_id) {
+                        const list = await organizationsApi.listByDepartment(me.department_id, {
+                          skip: 0,
+                          limit: PAGE_SIZE,
+                          sub_department: value,
+                        });
+                        setOrgs(list);
+                        setPage(0);
+                        setHasMore(list.length === PAGE_SIZE);
+                      }
+                    }}
+                  >
+                    <option value="SCHOOL">School</option>
+                    <option value="ENGINEERING_COLLEGE">Engineering College</option>
+                    <option value="ITI">ITI</option>
+                    <option value="UNIVERSITY">University</option>
+                    <option value="DIPLOMA_COLLEGE">Diploma College</option>
+                  </select>
+                  <span className="text-text-muted">
+                    Uploads and organization list below are filtered by the selected sub-department.
+                  </span>
+                </div>
+              </section>
+            )}
 
             {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && (
               <section className="rounded-lg border border-border bg-background p-4">
@@ -486,7 +604,7 @@ export default function DepartmentAdminPage() {
               </section>
             )}
 
-            {deptCode === 'EDUCATION' && (
+            {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual School entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
@@ -524,6 +642,7 @@ export default function DepartmentAdminPage() {
                           ward_village: newEducationOrg.village || null,
                           sector: newEducationOrg.category || null,
                         } as Record<string, string | number | null>,
+                        sub_department: 'SCHOOL',
                       };
                       let updated: Organization;
                       if (editingEducationId) {
@@ -668,6 +787,148 @@ export default function DepartmentAdminPage() {
                   <div className="md:col-span-2">
                     <button type="submit" disabled={creating} className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60">
                       {creating ? 'Saving...' : editingEducationId ? 'Update School' : 'Save School'}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            )}
+
+            {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
+              <section className="rounded-lg border border-border bg-background p-4">
+                <h2 className="text-sm font-semibold text-text">
+                  Manual{' '}
+                  {educationSubDept === 'ENGINEERING_COLLEGE'
+                    ? 'Engineering College'
+                    : educationSubDept === 'ITI'
+                    ? 'ITI'
+                    : educationSubDept === 'DIPLOMA_COLLEGE'
+                    ? 'Diploma College'
+                    : educationSubDept === 'UNIVERSITY'
+                    ? 'University'
+                    : 'Education'}{' '}
+                  entry
+                </h2>
+                <p className="mt-1 text-xs text-text-muted">
+                  Add a single institution manually. All columns from the selected CSV template are available below.
+                </p>
+                <form
+                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!me?.department_id) {
+                      setError('Department is not set for this admin user.');
+                      return;
+                    }
+                    const headers = getEducationHeadersForSubDept(educationSubDept);
+                    const nameHeader =
+                      educationSubDept === 'ENGINEERING_COLLEGE'
+                        ? 'NAME OF COLLEGE'
+                        : educationSubDept === 'ITI'
+                        ? 'ITI NAME'
+                        : educationSubDept === 'DIPLOMA_COLLEGE'
+                        ? 'COLLEGE NAME'
+                        : educationSubDept === 'UNIVERSITY'
+                        ? 'UNIVERSITY NAME'
+                        : '';
+                    const nameKey = nameHeader ? snakeFromHeader(nameHeader) : '';
+                    const latKey = snakeFromHeader('LATITUDE');
+                    const lngKey = snakeFromHeader('LONGITUDE');
+                    const name = nameKey ? (eduFormValues[nameKey] || '').trim() : '';
+                    const latStr = eduFormValues[latKey] || '';
+                    const lngStr = eduFormValues[lngKey] || '';
+                    if (!name || !latStr.trim() || !lngStr.trim()) {
+                      setError('Name, Latitude and Longitude are required.');
+                      return;
+                    }
+                    setCreating(true);
+                    setError(null);
+                    try {
+                      const lat = Number(latStr);
+                      const lng = Number(lngStr);
+                      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                        throw new Error('Latitude and Longitude must be valid numbers.');
+                      }
+                      const blockKey = snakeFromHeader('BLOCK/ULB');
+                      const gpKey = snakeFromHeader('GP/WARD');
+                      const villageKey =
+                        educationSubDept === 'ITI' || educationSubDept === 'DIPLOMA_COLLEGE'
+                          ? snakeFromHeader('VILLAGE/LOCALITY')
+                          : snakeFromHeader('VILLAGE');
+                      const block = eduFormValues[blockKey] || '';
+                      const gp = eduFormValues[gpKey] || '';
+                      const village = eduFormValues[villageKey] || '';
+                      const addressParts = [block, gp, village].filter((p) => p && p.trim());
+                      const basePayload = {
+                        name,
+                        latitude: lat,
+                        longitude: lng,
+                        address: addressParts.length ? addressParts.join(', ') : undefined,
+                        attributes: {
+                          ulb_block: block || null,
+                          gp_name: gp || null,
+                          ward_village: village || null,
+                        } as Record<string, string | number | null>,
+                        sub_department: educationSubDept,
+                      };
+                      const orgType =
+                        educationSubDept === 'UNIVERSITY'
+                          ? 'UNIVERSITY'
+                          : 'COLLEGE';
+                      let org: Organization;
+                      if (editingEducationId) {
+                        org = await organizationsApi.update(editingEducationId, basePayload);
+                        setOrgs((prev) => prev.map((o) => (o.id === org.id ? org : o)));
+                      } else {
+                        org = await organizationsApi.create({
+                          department_id: me.department_id,
+                          type: orgType,
+                          ...basePayload,
+                        });
+                        setOrgs((prev) => [org, ...prev]);
+                      }
+                      const profileData: Record<string, unknown> = {};
+                      headers.forEach((h) => {
+                        const key = snakeFromHeader(h);
+                        const val = eduFormValues[key];
+                        if (val != null && String(val).trim() !== '') {
+                          profileData[key] = val;
+                        }
+                      });
+                      profileData[latKey] = lat;
+                      profileData[lngKey] = lng;
+                      await educationApi.putProfile(org.id, profileData);
+                      setEducationProfiles((prev) => ({ ...prev, [org.id]: profileData }));
+                      setEduFormValues({});
+                      setEditingEducationId(null);
+                    } catch (err: any) {
+                      setError(err.message || 'Failed to save organization');
+                    } finally {
+                      setCreating(false);
+                    }
+                  }}
+                >
+                  {getEducationHeadersForSubDept(educationSubDept).map((header) => {
+                    const key = snakeFromHeader(header);
+                    return (
+                      <div key={key} className="space-y-1">
+                        <label className="block text-text">{header}</label>
+                        <input
+                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                          value={eduFormValues[key] ?? ''}
+                          onChange={(e) =>
+                            setEduFormValues((prev) => ({ ...prev, [key]: e.target.value }))
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                  <div className="md:col-span-2">
+                    <button
+                      type="submit"
+                      disabled={creating}
+                      className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                    >
+                      {creating ? 'Saving...' : editingEducationId ? 'Update' : 'Save'}
                     </button>
                   </div>
                 </form>
@@ -897,7 +1158,9 @@ export default function DepartmentAdminPage() {
               <h2 className="text-sm font-semibold text-text">Bulk CSV upload</h2>
               <p className="mt-1 text-xs text-text-muted">
                 {deptCode === 'EDUCATION'
-                  ? 'Upload Education minister CSV. Organizations and profiles will be created or updated by NAME OF SCHOOL, LATITUDE, LONGITUDE.'
+                  ? educationSubDept === 'SCHOOL'
+                    ? 'Upload Education minister CSV for schools. Organizations and profiles will be created or updated by NAME OF SCHOOL, LATITUDE, LONGITUDE.'
+                    : 'Upload Education CSV for the selected sub-department. Organizations and profiles will be created or updated by name and location.'
                   : deptCode === 'HEALTH'
                     ? 'Upload Health minister CSV. Organizations and profiles will be created or updated by NAME, LATITUDE, LONGITUDE.'
                     : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
@@ -939,7 +1202,15 @@ export default function DepartmentAdminPage() {
                   <thead>
                     <tr className="border-b border-border bg-background-muted">
                       <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Sl. No.</th>
-                      <th className="px-2 py-1 text-left font-medium text-text">{deptCode === 'EDUCATION' ? 'School Name' : deptCode === 'HEALTH' ? 'Facility Name' : 'AWC Name'}</th>
+                      <th className="px-2 py-1 text-left font-medium text-text">
+                        {deptCode === 'EDUCATION'
+                          ? educationSubDept === 'SCHOOL'
+                            ? 'School Name'
+                            : 'Institution Name'
+                          : deptCode === 'HEALTH'
+                            ? 'Facility Name'
+                            : 'AWC Name'}
+                      </th>
                       {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH') && (
                         <>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
@@ -962,7 +1233,7 @@ export default function DepartmentAdminPage() {
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">LGD Code</th>
                         </>
                       )}
-                      {deptCode === 'EDUCATION' && (
+                      {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
                         <>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
@@ -1019,6 +1290,18 @@ export default function DepartmentAdminPage() {
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">DW(Aquaguard)</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Latitude</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Longitude</th>
+                        </>
+                      )}
+                      {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
+                        <>
+                          {getEducationHeadersForSubDept(educationSubDept).map((header) => (
+                            <th
+                              key={header}
+                              className="px-2 py-1 text-left font-medium text-text whitespace-nowrap"
+                            >
+                              {header}
+                            </th>
+                          ))}
                         </>
                       )}
                       {deptCode === 'HEALTH' && (
@@ -1084,7 +1367,7 @@ export default function DepartmentAdminPage() {
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.lgd_code)}</td>
                             </>
                           )}
-                          {deptCode === 'EDUCATION' && (
+                          {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
                             <>
                               <td className="px-2 py-1 text-text-muted">{_(ep?.block_ulb ?? o.attributes?.ulb_block)}</td>
                               <td className="px-2 py-1 text-text-muted">{_(ep?.gp_ward ?? o.attributes?.gp_name)}</td>
@@ -1141,6 +1424,35 @@ export default function DepartmentAdminPage() {
                               <td className="px-2 py-1 text-text-muted">{_(ep?.drinking_water_aquaguard)}</td>
                               <td className="px-2 py-1 text-text-muted">{o.latitude != null ? o.latitude.toFixed(6) : '—'}</td>
                               <td className="px-2 py-1 text-text-muted">{o.longitude != null ? o.longitude.toFixed(6) : '—'}</td>
+                            </>
+                          )}
+                          {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
+                            <>
+                              {getEducationHeadersForSubDept(educationSubDept).map((header) => {
+                                const key = snakeFromHeader(header);
+                                const val = ep ? ep[key] : undefined;
+                                const show = (v: unknown) =>
+                                  v != null && String(v).trim() !== '' ? String(v) : '—';
+                                if (key === 'latitude') {
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {o.latitude != null ? o.latitude.toFixed(6) : '—'}
+                                    </td>
+                                  );
+                                }
+                                if (key === 'longitude') {
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {o.longitude != null ? o.longitude.toFixed(6) : '—'}
+                                    </td>
+                                  );
+                                }
+                                return (
+                                  <td key={key} className="px-2 py-1 text-text-muted">
+                                    {show(val)}
+                                  </td>
+                                );
+                              })}
                             </>
                           )}
                           {deptCode === 'HEALTH' && (
@@ -1208,7 +1520,7 @@ export default function DepartmentAdminPage() {
                                 Edit
                               </button>
                             )}
-                            {deptCode === 'EDUCATION' && (
+                            {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
                               <button
                                 type="button"
                                 className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
