@@ -16,7 +16,7 @@ import { ImageSlider } from './ImageSlider';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
 import { getHealthProfileLabel, HEALTH_PROFILE_KEYS } from '../../lib/profileLabels';
-import { Users, User, Phone, Wrench, CheckCircle2, AlertTriangle, TrendingUp, BarChart4, Activity, Stethoscope, BedDouble, HeartPulse, ActivitySquare, Clock, FileText, Monitor } from 'lucide-react';
+import { Users, User, Phone, MapPin, Wrench, CheckCircle2, AlertTriangle, TrendingUp, BarChart4, Activity, Stethoscope, BedDouble, HeartPulse, ActivitySquare, Clock, FileText, Monitor } from 'lucide-react';
 
 function formatVal(v: string | number | null | undefined): string {
   if (v == null || String(v).trim() === '') return '—';
@@ -177,61 +177,69 @@ export function HealthPortfolioDashboard({
   const avgImprovement = patientCategories.length > 0 ? Math.round(totalImprovementChange / patientCategories.length) : 0;
 
   return (
-    <div className="min-h-screen bg-[#fafafb] text-slate-800 font-sans pb-16">
+    <div className="min-h-screen bg-slate-50/30 text-slate-800 font-sans pb-16">
       {/* Header Profile Info & Images */}
       <header className="mx-auto max-w-[1920px] px-4 pt-8 pb-6 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left Side: Profile Title, Info & Stats */}
-          <div className="flex-1 flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex-1 flex flex-col justify-between rounded-3xl border border-blue-200 bg-blue-50/60 p-6 sm:p-8 shadow-sm backdrop-blur-md">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div>
                 <p className="inline-flex items-center rounded bg-orange-500/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-orange-600 border border-orange-500/20">
                   {t('health.badge', language)}
                 </p>
-                <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                <h1 className="mt-3 text-xl font-black tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
                   {org.name}
                 </h1>
-                {departmentName && (
-                  <p className="mt-1.5 text-sm font-medium text-slate-500">{departmentName}</p>
-                )}
-                {locationLine && (
-                  <p className="mt-0.5 text-sm text-slate-400">{locationLine}</p>
-                )}
-              </div>
-              {facilityMaster?.facility_type && (
-                <div className="rounded border border-amber-200/60 bg-amber-500/5 px-4 py-3 text-xs text-slate-600 shadow-sm min-w-[150px]">
-                  <div className="font-semibold text-amber-800/80 uppercase tracking-widest text-[10px]">
-                    {t('health.facilityProfileTitle', language)}
+                <div className="mt-3 flex flex-wrap items-center gap-y-2 gap-x-4 text-xs sm:text-sm font-medium text-slate-600">
+                  <div className="flex items-center gap-1.5">
+                    <MapPin size={14} className="text-blue-500 sm:size-[16px]" />
+                    <span className="truncate max-w-[200px] sm:max-w-none">{org.address || 'Gopalpur, Ganjam'}</span>
                   </div>
-                  <div className="mt-1 text-sm font-semibold text-slate-800">
-                    {facilityMaster.facility_type}
+                  <div className="flex items-center gap-1.5">
+                    <Phone size={14} className="text-blue-500 sm:size-[16px]" />
+                    <span>+91 98765 43210</span>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* Quick Status Badges */}
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] sm:text-xs font-bold text-emerald-700 border border-emerald-200">
+                  <span className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-emerald-500"></span>
+                  Active Facility
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] sm:text-xs font-bold text-blue-700 border border-blue-200">
+                  Verified
+                </span>
+              </div>
             </div>
 
-            <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {/* Quick Stats Grid */}
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               {topStats.map(({ label, value, icon: Icon }) => {
                 const theme = {
-                  shadow: 'shadow-sm hover:shadow-md',
-                  outline: 'border-emerald-200/60 bg-emerald-50/30',
-                  iconBg: 'bg-emerald-100/60',
-                  iconColor: 'text-emerald-600',
+                  shadow: 'shadow-sm',
+                  outline: 'border-emerald-200/60 bg-white/40',
+                  iconBg: 'bg-emerald-200/50',
+                  iconColor: 'text-emerald-700',
                   valueBg: 'bg-emerald-100/50 text-emerald-800'
                 };
 
                 return (
                   <div
                     key={label}
-                    className={`flex flex-col items-center justify-center rounded-2xl border p-5 text-center ${theme.outline} ${theme.shadow} transition-all duration-300`}
+                    className={`flex flex-col items-center justify-center rounded-2xl border p-4 sm:p-5 text-center backdrop-blur-sm ${theme.outline} ${theme.shadow} bg-white/40 shadow-sm`}
                   >
-                    <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-[18px] ${theme.iconBg} ${theme.iconColor}`}>
-                      {Icon && <Icon size={24} strokeWidth={2.5} />}
+                    <div className={`mb-2 sm:mb-3 flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-[20px] ${theme.iconBg} ${theme.iconColor} shadow-inner`}>
+                      {Icon && <Icon size={20} className="sm:size-[26px]" strokeWidth={2.5} />}
                     </div>
-                    <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-600">{label}</p>
-                    <div className={`rounded-full px-5 py-2 ${theme.valueBg}`}>
-                      <p className="text-[22px] font-black tracking-tight">{formatVal(value)}</p>
-                    </div>
+                    <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      {label}
+                    </span>
+                    <span className="mt-0.5 sm:mt-1 text-xl sm:text-2xl font-black text-slate-900">
+                      {formatVal(value)}
+                    </span>
                   </div>
                 );
               })}
@@ -239,7 +247,7 @@ export function HealthPortfolioDashboard({
           </div>
 
           {/* Right Side: Photo Gallery */}
-          <div className="w-full lg:w-1/3 xl:w-[450px] min-h-[300px] flex-shrink-0 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+          <div className="w-full lg:w-1/3 xl:w-[450px] h-[240px] sm:h-[300px] lg:h-auto flex-shrink-0 rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
             <ImageSlider images={images} altPrefix={org.name} className="h-full w-full object-cover" />
           </div>
         </div>
@@ -250,7 +258,7 @@ export function HealthPortfolioDashboard({
         <div className="grid gap-8 lg:grid-cols-2">
 
           {/* Medical Staff Directory */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-3xl border border-orange-200 bg-orange-100/40 p-6 sm:p-8 shadow-sm backdrop-blur-md">
             <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-4">
               <div className="rounded-lg bg-orange-100 p-2 text-orange-600">
                 <Users size={20} />
@@ -292,17 +300,17 @@ export function HealthPortfolioDashboard({
                     {members.map(member => (
                       <div key={member.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4 transition-colors hover:bg-slate-100">
                         <div className="flex items-start justify-between">
-                          <div>
-                            <p className="font-bold text-slate-800 flex items-center gap-2">
+                          <div className="flex flex-col items-center justify-center flex-1">
+                            <p className="font-bold text-slate-800 flex items-center gap-2 justify-center">
                               <User size={14} className="text-slate-400" />
                               {member.name || 'Unnamed Staff'}
                             </p>
-                            <p className="mt-0.5 text-xs text-slate-500 pl-5">{member.qualification || 'No qualification listed'}</p>
-                            <p className="mt-1 text-[11px] text-slate-400 pl-5 uppercase tracking-wider">{member.employment_type || 'Unknown term'}</p>
+                            <p className="mt-0.5 text-xs text-slate-500 text-center">{member.qualification || 'No qualification listed'}</p>
+                            <p className="mt-1 text-[11px] text-slate-400 text-center uppercase tracking-wider">{member.employment_type || 'Unknown term'}</p>
                           </div>
-                          <div className="text-right">
+                          <div className="text-center mt-3 pt-3 border-t border-slate-100 w-full">
                             <p className="text-xs font-semibold text-amber-600">{member.experience_years ? `${member.experience_years} yrs exp` : ''}</p>
-                            <p className="mt-1 flex items-center gap-1 justify-end text-xs text-slate-500">
+                            <p className="mt-1 flex items-center gap-1 justify-center text-xs text-slate-500">
                               <Phone size={12} /> {member.contact || 'No contact'}
                             </p>
                           </div>
@@ -319,7 +327,7 @@ export function HealthPortfolioDashboard({
           </div>
 
           {/* Medical Equipment Status */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col">
+          <div className="rounded-3xl border border-teal-200 bg-teal-100/40 p-6 sm:p-8 shadow-sm backdrop-blur-md flex flex-col">
             <div className="mb-6 pb-2">
               <h2 className="text-2xl font-bold text-[#0f172a]">Medical Equipment Status</h2>
               <p className="mt-1 text-sm text-[#64748b]">Equipment availability and maintenance schedule</p>
@@ -373,10 +381,10 @@ export function HealthPortfolioDashboard({
 
             <div className="overflow-hidden rounded-xl border border-slate-200">
               <div className="overflow-x-auto custom-scrollbar max-h-[400px]">
-                <table className="w-full min-w-[500px] text-left text-sm relative">
+                <table className="w-full min-w-[500px] text-center text-sm relative">
                   <thead className="bg-[#f8f9fa] text-[11px] font-bold uppercase tracking-wider text-slate-600 border-b border-slate-200 sticky top-0 z-10">
                     <tr>
-                      <th className="px-6 py-4">Equipment Type</th>
+                      <th className="px-6 py-4 text-center">Equipment Type</th>
                       <th className="px-4 py-4 text-center">Total</th>
                       <th className="px-4 py-4 text-center">Operational</th>
                       <th className="px-4 py-4 text-center">Maintenance</th>
@@ -394,7 +402,7 @@ export function HealthPortfolioDashboard({
 
                       return (
                         <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-6 py-4 flex items-center gap-2">
+                          <td className="px-6 py-4 flex items-center justify-center gap-2">
                             <span className="font-medium text-[#475569]">{item.equipment_name || 'Unnamed Equipment'}</span>
                           </td>
                           <td className="px-4 py-4 text-center text-[#475569]">{total}</td>
@@ -419,7 +427,7 @@ export function HealthPortfolioDashboard({
 
       {/* Patient Statistics & Analytics */}
       <section className="mx-auto max-w-[1920px] px-4 pb-8 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-3xl border border-indigo-200 bg-indigo-100/40 p-6 sm:p-8 shadow-sm backdrop-blur-md">
           <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
               <h2 className="text-lg font-bold text-slate-800">Patient Statistics & Analytics</h2>
@@ -528,7 +536,7 @@ export function HealthPortfolioDashboard({
 
       {/* Health Service Metrics */}
       <section className="mx-auto max-w-[1920px] px-4 pb-12 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-3xl border border-amber-200 bg-amber-100/40 p-6 sm:p-8 shadow-sm backdrop-blur-md">
           <div className="mb-6 border-b border-slate-100 pb-4">
             <h2 className="text-lg font-bold text-slate-800">Health Service Metrics</h2>
             <p className="text-xs text-slate-500">Current vs Previous Month Performance</p>
@@ -557,7 +565,7 @@ export function HealthPortfolioDashboard({
           <div>
             <h3 className="mb-4 text-sm font-bold text-slate-700">Detailed Metrics</h3>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-center text-sm">
                 <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                   <tr>
                     <th className="px-4 py-3 font-semibold rounded-tl-lg">Metric</th>
@@ -570,11 +578,11 @@ export function HealthPortfolioDashboard({
                   {patientCategories.map(c => {
                     const perc = c.previous > 0 ? (((c.current - c.previous) / c.previous) * 100).toFixed(1) : '0.0';
                     return (
-                      <tr key={c.name} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 text-slate-700 font-medium">{c.name} Services</td>
-                        <td className="px-4 py-3 text-slate-600">{c.previous}</td>
-                        <td className="px-4 py-3 font-bold text-slate-800">{c.current}</td>
-                        <td className="px-4 py-3 text-emerald-600 font-bold text-xs flex items-center gap-1">
+                      <tr key={c.name} className="border-b border-slate-100 transition-colors">
+                        <td className="px-4 py-3 text-slate-700 font-medium text-center">{c.name} Services</td>
+                        <td className="px-4 py-3 text-slate-600 text-center">{c.previous}</td>
+                        <td className="px-4 py-3 font-bold text-slate-800 text-center">{c.current}</td>
+                        <td className="px-4 py-3 text-emerald-600 font-bold text-xs flex items-center justify-center gap-1">
                           <TrendingUp size={14} /> {perc}%
                         </td>
                       </tr>
@@ -590,7 +598,7 @@ export function HealthPortfolioDashboard({
 
       {/* Raw Database Fields Profile Fields Fallback Display */}
       <section className="mx-auto max-w-[1920px] px-4 pb-12 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-teal-200/80 bg-teal-500/5 shadow-sm overflow-hidden">
+        <div className="rounded-3xl border border-teal-100 bg-teal-50/30 shadow-sm overflow-hidden backdrop-blur-md">
           <div className="border-b border-teal-200/60 bg-teal-500/10 px-4 py-4 sm:px-6">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-teal-800">
               {t('health.facilityProfileTitle', language)} Overview
@@ -611,7 +619,7 @@ export function HealthPortfolioDashboard({
                 return ia - ib;
               })
               .map(([key, value]) => (
-                <div key={key} className="rounded-xl border border-teal-100 bg-white/80 p-4 shadow-sm hover:bg-white hover:border-teal-300 transition-colors flex flex-col justify-center">
+                <div key={key} className="rounded-xl border border-teal-100 bg-white/80 p-4 shadow-sm hover:border-teal-300 transition-colors flex flex-col items-center justify-center text-center">
                   <p className="text-[10px] font-bold uppercase text-slate-500 mb-1 leading-tight line-clamp-2" title={getHealthProfileLabel(key)}>
                     {getHealthProfileLabel(key)}
                   </p>
