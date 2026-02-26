@@ -1,11 +1,46 @@
 'use client';
 
-import { useState } from 'react';
-import { Organization, EducationSchoolMaster, EducationInfrastructure } from '../../services/api';
+import { useState, useMemo } from 'react';
+import {
+  Organization,
+  EducationSchoolMaster,
+  EducationInfrastructure,
+  EducationGovtRegistry,
+  EducationTeacher,
+  EducationMonthlyProgress,
+  EducationBeneficiaryAnalytics,
+} from '../../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
-import { MapPin, Users, Building, Monitor, Calendar, CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  MapPin,
+  Users,
+  Building,
+  Monitor,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  Phone,
+  UserCheck,
+  Home,
+  Hash,
+} from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ImageSlider } from './ImageSlider';
+import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
+import { GOPALPUR_BOUNDS, AWC_MARKER_ICON, EDUCATION_TYPE_LABELS } from '../../lib/mapConfig';
+
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+
+function getFirstDefined(obj: any, keys: string[]): unknown {
+  if (!obj) return undefined;
+  for (const key of keys) {
+    if (obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== '') {
+      return obj[key];
+    }
+  }
+  return undefined;
+}
 
 export interface EducationPortfolioDashboardProps {
   org: Organization;
@@ -15,6 +50,21 @@ export interface EducationPortfolioDashboardProps {
   educationProfile: Record<string, unknown>;
   departmentName?: string | null;
   images?: string[];
+  govtRegistry?: EducationGovtRegistry | null;
+  teachers?: EducationTeacher[];
+  monthly?: EducationMonthlyProgress[];
+  beneficiaryAnalytics?: EducationBeneficiaryAnalytics[];
+}
+
+function formatVal(v: unknown): string {
+  if (v === null || v === undefined) return '—';
+  if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+  if (typeof v === 'number') {
+    return Number.isFinite(v) ? String(v) : '—';
+  }
+  const s = String(v).trim();
+  if (s === '') return '—';
+  return s;
 }
 
 export function EducationPortfolioDashboard({
@@ -22,300 +72,536 @@ export function EducationPortfolioDashboard({
   schoolMaster,
   infra,
   educationProfile,
+  departmentName,
+  images = [],
+  govtRegistry,
+  teachers = [],
+  monthly = [],
+  beneficiaryAnalytics = [],
 }: EducationPortfolioDashboardProps) {
   const { language } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'Overview' | 'Infrastructure' | 'Teachers' | 'Students' | 'Meals'>('Overview');
+  const [detailTab, setDetailTab] = useState<'profile' | 'staff'>('profile');
+  const [mealDateFilter, setMealDateFilter] = useState('');
+  const [mealPage, setMealPage] = useState(1);
+  const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY });
 
-  const toNumber = (v: unknown): number | null => {
-    if (v == null) return null;
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null;
-  };
-
-  const formatStr = (v: unknown): string => {
-    if (v == null || String(v).trim() === '') return '—';
-    return String(v);
-  };
-
-  const formatBoolStr = (v: unknown): string => {
-    if (v === true || v === 'true' || v === 'Yes' || v === 'yes' || v === '1' || v === 1) return 'Yes';
-    if (v === false || v === 'false' || v === 'No' || v === 'no' || v === '0' || v === 0) return 'No';
-    return formatStr(v);
-  };
-
-  // Header Details
-  const categoryStr = formatStr(educationProfile?.category || schoolMaster?.school_type || 'govt.');
-  const block = formatStr(schoolMaster?.block || org.address || '—');
-  const gpWard = formatStr(educationProfile?.gp_ward || schoolMaster?.village || '—');
-  const village = formatStr(educationProfile?.village || schoolMaster?.village || '—');
-  const district = formatStr(schoolMaster?.district || 'Ganjam');
-
-  const lat = org.latitude || 19.3378;
-  const lng = org.longitude || 84.8560;
-  const latLongStr = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-
-  // Quick Stats
-  const totalTeachers = toNumber(educationProfile?.total_teachers) ?? toNumber(educationProfile?.no_of_ts) ?? 2;
-  const totalRooms = toNumber(educationProfile?.no_of_rooms) ?? infra?.classrooms ?? 3;
-  const smartRooms = toNumber(educationProfile?.no_of_smart_class_rooms) ?? infra?.smart_classrooms ?? 0;
-  const estYear = formatStr(schoolMaster?.established_year || educationProfile?.established_year || '1983');
-
-  // Overview Tab Fields
-  const headMaster = formatStr(educationProfile?.hm_name || educationProfile?.name_of_hm || 'Tuhina Mahapatro');
-  const contactOfHm = formatStr(educationProfile?.contact_of_hm || educationProfile?.hm_contact || '9937128543');
-
-  // Infrastructure Tab Fields - Academic
-  const scienceLab = formatStr(educationProfile?.science_lab || infra?.labs_science || '1');
-  const library = formatBoolStr(educationProfile?.library || (infra?.library_books ? 'Yes' : 'No') || 'yes');
-  const meetingHall = formatStr(educationProfile?.meeting_hall || '0');
-
-  // Infrastructure Tab Fields - Sanitation
-  const toiletM = formatStr(educationProfile?.toilet_m || infra?.toilets_boys || '2');
-  const toiletF = formatStr(educationProfile?.toilet_f || infra?.toilets_girls || '2');
-  const drinkWaterTap = formatBoolStr(educationProfile?.drinking_water_tap || infra?.drinking_water || 'yes');
-  const drinkWaterOverhead = formatBoolStr(educationProfile?.drinking_water_overhead_tap || 'yes');
-  const ramp = formatStr(educationProfile?.ramp || '0');
-
-  // Infrastructure Tab Fields - Clubs
-  const ncc = formatStr(educationProfile?.ncc || '0');
-  const nss = formatStr(educationProfile?.nss || '0');
-  const jrc = formatStr(educationProfile?.jrc || '1');
-  const ecoClub = formatBoolStr(educationProfile?.eco_club || 'yes');
-  const playground = formatBoolStr(educationProfile?.play_ground || infra?.sports_ground || 'No');
-
-  // Administration Tab Fields
-  const deoName = formatStr(educationProfile?.deo_name || 'Ajaya Kumar Patra');
-  const deoContact = formatStr(educationProfile?.deo_contact || '9438100085');
-  const beoName = formatStr(educationProfile?.beo_name || 'Debendra Behera');
-  const beoContact = formatStr(educationProfile?.beo_contact || '9861428826');
-  const brccName = formatStr(educationProfile?.brcc_name || 'Jagannath Bhuyan');
-  const brccContact = formatStr(educationProfile?.brcc_contact || '9437519799');
-  const crccName = formatStr(educationProfile?.crcc_name || educationProfile?.crc_name || 'Sasmita devi');
-  const crccContact = formatStr(educationProfile?.crcc_contact || educationProfile?.crc_contact || '9438219004');
-
-  const monthlyData = [
-    { name: 'Jan', newEnrollments: 5, dropouts: 3, budget: 25 },
-    { name: 'Feb', newEnrollments: 5, dropouts: 2, budget: 18 },
-  ];
-
-  const projectData = [
-    {
-      title: 'Smart Classroom Setup',
-      description: 'Installation of smart boards and projectors',
-      budget: '₹5.0L',
-      status: 'ongoing',
-      progress: 60
+  // Map center
+  const mapCenter = useMemo(() => {
+    if (org.latitude != null && org.longitude != null) {
+      return { lat: org.latitude, lng: org.longitude };
     }
-  ];
+    return { lat: 20.296, lng: 85.824 }; // Default fallback
+  }, [org.latitude, org.longitude]);
 
-  const isTrue = (v: unknown): boolean => {
-    return v === true || v === 'true' || v === 'Yes' || v === 'yes' || v === '1' || v === 1;
-  };
+  const profile = educationProfile as any;
 
-  const drinkWaterBool = isTrue(educationProfile?.drinking_water_tap || infra?.drinking_water);
-  const electricityBool = isTrue(educationProfile?.electricity);
-  const internetBool = isTrue(educationProfile?.internet);
-  const hostelBool = isTrue(educationProfile?.hostel);
-  const canteenBool = isTrue(educationProfile?.canteen);
-  const rampBool = isTrue(educationProfile?.ramp);
-  const boundaryWallBool = isTrue(educationProfile?.boundary_wall);
-  const cctvBool = isTrue(educationProfile?.cctv);
-  const transportBool = isTrue(educationProfile?.transport);
+  // Derive whether this org is a school or college/university
+  const educationTypeLabel =
+    (org.type && EDUCATION_TYPE_LABELS[org.type]) || org.type.replace(/_/g, ' ');
+  const isHigherEd = /college|university/i.test(educationTypeLabel);
+  const entityLabel = isHigherEd ? 'College' : 'School';
+  const entityLabelLower = isHigherEd ? 'college' : 'school';
 
-  const utilitiesList = [
-    { label: 'Drinking Water', active: drinkWaterBool },
-    { label: 'Electricity', active: electricityBool },
-    { label: 'Internet', active: internetBool },
-    { label: 'Hostel', active: hostelBool },
-    { label: 'Canteen', active: canteenBool },
-    { label: 'Ramp Access', active: rampBool },
-    { label: 'Boundary Wall', active: boundaryWallBool },
-    { label: 'CCTV', active: cctvBool },
-    { label: 'Transport', active: transportBool },
-  ];
+  // Profile data extraction (prefer typed backend fields, then CSV profile, then org attributes)
+  const categoryStr = formatVal(
+    (getFirstDefined(profile, ['category']) as string | undefined) ??
+      schoolMaster?.school_type ??
+      (org.attributes && (org.attributes['sector'] as string | undefined)) ??
+      null,
+  );
 
-  const activeUtilitiesCount = utilitiesList.filter(u => u.active).length;
-  const totalUtilitiesCount = utilitiesList.length;
-  const utilitiesCoveragePercent = Math.round((activeUtilitiesCount / totalUtilitiesCount) * 100) || 0;
+  const block = formatVal(
+    schoolMaster?.block ??
+      (getFirstDefined(profile, ['block_ulb', 'block']) as string | undefined) ??
+      (org.attributes && (org.attributes['ulb_block'] as string | undefined)) ??
+      org.address ??
+      null,
+  );
 
-  const totalBooks = formatStr(educationProfile?.library_books || '2500');
+  const gpWard = formatVal(
+    (getFirstDefined(profile, ['gp_ward']) as string | undefined) ??
+      (org.attributes && (org.attributes['gp_name'] as string | undefined)) ??
+      schoolMaster?.village ??
+      null,
+  );
 
-  const tabs = ['Overview', 'Infrastructure', 'Teachers', 'Students', 'Meals'] as const;
+  const village = formatVal(
+    (getFirstDefined(profile, ['village']) as string | undefined) ??
+      schoolMaster?.village ??
+      (org.attributes && (org.attributes['ward_village'] as string | undefined)) ??
+      null,
+  );
 
-  // Mock data for Teachers Tab as shown in user screenshot
-  const teachersData = {
-    total: totalTeachers || 2,
-    male: 1,
-    female: 1,
-    avgExperience: '15y',
-    employmentStatus: { permanent: 2, contract: 0, temporary: 0 },
-    training: [
-      { name: 'Rajesh Kumar Singh', score: 5 },
-      { name: 'Priya Sharma', score: 3 }
-    ],
-    directory: [
-      {
-        name: 'Rajesh Kumar Singh',
-        subject: 'Mathematics',
-        qualifications: 'B.Sc, B.Ed',
-        experience: '18 years exp.',
-        email: 'rajesh.singh@school.gov.in',
-        phone: '9876543210',
-        status: 'permanent'
-      },
-      {
-        name: 'Priya Sharma',
-        subject: 'English',
-        qualifications: 'B.A, B.Ed',
-        experience: '12 years exp.',
-        email: 'priya.sharma@school.gov.in',
-        phone: '9876543211',
-        status: 'permanent'
-      }
-    ]
-  };
+  const district = formatVal(
+    schoolMaster?.district ??
+      (getFirstDefined(profile, ['district']) as string | undefined) ??
+      null,
+  );
+
+  // Teacher / classroom stats – prefer typed infra & counts, avoid hard-coded defaults
+  const totalTeachersFromProfileRaw = getFirstDefined(profile, ['total_teachers', 'no_of_ts']);
+  const totalTeachersFromProfile =
+    typeof totalTeachersFromProfileRaw === 'number'
+      ? totalTeachersFromProfileRaw
+      : totalTeachersFromProfileRaw != null
+      ? Number(totalTeachersFromProfileRaw)
+      : null;
+
+  const totalTeachers =
+    (Number.isFinite(totalTeachersFromProfile as number) ? (totalTeachersFromProfile as number) : null) ??
+    (teachers.length > 0 ? teachers.length : null);
+
+  const totalRoomsFromProfileRaw = getFirstDefined(profile, ['no_of_rooms']);
+  const totalRoomsFromProfile =
+    typeof totalRoomsFromProfileRaw === 'number'
+      ? totalRoomsFromProfileRaw
+      : totalRoomsFromProfileRaw != null
+      ? Number(totalRoomsFromProfileRaw)
+      : null;
+
+  const totalRooms =
+    (Number.isFinite(totalRoomsFromProfile as number) ? (totalRoomsFromProfile as number) : null) ??
+    infra?.classrooms ??
+    null;
+
+  const smartRoomsFromProfileRaw = getFirstDefined(profile, ['no_of_smart_class_rooms']);
+  const smartRoomsFromProfile =
+    typeof smartRoomsFromProfileRaw === 'number'
+      ? smartRoomsFromProfileRaw
+      : smartRoomsFromProfileRaw != null
+      ? Number(smartRoomsFromProfileRaw)
+      : null;
+
+  const smartRooms =
+    infra?.smart_classrooms ??
+    (Number.isFinite(smartRoomsFromProfile as number) ? (smartRoomsFromProfile as number) : null) ??
+    null;
+
+  const estYear = formatVal(
+    schoolMaster?.established_year ??
+      (getFirstDefined(profile, ['esst_year', 'established_year']) as string | number | undefined) ??
+      null,
+  );
+
+  const headMaster = formatVal(
+    (getFirstDefined(profile, ['name_of_hm', 'hm_name', 'head_master']) as string | undefined) ??
+      null,
+  );
+  const hmContact = formatVal(
+    (getFirstDefined(profile, ['contact_of_hm', 'hm_contact']) as string | undefined) ?? null,
+  );
+  const deoName = formatVal(
+    (getFirstDefined(profile, ['deo_name']) as string | undefined) ?? null,
+  );
+  const deoContact = formatVal(
+    (getFirstDefined(profile, ['deo_contact']) as string | undefined) ?? null,
+  );
+  const beoName = formatVal(
+    (getFirstDefined(profile, ['beo_name']) as string | undefined) ?? null,
+  );
+  const beoContact = formatVal(
+    (getFirstDefined(profile, ['beo_contact']) as string | undefined) ?? null,
+  );
+
+  const latLongStr = `${(org.latitude || 19.3378).toFixed(5)}, ${(org.longitude || 84.8560).toFixed(5)}`;
+  const description = formatVal(
+    (getFirstDefined(profile, ['description']) as string | undefined) ?? null,
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50/30">
+    <div className="min-h-screen bg-slate-50/30 text-slate-800 font-sans pb-16">
+
       {/* Hero: image slider */}
       <section className="w-full">
-        <ImageSlider images={images} altPrefix={org.name} className="h-[240px] sm:h-[320px] rounded-none" />
+        <ImageSlider images={images} altPrefix={org.name} className="h-[240px] sm:h-[320px]" />
       </section>
 
-      {/* Header */}
-      <header className="border-b border-slate-200/80 bg-white/60 px-4 pb-4 pt-6 shadow-sm backdrop-blur-md sm:px-6 lg:px-10">
-        <div className="mx-auto max-w-[1920px]">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="inline-flex items-center rounded-full bg-orange-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-700">
-                {departmentBadgeText}
-              </p>
-              <h1 className="mt-2 text-xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                {org.name}
-              </h1>
-              {departmentName && (
-                <p className="mt-1 text-sm text-slate-600 truncate">{departmentName}</p>
-              )}
-              {locationLine && (
-                <p className="mt-0.5 text-xs text-slate-500">{locationLine}</p>
-              )}
-            </div>
-          )}
-
-            {/* TAB 2: INFRASTRUCTURE */}
-            {activeTab === 'Infrastructure' && (
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8 animate-in fade-in">
-                <div className="mb-8">
-                  <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                    🏢 Infrastructure Overview
-                  </h2>
-                  <p className="text-[13px] text-slate-500 mt-1">Complete facility checklist and details</p>
-                </div>
-
-                {/* Top 4 Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                  <div className="bg-[#fffdf2] rounded-xl p-5 border border-[#ffecb3]">
-                    <p className="text-[12px] font-medium text-slate-500 mb-1">Classrooms</p>
-                    <h3 className="text-2xl font-black text-[#f59e0b] leading-none">{totalRooms}</h3>
-                  </div>
-                  <div className="bg-[#f3f4f6] rounded-xl p-5 border border-slate-200">
-                    <p className="text-[12px] font-medium text-slate-500 mb-1">Smart Classes</p>
-                    <h3 className="text-2xl font-black text-[#1e293b] leading-none">{smartRooms}</h3>
-                  </div>
-                  <div className="bg-[#f0fdf4] rounded-xl p-5 border border-[#d1fae5]">
-                    <p className="text-[12px] font-medium text-slate-500 mb-1">Utilities</p>
-                    <h3 className="text-2xl font-black text-[#10b981] leading-none">{utilitiesCoveragePercent}%</h3>
-                  </div>
-                  <div className="bg-[#eff6ff] rounded-xl p-5 border border-[#bfdbfe]">
-                    <p className="text-[12px] font-medium text-slate-500 mb-1">Books</p>
-                    <h3 className="text-2xl font-black text-[#3b82f6] leading-none">{totalBooks}</h3>
-                  </div>
-                </div>
-            )}
-              </div>
-        </div>
+      {/* Top Header */}
+      <header className="mx-auto max-w-[1920px] px-4 pt-6 pb-6 sm:px-6 lg:px-8">
+        <h1 className="text-xl font-bold tracking-tight text-[#1e293b] sm:text-3xl lg:text-[32px]">
+          {entityLabel} Portfolio Dashboard
+        </h1>
+        <p className="mt-1 text-[15px] font-medium text-[#64748b]">
+          {entityLabel} details and infrastructure from available data
+        </p>
       </header>
 
-      {/* Stats – show up to four cards, always backed by real data */}
-      {finalStats.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-10">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {finalStats.map(({ label, value }, i) => {
-              const tints = [
-                'border-amber-200/80 bg-amber-500/10',
-                'border-emerald-200/80 bg-emerald-500/10',
-                'border-sky-200/80 bg-sky-500/10',
-                'border-violet-200/80 bg-violet-500/10',
-              ];
-              return (
-                <div
-                  key={label}
-                  className={`rounded-2xl border p-4 shadow-sm backdrop-blur-sm text-center ${tints[i % tints.length]}`}
+      {/* School / College details tabs – profile / staff */}
+      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="rounded-3xl border border-orange-200 bg-orange-50/60 p-5 sm:p-8 shadow-sm backdrop-blur-md overflow-hidden relative">
+          <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none border-l border-slate-50 hidden sm:block" />
+          <div className="relative z-10">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
+                {entityLabel} details
+              </h2>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start rounded-full bg-slate-100 p-1 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setDetailTab('profile')}
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition ${detailTab === 'profile'
+                    ? 'bg-white text-[#0f172a] shadow-sm'
+                    : 'text-[#64748b] hover:text-[#0f172a]'
+                    }`}
                 >
-                  <p className="text-2xl font-bold text-slate-900">{formatVal(value)}</p>
-                  <p className="mt-0.5 text-xs font-medium text-slate-600">{label}</p>
+                  <Building size={14} />
+                  <span>{entityLabel} profile</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDetailTab('staff')}
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition ${detailTab === 'staff'
+                    ? 'bg-white text-[#0f172a] shadow-sm'
+                    : 'text-[#64748b] hover:text-[#0f172a]'
+                    }`}
+                >
+                  <UserCheck size={14} />
+                  <span>Staff & contact</span>
+                </button>
+              </div>
+            </div>
+
+            {detailTab === 'profile' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600 border border-orange-100">
+                    <Building size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">
+                      {entityLabel} name
+                    </p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(org.name)}</p>
+                  </div>
                 </div>
-              );
-            })}
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                    <MapPin size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Block</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(block)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
+                    <Home size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">GP / Ward</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(gpWard)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600 border border-violet-100">
+                    <MapPin size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Village</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(village)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 border border-teal-100">
+                    <Hash size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">District</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(district)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-100">
+                    <Calendar size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Established</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(estYear)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-pink-50 text-pink-600 border border-pink-100">
+                    <MapPin size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Coordinates</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate text-xs">{latLongStr}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+                    <Building size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Category</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(categoryStr)}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {detailTab === 'staff' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+                    <UserCheck size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Head Master</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] break-words">{formatVal(headMaster)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600 border border-sky-100">
+                    <Phone size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">HM Contact</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] break-words">{formatVal(hmContact)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                    <UserCheck size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">DEO Name</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] break-words">{formatVal(deoName)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
+                    <Phone size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">DEO Contact</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] break-words">{formatVal(deoContact)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600 border border-violet-100">
+                    <UserCheck size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">BEO Name</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] break-words">{formatVal(beoName)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 border border-teal-100">
+                    <Phone size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">BEO Contact</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] break-words">{formatVal(beoContact)}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats row – Teachers & key infrastructure */}
+      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="rounded-2xl border border-amber-200 bg-amber-100/40 p-6 shadow-sm flex justify-between items-center backdrop-blur-sm">
+            <div className="min-w-0">
+              <p className="text-[13px] font-bold text-amber-900/70 mb-1 uppercase tracking-wider">Total teachers</p>
+              <h3 className="text-[28px] sm:text-[32px] font-black text-amber-950 leading-none">{totalTeachers}</h3>
+              <p className="text-[11px] text-amber-800/60 mt-1 font-medium">teaching staff</p>
+            </div>
+            <div className="w-14 h-14 shrink-0 rounded-2xl bg-amber-200/50 flex items-center justify-center text-amber-700 ml-3 shadow-inner">
+              <Users size={28} strokeWidth={2.5} />
+            </div>
+          </div>
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-100/40 p-6 shadow-sm flex justify-between items-center backdrop-blur-sm">
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold text-emerald-900/70 mb-1 uppercase tracking-wider">Classrooms</p>
+              <p className="text-[28px] sm:text-[32px] font-black text-emerald-950 leading-none">{totalRooms}</p>
+              <p className="text-[11px] text-emerald-800/60 mt-0.5 font-medium">total rooms</p>
+            </div>
+            <div className="w-14 h-14 shrink-0 rounded-2xl bg-emerald-200/50 flex items-center justify-center text-emerald-700 ml-3 shadow-inner">
+              <Building size={28} strokeWidth={2.5} />
+            </div>
+          </div>
+          <div className="rounded-2xl border border-indigo-200 bg-indigo-100/40 p-6 shadow-sm flex justify-between items-center backdrop-blur-sm">
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold text-indigo-900/70 mb-1 uppercase tracking-wider">Smart classes</p>
+              <p className="text-[28px] sm:text-[32px] font-black text-indigo-950 leading-none">{smartRooms}</p>
+              <p className="text-[11px] text-indigo-800/60 mt-0.5 font-medium">equipped rooms</p>
+            </div>
+            <div className="w-14 h-14 shrink-0 rounded-2xl bg-indigo-200/50 flex items-center justify-center text-indigo-700 ml-3 shadow-inner">
+              <Monitor size={28} strokeWidth={2.5} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Description snippet when present */}
+      {description != null && String(description).trim() !== '' && (
+        <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+          <div className="rounded-3xl border border-slate-300 bg-slate-100/50 p-6 sm:p-8 shadow-sm backdrop-blur-md">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b] mb-2">
+              {isHigherEd ? 'About this college' : 'About this school'}
+            </h2>
+            <p className="text-[14px] text-[#334155] leading-relaxed">{formatVal(description)}</p>
           </div>
         </section>
       )}
 
-      {/* Details – show only Education CSV / OrganizationProfile.data fields */}
-      <section className="mx-auto max-w-[1920px] px-4 pb-12 sm:px-6 lg:px-10">
-        <div className="rounded-3xl border border-teal-200 bg-teal-100/30 shadow-sm overflow-hidden backdrop-blur-md">
-          <div className="border-b border-teal-200/60 bg-teal-500/15 px-6 py-6 sm:px-10">
-            <h2 className="text-lg font-black uppercase tracking-widest text-teal-900">
-              {t('edu.schoolProfileTitle', language)}
-            </h2>
-            <p className="mt-1 text-sm text-teal-800/70 font-bold italic">
-              {t('edu.schoolProfileSubtitle', language)}
+      {/* Infrastructure overview */}
+      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="rounded-3xl border border-teal-200 bg-teal-100/30 p-6 sm:p-8 shadow-sm backdrop-blur-md">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-[#0f172a]">Infrastructure & Facilities</h2>
+            <p className="text-[13px] text-[#64748b] mt-1">
+              Complete facility details and amenities available at the {entityLabelLower}.
             </p>
           </div>
-          <div className="grid gap-0 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-teal-200/40">
-            {Object.entries(educationProfile || {})
-              .filter(([, v]) => v != null && String(v).trim() !== '')
-              .sort(([aKey], [bKey]) => {
-                const ia = EDUCATION_PROFILE_KEYS.indexOf(aKey);
-                const ib = EDUCATION_PROFILE_KEYS.indexOf(bKey);
-                if (ia === -1 && ib === -1) return aKey.localeCompare(bKey);
-                if (ia === -1) return 1;
-                if (ib === -1) return -1;
-                return ia - ib;
-              })
-              .reduce<[Array<[string, unknown]>, Array<[string, unknown]>]>(
-                (cols, entry, idx) => {
-                  cols[idx % 2].push(entry);
-                  return cols;
-                },
-                [[], []],
-              )
-              .map((colEntries, colIdx) => (
-                <div key={colIdx} className="p-6 sm:p-8 lg:p-10 bg-white/20">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full border-collapse text-sm text-center">
-                      <tbody>
-                        {colEntries.map(([key, value]) => (
-                          <tr
-                            key={key}
-                            className="border-b border-teal-200/20 last:border-0"
-                          >
-                            <td className="w-1/2 px-4 py-3 font-bold text-teal-800/80">
-                              {getEducationProfileLabel(key)}
-                            </td>
-                            <td className="px-4 py-3 text-slate-900 font-extrabold">
-                              {formatVal(value as string | number | null | undefined)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: 'Science Lab', value: educationProfile?.science_lab || '—' },
+              { label: 'Library', value: educationProfile?.library || 'No' },
+              { label: 'Boys Toilet', value: educationProfile?.toilet_m || '—' },
+              { label: 'Girls Toilet', value: educationProfile?.toilet_f || '—' },
+              { label: 'Drinking Water', value: educationProfile?.drinking_water_tap ? 'Yes' : 'No' },
+              { label: 'Electricity', value: educationProfile?.electricity ? 'Yes' : 'No' },
+              { label: 'Internet', value: educationProfile?.internet ? 'Yes' : 'No' },
+              { label: 'CCTV', value: educationProfile?.cctv ? 'Yes' : 'No' },
+            ].map(({ label, value }, idx) => (
+              <div key={label} className="bg-white rounded-xl border border-teal-100 p-4 shadow-sm">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-teal-700 mb-2">{label}</p>
+                <p className="text-[18px] font-black text-[#0f172a]">{formatVal(value)}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
-    </div >
+
+      {/* Map – school location from CSV (lat/long) */}
+      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="rounded-3xl border border-violet-200 bg-violet-100/30 p-6 sm:p-8 shadow-sm backdrop-blur-md">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-[#0f172a]">School Location</h2>
+            <p className="text-[13px] text-[#64748b] mt-1">School location on map.</p>
+          </div>
+          <div className="h-[400px] w-full rounded-xl bg-[#f8f9fa] overflow-hidden relative flex items-center justify-center">
+            {isLoaded ? (
+              <GoogleMap
+                mapContainerStyle={{ width: '100%', height: '100%' }}
+                center={mapCenter}
+                zoom={14}
+                options={{
+                  restriction: {
+                    latLngBounds: {
+                      south: GOPALPUR_BOUNDS.south,
+                      west: GOPALPUR_BOUNDS.west,
+                      north: GOPALPUR_BOUNDS.north,
+                      east: GOPALPUR_BOUNDS.east,
+                    },
+                    strictBounds: true,
+                  },
+                  styles: [
+                    { featureType: 'poi', elementType: 'all', stylers: [{ visibility: 'off' }] },
+                    { featureType: 'transit', elementType: 'all', stylers: [{ visibility: 'off' }] },
+                  ],
+                  disableDefaultUI: false,
+                  zoomControl: true,
+                  mapTypeControl: true,
+                  scaleControl: true,
+                  fullscreenControl: true,
+                  streetViewControl: false,
+                  minZoom: 11,
+                  maxZoom: 18,
+                }}
+              >
+                <Marker position={mapCenter} icon={AWC_MARKER_ICON} />
+              </GoogleMap>
+            ) : (
+              <div className="text-center">
+                <MapPin size={24} className="text-rose-500 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-slate-700">Loading map…</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Meal Distribution Daily Stock – charts + table */}
+      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="rounded-3xl border border-rose-200 bg-rose-100/30 p-6 sm:p-8 shadow-sm backdrop-blur-md">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-[#0f172a]">Meal Distribution Daily Stock</h2>
+            <p className="text-[13px] text-[#64748b] mt-1">
+              Opening balance, received and expenditure for Mid Day Meal Scheme.
+            </p>
+          </div>
+
+          {/* Meal graphs – always visible; empty state when no data */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm backdrop-blur-sm">
+              <h3 className="text-sm font-bold text-sky-900 mb-3">Stock trend (Kg)</h3>
+              <div className="h-[260px] w-full">
+                <div className="h-full w-full flex flex-col items-center justify-center rounded-lg bg-slate-100/80 border border-dashed border-slate-300 text-slate-500">
+                  <p className="text-sm font-medium">No meal stock data</p>
+                  <p className="text-xs mt-1">Add daily meal records to see the chart</p>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm backdrop-blur-sm">
+              <h3 className="text-sm font-bold text-amber-900 mb-3">Distributed vs remaining (Kg)</h3>
+              <div className="h-[260px] w-full">
+                <div className="h-full w-full flex flex-col items-center justify-center rounded-lg bg-slate-100/80 border border-dashed border-slate-300 text-slate-500">
+                  <p className="text-sm font-medium">No meal stock data</p>
+                  <p className="text-xs mt-1">Add daily meal records to see the chart</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-4">
+            <h3 className="text-[15px] font-semibold text-[#0f172a]">Daily records</h3>
+            <div className="flex flex-col items-start gap-2">
+              <label className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider">
+                Filter by date
+              </label>
+              <input
+                type="date"
+                value={mealDateFilter}
+                onChange={(e) => {
+                  setMealPage(1);
+                  setMealDateFilter(e.target.value);
+                }}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9]"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-rose-100/60 shadow-sm overflow-hidden backdrop-blur-sm">
+            <table className="w-full text-center text-sm whitespace-nowrap lg:whitespace-normal">
+              <thead className="bg-rose-100/40">
+                <tr>
+                  <th className="px-4 py-3 font-bold text-rose-900 text-left">Date</th>
+                  <th className="px-4 py-3 font-bold text-rose-900">Opening Kg</th>
+                  <th className="px-4 py-3 font-bold text-rose-900">Received Kg</th>
+                  <th className="px-4 py-3 font-bold text-rose-900">Distributed Kg</th>
+                  <th className="px-4 py-3 font-bold text-rose-900">Closing Kg</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-rose-100/60">
+                <tr className="bg-white/60 hover:bg-white/80 transition">
+                  <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                    <p className="font-medium">No meal stock data available</p>
+                    <p className="text-xs mt-1">Add daily meal distribution records to view details</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

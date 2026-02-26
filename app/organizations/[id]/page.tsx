@@ -302,6 +302,10 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           educationProfile={educationProfile}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
+          govtRegistry={eduGovt}
+          teachers={eduTeachers}
+          monthly={eduMonthly}
+          beneficiaryAnalytics={eduBeneficiary}
         />
       </div>
     );
