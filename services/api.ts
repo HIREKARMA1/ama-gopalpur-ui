@@ -472,6 +472,36 @@ export interface EducationMonthlyProgress {
   remarks?: string | null;
   [key: string]: unknown;
 }
+
+export interface HealthDailyAttendance {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  staff_present_count?: number | null;
+  doctor_present?: boolean | null;
+  created_at?: string;
+}
+
+export interface HealthDailyMedicineStock {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  medicine_name: string;
+  opening_balance?: number | null;
+  received?: number | null;
+  issued?: number | null;
+  closing_balance?: number | null;
+  created_at?: string;
+}
+
+export interface HealthDailyExtraData {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  mobile_van_available?: boolean | null;
+  remarks?: string | null;
+  created_at?: string;
+}
 export interface EducationBeneficiaryAnalytics {
   id: number;
   organization_id: number;
@@ -512,6 +542,13 @@ export const healthApi = {
   },
   listPatientServices: (orgId: number, params?: { skip?: number; limit?: number }) =>
     apiFetch<HealthPatientService[]>(`${healthBase(orgId)}/patient-services?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 50}`),
+  listPatientServicesForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.organization_id != null) p.set('organization_id', String(params.organization_id));
+    if (params?.skip != null) p.set('skip', String(params.skip));
+    if (params?.limit != null) p.set('limit', String(params.limit ?? 50));
+    return apiFetch<HealthPatientService[]>(`/api/v1/health/patient-services?${p}`);
+  },
   listImmunisation: (orgId: number, params?: { skip?: number; limit?: number }) =>
     apiFetch<HealthImmunisation[]>(`${healthBase(orgId)}/immunisation?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 50}`),
   listMedicinesStock: (orgId: number, params?: { skip?: number; limit?: number }) =>
@@ -531,6 +568,104 @@ export const healthApi = {
     const form = new FormData();
     form.append('file', file);
     return apiFetch<{ imported: number; errors: string[] }>('/api/v1/health/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  // Daily Dynamic Data
+  listDailyAttendance: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<HealthDailyAttendance[]>(`${healthBase(orgId)}/daily-attendance?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 50}`),
+  listDailyAttendanceForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.organization_id != null) p.set('organization_id', String(params.organization_id));
+    if (params?.skip != null) p.set('skip', String(params.skip));
+    if (params?.limit != null) p.set('limit', String(params.limit ?? 50));
+    return apiFetch<HealthDailyAttendance[]>(`/api/v1/health/daily-attendance?${p}`);
+  },
+  createDailyAttendance: (data: Partial<HealthDailyAttendance>) =>
+    apiFetch<HealthDailyAttendance>('/api/v1/health/daily-attendance', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  bulkDailyAttendanceCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/health/daily-attendance/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  listDailyMedicineStock: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<HealthDailyMedicineStock[]>(`${healthBase(orgId)}/daily-medicine-stock?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 50}`),
+  listDailyMedicineStockForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.organization_id != null) p.set('organization_id', String(params.organization_id));
+    if (params?.skip != null) p.set('skip', String(params.skip));
+    if (params?.limit != null) p.set('limit', String(params.limit ?? 50));
+    return apiFetch<HealthDailyMedicineStock[]>(`/api/v1/health/daily-medicine-stock?${p}`);
+  },
+  createDailyMedicineStock: (data: Partial<HealthDailyMedicineStock>) =>
+    apiFetch<HealthDailyMedicineStock>('/api/v1/health/daily-medicine-stock', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateDailyMedicineStock: (id: number, data: Partial<HealthDailyMedicineStock>) =>
+    apiFetch<HealthDailyMedicineStock>(`/api/v1/health/daily-medicine-stock/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteDailyMedicineStock: (id: number) =>
+    apiFetch<void>(`/api/v1/health/daily-medicine-stock/${id}`, { method: 'DELETE' }),
+  bulkDailyMedicineStockCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/health/daily-medicine-stock/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  listDailyExtraData: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<HealthDailyExtraData[]>(`${healthBase(orgId)}/daily-extra-data?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 50}`),
+  listDailyExtraDataForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.organization_id != null) p.set('organization_id', String(params.organization_id));
+    if (params?.skip != null) p.set('skip', String(params.skip));
+    if (params?.limit != null) p.set('limit', String(params.limit ?? 50));
+    return apiFetch<HealthDailyExtraData[]>(`/api/v1/health/daily-extra-data?${p}`);
+  },
+  createDailyExtraData: (data: Partial<HealthDailyExtraData>) =>
+    apiFetch<HealthDailyExtraData>('/api/v1/health/daily-extra-data', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  bulkDailyExtraDataCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/health/daily-extra-data/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  createPatientService: (data: Partial<HealthPatientService>) =>
+    apiFetch<HealthPatientService>('/api/v1/health/patient-services', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updatePatientService: (id: number, data: Partial<HealthPatientService>) =>
+    apiFetch<HealthPatientService>(`/api/v1/health/patient-services/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deletePatientService: (id: number) =>
+    apiFetch<void>(`/api/v1/health/patient-services/${id}`, { method: 'DELETE' }),
+  bulkPatientServicesCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/health/patient-services/bulk-csv', {
       method: 'POST',
       body: form,
     });
@@ -592,8 +727,6 @@ export interface HealthPatientService {
   ipd_count?: number | null;
   surgeries?: number | null;
   deliveries?: number | null;
-  referrals_in?: number | null;
-  referrals_out?: number | null;
   [key: string]: unknown;
 }
 export interface HealthImmunisation {

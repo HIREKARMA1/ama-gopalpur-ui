@@ -358,7 +358,12 @@ export default function DepartmentAdminPage() {
             { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
             { href: '/admin/dept/snp', labelKey: 'super.sidebar.snp' },
           ]
-          : [{ href: '/admin/dept', labelKey: 'super.sidebar.dashboard' }]
+          : deptCode === 'HEALTH'
+            ? [
+              { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
+              { href: '/admin/dept/health-monitoring', labelKey: 'health.monitoring.title' },
+            ]
+            : [{ href: '/admin/dept', labelKey: 'super.sidebar.dashboard' }]
       }
       onLogout={() => {
         clearToken();
@@ -800,12 +805,12 @@ export default function DepartmentAdminPage() {
                   {educationSubDept === 'ENGINEERING_COLLEGE'
                     ? 'Engineering College'
                     : educationSubDept === 'ITI'
-                    ? 'ITI'
-                    : educationSubDept === 'DIPLOMA_COLLEGE'
-                    ? 'Diploma College'
-                    : educationSubDept === 'UNIVERSITY'
-                    ? 'University'
-                    : 'Education'}{' '}
+                      ? 'ITI'
+                      : educationSubDept === 'DIPLOMA_COLLEGE'
+                        ? 'Diploma College'
+                        : educationSubDept === 'UNIVERSITY'
+                          ? 'University'
+                          : 'Education'}{' '}
                   entry
                 </h2>
                 <p className="mt-1 text-xs text-text-muted">
@@ -824,12 +829,12 @@ export default function DepartmentAdminPage() {
                       educationSubDept === 'ENGINEERING_COLLEGE'
                         ? 'NAME OF COLLEGE'
                         : educationSubDept === 'ITI'
-                        ? 'ITI NAME'
-                        : educationSubDept === 'DIPLOMA_COLLEGE'
-                        ? 'COLLEGE NAME'
-                        : educationSubDept === 'UNIVERSITY'
-                        ? 'UNIVERSITY NAME'
-                        : '';
+                          ? 'ITI NAME'
+                          : educationSubDept === 'DIPLOMA_COLLEGE'
+                            ? 'COLLEGE NAME'
+                            : educationSubDept === 'UNIVERSITY'
+                              ? 'UNIVERSITY NAME'
+                              : '';
                     const nameKey = nameHeader ? snakeFromHeader(nameHeader) : '';
                     const latKey = snakeFromHeader('LATITUDE');
                     const lngKey = snakeFromHeader('LONGITUDE');
