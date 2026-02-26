@@ -176,475 +176,146 @@ export function EducationPortfolioDashboard({
   };
 
   return (
-    <div className="bg-white min-h-screen font-sans text-slate-800 pb-16">
-
-      {/* 1. Header Section */}
-      <section className="bg-white px-4 md:px-8 pt-10 pb-4 max-w-[1800px] mx-auto">
-        <span className="inline-block px-3 py-1 bg-[#fff2e8] text-[#f06e28] text-[10px] font-bold uppercase rounded-full mb-5 border border-[#ffdfc4]">
-          Education
-        </span>
-
-        <h1 className="text-2xl md:text-[32px] font-black uppercase text-[#0f172a] leading-tight tracking-tight mb-3">
-          {org.name}
-        </h1>
-
-        <div className="flex flex-wrap items-center gap-2 text-[13px] md:text-[14px] text-slate-500 mb-6">
-          <span className="text-slate-600 font-medium">{categoryStr}</span>
-          <span className="text-slate-300 mx-1">•</span>
-          <span className="text-slate-600 font-medium">
-            {block}{block !== '—' && ','} {gpWard}{gpWard !== '—' && ','} {village}
-          </span>
-          <span className="text-slate-300 mx-1">•</span>
-          <span className="text-slate-600 font-medium">{district}</span>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-1.5 text-[14px] font-bold text-[#f06e28]">
-            <MapPin size={18} strokeWidth={2.5} />
-            <span>{latLongStr}</span>
-          </div>
-          <button
-            onClick={() => setActiveTab('Location')}
-            className="bg-[#f06e28] hover:bg-[#e65c19] text-white transition px-5 py-2 rounded-full text-[13px] font-bold shadow-sm"
-          >
-            View on Map
-          </button>
-        </div>
+    <div className="min-h-screen bg-slate-50/30">
+      {/* Hero: image slider */}
+      <section className="w-full">
+        <ImageSlider images={images} altPrefix={org.name} className="h-[240px] sm:h-[320px] rounded-none" />
       </section>
 
-      {/* 2. Quick Statistics Cards */}
-      <section className="max-w-[1920px] mx-auto px-4 md:px-8 py-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
-          {/* Card 1 */}
-          <div className="bg-[#fffdf2] border border-[#ffecb3] rounded-xl p-6 shadow-sm flex flex-col justify-between">
-            <div className="flex items-end gap-3 mb-2">
-              <Users size={22} className="text-[#f59e0b]" strokeWidth={2.5} />
-              <span className="text-3xl font-black text-slate-900 leading-none">{totalTeachers}</span>
-            </div>
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-2 block">Teachers</p>
-          </div>
-
-          {/* Card 2 */}
-          <div className="bg-[#f0fdf4] border border-[#d1fae5] rounded-xl p-6 shadow-sm flex flex-col justify-between">
-            <div className="flex items-end gap-3 mb-2">
-              <Building size={22} className="text-[#10b981]" strokeWidth={2.5} />
-              <span className="text-3xl font-black text-slate-900 leading-none">{totalRooms}</span>
-            </div>
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-2 block">Classrooms</p>
-          </div>
-
-          {/* Card 3 */}
-          <div className="bg-[#f0f9ff] border border-[#bae6fd] rounded-xl p-6 shadow-sm flex flex-col justify-between">
-            <div className="flex items-end gap-3 mb-2">
-              <Monitor size={22} className="text-[#0ea5e9]" strokeWidth={2.5} />
-              <span className="text-3xl font-black text-slate-900 leading-none">{smartRooms}</span>
-            </div>
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-2 block">Smart Rooms</p>
-          </div>
-
-          {/* Card 4 */}
-          <div className="bg-[#faf5ff] border border-[#e9d5ff] rounded-xl p-6 shadow-sm flex flex-col justify-between">
-            <div className="flex items-end gap-3 mb-2">
-              <Calendar size={22} className="text-[#a855f7]" strokeWidth={2.5} />
-              <span className="text-3xl font-black text-slate-900 leading-none">{estYear}</span>
-            </div>
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-2 block">Est Year</p>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. Tabs Section */}
-      <section className="max-w-[1920px] mx-auto mt-2">
-        {/* Tab Headers */}
-        <div className="border-b border-gray-200">
-          <div className="flex gap-8 px-4 md:px-8 overflow-x-auto no-scrollbar">
-            {tabs.map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`pb-4 text-[14px] font-bold transition-all whitespace-nowrap border-b-[3px] ${activeTab === tab
-                  ? 'border-[#f06e28] text-[#f06e28]'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
-                  }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Tab Content */}
-        <div className="px-4 md:px-8 py-8">
-
-          {/* TAB 1: OVERVIEW */}
-          {activeTab === 'Overview' && (
-            <div className="space-y-8 animate-in fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-
-                {/* Left Box */}
-                <div className="bg-[#f0fdfa] rounded-xl p-8 border border-[#ccfbf1]/80 shadow-sm">
-                  <div className="mb-6">
-                    <h2 className="text-[15px] font-bold text-[#0f766e] uppercase tracking-wide">School Profile</h2>
-                    <p className="text-[13px] text-[#0f766e] opacity-80 mt-1">Basic information about this school.</p>
-                  </div>
-                  <div className="space-y-0">
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">Block / ULB</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">
-                        {block}{block !== '—' && ','} {gpWard}{gpWard !== '—' && ','} {village}
-                      </div>
-                    </div>
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">Village</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">{village}</div>
-                    </div>
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">ESST Year</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">{estYear}</div>
-                    </div>
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">DEO Name</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">{deoName}</div>
-                    </div>
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">BEO Name</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">{beoName}</div>
-                    </div>
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">BRCC Name</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">{brccName}</div>
-                    </div>
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">CRCC Name</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">{crccName}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Box */}
-                <div className="bg-[#f0fdfa] rounded-xl p-8 border border-[#ccfbf1]/80 shadow-sm">
-                  <div className="mb-6">
-                    <h2 className="text-[15px] font-bold text-[#0f766e] uppercase tracking-wide">School Profile</h2>
-                    <p className="text-[13px] text-[#0f766e] opacity-80 mt-1">Basic information about this school.</p>
-                  </div>
-                  <div className="space-y-0">
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">GP / Ward</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">{gpWard}</div>
-                    </div>
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">Name of School</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium uppercase">{org.name}</div>
-                    </div>
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">Category</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">{categoryStr}</div>
-                    </div>
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">DEO Contact</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">{deoContact}</div>
-                    </div>
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">BEO Contact</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">{beoContact}</div>
-                    </div>
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">BRCC Contact</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">{brccContact}</div>
-                    </div>
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">CRCC Contact</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">{crccContact}</div>
-                    </div>
-                    <div className="flex py-3.5 border-b border-[#ccfbf1] last:border-0 items-start">
-                      <div className="w-1/3 shrink-0 text-[13px] text-[#0f766e]">Contact of HM</div>
-                      <div className="flex-1 text-[13px] text-slate-800 font-medium">{contactOfHm}</div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Monthly Progress Trend */}
-              <div className="bg-white rounded-xl border border-slate-200 p-6 md:p-8 shadow-sm">
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold text-slate-800">Monthly Progress Trend</h2>
-                  <p className="text-[13px] text-slate-500 mt-1">Enrollment, dropouts, and budget utilization</p>
-                </div>
-                <div className="h-[300px] w-full mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlyData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="name" axisLine={{ stroke: '#cbd5e1' }} tickLine={false} tick={{ fill: '#64748b', fontSize: 13 }} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13 }} dx={-10} />
-                      <Tooltip
-                        cursor={{ fill: '#e2e8f0', opacity: 0.4 }}
-                        contentStyle={{ borderRadius: '8px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      />
-                      <Legend iconType="square" wrapperStyle={{ fontSize: '13px', paddingTop: '20px' }} />
-                      <Bar dataKey="newEnrollments" name="New Enrollments" fill="#f97316" radius={[4, 4, 0, 0]} maxBarSize={80} />
-                      <Bar dataKey="dropouts" name="Dropouts" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={80} />
-                      <Bar dataKey="budget" name="Budget (₹10k)" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={80} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Development Projects */}
-              <div className="bg-white rounded-xl border border-slate-200 p-6 md:p-8 shadow-sm">
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold text-slate-800">Development Projects</h2>
-                  <p className="text-[13px] text-slate-500 mt-1">Ongoing and planned infrastructure projects</p>
-                </div>
-                <div className="space-y-4">
-                  {projectData.map((proj, idx) => (
-                    <div key={idx} className="border border-yellow-200 rounded-xl p-6 bg-yellow-50/50">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h4 className="font-bold text-slate-800 text-[15px]">{proj.title}</h4>
-                          <p className="text-[13px] text-slate-500 mt-1">{proj.description}</p>
-                        </div>
-                        <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-[11px] font-bold rounded-full">
-                          {proj.status}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-[13px] text-slate-600 mb-2 mt-6">
-                        <span>Budget: <span className="font-semibold text-slate-800">{proj.budget}</span></span>
-                        <span className="font-bold text-slate-800">{proj.progress}%</span>
-                      </div>
-                      <div className="w-full bg-slate-200 rounded-full h-2">
-                        <div className="bg-orange-500 h-2 rounded-full" style={{ width: `${proj.progress}%` }}></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
+      {/* Header */}
+      <header className="border-b border-slate-200/80 bg-white/60 px-4 pb-4 pt-6 shadow-sm backdrop-blur-md sm:px-6 lg:px-10">
+        <div className="mx-auto max-w-[1920px]">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="inline-flex items-center rounded-full bg-orange-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-700">
+                {departmentBadgeText}
+              </p>
+              <h1 className="mt-2 text-xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                {org.name}
+              </h1>
+              {departmentName && (
+                <p className="mt-1 text-sm text-slate-600 truncate">{departmentName}</p>
+              )}
+              {locationLine && (
+                <p className="mt-0.5 text-xs text-slate-500">{locationLine}</p>
+              )}
             </div>
           )}
 
-          {/* TAB 2: INFRASTRUCTURE */}
-          {activeTab === 'Infrastructure' && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8 animate-in fade-in">
-              <div className="mb-8">
-                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                  🏢 Infrastructure Overview
-                </h2>
-                <p className="text-[13px] text-slate-500 mt-1">Complete facility checklist and details</p>
-              </div>
-
-              {/* Top 4 Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-[#fffdf2] rounded-xl p-5 border border-[#ffecb3]">
-                  <p className="text-[12px] font-medium text-slate-500 mb-1">Classrooms</p>
-                  <h3 className="text-2xl font-black text-[#f59e0b] leading-none">{totalRooms}</h3>
-                </div>
-                <div className="bg-[#f3f4f6] rounded-xl p-5 border border-slate-200">
-                  <p className="text-[12px] font-medium text-slate-500 mb-1">Smart Classes</p>
-                  <h3 className="text-2xl font-black text-[#1e293b] leading-none">{smartRooms}</h3>
-                </div>
-                <div className="bg-[#f0fdf4] rounded-xl p-5 border border-[#d1fae5]">
-                  <p className="text-[12px] font-medium text-slate-500 mb-1">Utilities</p>
-                  <h3 className="text-2xl font-black text-[#10b981] leading-none">{utilitiesCoveragePercent}%</h3>
-                </div>
-                <div className="bg-[#eff6ff] rounded-xl p-5 border border-[#bfdbfe]">
-                  <p className="text-[12px] font-medium text-slate-500 mb-1">Books</p>
-                  <h3 className="text-2xl font-black text-[#3b82f6] leading-none">{totalBooks}</h3>
-                </div>
-              </div>
-
-              {/* Basic Facilities */}
-              <div className="mb-8">
-                <h3 className="text-[14px] font-bold text-slate-800 mb-4">Basic Facilities</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition bg-white">
-                    <span className="text-2xl mb-2">🏫</span>
-                    <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mb-1">Classrooms</p>
-                    <p className="text-xl font-bold text-slate-800">{totalRooms}</p>
-                  </div>
-                  <div className="border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition bg-white">
-                    <span className="text-2xl mb-2">📱</span>
-                    <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mb-1">Smart Classrooms</p>
-                    <p className="text-xl font-bold text-slate-800">{smartRooms}</p>
-                  </div>
-                  <div className="border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition bg-white">
-                    <span className="text-2xl mb-2">🔬</span>
-                    <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mb-1">Science Lab</p>
-                    <p className="text-xl font-bold text-slate-800">{scienceLab !== '0' && scienceLab !== '—' ? '✓' : '✗'}</p>
-                  </div>
-                  <div className="border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition bg-white">
-                    <span className="text-2xl mb-2">💻</span>
-                    <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mb-1">Computer Lab</p>
-                    <p className="text-xl font-bold text-slate-800">✓</p>
-                  </div>
-                  <div className="border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition bg-white">
-                    <span className="text-2xl mb-2">📚</span>
-                    <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mb-1">Library Books</p>
-                    <p className="text-xl font-bold text-slate-800">{totalBooks}</p>
-                  </div>
-                  <div className="border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition bg-white">
-                    <span className="text-2xl mb-2">⚽</span>
-                    <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mb-1">Sports Ground</p>
-                    <p className="text-xl font-bold text-slate-800">{playground === 'Yes' ? '✓' : '✗'}</p>
-                  </div>
-                  <div className="border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition bg-white">
-                    <span className="text-2xl mb-2">🚹</span>
-                    <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mb-1">Boys Toilets</p>
-                    <p className="text-xl font-bold text-slate-800">{toiletM}</p>
-                  </div>
-                  <div className="border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition bg-white">
-                    <span className="text-2xl mb-2">🚺</span>
-                    <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mb-1">Girls Toilets</p>
-                    <p className="text-xl font-bold text-slate-800">{toiletF}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Utilities Checklist */}
-              <div>
-                <h3 className="text-[14px] font-bold text-slate-800 mb-4">Utilities & Amenities</h3>
-                <div className="border border-slate-200 rounded-xl bg-white p-6 md:p-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 mb-8">
-                    {utilitiesList.map((util, idx) => (
-                      <div key={idx} className="flex items-center gap-3">
-                        {util.active ? (
-                          <CheckCircle2 size={20} className="text-[#10b981]" />
-                        ) : (
-                          <AlertCircle size={20} className="text-[#ef4444]" />
-                        )}
-                        <span className="text-[14px] text-slate-700">{util.label}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Coverage Summary Bar */}
-                  <div className="bg-[#fffdf2] rounded-lg p-4 border border-[#ffecb3] mt-4">
-                    <p className="text-[13px] text-slate-600">
-                      This school has <span className="font-bold text-[#f59e0b]">{activeUtilitiesCount}</span> out of <span className="font-bold text-slate-800">{totalUtilitiesCount}</span> utilities operational ({utilitiesCoveragePercent}% coverage)
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          )}
-
-          {/* TAB 3: TEACHERS */}
-          {activeTab === 'Teachers' && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm animate-in fade-in">
-              <div className="p-6 md:p-8">
-                <div className="mb-6">
+            {/* TAB 2: INFRASTRUCTURE */}
+            {activeTab === 'Infrastructure' && (
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8 animate-in fade-in">
+                <div className="mb-8">
                   <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                    <Users size={24} className="text-slate-600" /> Teachers & Staff
+                    🏢 Infrastructure Overview
                   </h2>
-                  <p className="text-[13px] text-slate-500 mt-1">Faculty information and credentials</p>
+                  <p className="text-[13px] text-slate-500 mt-1">Complete facility checklist and details</p>
                 </div>
 
                 {/* Top 4 Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                   <div className="bg-[#fffdf2] rounded-xl p-5 border border-[#ffecb3]">
-                    <p className="text-[12px] font-medium text-slate-500 mb-1">Total Teachers</p>
-                    <h3 className="text-2xl font-black text-[#f59e0b] leading-none">{teachersData.total}</h3>
+                    <p className="text-[12px] font-medium text-slate-500 mb-1">Classrooms</p>
+                    <h3 className="text-2xl font-black text-[#f59e0b] leading-none">{totalRooms}</h3>
                   </div>
-                  <div className="bg-[#eff6ff] rounded-xl p-5 border border-[#bfdbfe]">
-                    <p className="text-[12px] font-medium text-slate-500 mb-1">Male</p>
-                    <h3 className="text-2xl font-black text-[#3b82f6] leading-none">{teachersData.male}</h3>
-                  </div>
-                  <div className="bg-[#fdf2f8] rounded-xl p-5 border border-[#fbcfe8]">
-                    <p className="text-[12px] font-medium text-slate-500 mb-1">Female</p>
-                    <h3 className="text-2xl font-black text-[#db2777] leading-none">{teachersData.female}</h3>
+                  <div className="bg-[#f3f4f6] rounded-xl p-5 border border-slate-200">
+                    <p className="text-[12px] font-medium text-slate-500 mb-1">Smart Classes</p>
+                    <h3 className="text-2xl font-black text-[#1e293b] leading-none">{smartRooms}</h3>
                   </div>
                   <div className="bg-[#f0fdf4] rounded-xl p-5 border border-[#d1fae5]">
-                    <p className="text-[12px] font-medium text-slate-500 mb-1">Avg Experience</p>
-                    <h3 className="text-2xl font-black text-[#10b981] leading-none">{teachersData.avgExperience}</h3>
+                    <p className="text-[12px] font-medium text-slate-500 mb-1">Utilities</p>
+                    <h3 className="text-2xl font-black text-[#10b981] leading-none">{utilitiesCoveragePercent}%</h3>
+                  </div>
+                  <div className="bg-[#eff6ff] rounded-xl p-5 border border-[#bfdbfe]">
+                    <p className="text-[12px] font-medium text-slate-500 mb-1">Books</p>
+                    <h3 className="text-2xl font-black text-[#3b82f6] leading-none">{totalBooks}</h3>
                   </div>
                 </div>
-
-                {/* Status & Training Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-
-                  {/* Employment Status */}
-                  <div className="border border-slate-200 rounded-xl p-6">
-                    <h3 className="text-[14px] font-bold text-slate-800 mb-4">Employment Status</h3>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center text-[13px]">
-                        <span className="text-slate-600 font-medium">Permanent</span>
-                        <span className="bg-[#10b981] text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-[11px]">{teachersData.employmentStatus.permanent}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-[13px]">
-                        <span className="text-slate-600 font-medium">Contract</span>
-                        <span className="bg-slate-100 text-slate-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-[11px]">{teachersData.employmentStatus.contract}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-[13px]">
-                        <span className="text-slate-600 font-medium">Temporary</span>
-                        <span className="bg-slate-100 text-slate-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-[11px]">{teachersData.employmentStatus.temporary}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Training Completed */}
-                  <div className="border border-slate-200 rounded-xl p-6">
-                    <h3 className="text-[14px] font-bold text-slate-800 mb-4">Training Completed</h3>
-                    <div className="space-y-4 text-[13px]">
-                      {teachersData.training.map((t, i) => (
-                        <div key={i} className="flex justify-between items-center">
-                          <span className="text-slate-500">{t.name}</span>
-                          <span className="text-[#f59e0b] font-bold text-[14px]">{t.score}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Staff Directory */}
-                <div>
-                  <h3 className="text-[14px] font-bold text-slate-800 mb-4">Staff Directory</h3>
-                  <div className="space-y-4">
-                    {teachersData.directory.map((teacher, idx) => (
-                      <div key={idx} className="border border-slate-200 rounded-xl p-6 relative">
-                        <span className="absolute top-6 right-6 px-3 py-1 bg-[#d1fae5] text-[#059669] text-[11px] font-bold rounded-full uppercase tracking-wider">
-                          {teacher.status}
-                        </span>
-
-                        <h4 className="text-[15px] font-bold text-slate-800 mb-1">{teacher.name}</h4>
-                        <p className="text-[13px] text-slate-500 mb-4">{teacher.subject}</p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[12px] text-slate-600">
-                          <div className="space-y-1">
-                            <p className="font-semibold">{teacher.qualifications}</p>
-                            <p>{teacher.experience}</p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="flex items-center gap-2"><span className="text-slate-400">✉</span> {teacher.email}</p>
-                            <p className="flex items-center gap-2"><span className="text-slate-400">📞</span> {teacher.phone}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
+            )}
               </div>
-            </div>
-          )}
+        </div>
+      </header>
 
-          {/* TAB 4: STUDENTS Placeholder */}
-          {activeTab === 'Students' && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8 animate-in fade-in">
-              <p className="text-slate-500 text-center py-10">Students data coming soon.</p>
-            </div>
-          )}
+      {/* Stats – show up to four cards, always backed by real data */}
+      {finalStats.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-10">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {finalStats.map(({ label, value }, i) => {
+              const tints = [
+                'border-amber-200/80 bg-amber-500/10',
+                'border-emerald-200/80 bg-emerald-500/10',
+                'border-sky-200/80 bg-sky-500/10',
+                'border-violet-200/80 bg-violet-500/10',
+              ];
+              return (
+                <div
+                  key={label}
+                  className={`rounded-2xl border p-4 shadow-sm backdrop-blur-sm text-center ${tints[i % tints.length]}`}
+                >
+                  <p className="text-2xl font-bold text-slate-900">{formatVal(value)}</p>
+                  <p className="mt-0.5 text-xs font-medium text-slate-600">{label}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
-          {/* TAB 5: MEALS Placeholder */}
-          {activeTab === 'Meals' && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8 animate-in fade-in">
-              <p className="text-slate-500 text-center py-10">Meals data coming soon.</p>
-            </div>
-          )}
-
+      {/* Details – show only Education CSV / OrganizationProfile.data fields */}
+      <section className="mx-auto max-w-[1920px] px-4 pb-12 sm:px-6 lg:px-10">
+        <div className="rounded-3xl border border-teal-200 bg-teal-100/30 shadow-sm overflow-hidden backdrop-blur-md">
+          <div className="border-b border-teal-200/60 bg-teal-500/15 px-6 py-6 sm:px-10">
+            <h2 className="text-lg font-black uppercase tracking-widest text-teal-900">
+              {t('edu.schoolProfileTitle', language)}
+            </h2>
+            <p className="mt-1 text-sm text-teal-800/70 font-bold italic">
+              {t('edu.schoolProfileSubtitle', language)}
+            </p>
+          </div>
+          <div className="grid gap-0 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-teal-200/40">
+            {Object.entries(educationProfile || {})
+              .filter(([, v]) => v != null && String(v).trim() !== '')
+              .sort(([aKey], [bKey]) => {
+                const ia = EDUCATION_PROFILE_KEYS.indexOf(aKey);
+                const ib = EDUCATION_PROFILE_KEYS.indexOf(bKey);
+                if (ia === -1 && ib === -1) return aKey.localeCompare(bKey);
+                if (ia === -1) return 1;
+                if (ib === -1) return -1;
+                return ia - ib;
+              })
+              .reduce<[Array<[string, unknown]>, Array<[string, unknown]>]>(
+                (cols, entry, idx) => {
+                  cols[idx % 2].push(entry);
+                  return cols;
+                },
+                [[], []],
+              )
+              .map((colEntries, colIdx) => (
+                <div key={colIdx} className="p-6 sm:p-8 lg:p-10 bg-white/20">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border-collapse text-sm text-center">
+                      <tbody>
+                        {colEntries.map(([key, value]) => (
+                          <tr
+                            key={key}
+                            className="border-b border-teal-200/20 last:border-0"
+                          >
+                            <td className="w-1/2 px-4 py-3 font-bold text-teal-800/80">
+                              {getEducationProfileLabel(key)}
+                            </td>
+                            <td className="px-4 py-3 text-slate-900 font-extrabold">
+                              {formatVal(value as string | number | null | undefined)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+          </div>
         </div>
       </section>
-    </div>
+    </div >
   );
 }
