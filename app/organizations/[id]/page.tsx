@@ -321,6 +321,12 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           infra={healthInfra}
           healthProfile={healthProfile}
           staff={healthStaff}
+          equipment={healthEquipment}
+          patientServices={healthPatient}
+          immunisation={healthImmunisation}
+          medicines={healthMedicines}
+          schemes={healthSchemes}
+          monthly={healthMonthly}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
         />
@@ -377,7 +383,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
         )}
       </header>
 
-      <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto">
+      <main className="flex-1 p-4 space-y-6 max-w-[1920px] mx-auto">
         {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ICDS' && deptCode !== 'AWC_ICDS' && org.type !== 'AWC' && (
           <section className="space-y-3">
             <h2 className="text-base font-semibold text-text">Organization portfolio</h2>

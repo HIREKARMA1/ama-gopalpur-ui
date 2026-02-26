@@ -51,18 +51,18 @@ export function Navbar() {
             href="/"
             className="flex min-w-0 shrink items-center gap-2 text-white no-underline transition-opacity hover:opacity-90 sm:gap-4"
           >
-            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-lg backdrop-blur-sm">
+            <div className="relative flex h-14 w-14 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-lg backdrop-blur-sm">
               <Image
                 src="/images/logo-odisha.png"
                 alt="Government of Odisha emblem"
                 fill
                 className="object-contain"
-                sizes="56px"
+                sizes="(max-width: 640px) 56px, 80px"
                 unoptimized
               />
             </div>
             <div className="min-w-0">
-              <span className="block truncate text-xl font-extrabold tracking-tight text-white sm:text-2xl">
+              <span className="block truncate text-lg font-extrabold tracking-tight text-white sm:text-2xl">
                 {t('navbar.title', language)}
               </span>
               <span className="hidden truncate text-sm font-semibold text-orange-100 sm:text-base sm:block">
