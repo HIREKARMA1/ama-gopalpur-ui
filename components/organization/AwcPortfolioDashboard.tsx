@@ -4,8 +4,22 @@ import { useMemo, useState } from 'react';
 import { Organization, CenterProfile, SnpDailyStock } from '../../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
-import { Users, User, UserCog, UserCheck, CheckCircle2, AlertTriangle, Building, MapPin, ActivitySquare, TrendingUp, Contact } from 'lucide-react';
+import { Users, Building, MapPin, Contact, Home, Hash, UserCheck, FileText, Phone } from 'lucide-react';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
+import { ImageSlider } from './ImageSlider';
+import { GOPALPUR_BOUNDS, AWC_MARKER_ICON } from '../../lib/mapConfig';
 
 const SNP_ROWS_PER_PAGE = 10;
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
@@ -24,7 +38,6 @@ const PROFILE_ROWS: { attribute: string; key: string }[] = [
 ];
 
 const CONTACT_ROWS: { attribute: string; key: string }[] = [
-  { attribute: 'Centre contact', key: 'contact_number' },
   { attribute: 'CPDO name', key: 'cpdo_name' },
   { attribute: 'CPDO contact no', key: 'cpdo_contact_no' },
   { attribute: 'Supervisor name', key: 'supervisor_name' },
@@ -73,6 +86,7 @@ export function AwcPortfolioDashboard({
   const { language } = useLanguage();
   const [snpDateFilter, setSnpDateFilter] = useState('');
   const [snpPage, setSnpPage] = useState(1);
+  const [detailTab, setDetailTab] = useState<'profile' | 'staff'>('profile');
   const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY });
 
 
@@ -95,12 +109,37 @@ export function AwcPortfolioDashboard({
   const snpShowStart = snpTotalRows === 0 ? 0 : snpStart + 1;
   const snpShowEnd = Math.min(snpStart + SNP_ROWS_PER_PAGE, snpTotalRows);
 
-  const blockName = getValue(org, awcProfile, 'block_name') || '—';
-  const estYear = getValue(org, awcProfile, 'establishment_year') || '2010'; // using as fallback
-  const centreType = getValue(org, awcProfile, 'center_type') || 'Main Centre';
+  // Chart data: sorted by date, with opening/received/expenditure/closing (Kg)
+  const snpChartData = useMemo(() => {
+    if (!snpDailyStock.length) return [];
+    const withClosing = snpDailyStock.map((row) => {
+      const d = row.record_date;
+      const dateStr = typeof d === 'string' ? d.slice(0, 10) : new Date(d).toISOString().slice(0, 10);
+      const opening = Number(row.opening_balance_kg) || 0;
+      const received = Number(row.received_kg) || 0;
+      const expenditure = Number(row.exp_kg) || 0;
+      const closing = opening + received - expenditure;
+      return {
+        date: dateStr,
+        dateLabel: dateStr.slice(8, 10) + '/' + dateStr.slice(5, 7),
+        opening: Math.round(opening * 10) / 10,
+        received: Math.round(received * 10) / 10,
+        expenditure: Math.round(expenditure * 10) / 10,
+        closing: Math.round(closing * 10) / 10,
+      };
+    });
+    return withClosing.sort((a, b) => a.date.localeCompare(b.date));
+  }, [snpDailyStock]);
 
-  const studentStrength = getValue(org, awcProfile, 'student_strength') || 0;
-  const healthCheckups = Number(studentStrength) > 0 ? Math.round(Number(studentStrength) * 0.85) : 0; // Mock derived metric for dashboard
+  const blockName = getValue(org, awcProfile, 'block_name') || '—';
+  const gramPanchayat = getValue(org, awcProfile, 'gram_panchayat');
+  const villageWard = getValue(org, awcProfile, 'village_ward');
+  const centerCode = getValue(org, awcProfile, 'center_code');
+  const buildingType = getValue(org, awcProfile, 'building_type');
+  const studentStrength = getValue(org, awcProfile, 'student_strength');
+  const workerName = getValue(org, awcProfile, 'worker_name');
+  const supervisorName = getValue(org, awcProfile, 'supervisor_name');
+  const description = getValue(org, awcProfile, 'description');
 
 
   // Center for map
@@ -113,611 +152,445 @@ export function AwcPortfolioDashboard({
 
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 font-sans pb-16">
+    <div className="min-h-screen bg-slate-50/30 text-slate-800 font-sans pb-16">
+
+      {/* Hero: centre photo (from admin-uploaded images) */}
+      <section className="w-full">
+        <ImageSlider images={images} altPrefix={org.name} className="h-[240px] sm:h-[320px]" />
+      </section>
 
       {/* Top Header */}
-      <header className="mx-auto max-w-[1920px] px-4 pt-10 pb-6 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold tracking-tight text-[#1e293b] sm:text-[32px]">
+      <header className="mx-auto max-w-[1920px] px-4 pt-6 pb-6 sm:px-6 lg:px-8">
+        <h1 className="text-xl font-bold tracking-tight text-[#1e293b] sm:text-3xl lg:text-[32px]">
           Anganwadi Centre Dashboard
         </h1>
         <p className="mt-1 text-[15px] font-medium text-[#64748b]">
-          Real-time monitoring of infrastructure, resources, and key performance metrics
+          Centre details and location from available data
         </p>
       </header>
 
-      {/* Selector & Info Summary Card */}
+      {/* Centre details tabs – profile / staff (overview style) */}
       <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
-        <div className="rounded-2xl border border-[#8D8989] bg-white p-5 sm:p-6 shadow-sm overflow-hidden relative">
-          {/* Subtle background accent */}
-          <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none border-l border-slate-50"></div>
-
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
-
-
-            {/* Divider for mobile, vertical rule for desktop */}
-            {/* <div className="hidden lg:block w-px h-16 bg-[#8D8989] opacity-20"></div>
-            <div className="block lg:hidden h-px w-full bg-[#8D8989] opacity-20 my-1"></div> */}
-
-            {/* Right side: Summary Stats */}
-            <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-
-              <div className="flex gap-4 items-center">
-                <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-100">
-                  <Building size={18} strokeWidth={2} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Org Name</p>
-                  <p className="text-[15px] font-bold text-[#0f172a] tracking-tight">{formatVal(org.name)}</p>
-                </div>
-              </div>
-
-
-              <div className="flex gap-4 items-center">
-                <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-100">
-                  <Building size={18} strokeWidth={2} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Centre Type</p>
-                  <p className="text-[15px] font-bold text-[#0f172a] tracking-tight">{formatVal(centreType)}</p>
-                </div>
-              </div>
-
-              <div className="flex gap-4 items-center">
-                <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
-                  <MapPin size={18} strokeWidth={2} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Location Block</p>
-                  <p className="text-[15px] font-bold text-[#0f172a] tracking-tight">{formatVal(blockName)}</p>
-                </div>
-              </div>
-
-              <div className="flex gap-4 items-center">
-                <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-50 text-purple-600 border border-purple-100">
-                  <CheckCircle2 size={18} strokeWidth={2} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Established</p>
-                  <p className="text-[15px] font-bold text-[#0f172a] tracking-tight">{formatVal(estYear)}</p>
-                </div>
+        <div className="rounded-3xl border border-blue-200 bg-blue-50/60 p-5 sm:p-8 shadow-sm backdrop-blur-md overflow-hidden relative">
+          <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none border-l border-slate-50 hidden sm:block" />
+          <div className="relative z-10">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
+                Centre details
+              </h2>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start rounded-full bg-slate-100 p-1 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setDetailTab('profile')}
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition ${detailTab === 'profile'
+                    ? 'bg-white text-[#0f172a] shadow-sm'
+                    : 'text-[#64748b] hover:text-[#0f172a]'
+                    }`}
+                >
+                  <Building size={14} />
+                  <span>{t('awc.centreProfileTitle', language) || 'Centre profile'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDetailTab('staff')}
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition ${detailTab === 'staff'
+                    ? 'bg-white text-[#0f172a] shadow-sm'
+                    : 'text-[#64748b] hover:text-[#0f172a]'
+                    }`}
+                >
+                  <Contact size={14} />
+                  <span>{t('awc.staffContactTitle', language) || 'Staff & contact'}</span>
+                </button>
               </div>
             </div>
 
+            {detailTab === 'profile' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                    <Building size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Org name</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(org.name)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                    <MapPin size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Block / ULB</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(blockName)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
+                    <Home size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">GP / Ward</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(gramPanchayat)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600 border border-violet-100">
+                    <MapPin size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Village</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(villageWard)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 border border-slate-200">
+                    <Hash size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">AWC ID</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(centerCode)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 border border-teal-100">
+                    <Building size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Building status</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(buildingType)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-100">
+                    <MapPin size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Latitude</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(org?.latitude)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-pink-50 text-pink-600 border border-pink-100">
+                    <MapPin size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Longitude</p>
+                    <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(org?.longitude)}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {detailTab === 'staff' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {CONTACT_ROWS.map(({ attribute, key }, idx) => {
+                  const value = getValue(org, awcProfile, key);
+                  const iconStyles = [
+                    'bg-indigo-50 text-indigo-600 border-indigo-100',
+                    'bg-sky-50 text-sky-600 border-sky-100',
+                    'bg-emerald-50 text-emerald-600 border-emerald-100',
+                    'bg-amber-50 text-amber-600 border-amber-100',
+                    'bg-violet-50 text-violet-600 border-violet-100',
+                    'bg-teal-50 text-teal-600 border-teal-100',
+                    'bg-rose-50 text-rose-600 border-rose-100',
+                    'bg-slate-100 text-slate-600 border-slate-200',
+                  ];
+                  const Icon = key.includes('contact') || key.includes('_no') ? Phone : (key.includes('name') ? UserCheck : Contact);
+                  return (
+                    <div key={key} className="flex gap-4 items-center">
+                      <div className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${iconStyles[idx % iconStyles.length]}`}>
+                        <Icon size={20} strokeWidth={2} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">{attribute}</p>
+                        <p className="text-[15px] font-bold text-[#0f172a] break-words">{formatVal(value)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </div >
-      </section >
+        </div>
+      </section>
 
-      {/* Top Main KPIs */}
-      < section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8" >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Total Enrollment */}
-          <div className="rounded-xl border border-[#8D8989] bg-white p-6 shadow-sm flex justify-between items-center h-full">
-            <div>
-              <p className="text-[13px] font-medium text-[#64748b] mb-1">Total Enrollment</p>
-              <h3 className="text-[32px] font-black text-[#0f172a] leading-none mb-1">{studentStrength || 185}</h3>
-              <p className="text-[11px] text-[#94a3b8] mb-3">children</p>
-              <div className="inline-flex items-center gap-1 text-[#10b981]">
-                <span className="text-[11px] font-bold">↑ 12% from last month</span>
-              </div>
+      {/* Stats row – enrollment & key staff */}
+      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="rounded-2xl border border-amber-200 bg-amber-100/40 p-6 shadow-sm flex justify-between items-center backdrop-blur-sm">
+            <div className="min-w-0">
+              <p className="text-[13px] font-bold text-amber-900/70 mb-1 uppercase tracking-wider">Total enrollment</p>
+              <h3 className="text-[28px] sm:text-[32px] font-black text-amber-950 leading-none">{formatVal(studentStrength)}</h3>
+              <p className="text-[11px] text-amber-800/60 mt-1 font-medium">children</p>
             </div>
-            <div className="w-[52px] h-[52px] rounded-xl bg-[#fff8eb] flex items-center justify-center text-[#4f46e5]">
-              <Users size={28} />
+            <div className="w-14 h-14 shrink-0 rounded-2xl bg-amber-200/50 flex items-center justify-center text-amber-700 ml-3 shadow-inner">
+              <Users size={28} strokeWidth={2.5} />
             </div>
           </div>
-
-          {/* Attendance Rate */}
-          <div className="rounded-xl border border-[#8D8989] bg-white p-6 shadow-sm flex justify-between items-center h-full">
-            <div>
-              <p className="text-[13px] font-medium text-[#64748b] mb-1">Attendance Rate</p>
-              <h3 className="text-[32px] font-black text-[#0f172a] leading-none mb-1">88%</h3>
-              <p className="text-[11px] text-[#94a3b8] mb-3">on average</p>
-              <div className="inline-flex items-center gap-1 text-[#10b981]">
-                <span className="text-[11px] font-bold">↑ 4% from last month</span>
-              </div>
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-100/40 p-6 shadow-sm flex justify-between items-center backdrop-blur-sm">
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold text-emerald-900/70 mb-1 uppercase tracking-wider">AWW (Worker)</p>
+              <p className="text-[16px] font-black text-emerald-950 truncate">{formatVal(workerName)}</p>
+              <p className="text-[11px] text-emerald-800/60 mt-0.5 font-medium">Anganwadi Worker</p>
             </div>
-            <div className="w-[52px] h-[52px] rounded-xl bg-[#e8fbf0] flex items-center justify-center text-[#10b981]">
-              <UserCheck size={28} />
+            <div className="w-14 h-14 shrink-0 rounded-2xl bg-emerald-200/50 flex items-center justify-center text-emerald-700 ml-3 shadow-inner">
+              <UserCheck size={28} strokeWidth={2.5} />
             </div>
           </div>
-
-          {/* Health Checkups */}
-          <div className="rounded-xl border border-[#8D8989] bg-white p-6 shadow-sm flex justify-between items-center h-full">
-            <div>
-              <p className="text-[13px] font-medium text-[#64748b] mb-1">Health Checkups</p>
-              <h3 className="text-[32px] font-black text-[#0f172a] leading-none mb-1">{healthCheckups || 160}</h3>
-              <p className="text-[11px] text-[#94a3b8] mb-3">completed</p>
-              <div className="inline-flex items-center gap-1 text-[#10b981]">
-                <span className="text-[11px] font-bold">↑ 10% from last month</span>
-              </div>
+          <div className="rounded-2xl border border-indigo-200 bg-indigo-100/40 p-6 shadow-sm flex justify-between items-center backdrop-blur-sm">
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold text-indigo-900/70 mb-1 uppercase tracking-wider">Supervisor</p>
+              <p className="text-[16px] font-black text-indigo-950 truncate">{formatVal(supervisorName)}</p>
+              <p className="text-[11px] text-indigo-800/60 mt-0.5 font-medium">Centre supervisor</p>
             </div>
-            <div className="w-[52px] h-[52px] rounded-xl bg-[#e8fbf0] flex items-center justify-center text-[#db2777]">
-              <ActivitySquare size={28} />
-            </div>
-          </div>
-
-          {/* Total Shortage */}
-          <div className="rounded-xl border border-[#8D8989] bg-white p-6 shadow-sm flex justify-between items-center h-full">
-            <div>
-              <p className="text-[13px] font-medium text-[#64748b] mb-1">Total Shortage</p>
-              <h3 className="text-[32px] font-black text-[#0f172a] leading-none mb-1">378</h3>
-              <p className="text-[11px] text-[#94a3b8]">items needed</p>
-            </div>
-            <div className="w-[52px] h-[52px] rounded-xl bg-[#fee2e2] flex items-center justify-center">
-              <AlertTriangle size={24} fill="#fcd34d" stroke="#fcd34d" className="text-[#ea580c]" />
+            <div className="w-14 h-14 shrink-0 rounded-2xl bg-indigo-200/50 flex items-center justify-center text-indigo-700 ml-3 shadow-inner">
+              <Contact size={28} strokeWidth={2.5} />
             </div>
           </div>
         </div>
-      </section >
+      </section>
 
-      {/* Map & Resource Shortage Section */}
-      < section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8" >
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Description snippet when present */}
+      {description != null && String(description).trim() !== '' && (
+        <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+          <div className="rounded-3xl border border-slate-300 bg-slate-100/50 p-6 sm:p-8 shadow-sm backdrop-blur-md">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b] mb-2">About this centre</h2>
+            <p className="text-[14px] text-[#334155] leading-relaxed">{formatVal(description)}</p>
+          </div>
+        </section>
+      )}
 
-          {/* Left Column: Map & Infra Summary */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Map Widget */}
-            <div className="rounded-xl border border-[#8D8989] bg-white p-6 shadow-sm">
-              <div className="mb-4">
-                <h2 className="text-xl font-bold text-[#0f172a]">Infrastructure Map & Locations</h2>
-                <p className="text-[13px] text-[#64748b] mt-1">Live marking of all Anganwadi centres, schools, libraries, and kitchens. Click on any location for details.</p>
+      {/* Map – centre location from CSV (lat/long) */}
+      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="rounded-3xl border border-violet-200 bg-violet-100/30 p-6 sm:p-8 shadow-sm backdrop-blur-md">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-[#0f172a]">Centre Location</h2>
+            <p className="text-[13px] text-[#64748b] mt-1">Anganwadi centre location on map.</p>
+          </div>
+          <div className="h-[400px] w-full rounded-xl bg-[#f8f9fa] overflow-hidden relative flex items-center justify-center">
+            {isLoaded ? (
+              <GoogleMap
+                mapContainerStyle={{ width: '100%', height: '100%' }}
+                center={mapCenter}
+                zoom={14}
+                options={{
+                  restriction: {
+                    latLngBounds: {
+                      south: GOPALPUR_BOUNDS.south,
+                      west: GOPALPUR_BOUNDS.west,
+                      north: GOPALPUR_BOUNDS.north,
+                      east: GOPALPUR_BOUNDS.east,
+                    },
+                    strictBounds: true,
+                  },
+                  styles: [
+                    { featureType: 'poi', elementType: 'all', stylers: [{ visibility: 'off' }] },
+                    { featureType: 'transit', elementType: 'all', stylers: [{ visibility: 'off' }] },
+                  ],
+                  disableDefaultUI: false,
+                  zoomControl: true,
+                  mapTypeControl: true,
+                  scaleControl: true,
+                  fullscreenControl: true,
+                  streetViewControl: false,
+                  minZoom: 11,
+                  maxZoom: 18,
+                }}
+              >
+                <Marker position={mapCenter} icon={AWC_MARKER_ICON} />
+              </GoogleMap>
+            ) : (
+              <div className="text-center">
+                <MapPin size={24} className="text-rose-500 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-slate-700">Loading map…</p>
               </div>
-              <div className="h-[400px] w-full rounded-xl bg-[#f8f9fa]  overflow-hidden relative flex items-center justify-center">
-                {isLoaded ? (
-                  <GoogleMap
-                    mapContainerStyle={{ width: '100%', height: '100%' }}
-                    center={mapCenter}
-                    zoom={14}
-                    options={{
-                      disableDefaultUI: true,
-                      zoomControl: true,
-                      styles: [
-                        {
-                          "elementType": "geometry",
-                          "stylers": [{ "color": "#f5f5f5" }]
-                        },
-                        {
-                          "featureType": "poi",
-                          "stylers": [{ "visibility": "off" }]
-                        },
-                        {
-                          "featureType": "transit",
-                          "stylers": [{ "visibility": "off" }]
-                        }
-                      ]
-                    }}
-                  >
-                    <Marker position={mapCenter} icon={{ url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png" }} />
-                  </GoogleMap>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* SNP Daily Stock – charts + table */}
+      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="rounded-3xl border border-rose-200 bg-rose-100/30 p-6 sm:p-8 shadow-sm backdrop-blur-md">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-[#0f172a]">SNP Daily Stock</h2>
+            <p className="text-[13px] text-[#64748b] mt-1">
+              Opening balance, received and expenditure for Supplementary Nutrition Programme.
+            </p>
+          </div>
+
+          {/* SNP graphs – always visible; empty state when no data */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm backdrop-blur-sm">
+              <h3 className="text-sm font-bold text-sky-900 mb-3">Stock trend (Kg)</h3>
+              <div className="h-[260px] w-full">
+                {snpChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={snpChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="dateLabel" tick={{ fontSize: 11 }} stroke="#64748b" />
+                      <YAxis tick={{ fontSize: 11 }} stroke="#64748b" unit=" Kg" width={40} />
+                      <Tooltip
+                        formatter={(value, name) => [`${value != null ? Number(value).toFixed(1) : '—'} Kg`, name ?? '']}
+                        labelFormatter={(_, payload) => payload?.[0]?.payload?.date ?? ''}
+                        contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Line type="monotone" dataKey="opening" name="Opening" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, fill: '#0ea5e9' }} />
+                      <Line type="monotone" dataKey="closing" name="Closing" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} />
+                    </LineChart>
+                  </ResponsiveContainer>
                 ) : (
-                  <div className="text-center">
-                    <MapPin size={24} className="text-rose-500 mx-auto mb-2" />
-                    <p className="text-sm font-semibold text-slate-700">Google Maps Integration</p>
-                    <p className="text-xs text-slate-500 mt-1">Map view with live infrastructure markers</p>
-                    <p className="text-[10px] text-slate-400 mt-2">Green: Functional | Amber: Partial | Red: Non-functional</p>
+                  <div className="h-full w-full flex flex-col items-center justify-center rounded-lg bg-slate-100/80 border border-dashed border-slate-300 text-slate-500">
+                    <p className="text-sm font-medium">No SNP data</p>
+                    <p className="text-xs mt-1">Add daily stock records to see the chart</p>
                   </div>
                 )}
               </div>
             </div>
-
-            {/* Infrastructure Summary Widget */}
-            <div className="rounded-xl border border-[#8D8989] bg-white p-6 shadow-sm">
-              <h3 className="text-[14px] font-bold text-[#334155] mb-4">Infrastructure Summary</h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                {/* AWC Card */}
-                <div className="group rounded-xl border border-[#10b981] bg-white hover:bg-[#f59e0b] hover:border-[#f59e0b] p-4 flex justify-between items-start shadow-sm border-l-4 transition-colors cursor-pointer">
-                  <div className="flex gap-3">
-                    <Building size={20} className="text-slate-400 group-hover:text-white mt-0.5 transition-colors" />
-                    <div>
-                      <p className="text-[14px] font-bold text-[#0f172a] group-hover:text-white leading-tight transition-colors">Anganwadi Centre - {formatVal(blockName)}</p>
-                      <p className="text-[11px] text-[#64748b] group-hover:text-white/80 mt-1 transition-colors">85/100 capacity</p>
-                    </div>
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm backdrop-blur-sm">
+              <h3 className="text-sm font-bold text-amber-900 mb-3">Received vs expenditure (Kg)</h3>
+              <div className="h-[260px] w-full">
+                {snpChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={snpChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="dateLabel" tick={{ fontSize: 11 }} stroke="#64748b" />
+                      <YAxis tick={{ fontSize: 11 }} stroke="#64748b" unit=" Kg" width={40} />
+                      <Tooltip
+                        formatter={(value, name) => [`${value != null ? Number(value).toFixed(1) : '—'} Kg`, name ?? '']}
+                        labelFormatter={(_, payload) => payload?.[0]?.payload?.date ?? ''}
+                        contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Bar dataKey="received" name="Received" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="expenditure" name="Expenditure" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full w-full flex flex-col items-center justify-center rounded-lg bg-slate-100/80 border border-dashed border-slate-300 text-slate-500">
+                    <p className="text-sm font-medium">No SNP data</p>
+                    <p className="text-xs mt-1">Add daily stock records to see the chart</p>
                   </div>
-                  <span className="bg-[#ecfdf5] group-hover:bg-white text-[#10b981] text-[10px] font-bold px-2.5 py-1 rounded-md transition-colors">Functional</span>
-                </div>
-
-                {/* School Card */}
-                <div className="group rounded-xl border border-[#10b981] bg-white hover:bg-[#f59e0b] hover:border-[#f59e0b] p-4 flex justify-between items-start shadow-sm border-l-4 transition-colors cursor-pointer">
-                  <div className="flex gap-3">
-                    <Building size={20} className="text-amber-500 group-hover:text-white mt-0.5 transition-colors" />
-                    <div>
-                      <p className="text-[14px] font-bold text-[#0f172a] group-hover:text-white leading-tight transition-colors">Government Primary School - {formatVal(blockName)}</p>
-                      <p className="text-[11px] text-[#64748b] group-hover:text-white/80 mt-1 transition-colors">180/250 capacity</p>
-                    </div>
-                  </div>
-                  <span className="bg-[#ecfdf5] group-hover:bg-white text-[#10b981] text-[10px] font-bold px-2.5 py-1 rounded-md transition-colors">Functional</span>
-                </div>
-
-                {/* Library Card */}
-                <div className="group rounded-xl border border-[#10b981] bg-white hover:bg-[#f59e0b] hover:border-[#f59e0b] p-4 flex justify-between items-start shadow-sm border-l-4 transition-colors cursor-pointer">
-                  <div className="flex gap-3">
-                    <Building size={20} className="text-orange-500 group-hover:text-white mt-0.5 transition-colors" />
-                    <div>
-                      <p className="text-[14px] font-bold text-[#0f172a] group-hover:text-white leading-tight transition-colors">Community Library - {formatVal(blockName)}</p>
-                      <p className="text-[11px] text-[#64748b] group-hover:text-white/80 mt-1 transition-colors">350/500 capacity</p>
-                    </div>
-                  </div>
-                  <span className="bg-[#ecfdf5] group-hover:bg-white text-[#10b981] text-[10px] font-bold px-2.5 py-1 rounded-md transition-colors">Functional</span>
-                </div>
-
-                {/* Kitchen Card */}
-                <div className="group rounded-xl border border-[#10b981] bg-white hover:bg-[#f59e0b] hover:border-[#f59e0b] p-4 flex justify-between items-start shadow-sm border-l-4 transition-colors cursor-pointer">
-                  <div className="flex gap-3">
-                    <Building size={20} className="text-indigo-600 group-hover:text-white mt-0.5 transition-colors" />
-                    <div>
-                      <p className="text-[14px] font-bold text-[#0f172a] group-hover:text-white leading-tight transition-colors">Central Kitchen - Midday Meal</p>
-                      <p className="text-[11px] text-[#64748b] group-hover:text-white/80 mt-1 transition-colors">450/500 capacity</p>
-                    </div>
-                  </div>
-                  <span className="bg-[#ecfdf5] group-hover:bg-white text-[#10b981] text-[10px] font-bold px-2.5 py-1 rounded-md transition-colors">Functional</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 gap-4 pt-6 border-t border-[#8D8989]">
-                <div>
-                  <p className="text-[11px] text-[#64748b] mb-1">Total Infrastructure</p>
-                  <p className="text-[22px] font-black text-[#f59e0b]">4</p>
-                </div>
-                <div>
-                  <p className="text-[11px] text-[#64748b] mb-1">Functional</p>
-                  <p className="text-[22px] font-black text-[#10b981]">4</p>
-                </div>
-                <div>
-                  <p className="text-[11px] text-[#64748b] mb-1">Partial</p>
-                  <p className="text-[22px] font-black text-[#f59e0b]">0</p>
-                </div>
-                <div>
-                  <p className="text-[11px] text-[#64748b] mb-1">Non-functional</p>
-                  <p className="text-[22px] font-black text-[#ef4444]">0</p>
-                </div>
+                )}
               </div>
             </div>
           </div>
 
-
-          {/* Right Column: Resource Shortage Status */}
-          <div className="rounded-xl border border-[#8D8989] bg-white p-6 shadow-sm">
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-[#0f172a]">Resource Shortage Status</h2>
-              <p className="text-[13px] text-[#64748b] mt-1">What is the need of the hour - Critical shortages and resource gaps</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="rounded-xl bg-[#f1f5f9] p-4">
-                <p className="text-[11px] font-medium text-[#64748b] mb-1">Total Shortage</p>
-                <p className="text-[28px] font-black text-[#ef4444] leading-tight">378</p>
-                <p className="text-[11px] text-[#64748b]">items</p>
-              </div>
-              <div className="rounded-xl bg-[#fffbeb] p-4">
-                <p className="text-[11px] font-medium text-[#64748b] mb-1">Availability</p>
-                <p className="text-[28px] font-black text-[#f59e0b] leading-tight">83%</p>
-                <p className="text-[11px] text-[#64748b]">overall</p>
-              </div>
-            </div>
-
-            <h3 className="text-[13px] font-bold text-[#334155] mb-5">All Resources</h3>
-
-            <div className="space-y-6 relative">
-              {/* Custom Scrollbar track indicator */}
-              <div className="absolute right-[-10px] top-0 bottom-0 w-[4px] bg-slate-100 rounded-full flex flex-col justify-between items-center py-1">
-                <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[4px] border-b-slate-400"></div>
-                <div className="w-1.5 h-16 bg-slate-500 rounded-full my-auto"></div>
-                <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[4px] border-t-slate-400"></div>
-              </div>
-
-              {/* Infrastructure Bar */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center gap-2">
-                    <Building size={14} className="text-orange-500" />
-                    <span className="text-[14px] font-bold text-[#0f172a]">Infrastructure</span>
-                  </div>
-                  <span className="text-[10px] font-bold bg-[#ecfdf5] text-[#10b981] px-2 py-0.5 rounded">88% Available</span>
-                </div>
-                <div className="flex justify-between items-center mb-1 text-[11px] text-[#64748b]">
-                  <span>Available: 7 • Required: 8</span>
-                  <span className="font-bold text-[#ef4444]">Shortage: 1</span>
-                </div>
-                <div className="h-2 w-full bg-[#f1f5f9] rounded-full overflow-hidden">
-                  <div className="h-full bg-orange-500 rounded-full" style={{ width: '88%' }}></div>
-                </div>
-              </div>
-
-              {/* Seats Bar */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center gap-2">
-                    <Building size={14} className="text-[#8b5cf6]" />
-                    <span className="text-[14px] font-bold text-[#0f172a]">Seats</span>
-                  </div>
-                  <span className="text-[10px] font-bold bg-[#ecfdf5] text-[#10b981] px-2 py-0.5 rounded">84% Available</span>
-                </div>
-                <div className="flex justify-between items-center mb-1 text-[11px] text-[#64748b]">
-                  <span>Available: 210 • Required: 250</span>
-                  <span className="font-bold text-[#ef4444]">Shortage: 40</span>
-                </div>
-                <div className="h-2 w-full bg-[#f1f5f9] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#8b5cf6] rounded-full" style={{ width: '84%' }}></div>
-                </div>
-              </div>
-
-              {/* Meals Bar */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center gap-2">
-                    <Building size={14} className="text-[#a855f7]" />
-                    <span className="text-[14px] font-bold text-[#0f172a]">Meals</span>
-                  </div>
-                  <span className="text-[10px] font-bold bg-[#ecfdf5] text-[#10b981] px-2 py-0.5 rounded">93% Available</span>
-                </div>
-                <div className="flex justify-between items-center mb-1 text-[11px] text-[#64748b]">
-                  <span>Available: 280 • Required: 300</span>
-                  <span className="font-bold text-[#ef4444]">Shortage: 20</span>
-                </div>
-                <div className="h-2 w-full bg-[#f1f5f9] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#10b981] rounded-full" style={{ width: '93%' }}></div>
-                </div>
-              </div>
-
-              {/* Books Bar */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center gap-2">
-                    <Building size={14} className="text-[#ec4899]" />
-                    <span className="text-[14px] font-bold text-[#0f172a]">Books</span>
-                  </div>
-                  <span className="text-[10px] font-bold bg-[#ecfdf5] text-[#10b981] px-2 py-0.5 rounded">80% Available</span>
-                </div>
-                <div className="flex justify-between items-center mb-1 text-[11px] text-[#64748b]">
-                  <span>Available: 1200 • Required: 1500</span>
-                  <span className="font-bold text-[#ef4444]">Shortage: 300</span>
-                </div>
-                <div className="h-2 w-full bg-[#f1f5f9] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#a78bfa] rounded-full" style={{ width: '80%' }}></div>
-                </div>
-              </div>
-
-              {/* Scholarships Bar */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center gap-2">
-                    <Building size={14} className="text-[#1e3a8a]" />
-                    <span className="text-[14px] font-bold text-[#0f172a]">Scholarships</span>
-                  </div>
-                  <span className="text-[10px] font-bold bg-[#ecfdf5] text-[#10b981] px-2 py-0.5 rounded">85% Available</span>
-                </div>
-                <div className="flex justify-between items-center mb-1 text-[11px] text-[#64748b]">
-                  <span>Available: 85 • Required: 100</span>
-                  <span className="font-bold text-[#ef4444]">Shortage: 15</span>
-                </div>
-                <div className="h-2 w-full bg-[#f1f5f9] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#ec4899] rounded-full" style={{ width: '85%' }}></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-6 mt-6 border-t border-[#8D8989]">
-              <p className="text-[10px] text-[#94a3b8]">Last updated: {new Date().toISOString().split('T')[0]}</p>
-            </div>
-          </div>
-        </div>
-      </section >
-
-      {/* Month-over-Month Metrics Comparison */}
-      < section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8" >
-        <div className="rounded-xl border border-[#8D8989] bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-bold text-[#0f172a]">Month-over-Month Metrics Comparison</h2>
-          <p className="text-[13px] text-[#64748b] mt-1 mb-6">Performance metrics showing improvement trends from previous month</p>
-
-          {/* Top 3 Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="rounded-xl bg-[#fff7ed] p-5">
-              <p className="text-[11px] font-medium text-[#64748b] mb-1">Metrics Improved</p>
-              <p className="text-3xl font-black text-[#f97316]">8</p>
-              <p className="text-[11px] text-[#64748b] mt-1">out of 8</p>
-            </div>
-            <div className="rounded-xl bg-[#ecfdf5] p-5">
-              <p className="text-[11px] font-medium text-[#64748b] mb-1">Best Performer</p>
-              <p className="text-xl font-black text-[#059669]">Total Enrollment</p>
-              <p className="text-[11px] text-[#10b981] font-bold mt-1">↑ 20 children</p>
-            </div>
-            <div className="rounded-xl bg-[#fefce8] p-5">
-              <p className="text-[11px] font-medium text-[#64748b] mb-1">Avg Improvement</p>
-              <p className="text-3xl font-black text-[#ca8a04]">+9.0</p>
-              <p className="text-[11px] text-[#64748b] mt-1">per metric</p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-4">
+            <h3 className="text-[15px] font-semibold text-[#0f172a]">Daily records</h3>
+            <div className="flex flex-col items-start gap-2">
+              <label className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider">
+                Filter by date
+              </label>
+              <input
+                type="date"
+                value={snpDateFilter}
+                onChange={(e) => {
+                  setSnpPage(1);
+                  setSnpDateFilter(e.target.value);
+                }}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9]"
+              />
             </div>
           </div>
 
-          {/* Bar Chart Container */}
-          <div className="mb-8">
-            <h3 className="text-[13px] font-bold text-[#334155] mb-4">Current vs Previous Month</h3>
-            <div className="w-full h-[250px] relative border-b border-l border-[#8D8989] pl-2 pb-6">
-              {/* Y Axis Labels & Grid lines */}
-              <div className="absolute left-0 bottom-6 w-full h-[200px] flex flex-col justify-between items-end border-t border-dashed border-[#8D8989]">
-                <span className="text-[10px] text-slate-400 absolute left-[-25px] top-[-6px]">200</span>
-                <div className="w-full border-t border-dashed border-[#8D8989]"></div>
-                <span className="text-[10px] text-slate-400 absolute left-[-25px] top-[44px]">150</span>
-                <div className="w-full border-t border-dashed border-[#8D8989]"></div>
-                <span className="text-[10px] text-slate-400 absolute left-[-25px] top-[94px]">100</span>
-                <div className="w-full border-t border-dashed border-[#8D8989]"></div>
-                <span className="text-[10px] text-slate-400 absolute left-[-21px] top-[144px]">50</span>
-                <div className="w-full border-t border-dashed border-[#8D8989]"></div>
-                <span className="text-[10px] text-slate-400 absolute left-[-15px] bottom-[-6px]">0</span>
-              </div>
-
-              {/* Bars */}
-              <div className="absolute left-0 bottom-6 w-full h-[200px] flex justify-around items-end pt-2 px-2">
-                {/* Group 1 */}
-                <div className="flex gap-0.5 items-end h-full relative group">
-                  <div className="w-8 sm:w-10 bg-[#f97316] h-[95%] relative"><span className="hidden group-hover:block absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white shadow rounded px-1 z-10">190</span></div>
-                  <div className="w-8 sm:w-10 bg-[#033b8a] h-[83%] relative"><span className="hidden group-hover:block absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white shadow rounded px-1 z-10">166</span></div>
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] text-slate-600 -rotate-45 whitespace-nowrap">Total Enrollmen</span>
-                </div>
-                {/* Group 2 */}
-                <div className="flex gap-0.5 items-end h-full relative group">
-                  <div className="w-8 sm:w-10 bg-[#f97316] h-[44%] relative"><span className="hidden group-hover:block absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white shadow rounded px-1 z-10">88</span></div>
-                  <div className="w-8 sm:w-10 bg-[#033b8a] h-[42%] relative"><span className="hidden group-hover:block absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white shadow rounded px-1 z-10">84</span></div>
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] text-slate-600 -rotate-45 whitespace-nowrap">Attendance Rate</span>
-                </div>
-                {/* Group 3 */}
-                <div className="flex gap-0.5 items-end h-full relative group">
-                  <div className="w-8 sm:w-10 bg-[#f97316] h-[80%] relative"><span className="hidden group-hover:block absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white shadow rounded px-1 z-10">160</span></div>
-                  <div className="w-8 sm:w-10 bg-[#033b8a] h-[72%] relative"><span className="hidden group-hover:block absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white shadow rounded px-1 z-10">145</span></div>
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] text-slate-600 -rotate-45 whitespace-nowrap">Health Checkups</span>
-                </div>
-                {/* Group 4 */}
-                <div className="flex gap-0.5 items-end h-full relative group">
-                  <div className="w-8 sm:w-10 bg-[#f97316] h-[37%] relative"><span className="hidden group-hover:block absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white shadow rounded px-1 z-10">75</span></div>
-                  <div className="w-8 sm:w-10 bg-[#033b8a] h-[35%] relative"><span className="hidden group-hover:block absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white shadow rounded px-1 z-10">70</span></div>
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] text-slate-600 -rotate-45 whitespace-nowrap">Nutrition Impro</span>
-                </div>
-                {/* Group 5 */}
-                <div className="flex gap-0.5 items-end h-full relative group">
-                  <div className="w-8 sm:w-10 bg-[#f97316] h-[41%] relative"><span className="hidden group-hover:block absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white shadow rounded px-1 z-10">83</span></div>
-                  <div className="w-8 sm:w-10 bg-[#033b8a] h-[39%] relative"><span className="hidden group-hover:block absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white shadow rounded px-1 z-10">78</span></div>
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] text-slate-600 -rotate-45 whitespace-nowrap">Teacher Availab</span>
-                </div>
-                {/* Group 6 */}
-                <div className="flex gap-0.5 items-end h-full relative group">
-                  <div className="w-8 sm:w-10 bg-[#f97316] h-[36%] relative"><span className="hidden group-hover:block absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white shadow rounded px-1 z-10">72</span></div>
-                  <div className="w-8 sm:w-10 bg-[#033b8a] h-[32%] relative"><span className="hidden group-hover:block absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white shadow rounded px-1 z-10">65</span></div>
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] text-slate-600 -rotate-45 whitespace-nowrap">Budget Utilizat</span>
-                </div>
-                {/* Group 7 */}
-                <div className="flex gap-0.5 items-end h-full relative group">
-                  <div className="w-8 sm:w-10 bg-[#f97316] h-[42%] relative"></div>
-                  <div className="w-8 sm:w-10 bg-[#033b8a] h-[39%] relative"></div>
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] text-slate-600 -rotate-45 whitespace-nowrap">Resource Availa</span>
-                </div>
-                {/* Group 8 */}
-                <div className="flex gap-0.5 items-end h-full relative group">
-                  <div className="w-8 sm:w-10 bg-[#f97316] h-[43%] relative"></div>
-                  <div className="w-8 sm:w-10 bg-[#033b8a] h-[38%] relative"></div>
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] text-slate-600 -rotate-45 whitespace-nowrap">Scholarship Dis</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-center items-center gap-6 mt-14">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-[#f97316] rounded-sm"></div>
-                <span className="text-[12px] font-bold text-[#f97316]">Current Month</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-[#033b8a] rounded-sm"></div>
-                <span className="text-[12px] font-bold text-[#033b8a]">Previous Month</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Detailed Changes View */}
-          <div>
-            <h3 className="text-[13px] font-bold text-[#334155] mb-4">Detailed Changes</h3>
-
-            <div className="space-y-3 relative">
-              <div className="absolute right-[-14px] top-0 bottom-0 w-[4px] bg-slate-100 rounded-full flex flex-col justify-start items-center py-1">
-                <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[4px] border-b-slate-400"></div>
-                <div className="w-1.5 h-16 bg-slate-500 rounded-full mt-1"></div>
-              </div>
-
-              {/* Change Rows */}
-              {[
-                { name: 'Total Enrollment', desc: '165 ➝ 185', change: '↑ 20 children', perc: '+12.1%' },
-                { name: 'Attendance Rate', desc: '84 ➝ 88', change: '↑ 4 %', perc: '+4.8%' },
-                { name: 'Health Checkups', desc: '145 ➝ 160', change: '↑ 15 completed', perc: '+10.3%' },
-                { name: 'Nutrition Improvement', desc: '70 ➝ 75', change: '↑ 5 %', perc: '+7.1%' },
-                { name: 'Teacher Availability', desc: '78 ➝ 83', change: '↑ 5 %', perc: '+6.4%' },
-              ].map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center rounded-xl border border-[#8D8989] p-4">
-                  <div>
-                    <p className="text-[14px] font-bold text-[#0f172a]">{item.name}</p>
-                    <p className="text-[12px] text-[#64748b] mt-1">{item.desc}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[13px] font-bold text-[#10b981]">{item.change}</p>
-                    <p className="text-[11px] font-bold text-[#10b981] mt-1">{item.perc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section >
-
-      {/* Grid for Centre Profile & Contact Information (Original Static Data) */}
-      < section className="mx-auto max-w-[1920px] px-4 pb-12 sm:px-6 lg:px-8" >
-        <div className="grid gap-6 lg:grid-cols-2">
-
-          {/* Centre Profile Directory */}
-          <div className="rounded-xl border border-[#8D8989] bg-white p-6 md:p-8 shadow-sm">
-            <div className="mb-6 flex items-center gap-4 pb-6 border-b border-[#8D8989]">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#ccfbf1]/50 text-[#14b8a6]">
-                <Building size={24} strokeWidth={2} />
-              </div>
-              <div>
-                <h2 className="text-[17px] font-bold text-[#0f172a] tracking-tight">{t('awc.centreProfileTitle', language) || 'Centre profile'}</h2>
-                <p className="mt-0.5 text-[12px] text-[#64748b]">{t('awc.centreProfileSubtitle', language) || 'Basic information about this Anganwadi centre.'}</p>
-              </div>
-            </div>
-
-            <div className="w-full relative">
-              <table className="w-full text-left text-sm whitespace-nowrap lg:whitespace-normal">
-                <tbody className="divide-y divide-slate-100">
-                  {PROFILE_ROWS.map(({ attribute, key }) => {
-                    const value = getValue(org, awcProfile, key);
+          <div className="overflow-x-auto rounded-2xl border border-rose-100/60 shadow-sm overflow-hidden backdrop-blur-sm">
+            <table className="w-full text-center text-sm whitespace-nowrap lg:whitespace-normal">
+              <thead className="bg-rose-100/40">
+                <tr>
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-rose-800/80">Date</th>
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-rose-800/80">
+                    Opening balance
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-rose-800/80">
+                    Received
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-rose-800/80">
+                    Expenditure
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-rose-800/80">
+                    Closing balance
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-rose-100/20 bg-white/40">
+                {snpPaginated.length > 0 ? (
+                  snpPaginated.map((row) => {
+                    const d = row.record_date;
+                    const dateStr =
+                      typeof d === 'string' ? d.slice(0, 10) : new Date(d).toISOString().slice(0, 10);
+                    const opening = row.opening_balance_kg ?? 0;
+                    const received = row.received_kg ?? 0;
+                    const expended = row.exp_kg ?? 0;
+                    const closing = opening + received - expended;
                     return (
-                      <tr key={key} className="hover:bg-slate-50/50 transition-colors group">
-                        <td className="py-4 pr-6 w-1/3 align-top">
-                          <span className="font-bold text-[#475569] text-[11px] uppercase tracking-wider">{attribute}</span>
-                        </td>
-                        <td className="py-4 pl-0 lg:pl-4 text-[#0f172a] font-semibold text-[13px] break-words">
-                          {formatVal(value)}
-                        </td>
+                      <tr key={`${row.organization_id}-${dateStr}`}>
+                        <td className="px-4 py-3 text-[13px] text-rose-900 font-bold">{dateStr}</td>
+                        <td className="px-4 py-3 text-[13px] text-slate-700">{snpKg(opening)}</td>
+                        <td className="px-4 py-3 text-[13px] text-slate-700">{snpKg(received)}</td>
+                        <td className="px-4 py-3 text-[13px] text-slate-700">{snpKg(expended)}</td>
+                        <td className="px-4 py-3 text-[13px] text-rose-900 font-extrabold">{snpKg(closing)}</td>
                       </tr>
                     );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                  })
+                ) : (
+                  <tr>
+                    <td
+                      className="px-4 py-6 text-[13px] text-[#64748b] text-center"
+                      colSpan={5}
+                    >
+                      No SNP stock records available yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
 
-          {/* Contact Directory */}
-          <div className="rounded-xl border border-[#8D8989] bg-white p-6 md:p-8 shadow-sm">
-            <div className="mb-6 flex items-center gap-4 pb-6 border-b border-[#8D8989]">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#e0e7ff]/50 text-[#6366f1]">
-                <Contact size={24} strokeWidth={2} />
-              </div>
-              <div>
-                <h2 className="text-[17px] font-bold text-[#0f172a] tracking-tight">{t('awc.staffContactTitle', language) || 'Staff & contact'}</h2>
-                <p className="mt-0.5 text-[12px] text-[#64748b]">{t('awc.staffContactSubtitle', language) || 'Key staff members and contact details for this centre.'}</p>
-              </div>
-            </div>
-
-            <div className="w-full relative">
-              <div className="rounded-xl border border-[#8D8989] px-6 py-2 overflow-hidden">
-                <table className="w-full text-left text-sm whitespace-nowrap lg:whitespace-normal">
-                  <tbody className="divide-y divide-slate-100">
-                    {CONTACT_ROWS.map(({ attribute, key }) => {
-                      const value = getValue(org, awcProfile, key);
-                      return (
-                        <tr key={key} className="hover:bg-slate-50/50 transition-colors group">
-                          <td className="py-4 pr-6 w-1/3 align-top">
-                            <span className="font-bold text-[#475569] text-[11px] uppercase tracking-wider">{attribute}</span>
-                          </td>
-                          <td className="py-4 pl-0 lg:pl-4 text-[#0f172a] font-semibold text-[13px] break-words">
-                            {formatVal(value)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-[12px] text-[#64748b]">
+            <span>
+              Showing{' '}
+              <span className="font-semibold text-[#0f172a]">
+                {snpShowStart}-{snpShowEnd}
+              </span>{' '}
+              of{' '}
+              <span className="font-semibold text-[#0f172a]">
+                {snpTotalRows}
+              </span>{' '}
+              days
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSnpPage((p) => Math.max(1, p - 1))}
+                disabled={snpPageClamped <= 1}
+                className="rounded-md border border-slate-300 px-3 py-1 text-[12px] font-medium text-[#0f172a] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+              >
+                Previous
+              </button>
+              <span className="text-[12px] text-[#64748b]">
+                Page{' '}
+                <span className="font-semibold text-[#0f172a]">
+                  {snpPageClamped}
+                </span>{' '}
+                of{' '}
+                <span className="font-semibold text-[#0f172a]">
+                  {snpTotalPages}
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setSnpPage((p) => Math.min(snpTotalPages, p + 1))}
+                disabled={snpPageClamped >= snpTotalPages}
+                className="rounded-md border border-slate-300 px-3 py-1 text-[12px] font-medium text-[#0f172a] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+              >
+                Next
+              </button>
             </div>
           </div>
-
         </div>
-      </section >
+      </section>
 
     </div >
   );

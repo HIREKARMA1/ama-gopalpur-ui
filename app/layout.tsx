@@ -8,6 +8,12 @@ export const metadata = {
   description: 'Map-based overview of departments and institutions in Gopalpur constituency.',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>

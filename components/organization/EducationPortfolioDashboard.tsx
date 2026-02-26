@@ -190,25 +190,25 @@ export function EducationPortfolioDashboard({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50/30">
       {/* Hero: image slider */}
       <section className="w-full">
-        <ImageSlider images={images} altPrefix={org.name} className="rounded-none" />
+        <ImageSlider images={images} altPrefix={org.name} className="h-[240px] sm:h-[320px] rounded-none" />
       </section>
 
       {/* Header */}
-      <header className="border-b border-slate-200/80 bg-white/80 px-4 pb-4 pt-6 shadow-sm backdrop-blur-sm sm:px-6 lg:px-10">
+      <header className="border-b border-slate-200/80 bg-white/60 px-4 pb-4 pt-6 shadow-sm backdrop-blur-md sm:px-6 lg:px-10">
         <div className="mx-auto max-w-[1920px]">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="inline-flex items-center rounded-full bg-orange-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-700">
                 {departmentBadgeText}
               </p>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              <h1 className="mt-2 text-xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                 {org.name}
               </h1>
               {departmentName && (
-                <p className="mt-1 text-sm text-slate-600">{departmentName}</p>
+                <p className="mt-1 text-sm text-slate-600 truncate">{departmentName}</p>
               )}
               {locationLine && (
                 <p className="mt-0.5 text-xs text-slate-500">{locationLine}</p>
@@ -232,15 +232,15 @@ export function EducationPortfolioDashboard({
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {finalStats.map(({ label, value }, i) => {
               const tints = [
-                'border-amber-200/80 bg-amber-500/10 hover:bg-amber-500/15',
-                'border-emerald-200/80 bg-emerald-500/10 hover:bg-emerald-500/15',
-                'border-sky-200/80 bg-sky-500/10 hover:bg-sky-500/15',
-                'border-violet-200/80 bg-violet-500/10 hover:bg-violet-500/15',
+                'border-amber-200/80 bg-amber-500/10',
+                'border-emerald-200/80 bg-emerald-500/10',
+                'border-sky-200/80 bg-sky-500/10',
+                'border-violet-200/80 bg-violet-500/10',
               ];
               return (
                 <div
                   key={label}
-                  className={`rounded-xl border p-4 shadow-sm transition ${tints[i % tints.length]}`}
+                  className={`rounded-2xl border p-4 shadow-sm backdrop-blur-sm text-center ${tints[i % tints.length]}`}
                 >
                   <p className="text-2xl font-bold text-slate-900">{formatVal(value)}</p>
                   <p className="mt-0.5 text-xs font-medium text-slate-600">{label}</p>
@@ -253,61 +253,60 @@ export function EducationPortfolioDashboard({
 
       {/* Details – show only Education CSV / OrganizationProfile.data fields */}
       <section className="mx-auto max-w-[1920px] px-4 pb-12 sm:px-6 lg:px-10">
-        <div className="grid gap-6 lg:grid-cols-2">
-          {Object.entries(educationProfile || {})
-            .filter(([, v]) => v != null && String(v).trim() !== '')
-            .sort(([aKey], [bKey]) => {
-              const ia = EDUCATION_PROFILE_KEYS.indexOf(aKey);
-              const ib = EDUCATION_PROFILE_KEYS.indexOf(bKey);
-              if (ia === -1 && ib === -1) return aKey.localeCompare(bKey);
-              if (ia === -1) return 1;
-              if (ib === -1) return -1;
-              return ia - ib;
-            })
-            .reduce<[Array<[string, unknown]>, Array<[string, unknown]>]>(
-              (cols, entry, idx) => {
-                cols[idx % 2].push(entry);
-                return cols;
-              },
-              [[], []],
-            )
-            .map((colEntries, colIdx) => (
-              <div
-                key={colIdx}
-                className="rounded-xl border border-teal-200/80 bg-teal-500/5 shadow-sm overflow-hidden"
-              >
-                <div className="border-b border-teal-200/60 bg-teal-500/10 px-4 py-3">
-                  <h2 className="text-sm font-semibold uppercase tracking-wide text-teal-800">
-                    {t('edu.schoolProfileTitle', language)}
-                  </h2>
-                  <p className="mt-0.5 text-xs text-slate-600">
-                    {t('edu.schoolProfileSubtitle', language)}
-                  </p>
+        <div className="rounded-3xl border border-teal-200 bg-teal-100/30 shadow-sm overflow-hidden backdrop-blur-md">
+          <div className="border-b border-teal-200/60 bg-teal-500/15 px-6 py-6 sm:px-10">
+            <h2 className="text-lg font-black uppercase tracking-widest text-teal-900">
+              {t('edu.schoolProfileTitle', language)}
+            </h2>
+            <p className="mt-1 text-sm text-teal-800/70 font-bold italic">
+              {t('edu.schoolProfileSubtitle', language)}
+            </p>
+          </div>
+          <div className="grid gap-0 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-teal-200/40">
+            {Object.entries(educationProfile || {})
+              .filter(([, v]) => v != null && String(v).trim() !== '')
+              .sort(([aKey], [bKey]) => {
+                const ia = EDUCATION_PROFILE_KEYS.indexOf(aKey);
+                const ib = EDUCATION_PROFILE_KEYS.indexOf(bKey);
+                if (ia === -1 && ib === -1) return aKey.localeCompare(bKey);
+                if (ia === -1) return 1;
+                if (ib === -1) return -1;
+                return ia - ib;
+              })
+              .reduce<[Array<[string, unknown]>, Array<[string, unknown]>]>(
+                (cols, entry, idx) => {
+                  cols[idx % 2].push(entry);
+                  return cols;
+                },
+                [[], []],
+              )
+              .map((colEntries, colIdx) => (
+                <div key={colIdx} className="p-6 sm:p-8 lg:p-10 bg-white/20">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border-collapse text-sm text-center">
+                      <tbody>
+                        {colEntries.map(([key, value]) => (
+                          <tr
+                            key={key}
+                            className="border-b border-teal-200/20 last:border-0"
+                          >
+                            <td className="w-1/2 px-4 py-3 font-bold text-teal-800/80">
+                              {getEducationProfileLabel(key)}
+                            </td>
+                            <td className="px-4 py-3 text-slate-900 font-extrabold">
+                              {formatVal(value as string | number | null | undefined)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full border-collapse text-xs">
-                    <tbody>
-                      {colEntries.map(([key, value]) => (
-                        <tr
-                          key={key}
-                          className="border-b border-slate-200/50 last:border-0 hover:bg-white/30 transition-colors"
-                        >
-                          <td className="w-1/3 px-4 py-2 font-medium text-slate-600">
-                            {getEducationProfileLabel(key)}
-                          </td>
-                          <td className="px-4 py-2 text-slate-900">
-                            {formatVal(value as string | number | null | undefined)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ))}
+              ))}
+          </div>
         </div>
       </section>
-    </div>
+    </div >
   );
 }
 
