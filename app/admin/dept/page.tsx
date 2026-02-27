@@ -252,8 +252,26 @@ export default function DepartmentAdminPage() {
       await Promise.all(
         orgs.map(async (o) => {
           if (cancelled) return;
-          const p = await agricultureApi.getProfile(o.id);
-          profiles[o.id] = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
+          const [rawProfile, facilityMaster] = await Promise.all([
+            agricultureApi.getProfile(o.id),
+            agricultureApi.getFacilityMaster(o.id),
+          ]);
+
+          const merged: Record<string, unknown> = {};
+
+          if (rawProfile && typeof rawProfile === 'object') {
+            Object.assign(merged, rawProfile as Record<string, unknown>);
+          }
+
+          if (facilityMaster && typeof facilityMaster === 'object') {
+            Object.entries(facilityMaster as unknown as Record<string, unknown>).forEach(([key, value]) => {
+              if (['id', 'organization_id', 'created_at', 'updated_at'].includes(key)) return;
+              if (value == null || String(value).trim() === '') return;
+              merged[key] = value;
+            });
+          }
+
+          profiles[o.id] = merged;
         })
       );
       if (!cancelled) setAgricultureProfiles(profiles);
@@ -1566,21 +1584,15 @@ export default function DepartmentAdminPage() {
                       )}
                       {deptCode === 'AGRICULTURE' && (
                         <>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Sub Department</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Block / ULB</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Village</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Institution ID</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Host Institution</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">In-Charge Name</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">In-Charge Contact</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Total Staff</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Scientists/Officers</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Tech Staff</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Extension Workers</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Soil Testing</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Latitude</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Longitude</th>
+                          {/* Show all Agriculture CSV columns exactly as in the template */}
+                          {splitHeader(AGRICULTURE_CSV_HEADER).map((header) => (
+                            <th
+                              key={header}
+                              className="px-2 py-1 text-left font-medium text-text whitespace-nowrap"
+                            >
+                              {header}
+                            </th>
+                          ))}
                         </>
                       )}
                       <th className="px-2 py-1 text-left font-medium text-text">Actions</th>
@@ -1737,21 +1749,82 @@ export default function DepartmentAdminPage() {
                           )}
                           {deptCode === 'AGRICULTURE' && (
                             <>
-                              <td className="px-2 py-1 text-text-muted">{_(ap?.sub_department ?? o.attributes?.sub_department)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ap?.block_ulb ?? o.attributes?.ulb_block)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ap?.gp_ward ?? o.attributes?.gp_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ap?.village ?? o.attributes?.ward_village)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ap?.institution_id)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ap?.host_institution)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ap?.in_charge_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ap?.in_charge_contact)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ap?.total_staff)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ap?.scientists_officers)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ap?.technical_staff)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ap?.extension_workers)}</td>
-                              <td className="px-2 py-1 text-text-muted">{ap?.soil_testing ? 'Yes' : 'No'}</td>
-                              <td className="px-2 py-1 text-text-muted">{o.latitude != null ? o.latitude.toFixed(6) : '—'}</td>
-                              <td className="px-2 py-1 text-text-muted">{o.longitude != null ? o.longitude.toFixed(6) : '—'}</td>
+                              {splitHeader(AGRICULTURE_CSV_HEADER).map((header) => {
+                                const key = snakeFromHeader(header);
+                                const show = (v: unknown) =>
+                                  v != null && String(v).trim() !== '' ? String(v) : '—';
+
+                                // Map specific headers to organization core fields / attributes
+                                if (key === 'name_of_office_center' || key === 'name') {
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {o.name}
+                                    </td>
+                                  );
+                                }
+                                if (key === 'block_ulb') {
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {_(ap?.block_ulb ?? o.attributes?.ulb_block)}
+                                    </td>
+                                  );
+                                }
+                                if (key === 'gp_ward') {
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {_(ap?.gp_ward ?? o.attributes?.gp_name)}
+                                    </td>
+                                  );
+                                }
+                                if (key === 'village' || key === 'village_locality') {
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {_(ap?.village ?? o.attributes?.ward_village)}
+                                    </td>
+                                  );
+                                }
+                                if (key === 'latitude') {
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {o.latitude != null ? o.latitude.toFixed(6) : '—'}
+                                    </td>
+                                  );
+                                }
+                                if (key === 'longitude') {
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {o.longitude != null ? o.longitude.toFixed(6) : '—'}
+                                    </td>
+                                  );
+                                }
+
+                                // Default: take value from merged agriculture profile (CSV + facility master)
+                                const val = ap ? (ap as Record<string, unknown>)[key] : undefined;
+                                if (
+                                  key === 'training_hall' ||
+                                  key === 'soil_testing' ||
+                                  key === 'seed_distribution' ||
+                                  key === 'seed_processing_unit' ||
+                                  key === 'demo_farm' ||
+                                  key === 'greenhouse_polyhouse' ||
+                                  key === 'irrigation_facility' ||
+                                  key === 'machinery_custom_hiring' ||
+                                  key === 'computer_it_lab' ||
+                                  key === 'library'
+                                ) {
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {val ? 'Yes' : 'No'}
+                                    </td>
+                                  );
+                                }
+
+                                return (
+                                  <td key={key} className="px-2 py-1 text-text-muted">
+                                    {show(val)}
+                                  </td>
+                                );
+                              })}
                             </>
                           )}
                           <td className="px-2 py-1 space-x-1">
