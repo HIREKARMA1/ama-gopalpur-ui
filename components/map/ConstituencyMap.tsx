@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useMemo, useState } from 'react';
 import {
   GoogleMap,
   useJsApiLoader,
@@ -8,6 +8,7 @@ import {
   InfoWindow,
   Polyline,
 } from '@react-google-maps/api';
+import { Search } from 'lucide-react';
 import {
   GOPALPUR_BOUNDS,
   GOPALPUR_CENTER,
@@ -80,6 +81,8 @@ export function ConstituencyMap({
   const { language } = useLanguage();
   const [infoWindowOrg, setInfoWindowOrg] = useState<MapOrganization | null>(null);
   const [selectedRoad, setSelectedRoad] = useState<RoadFeature | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [mapInstance, setMapInstance] = useState<any>(null);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   /** Load map in Odia when user has selected Odia. Read from localStorage so we use Odia on first paint after reload (context updates only in useEffect). Fixed at first mount so useJsApiLoader is never called with different options. */
@@ -174,6 +177,31 @@ export function ConstituencyMap({
     [selectedDepartmentCode, language]
   );
 
+  const filteredOrgs = useMemo(
+    () => {
+      const term = searchTerm.trim().toLowerCase();
+      if (!term) return orgsWithLocation;
+      return orgsWithLocation.filter((org) => {
+        const name = (org.name || '').toLowerCase();
+        const address = (org.address || '').toLowerCase();
+        const typeLabel = getTypeLabel(org.type).toLowerCase();
+        const attributesText = org.attributes
+          ? Object.values(org.attributes)
+            .filter((v) => v != null)
+            .join(' ')
+            .toLowerCase()
+          : '';
+        return (
+          name.includes(term) ||
+          address.includes(term) ||
+          typeLabel.includes(term) ||
+          attributesText.includes(term)
+        );
+      });
+    },
+    [orgsWithLocation, searchTerm, getTypeLabel]
+  );
+
   if (!apiKey) {
     return (
       <div className="relative flex h-full min-h-[200px] w-full items-center justify-center bg-background-muted">
@@ -207,13 +235,61 @@ export function ConstituencyMap({
     );
   }
 
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return;
+
+    // Only auto-select if there is exactly one match OR an exact name match
+    const exactMatch = filteredOrgs.find(org => (org.name || '').toLowerCase() === term);
+    const resultToSelect = exactMatch || (filteredOrgs.length === 1 ? filteredOrgs[0] : null);
+
+    if (resultToSelect && mapInstance) {
+      mapInstance.panTo({
+        lat: resultToSelect.latitude,
+        lng: resultToSelect.longitude,
+      });
+      if (typeof mapInstance.getZoom === 'function' && typeof mapInstance.setZoom === 'function') {
+        const currentZoom = mapInstance.getZoom() ?? DEFAULT_ZOOM;
+        if (currentZoom < 15) {
+          mapInstance.setZoom(15);
+        }
+      }
+      setInfoWindowOrg(resultToSelect);
+    }
+  };
+
   return (
     <div className="relative h-full w-full min-h-[200px] overflow-hidden">
+      {selectedDepartmentCode && (
+        <div className="pointer-events-none absolute top-[10px] left-32 sm:left-40 z-20 flex items-center justify-start px-2  sm:px-4">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="pointer-events-auto flex w-full max-w-xl items-center gap-2 rounded-sm bg-white/95 px-3 py-1.5 shadow-sm ring-1 ring-slate-200"
+          >
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={`Search ${selectedDepartmentCode === 'AWC_ICDS' ? 'ICDS' : selectedDepartmentCode.charAt(0).toUpperCase() + selectedDepartmentCode.slice(1).toLowerCase()}…`}
+              className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
+            />
+            <button
+              type="submit"
+              className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground hover:opacity-90"
+              aria-label="Search on map"
+            >
+              <Search size={14} />
+            </button>
+          </form>
+        </div>
+      )}
       <GoogleMap
         mapContainerStyle={MAP_CONTAINER_STYLE}
         center={GOPALPUR_CENTER}
         zoom={DEFAULT_ZOOM}
         options={mapOptions}
+        onLoad={(map) => setMapInstance(map)}
       >
         {isRoadsDept &&
           roads.map((road, idx) => {
@@ -238,7 +314,7 @@ export function ConstituencyMap({
             );
           })}
         {!isRoadsDept &&
-          orgsWithLocation.map((org) => (
+          filteredOrgs.map((org) => (
             <Marker
               key={org.id}
               position={{ lat: org.latitude, lng: org.longitude }}
