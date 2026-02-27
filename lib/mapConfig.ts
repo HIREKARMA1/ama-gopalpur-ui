@@ -4,18 +4,32 @@
  */
 
 /** Approximate center of Gopalpur constituency (covering Rangeilunda, Kukudakhandi, Berhampur Urban-I) */
-export const GOPALPUR_CENTER = { lat: 19.28, lng: 84.86 };
+export const GOPALPUR_CENTER = { lat: 19.29, lng: 84.78 };
 
 /** Bounds to restrict the map to the Gopalpur constituency (SW and NE corners) */
 export const GOPALPUR_BOUNDS = {
-  south: 19.18,
-  west: 84.75,
-  north: 19.40,
-  east: 84.98,
+  south: 19.10,
+  west: 84.55,
+  north: 19.48,
+  east: 85.05,
 };
 
+/** Comprehensive boundary for Gopalpur constituency (AC 132) 
+ * Expanded to include all organization clusters from data 
+ */
+export const GOPALPUR_BORDER = [
+  { lat: 19.45, lng: 84.75 }, // North edge (Hugulapatta area)
+  { lat: 19.38, lng: 84.95 }, // NE Coastal tip
+  { lat: 19.25, lng: 84.98 }, // SE Coastal edge
+  { lat: 19.13, lng: 84.85 }, // South coastal edge (Markandi area)
+  { lat: 19.13, lng: 84.74 }, // South inland (Biswanathpur area)
+  { lat: 19.20, lng: 84.59 }, // West edge (Golanthara/western GPs)
+  { lat: 19.40, lng: 84.65 }, // NW corner (Kukudakhandi area)
+  { lat: 19.45, lng: 84.75 }, // Close loop
+];
+
 /** Default zoom level so the block fills the map */
-export const DEFAULT_ZOOM = 12;
+export const DEFAULT_ZOOM = 11;
 
 /** Google Maps colored marker icons (base URL from env) */
 const PIN_BASE = process.env.NEXT_PUBLIC_MAP_ICONS_BASE_URL ?? '';
