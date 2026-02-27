@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   GoogleMap,
   useJsApiLoader,
@@ -86,6 +86,10 @@ export function ConstituencyMap({
   const [searchTerm, setSearchTerm] = useState('');
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+  /** When set, only show markers of this type (Education/Health legend click). Click again to clear. */
+  const [legendFilterType, setLegendFilterType] = useState<string | null>(null);
+  /** When set, only show roads of this type (Roads legend click). Click again to clear. */
+  const [roadLegendFilterType, setRoadLegendFilterType] = useState<RoadTypeKey | null>(null);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   /** Load map in Odia when user has selected Odia. Read from localStorage so we use Odia on first paint after reload (context updates only in useEffect). Fixed at first mount so useJsApiLoader is never called with different options. */
@@ -114,6 +118,12 @@ export function ConstituencyMap({
   );
 
   const isRoadsDept = selectedDepartmentCode?.toUpperCase() === 'ROADS';
+
+  useEffect(() => {
+    setLegendFilterType(null);
+    setRoadLegendFilterType(null);
+  }, [selectedDepartmentCode]);
+
   /** Road path as Google Maps LatLng[] (GeoJSON is [lng, lat]) */
   const roadPaths = useMemo(
     () =>
@@ -214,6 +224,16 @@ export function ConstituencyMap({
     },
     [orgsWithLocation, searchTerm, getTypeLabel]
   );
+
+  /** Apply legend filter: when user clicks a legend type, show only that type's markers */
+  const orgsToShow = useMemo(() => {
+    const code = selectedDepartmentCode?.toUpperCase();
+    if (!legendFilterType) return filteredOrgs;
+    if (code === 'EDUCATION' || code === 'HEALTH') {
+      return filteredOrgs.filter((org) => org.type === legendFilterType);
+    }
+    return filteredOrgs;
+  }, [filteredOrgs, legendFilterType, selectedDepartmentCode]);
 
   if (!apiKey) {
     return (
@@ -356,6 +376,7 @@ export function ConstituencyMap({
               const name = road.properties?.name ?? road.properties?.roadName ?? 'Road';
               const code = road.properties?.code ?? '';
               const roadType = getRoadType(name, code);
+              if (roadLegendFilterType != null && roadType !== roadLegendFilterType) return null;
               const color = ROAD_TYPE_COLORS[roadType];
               return (
                 <Polyline
@@ -372,7 +393,7 @@ export function ConstituencyMap({
               );
             })}
           {showContent && !isRoadsDept &&
-            filteredOrgs.map((org) => (
+            orgsToShow.map((org) => (
               <Marker
                 key={org.id}
                 position={{ lat: org.latitude, lng: org.longitude }}
@@ -451,28 +472,38 @@ export function ConstituencyMap({
         <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {Object.entries(EDUCATION_TYPE_LABELS).map(([type]) => (
-              <li key={type} className="flex items-center gap-1">
-                <span
-                  className="inline-block h-2 w-2 rounded-full"
-                  style={{
-                    backgroundColor:
-                      type === 'PRIMARY_SCHOOL'
-                        ? '#ea4335'
-                        : type === 'UPPER_PRIMARY_SCHOOL'
-                          ? '#4285f4'
-                          : type === 'HIGH_SCHOOL'
-                            ? '#34a853'
-                            : type === 'HIGHER_SECONDARY'
-                              ? '#fb8c00'
-                              : type === 'COLLEGE'
-                                ? '#9c27b0'
-                                : '#f9ab00',
-                  }}
-                />
-                {getTypeLabel(type, language)}
-              </li>
-            ))}
+            {Object.entries(EDUCATION_TYPE_LABELS).map(([type]) => {
+              const isSelected = legendFilterType === type;
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
+                    title={isSelected ? 'Show all' : `Show only ${getTypeLabel(type, language)}`}
+                  >
+                    <span
+                      className="inline-block h-2 w-2 rounded-full shrink-0"
+                      style={{
+                        backgroundColor:
+                          type === 'PRIMARY_SCHOOL'
+                            ? '#ea4335'
+                            : type === 'UPPER_PRIMARY_SCHOOL'
+                              ? '#4285f4'
+                              : type === 'HIGH_SCHOOL'
+                                ? '#34a853'
+                                : type === 'HIGHER_SECONDARY'
+                                  ? '#fb8c00'
+                                  : type === 'COLLEGE'
+                                    ? '#9c27b0'
+                                    : '#f9ab00',
+                      }}
+                    />
+                    {getTypeLabel(type, language)}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -489,18 +520,28 @@ export function ConstituencyMap({
         <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {Object.entries(HEALTH_TYPE_LABELS).map(([type]) => (
-              <li key={type} className="flex items-center gap-1">
-                <span
-                  className="inline-block h-2 w-2 rounded-full"
-                  style={{
-                    backgroundColor:
-                      type === 'HOSPITAL' ? '#ea4335' : type === 'HEALTH_CENTRE' ? '#4285f4' : '#34a853',
-                  }}
-                />
-                {getTypeLabel(type, language)}
-              </li>
-            ))}
+            {Object.entries(HEALTH_TYPE_LABELS).map(([type]) => {
+              const isSelected = legendFilterType === type;
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
+                    title={isSelected ? 'Show all' : `Show only ${getTypeLabel(type, language)}`}
+                  >
+                    <span
+                      className="inline-block h-2 w-2 rounded-full shrink-0"
+                      style={{
+                        backgroundColor:
+                          type === 'HOSPITAL' ? '#ea4335' : type === 'HEALTH_CENTRE' ? '#4285f4' : '#34a853',
+                      }}
+                    />
+                    {getTypeLabel(type, language)}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -508,15 +549,25 @@ export function ConstituencyMap({
         <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[220px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {(Object.entries(ROAD_TYPE_LABELS) as [RoadTypeKey, string][]).map(([type]) => (
-              <li key={type} className="flex items-center gap-1">
-                <span
-                  className="inline-block h-2 w-3 rounded-sm"
-                  style={{ backgroundColor: ROAD_TYPE_COLORS[type] }}
-                />
-                {ROAD_TYPE_LABELS[type]}
-              </li>
-            ))}
+            {(Object.entries(ROAD_TYPE_LABELS) as [RoadTypeKey, string][]).map(([type]) => {
+              const isSelected = roadLegendFilterType === type;
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() => setRoadLegendFilterType((prev) => (prev === type ? null : type))}
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
+                    title={isSelected ? 'Show all roads' : `Show only ${ROAD_TYPE_LABELS[type]}`}
+                  >
+                    <span
+                      className="inline-block h-2 w-3 rounded-sm shrink-0"
+                      style={{ backgroundColor: ROAD_TYPE_COLORS[type] }}
+                    />
+                    {ROAD_TYPE_LABELS[type]}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
