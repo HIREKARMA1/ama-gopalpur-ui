@@ -78,11 +78,11 @@ export default function HomePage() {
       renderMobileBar={({ sidebarOpen, setSidebarOpen }) => {
         if (sidebarOpen) return null;
         return (
-        <div className="md:hidden">
-          <div className="mx-auto flex max-w-md items-center gap-2 rounded-t-2xl bg-slate-900/95 px-3 py-2 shadow-[0_-4px_12px_rgba(15,23,42,0.85)] backdrop-blur">
-            <div className="flex-1 overflow-x-auto">
-              <div className="flex items-center gap-3">
-                {departments.map((dept) => {
+          <div className="md:hidden">
+            <div className="mx-auto flex max-w-md items-center gap-2 rounded-t-2xl bg-slate-900/95 px-3 py-2 shadow-[0_-4px_12px_rgba(15,23,42,0.85)] backdrop-blur">
+              <div className="flex-1 overflow-x-auto">
+                <div className="flex items-center gap-3">
+                  {departments.map((dept) => {
                     const Icon = getDepartmentIcon(dept.code, dept.name);
                     const isSelected = selectedDept?.id === dept.id;
                     return (
@@ -90,32 +90,32 @@ export default function HomePage() {
                         key={dept.id}
                         type="button"
                         onClick={() => handleSelectDepartment(dept)}
-                        className={`flex h-10 w-10 items-center justify-center rounded-full border text-xs font-medium transition ${
-                          isSelected
-                            ? 'border-orange-400 bg-orange-500 text-white shadow'
-                            : 'border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700'
-                        }`}
+                        className={`flex h-10 w-10 items-center justify-center rounded-full border text-xs font-medium transition ${isSelected
+                          ? 'border-orange-400 bg-orange-500 text-white shadow'
+                          : 'border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700'
+                          }`}
                         aria-label={dept.name}
                       >
                         <Icon className="h-5 w-5" />
                       </button>
                     );
                   })}
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-slate-200 shadow hover:bg-slate-700"
+                aria-label={sidebarOpen ? 'Close departments' : 'Open departments'}
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-slate-200 shadow hover:bg-slate-700"
-              aria-label={sidebarOpen ? 'Close departments' : 'Open departments'}
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
           </div>
-        </div>
-      )}}
+        )
+      }}
     >
       <section className="relative flex h-full min-h-0 flex-col">
         {loading && (
@@ -124,13 +124,15 @@ export default function HomePage() {
             Loading…
           </div>
         )}
-        <div className="relative flex-1 min-h-0 rounded-tl-lg bg-slate-200 shadow-inner">
-          <ConstituencyMap
-            selectedDepartmentCode={selectedDept?.code}
-            organizations={organizations}
-            roads={roads}
-            onSelectOrganization={(id) => router.push(`/organizations/${id}`)}
-          />
+        <div className="relative flex-1 min-h-0 rounded-tl-lg bg-slate-100 shadow-inner px-4 pt-4 pb-20 sm:p-6 lg:p-8">
+          <div className="h-full w-full rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden ring-1 ring-slate-200/50">
+            <ConstituencyMap
+              selectedDepartmentCode={selectedDept?.code}
+              organizations={organizations}
+              roads={roads}
+              onSelectOrganization={(id) => router.push(`/organizations/${id}`)}
+            />
+          </div>
         </div>
       </section>
     </Shell>
