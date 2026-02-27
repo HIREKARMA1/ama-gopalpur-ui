@@ -10,7 +10,22 @@ import {
   HealthMedicinesStock,
   HealthScheme,
   HealthMonthlyReport,
+  HealthDailyAttendance,
+  HealthDailyMedicineStock,
+  HealthDailyExtraData,
 } from '../../services/api';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import { ImageSlider } from './ImageSlider';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
@@ -43,6 +58,9 @@ export interface HealthPortfolioDashboardProps {
   medicines?: HealthMedicinesStock[];
   schemes?: HealthScheme[];
   monthly?: HealthMonthlyReport[];
+  dailyAttendance?: HealthDailyAttendance[];
+  dailyMedicineStock?: HealthDailyMedicineStock[];
+  dailyExtraData?: HealthDailyExtraData[];
   departmentName?: string | null;
   images?: string[];
 }
@@ -61,9 +79,13 @@ export function HealthPortfolioDashboard({
   monthly = [],
   departmentName,
   images = [],
+  dailyAttendance = [],
+  dailyMedicineStock = [],
+  dailyExtraData = [],
 }: HealthPortfolioDashboardProps) {
   const { language } = useLanguage();
   const [detailTab, setDetailTab] = useState<'profile' | 'resources'>('profile');
+  const [monitorDate, setMonitorDate] = useState(new Date().toISOString().slice(0, 10));
   const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY });
 
   const locationLine =
@@ -429,6 +451,204 @@ export function HealthPortfolioDashboard({
         </div>
       </section>
 
+      {/* Daily Monitoring Section */}
+      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-16">
+        <div className="rounded-3xl border border-blue-200 bg-blue-50/60 p-6 sm:p-8 shadow-sm backdrop-blur-md">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-[#0f172a]">Daily Monitoring</h2>
+            <p className="text-[13px] text-[#64748b] mt-1">Daily tracking of medicine inventory, attendance and patient traffic.</p>
+          </div>
+
+          <div className="space-y-10">
+            {/* Date Picker & Quick Status */}
+            <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between border-b border-slate-200 pb-6">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-[#64748b]">Select Monitoring Date</label>
+                <input
+                  type="date"
+                  value={monitorDate}
+                  onChange={(e) => setMonitorDate(e.target.value)}
+                  className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-4">
+                {(() => {
+                  const dayExtra = dailyExtraData.find(d => d.record_date.slice(0, 10) === monitorDate);
+                  const dayAttendance = dailyAttendance.find(d => d.record_date.slice(0, 10) === monitorDate);
+                  const isVanAvailable = dayExtra?.mobile_van_available;
+                  const isDoctorPresent = dayAttendance?.doctor_present;
+
+                  return (
+                    <>
+                      <div className={`flex items-center gap-3 px-4 py-2 rounded-2xl border ${isVanAvailable ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                        <Activity size={18} className={isVanAvailable ? 'text-emerald-500' : 'text-slate-400'} />
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 leading-tight">Mobile Van</p>
+                          <p className="text-xs font-bold leading-tight">{isVanAvailable ? 'Available' : 'Unavailable'}</p>
+                        </div>
+                      </div>
+                      <div className={`flex items-center gap-3 px-4 py-2 rounded-2xl border ${isDoctorPresent ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                        <UserCheck size={18} className={isDoctorPresent ? 'text-blue-500' : 'text-slate-400'} />
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 leading-tight">Doctor Presence</p>
+                          <p className="text-xs font-bold leading-tight">{isDoctorPresent ? 'Present Today' : 'Not Present'}</p>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Charts Area */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Patient Trends */}
+              <div className="rounded-2xl border border-slate-100 bg-white/50 p-6 flex flex-col h-[350px]">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-[#0f172a]">Daily Patient Traffic</h3>
+                    <p className="text-[11px] text-[#64748b]">OPD and IPD trends (Last 15 records)</p>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">OPD</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">IPD</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1 min-h-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={patientServices.slice(-15).map(p => ({
+                      date: p.record_date.slice(5, 10).split('-').reverse().join('/'),
+                      opd: p.opd_count || 0,
+                      ipd: p.ipd_count || 0,
+                    }))}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis
+                        dataKey="date"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fontWeight: 600, fill: '#94a3b8' }}
+                        dy={10}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fontWeight: 600, fill: '#94a3b8' }}
+                      />
+                      <Tooltip
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                        cursor={{ fill: '#f8fafc' }}
+                      />
+                      <Bar dataKey="opd" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
+                      <Bar dataKey="ipd" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Attendance Trends */}
+              <div className="rounded-2xl border border-slate-100 bg-white/50 p-6 flex flex-col h-[350px]">
+                <div className="mb-4">
+                  <h3 className="text-sm font-bold text-[#0f172a]">Attendance Trends</h3>
+                  <p className="text-[11px] text-[#64748b]">Staff presence count (Last 15 records)</p>
+                </div>
+                <div className="flex-1 min-h-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={dailyAttendance.slice(-15).map(a => ({
+                      date: a.record_date.slice(5, 10).split('-').reverse().join('/'),
+                      count: a.staff_present_count || 0,
+                    }))}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis
+                        dataKey="date"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fontWeight: 600, fill: '#94a3b8' }}
+                        dy={10}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fontWeight: 600, fill: '#94a3b8' }}
+                      />
+                      <Tooltip
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="count"
+                        stroke="#8b5cf6"
+                        strokeWidth={3}
+                        dot={{ r: 4, fill: '#8b5cf6', strokeWidth: 2, stroke: '#fff' }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            {/* Medicine Stock for Selected Day */}
+            <div className="rounded-2xl border border-slate-100 bg-white/40 overflow-hidden">
+              <div className="p-5 border-b border-slate-100 bg-white/50 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-[#0f172a]">Daily Medicine Inventory</h3>
+                  <p className="text-[11px] text-[#64748b]">Inventory level for {monitorDate}</p>
+                </div>
+                <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                  <Syringe size={20} />
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/50">
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Medicine Name</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">Opening</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">Received</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">Issued</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-right">Closing Stock</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {(() => {
+                      const dayStocks = dailyMedicineStock.filter(s => s.record_date.slice(0, 10) === monitorDate);
+                      if (dayStocks.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan={5} className="px-6 py-10 text-center text-slate-400 italic bg-white/20">
+                              No medicine stock data available for this date.
+                            </td>
+                          </tr>
+                        );
+                      }
+                      return dayStocks.map((stock, idx) => (
+                        <tr key={idx} className="hover:bg-white/40 transition">
+                          <td className="px-6 py-4 font-bold text-[#334155]">{stock.medicine_name}</td>
+                          <td className="px-6 py-4 text-center font-semibold text-slate-600">{stock.opening_balance || 0}</td>
+                          <td className="px-6 py-4 text-center font-semibold text-emerald-600">+{stock.received || 0}</td>
+                          <td className="px-6 py-4 text-center font-semibold text-rose-500">-{stock.issued || 0}</td>
+                          <td className="px-6 py-4 text-right">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${(stock.closing_balance || 0) < 10 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                              {stock.closing_balance || 0}
+                            </span>
+                          </td>
+                        </tr>
+                      ));
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
