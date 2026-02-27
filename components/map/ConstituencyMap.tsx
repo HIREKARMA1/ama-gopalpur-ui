@@ -7,11 +7,13 @@ import {
   Marker,
   InfoWindow,
   Polyline,
+  Polygon,
 } from '@react-google-maps/api';
 import { Search } from 'lucide-react';
 import {
   GOPALPUR_BOUNDS,
   GOPALPUR_CENTER,
+  GOPALPUR_BORDER,
   DEFAULT_ZOOM,
   EDUCATION_MARKER_ICONS,
   EDUCATION_TYPE_LABELS,
@@ -83,6 +85,7 @@ export function ConstituencyMap({
   const [selectedRoad, setSelectedRoad] = useState<RoadFeature | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [mapInstance, setMapInstance] = useState<any>(null);
+  const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   /** Load map in Odia when user has selected Odia. Read from localStorage so we use Odia on first paint after reload (context updates only in useEffect). Fixed at first mount so useJsApiLoader is never called with different options. */
@@ -138,11 +141,21 @@ export function ConstituencyMap({
         { featureType: 'transit', elementType: 'all', stylers: [{ visibility: 'off' }] },
       ],
       disableDefaultUI: false,
-      zoomControl: true,
+      zoomControl: false,
       mapTypeControl: true,
+      mapTypeControlOptions: {
+        position: 3, // google.maps.ControlPosition.TOP_RIGHT
+      },
       scaleControl: true,
       fullscreenControl: true,
+      fullscreenControlOptions: {
+        position: 3,
+      },
       streetViewControl: false,
+      rotateControl: true,
+      rotateControlOptions: {
+        position: 3, // TOP_RIGHT
+      },
       minZoom: 11,
       maxZoom: 18,
     }),
@@ -259,10 +272,29 @@ export function ConstituencyMap({
     }
   };
 
+  /** Only show markers/roads if we have a department selected, are zoomed in enough, or have a search result */
+  const showContent = !!selectedDepartmentCode || zoom >= 13 || !!infoWindowOrg || (searchTerm.trim() !== '' && filteredOrgs.length > 0);
+
   return (
-    <div className="relative h-full w-full min-h-[200px] overflow-hidden">
+    <div className="relative h-full w-full min-h-[400px] overflow-hidden flex flex-col">
+      <style jsx global>{`
+        /* Hide Google logo and terms/policy links */
+        .gm-style img[src*="google_white"],
+        .gm-style img[src*="google_gray"],
+        .gm-style a[href*="maps.google.com"],
+        .gm-style a[href*="google.com/intl/en-US_in/help/terms_maps"],
+        .gm-style a[href*="google.com/help/legalnotices_maps"],
+        .gm-style-cc a,
+        button[title*="Report a map error"] {
+          display: none !important;
+        }
+        /* Hide the container for copyright text but keep buttons */
+        .gm-style-cc {
+          display: none !important;
+        }
+      `}</style>
       {selectedDepartmentCode && (
-        <div className="pointer-events-none absolute top-[10px] left-32 sm:left-40 z-20 flex items-center justify-start px-2  sm:px-4">
+        <div className="pointer-events-none sm:absolute sm:top-[10px] sm:left-4 sm:right-auto z-20 flex items-center justify-start px-4 sm:px-0 w-full sm:w-auto py-2 sm:py-0">
           <form
             onSubmit={handleSearchSubmit}
             className="pointer-events-auto flex w-full max-w-xl items-center gap-2 rounded-sm bg-white/95 px-3 py-1.5 shadow-sm ring-1 ring-slate-200"
@@ -284,114 +316,141 @@ export function ConstituencyMap({
           </form>
         </div>
       )}
-      <GoogleMap
-        mapContainerStyle={MAP_CONTAINER_STYLE}
-        center={GOPALPUR_CENTER}
-        zoom={DEFAULT_ZOOM}
-        options={mapOptions}
-        onLoad={(map) => setMapInstance(map)}
-      >
-        {isRoadsDept &&
-          roads.map((road, idx) => {
-            const path = roadPaths[idx] ?? [];
-            if (path.length < 2) return null;
-            const name = road.properties?.name ?? road.properties?.roadName ?? 'Road';
-            const code = road.properties?.code ?? '';
-            const roadType = getRoadType(name, code);
-            const color = ROAD_TYPE_COLORS[roadType];
-            return (
-              <Polyline
-                key={`road-${idx}-${name}`}
-                path={path}
-                options={{
-                  strokeColor: color,
-                  strokeWeight: 5,
-                  strokeOpacity: 0.9,
-                  clickable: true,
+      <div className="flex-1 w-full relative">
+        <GoogleMap
+          mapContainerStyle={MAP_CONTAINER_STYLE}
+          center={GOPALPUR_CENTER}
+          zoom={DEFAULT_ZOOM}
+          options={mapOptions}
+          onLoad={(map) => setMapInstance(map)}
+          onZoomChanged={() => {
+            if (mapInstance) {
+              setZoom(mapInstance.getZoom());
+            }
+          }}
+        >
+          <Polyline
+            path={GOPALPUR_BORDER}
+            options={{
+              strokeColor: '#ef4444', // red-500
+              strokeOpacity: 0,
+              icons: [
+                {
+                  icon: {
+                    path: 'M 0,-1 0,1',
+                    strokeOpacity: 1,
+                    scale: 3,
+                    strokeWeight: 2,
+                  },
+                  offset: '0',
+                  repeat: '20px',
+                },
+              ],
+              clickable: false,
+            }}
+          />
+          {showContent && isRoadsDept &&
+            roads.map((road, idx) => {
+              const path = roadPaths[idx] ?? [];
+              if (path.length < 2) return null;
+              const name = road.properties?.name ?? road.properties?.roadName ?? 'Road';
+              const code = road.properties?.code ?? '';
+              const roadType = getRoadType(name, code);
+              const color = ROAD_TYPE_COLORS[roadType];
+              return (
+                <Polyline
+                  key={`road-${idx}-${name}`}
+                  path={path}
+                  options={{
+                    strokeColor: color,
+                    strokeWeight: 5,
+                    strokeOpacity: 0.9,
+                    clickable: true,
+                  }}
+                  onClick={() => setSelectedRoad(road)}
+                />
+              );
+            })}
+          {showContent && !isRoadsDept &&
+            filteredOrgs.map((org) => (
+              <Marker
+                key={org.id}
+                position={{ lat: org.latitude, lng: org.longitude }}
+                title={org.name}
+                icon={getIconUrl(org.type)}
+                onClick={() => {
+                  setInfoWindowOrg(org);
                 }}
-                onClick={() => setSelectedRoad(road)}
+                cursor="pointer"
               />
+            ))}
+          {selectedRoad && (() => {
+            const coords = selectedRoad.geometry?.coordinates ?? [];
+            const first = coords[0];
+            if (!first) return null;
+            const [lng, lat] = first;
+            const name = selectedRoad.properties?.name ?? selectedRoad.properties?.roadName ?? 'Road';
+            const code = selectedRoad.properties?.code ?? '';
+            const block = selectedRoad.properties?.block ?? '';
+            const roadType = getRoadType(name, code);
+            return (
+              <InfoWindow
+                position={{ lat, lng }}
+                onCloseClick={() => setSelectedRoad(null)}
+              >
+                <div className="min-w-[200px] max-w-[280px] py-1">
+                  <p className="font-semibold text-gray-900">{name}</p>
+                  {code && <p className="text-xs text-gray-600">{ROAD_TYPE_LABELS[roadType]} · {code}</p>}
+                  {block && <p className="mt-1 text-xs text-gray-500">Block: {block}</p>}
+                </div>
+              </InfoWindow>
             );
-          })}
-        {!isRoadsDept &&
-          filteredOrgs.map((org) => (
-            <Marker
-              key={org.id}
-              position={{ lat: org.latitude, lng: org.longitude }}
-              title={org.name}
-              icon={getIconUrl(org.type)}
-              onClick={() => {
-                setInfoWindowOrg(org);
-              }}
-              cursor="pointer"
-            />
-          ))}
-        {selectedRoad && (() => {
-          const coords = selectedRoad.geometry?.coordinates ?? [];
-          const first = coords[0];
-          if (!first) return null;
-          const [lng, lat] = first;
-          const name = selectedRoad.properties?.name ?? selectedRoad.properties?.roadName ?? 'Road';
-          const code = selectedRoad.properties?.code ?? '';
-          const block = selectedRoad.properties?.block ?? '';
-          const roadType = getRoadType(name, code);
-          return (
+          })()}
+          {infoWindowOrg && (
             <InfoWindow
-              position={{ lat, lng }}
-              onCloseClick={() => setSelectedRoad(null)}
+              position={{
+                lat: infoWindowOrg.latitude!,
+                lng: infoWindowOrg.longitude!,
+              }}
+              onCloseClick={() => setInfoWindowOrg(null)}
             >
-              <div className="min-w-[200px] max-w-[280px] py-1">
-                <p className="font-semibold text-gray-900">{name}</p>
-                {code && <p className="text-xs text-gray-600">{ROAD_TYPE_LABELS[roadType]} · {code}</p>}
-                {block && <p className="mt-1 text-xs text-gray-500">Block: {block}</p>}
+              <div className="min-w-[180px] max-w-[260px] py-1">
+                <p className="font-semibold text-gray-900">{infoWindowOrg.name}</p>
+                <p className="text-xs text-gray-600">
+                  {getTypeLabel(infoWindowOrg.type, language)}
+                </p>
+                {infoWindowOrg.type === 'AWC' && infoWindowOrg.attributes && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Sector: {String(infoWindowOrg.attributes.sector || '–')}
+                    {(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village) && (
+                      <> · GP: {String(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village)}</>
+                    )}
+                  </p>
+                )}
+                {infoWindowOrg.address && (
+                  <p className="mt-1 text-xs text-gray-500">{infoWindowOrg.address}</p>
+                )}
+                {onSelectOrganization && (
+                  <button
+                    type="button"
+                    className="mt-2 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
+                    onClick={() => {
+                      onSelectOrganization(infoWindowOrg.id);
+                      setInfoWindowOrg(null);
+                    }}
+                  >
+                    {t('map.viewProfile', language)}
+                  </button>
+                )}
               </div>
             </InfoWindow>
-          );
-        })()}
-        {infoWindowOrg && (
-          <InfoWindow
-            position={{
-              lat: infoWindowOrg.latitude!,
-              lng: infoWindowOrg.longitude!,
-            }}
-            onCloseClick={() => setInfoWindowOrg(null)}
-          >
-            <div className="min-w-[180px] max-w-[260px] py-1">
-              <p className="font-semibold text-gray-900">{infoWindowOrg.name}</p>
-              <p className="text-xs text-gray-600">
-                {getTypeLabel(infoWindowOrg.type, language)}
-              </p>
-              {infoWindowOrg.type === 'AWC' && infoWindowOrg.attributes && (
-                <p className="mt-1 text-xs text-gray-500">
-                  Sector: {String(infoWindowOrg.attributes.sector || '–')}
-                  {(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village) && (
-                    <> · GP: {String(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village)}</>
-                  )}
-                </p>
-              )}
-              {infoWindowOrg.address && (
-                <p className="mt-1 text-xs text-gray-500">{infoWindowOrg.address}</p>
-              )}
-              {onSelectOrganization && (
-                <button
-                  type="button"
-                  className="mt-2 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
-                  onClick={() => {
-                    onSelectOrganization(infoWindowOrg.id);
-                    setInfoWindowOrg(null);
-                  }}
-                >
-                  {t('map.viewProfile', language)}
-                </button>
-              )}
-            </div>
-          </InfoWindow>
-        )}
-      </GoogleMap>
+          )}
+        </GoogleMap>
+      </div>
       {selectedDepartmentCode?.toUpperCase() === 'EDUCATION' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[200px]">
-          <p className="font-medium text-text">{t('map.legend', language)}</p>
-          <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-text-muted">
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
             {Object.entries(EDUCATION_TYPE_LABELS).map(([type]) => (
               <li key={type} className="flex items-center gap-1">
                 <span
@@ -418,18 +477,18 @@ export function ConstituencyMap({
         </div>
       )}
       {(selectedDepartmentCode?.toUpperCase() === 'AWC_ICDS' || selectedDepartmentCode?.toUpperCase() === 'ICDS') && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[200px]">
-          <p className="font-medium text-text">{t('map.legend', language)}</p>
-          <p className="mt-1 flex items-center gap-1 text-text-muted">
-            <span className="inline-block h-2 w-2 rounded-full bg-pink-500" />
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <p className="flex items-center gap-2 text-slate-700">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-pink-500" />
             {t('map.awc.label', language)}
           </p>
         </div>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'HEALTH' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[200px]">
-          <p className="font-medium text-text">{t('map.legend', language)}</p>
-          <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-text-muted">
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
             {Object.entries(HEALTH_TYPE_LABELS).map(([type]) => (
               <li key={type} className="flex items-center gap-1">
                 <span
@@ -446,9 +505,9 @@ export function ConstituencyMap({
         </div>
       )}
       {isRoadsDept && roads.length > 0 && (
-        <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[220px]">
-          <p className="font-medium text-text">{t('map.legend', language)}</p>
-          <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-text-muted">
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[220px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
             {(Object.entries(ROAD_TYPE_LABELS) as [RoadTypeKey, string][]).map(([type]) => (
               <li key={type} className="flex items-center gap-1">
                 <span
