@@ -8,6 +8,7 @@ import { SuperAdminDashboardLayout } from '../../../components/layout/SuperAdmin
 import { useLanguage } from '../../../components/i18n/LanguageContext';
 import { t } from '../../../components/i18n/messages';
 import { Loader } from '../../../components/common/Loader';
+import { compressImage } from '../../../lib/imageCompression';
 
 /** ICDS minister CSV: all attributes for AWC profile (no SL NO; use system-generated org id). */
 const ICDS_CSV_HEADER =
@@ -489,7 +490,8 @@ export default function DepartmentAdminPage() {
                       };
                       await profileApi.putCenterProfile(updated.id, profilePayload);
                       if (icdsImageFile) {
-                        await organizationsApi.uploadCoverImage(updated.id, icdsImageFile);
+                        const compressed = await compressImage(icdsImageFile, { maxSizeMB: 0.5 });
+                        await organizationsApi.uploadCoverImage(updated.id, compressed);
                         setIcdsImageFile(null);
                       }
                       setOrgProfiles((prev) => ({ ...prev, [updated.id]: { ...profilePayload, organization_id: updated.id } as CenterProfile }));
@@ -692,7 +694,8 @@ export default function DepartmentAdminPage() {
                       };
                       await educationApi.putProfile(updated.id, profileData);
                       if (educationImageFile) {
-                        await organizationsApi.uploadCoverImage(updated.id, educationImageFile);
+                        const compressed = await compressImage(educationImageFile, { maxSizeMB: 0.5 });
+                        await organizationsApi.uploadCoverImage(updated.id, compressed);
                         setEducationImageFile(null);
                       }
                       setEducationProfiles((prev) => ({ ...prev, [updated.id]: profileData }));
@@ -1021,7 +1024,8 @@ export default function DepartmentAdminPage() {
                       };
                       await healthApi.putProfile(updated.id, profileData);
                       if (healthImageFile) {
-                        await organizationsApi.uploadCoverImage(updated.id, healthImageFile);
+                        const compressed = await compressImage(healthImageFile, { maxSizeMB: 0.5 });
+                        await organizationsApi.uploadCoverImage(updated.id, compressed);
                         setHealthImageFile(null);
                       }
                       setNewHealthOrg(emptyHealthOrg());
