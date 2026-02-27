@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { authApi, organizationsApi, departmentsApi, profileApi, clearToken, getToken, educationApi, healthApi, Organization, User, Department, CenterProfile } from '../../../services/api';
+import { authApi, organizationsApi, departmentsApi, profileApi, clearToken, getToken, educationApi, healthApi, agricultureApi, Organization, User, Department, CenterProfile } from '../../../services/api';
 import { SuperAdminDashboardLayout } from '../../../components/layout/SuperAdminDashboardLayout';
 import { useLanguage } from '../../../components/i18n/LanguageContext';
 import { t } from '../../../components/i18n/messages';
@@ -17,6 +17,9 @@ const EDUCATION_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF SCHOOL,SCHOOL ID,ESST YEAR,CATEGORY,I,II,III,IV,V,VI,VII,VIII,IX,X,DEO NAME,DEO CONTACT,BEO NAME,BEO CONTACT,BRCC NAME,BRCC CONTACT,CRCC NAME,CRCC CONTACT,NAME OF HM,CONTACT OF HM,NO OF TS,NO OF NTS,NO OF TGP(PCM),NO OF TGP(CBZ),NO OF TGT(ARTS),BUILDING STATUS,NO OF ROOMS,NO OF SMART CLASS ROOMS,SCIENCE LAB,TOILET(M),TOILET(F),RAMP,MEETING HALL,STAFF COMMON ROOM,NCC,NSS,JRC,ECO CLUB,LIBRARY,ICC HEAD NAME,ICC HEAD CONTACT,PLAY GROUND,CYCLE STAND,DRINKING WATER(TW),DRINKING WATER(TAP),DRINKING WATER(OVERHEAD TAP),DRINKING WATER(AQUAGUARD),LATITUDE,LONGITUDE,DESCRIPTION\n';
 const HEALTH_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,LATITUDE,LONGITUDE,NAME,INSTITUTION ID,CATEGORY,INST HEAD NAME,INST HEAD CONTACT,NO OF TS,NO OF NTS,NO OF MO,NO OF PHARMACIST,NO OF ANM,NO OF HEALTH WORKER,NO OF PATHOLOGY,NO OF CLERK,NO OF SWEEPER,NO OF NW,NO OF BED,NO OF ICU,X-RAY AVAILABILTY,CT-SCAN AVAILABILITY,AVAILABILITY OF PATHOLOGY TESTING,DESCRIPTION\n';
+
+const AGRICULTURE_CSV_HEADER =
+  'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID,HOST INSTITUTION/AFFILIATING BODY,ESTABLISHED YEAR,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,CAMPUS AREA (ACRES),TRAINING HALL (YES/NO),TRAINING HALL CAPACITY (SEATS),SOIL TESTING (YES/NO),SOIL SAMPLES TESTED PER YEAR,SEED DISTRIBUTION (YES/NO),SEED PROCESSING UNIT (YES/NO),SEED STORAGE CAPACITY (MT),DEMO UNITS (COMMA SEPARATED),DEMO FARM (YES/NO),DEMO FARM AREA (ACRES),GREENHOUSE/POLYHOUSE (YES/NO),IRRIGATION FACILITY (YES/NO),MACHINERY/CUSTOM HIRING (YES/NO),COMPUTER/IT LAB (YES/NO),LIBRARY (YES/NO),KEY SCHEMES (COMMA SEPARATED),TOTAL STAFF (COUNT),SCIENTISTS/OFFICERS (COUNT),TECHNICAL STAFF (COUNT),EXTENSION WORKERS (COUNT),FARMER TRAINING CAPACITY (PER BATCH),TRAINING PROGRAMMES CONDUCTED LAST YEAR,ON-FARM TRIALS/FLD LAST YEAR,VILLAGES/GPS COVERED (COUNT),SOIL HEALTH CARDS ISSUED LAST YEAR,FARMERS SERVED LAST YEAR (APPROX),REMARKS/DESCRIPTION\n';
 
 const EDUCATION_ENGINEERING_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF COLLEGE,INSTITUTION ID,ESTABLISHED YEAR,CAMPUS AREA (ACRES),AFFILIATING UNIVERSITY,AUTONOMOUS (YES/NO),AUTONOMOUS SINCE YEAR,COLLEGE TYPE,PIN CODE,LATITUDE,LONGITUDE,PRINCIPAL NAME,PRINCIPAL CONTACT,PRINCIPAL EMAIL,COLLEGE PHONE,COLLEGE EMAIL,WEBSITE,AICTE APPROVAL(YES/NO),NAAC,NBA,NIRF RANKING,AARIIA-ATAL RANKING,B.TECH BRANCHES COUNT,M.TECH PROGRAMMES COUNT,PH.D. (YES/NO),DEPARTMENTS (COMMA SEPARATED),TOTAL INTAKE UG AUTOMOBILE ENGINEERING,TOTAL INTAKE UG CHEMICAL ENGINEERING,TOTAL INTAKE UG CIVIL ENGINEERING,TOTAL INTAKE UG COMPUTER SCIENCE ENGINEERING,TOTAL INTAKE UG ELECTRICAL ENGINEERING,TOTAL INTAKE UG ELECTRONICS & TELECOMMUNICATION ENGINEERING,TOTAL INTAKE UG MECHANICAL ENGINEERING,TOTAL INTAKE UG METALLURGICAL AND MATERIALS ENGINEERING,TOTAL INTAKE UG PRODUCTION ENGINEERING,TOTAL INTAKE PG DEPARTMENTS WISE (COMMA SEPARATED),TOTAL NO OF FACULTY AUTOMOBILE ENGINEERING,TOTAL NO OF FACULTY CHEMICAL ENGINEERING,TOTAL NO OF FACULTY CIVIL ENGINEERING,TOTAL NO OF FACULTY COMPUTER SCIENCE ENGINEERING,TOTAL NO OF FACULTY ELECTRICAL ENGINEERING,TOTAL NO OF FACULTY ELECTRONICS & TELECOMMUNICATION ENGINEERING,TOTAL NO OF FACULTY MECHANICAL ENGINEERING,TOTAL NO OF FACULTY METALLURGICAL AND MATERIALS ENGINEERING,TOTAL NO OF FACULTY PRODUCTION ENGINEERING,TOTAL NO OF FACULTY BASIC SCIENCE,TOTAL NO OF FACULTY HUMANITIES AND SOCIAL SCIENCE,NO OF CLASSROOMS,NO OF LABS BRACH WISE(COMMA SEPARATED),NO OF SMART CLASSROOMS,WORKSHOP,HOSTEL,HOSTEL CAPACITY BOYS,HOSTEL CAPACITY GIRLS,GUEST HOUSE,BANKING,CANTEEN,GYMNASIUM,WIFI AVAILABILITY,PLAYGROUND,GARDEN,TRANSPORT FASCILITY,PARKING FASCILITY,STAFF ACCOMMODATION,SECURITY,CCTV,RAMP (ACCESSIBILITY),DRINKING WATER,ELECTRICITY,NSS,NCC,IQAC,ICC,ICC HEAD NAME,ICC HEAD CONTACT,GRIEVANCE CELL HEAD,GRIEVANCE CELL HEAD CONTACT,ANTI-RAGGING CELL HEAD,ANTI-RAGGING CELL HEAD CONTACT,INNOVATION AND STARTUP FASCILITY,ROBOTICS CLUB,CULTURAL CLUBS,SPORTS AND ATHLETICS FASCILITY,E-MAGAZINE,TEQIP,RESEARCH PROJECTS COUNT,PATENTS COUNT,MOU COUNT,CENTRE OF EXCELLENCE(COMMA SEPARATED),INCUBATION CENTRE(AVAILABILITY),PLACEMENT CELL,PLACEMENT OFFICER NAME,PLACEMENT OFFICER CONTACT,PLACEMENT PERCENTAGE (LAST YEAR),HIGHEST PACKAGE (LPA),INTERNSHIP,NAME OF DEANS/PIC/FIC/OIC/REGISTRAR,SCHORLASHIP FASCILITY,NOTABLE AWARDS OR ACHIEVEMENTS,DESCRIPTION\n';
@@ -73,9 +76,11 @@ export default function DepartmentAdminPage() {
   const [orgProfiles, setOrgProfiles] = useState<Record<number, CenterProfile | null>>({});
   const [healthProfiles, setHealthProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [educationProfiles, setEducationProfiles] = useState<Record<number, Record<string, unknown>>>({});
+  const [agricultureProfiles, setAgricultureProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [icdsImageFile, setIcdsImageFile] = useState<File | null>(null);
   const [healthImageFile, setHealthImageFile] = useState<File | null>(null);
   const [educationImageFile, setEducationImageFile] = useState<File | null>(null);
+  const [agricultureImageFile, setAgricultureImageFile] = useState<File | null>(null);
   const [newOrg, setNewOrg] = useState({
     ulb_block: '',
     gp_name: '',
@@ -125,6 +130,20 @@ export default function DepartmentAdminPage() {
   });
   const [newEducationOrg, setNewEducationOrg] = useState(emptyEducationOrg());
 
+  const [editingAgricultureId, setEditingAgricultureId] = useState<number | null>(null);
+  const emptyAgricultureOrg = () => ({
+    name: '', sub_department: '', block_ulb: '', gp_ward: '', village: '', address: '', latitude: '', longitude: '',
+    institution_id: '', host_institution: '', established_year: '', pin_code: '',
+    in_charge_name: '', in_charge_contact: '', in_charge_email: '', office_phone: '', office_email: '', website: '',
+    campus_area_acres: '', training_hall: '', training_hall_capacity: '', soil_testing: '', soil_samples_tested_per_year: '',
+    seed_distribution: '', seed_processing_unit: '', seed_storage_capacity_mt: '', demo_units: '', demo_farm: '', demo_farm_area_acres: '',
+    greenhouse_polyhouse: '', irrigation_facility: '', machinery_custom_hiring: '', computer_it_lab: '', library: '', key_schemes: '',
+    total_staff: '', scientists_officers: '', technical_staff: '', extension_workers: '', farmer_training_capacity_per_batch: '',
+    training_programmes_conducted_last_year: '', on_farm_trials_last_year: '', villages_covered: '', soil_health_cards_issued_last_year: '',
+    farmers_served_last_year: '', remarks: ''
+  });
+  const [newAgricultureOrg, setNewAgricultureOrg] = useState(emptyAgricultureOrg());
+
   // Generic form values for non-school Education sub-departments (engineering, ITI, diploma, university)
   // Keys are snake_case versions of CSV column headers.
   const [eduFormValues, setEduFormValues] = useState<Record<string, string>>({});
@@ -168,7 +187,7 @@ export default function DepartmentAdminPage() {
   }, [router]);
 
   useEffect(() => {
-    if (deptCode === 'EDUCATION' || deptCode === 'HEALTH' || orgs.length === 0) return;
+    if (deptCode === 'EDUCATION' || deptCode === 'HEALTH' || deptCode === 'AGRICULTURE' || orgs.length === 0) return;
     let cancelled = false;
     (async () => {
       const profiles: Record<number, CenterProfile | null> = {};
@@ -225,6 +244,23 @@ export default function DepartmentAdminPage() {
     return () => { cancelled = true; };
   }, [deptCode, orgs]);
 
+  useEffect(() => {
+    if (deptCode !== 'AGRICULTURE' || orgs.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const profiles: Record<number, Record<string, unknown>> = {};
+      await Promise.all(
+        orgs.map(async (o) => {
+          if (cancelled) return;
+          const p = await agricultureApi.getProfile(o.id);
+          profiles[o.id] = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
+        })
+      );
+      if (!cancelled) setAgricultureProfiles(profiles);
+    })();
+    return () => { cancelled = true; };
+  }, [deptCode, orgs]);
+
   const handleDelete = async (id: number) => {
     if (!window.confirm('Delete this organization?')) return;
     try {
@@ -269,6 +305,14 @@ export default function DepartmentAdminPage() {
         const result = await healthApi.bulkCsv(file);
         if (result.errors?.length) {
           setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
+        }
+      } else if (deptCode === 'AGRICULTURE') {
+        const result = await agricultureApi.bulkCsv(file);
+        if (result.results && result.results.length > 0) {
+          const firstSheet = result.results[0];
+          if (firstSheet.errors?.length) {
+            setError(`Imported ${firstSheet.imported ?? 0}; errors: ${firstSheet.errors.slice(0, 5).join('; ')}`);
+          }
         }
       } else {
         // ICDS / AWC: bulk upload center profiles (minister CSV) for existing organizations
@@ -329,6 +373,9 @@ export default function DepartmentAdminPage() {
     } else if (deptCode === 'HEALTH') {
       csvContent = HEALTH_CSV_HEADER;
       filename = 'health_template.csv';
+    } else if (deptCode === 'AGRICULTURE') {
+      csvContent = AGRICULTURE_CSV_HEADER;
+      filename = 'agriculture_template.csv';
     } else {
       csvContent = ICDS_CSV_HEADER + 'RANGEILUNDA,BADAKUSASTHALLI,BADAGUMULA,BADA GUMULLA-I,,,19.270275,84.781087,,,,,,,,,,KAMALAPUR,412630\n';
       filename = 'icds_awc_template.csv';
@@ -414,7 +461,7 @@ export default function DepartmentAdminPage() {
               </section>
             )}
 
-            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && (
+            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'AGRICULTURE' && (
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual AWC entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
@@ -1159,6 +1206,182 @@ export default function DepartmentAdminPage() {
               </section>
             )}
 
+            {deptCode === 'AGRICULTURE' && (
+              <section className="rounded-lg border border-border bg-background p-4">
+                <h2 className="text-sm font-semibold text-text">Manual Agriculture facility entry</h2>
+                <p className="mt-1 text-xs text-text-muted">
+                  Add a single Agriculture facility manually. Fields mirror the CSV columns.
+                </p>
+                <form
+                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!me?.department_id) {
+                      setError('Department is not set for this admin user.');
+                      return;
+                    }
+                    if (!newAgricultureOrg.name?.trim() || !newAgricultureOrg.latitude?.trim() || !newAgricultureOrg.longitude?.trim()) {
+                      setError('Name, Latitude and Longitude are required.');
+                      return;
+                    }
+                    setCreating(true);
+                    setError(null);
+                    try {
+                      const lat = Number(newAgricultureOrg.latitude);
+                      const lng = Number(newAgricultureOrg.longitude);
+                      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                        throw new Error('Latitude and Longitude must be valid numbers.');
+                      }
+                      const addressParts = [newAgricultureOrg.block_ulb, newAgricultureOrg.gp_ward, newAgricultureOrg.village].filter(Boolean);
+                      const basePayload = {
+                        name: newAgricultureOrg.name.trim(),
+                        latitude: lat,
+                        longitude: lng,
+                        address: addressParts.length ? addressParts.join(', ') : undefined,
+                        attributes: {
+                          ulb_block: newAgricultureOrg.block_ulb || null,
+                          gp_name: newAgricultureOrg.gp_ward || null,
+                          ward_village: newAgricultureOrg.village || null,
+                          sub_department: newAgricultureOrg.sub_department || null,
+                        } as Record<string, string | number | null>,
+                      };
+                      let updated: Organization;
+                      if (editingAgricultureId) {
+                        updated = await organizationsApi.update(editingAgricultureId, basePayload);
+                        setOrgs((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+                      } else {
+                        const created = await organizationsApi.create({
+                          department_id: me.department_id,
+                          type: 'AGRICULTURE',
+                          ...basePayload,
+                        });
+                        updated = created;
+                        setOrgs((prev) => [created, ...prev]);
+                      }
+
+                      const _mb = (v: string | undefined) => {
+                        if (!v) return null;
+                        const l = v.trim().toLowerCase();
+                        if (['1', 'true', 'yes', 'y'].includes(l)) { return true; }
+                        if (['0', 'false', 'no', 'n'].includes(l)) { return false; }
+                        return null;
+                      };
+                      const _s = (v: string | undefined | null) => v?.trim() || undefined;
+                      const _n = (v: string | undefined | null) => v?.trim() ? Number(v) : undefined;
+                      const _f = (v: string | undefined | null) => v?.trim() ? parseFloat(v) : undefined;
+
+                      const profileData: Record<string, unknown> = {
+                        sub_department: _s(newAgricultureOrg.sub_department),
+                        block_ulb: _s(newAgricultureOrg.block_ulb),
+                        gp_ward: _s(newAgricultureOrg.gp_ward),
+                        village: _s(newAgricultureOrg.village),
+                        address: _s(newAgricultureOrg.address),
+                        latitude: lat,
+                        longitude: lng,
+                        name: newAgricultureOrg.name.trim(),
+                        institution_id: _s(newAgricultureOrg.institution_id),
+                        host_institution: _s(newAgricultureOrg.host_institution),
+                        established_year: _n(newAgricultureOrg.established_year),
+                        pin_code: _s(newAgricultureOrg.pin_code),
+                        in_charge_name: _s(newAgricultureOrg.in_charge_name),
+                        in_charge_contact: _s(newAgricultureOrg.in_charge_contact),
+                        in_charge_email: _s(newAgricultureOrg.in_charge_email),
+                        office_phone: _s(newAgricultureOrg.office_phone),
+                        office_email: _s(newAgricultureOrg.office_email),
+                        website: _s(newAgricultureOrg.website),
+                        campus_area_acres: _f(newAgricultureOrg.campus_area_acres),
+                        training_hall: _mb(newAgricultureOrg.training_hall),
+                        training_hall_capacity: _n(newAgricultureOrg.training_hall_capacity),
+                        soil_testing: _mb(newAgricultureOrg.soil_testing),
+                        soil_samples_tested_per_year: _n(newAgricultureOrg.soil_samples_tested_per_year),
+                        seed_distribution: _mb(newAgricultureOrg.seed_distribution),
+                        seed_processing_unit: _mb(newAgricultureOrg.seed_processing_unit),
+                        seed_storage_capacity_mt: _f(newAgricultureOrg.seed_storage_capacity_mt),
+                        demo_units: _s(newAgricultureOrg.demo_units),
+                        demo_farm: _mb(newAgricultureOrg.demo_farm),
+                        demo_farm_area_acres: _f(newAgricultureOrg.demo_farm_area_acres),
+                        greenhouse_polyhouse: _mb(newAgricultureOrg.greenhouse_polyhouse),
+                        irrigation_facility: _mb(newAgricultureOrg.irrigation_facility),
+                        machinery_custom_hiring: _mb(newAgricultureOrg.machinery_custom_hiring),
+                        computer_it_lab: _mb(newAgricultureOrg.computer_it_lab),
+                        library: _mb(newAgricultureOrg.library),
+                        key_schemes: _s(newAgricultureOrg.key_schemes),
+                        total_staff: _n(newAgricultureOrg.total_staff),
+                        scientists_officers: _n(newAgricultureOrg.scientists_officers),
+                        technical_staff: _n(newAgricultureOrg.technical_staff),
+                        extension_workers: _n(newAgricultureOrg.extension_workers),
+                        farmer_training_capacity_per_batch: _n(newAgricultureOrg.farmer_training_capacity_per_batch),
+                        training_programmes_conducted_last_year: _n(newAgricultureOrg.training_programmes_conducted_last_year),
+                        on_farm_trials_last_year: _n(newAgricultureOrg.on_farm_trials_last_year),
+                        villages_covered: _n(newAgricultureOrg.villages_covered),
+                        soil_health_cards_issued_last_year: _n(newAgricultureOrg.soil_health_cards_issued_last_year),
+                        farmers_served_last_year: _n(newAgricultureOrg.farmers_served_last_year),
+                        remarks: _s(newAgricultureOrg.remarks),
+                      };
+                      await agricultureApi.putProfile(updated.id, profileData);
+                      setNewAgricultureOrg(emptyAgricultureOrg());
+                      setEditingAgricultureId(null);
+                    } catch (err: any) {
+                      setError(err.message || 'Failed to save facility');
+                    } finally {
+                      setCreating(false);
+                    }
+                  }}
+                >
+                  <div className="space-y-1"><label className="block text-text">Block/ULB</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.block_ulb} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, block_ulb: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">GP/Ward</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.gp_ward} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, gp_ward: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Village/Locality</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.village} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, village: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Name of Office/Center</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.name} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, name: e.target.value }))} required /></div>
+                  <div className="space-y-1"><label className="block text-text">Institution Type</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.sub_department} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, sub_department: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Institution ID</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.institution_id} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, institution_id: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Host Institution</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.host_institution} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, host_institution: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Established Year</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.established_year} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, established_year: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Pin Code</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.pin_code} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, pin_code: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Latitude</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.latitude} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, latitude: e.target.value }))} required /></div>
+                  <div className="space-y-1"><label className="block text-text">Longitude</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.longitude} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, longitude: e.target.value }))} required /></div>
+                  <div className="space-y-1"><label className="block text-text">In-Charge Name</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.in_charge_name} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, in_charge_name: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">In-Charge Contact</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.in_charge_contact} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, in_charge_contact: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">In-Charge Email</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.in_charge_email} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, in_charge_email: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Office Phone</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.office_phone} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, office_phone: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Office Email</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.office_email} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, office_email: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Website</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.website} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, website: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Campus Area</label><input type="number" step="0.01" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.campus_area_acres} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, campus_area_acres: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Training Hall (Y/N)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.training_hall} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, training_hall: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Training Hall Capacity</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.training_hall_capacity} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, training_hall_capacity: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Soil Testing (Y/N)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.soil_testing} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, soil_testing: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Soil Samples/Year</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.soil_samples_tested_per_year} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, soil_samples_tested_per_year: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Seed Distribution</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.seed_distribution} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, seed_distribution: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Seed Processing Unit</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.seed_processing_unit} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, seed_processing_unit: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Seed Storage Capacity</label><input type="number" step="0.01" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.seed_storage_capacity_mt} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, seed_storage_capacity_mt: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Demo Units</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.demo_units} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, demo_units: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Demo Farm (Y/N)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.demo_farm} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, demo_farm: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Demo Farm Area</label><input type="number" step="0.01" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.demo_farm_area_acres} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, demo_farm_area_acres: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Greenhouse/Polyhouse</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.greenhouse_polyhouse} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, greenhouse_polyhouse: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Irrigation Facility</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.irrigation_facility} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, irrigation_facility: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Machinery Hiring</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.machinery_custom_hiring} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, machinery_custom_hiring: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Computer/IT Lab</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.computer_it_lab} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, computer_it_lab: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Library</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.library} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, library: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Key Schemes</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.key_schemes} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, key_schemes: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Total Staff</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.total_staff} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, total_staff: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Scientists/Officers</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.scientists_officers} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, scientists_officers: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Technical Staff</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.technical_staff} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, technical_staff: e.target.value }))} /></div>
+                  <div className="space-y-1"><label className="block text-text">Extension Workers</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.extension_workers} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, extension_workers: e.target.value }))} /></div>
+                  <div className="space-y-1 md:col-span-2"><label className="block text-text">Farmer Training Capacity (Per Batch)</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.farmer_training_capacity_per_batch} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, farmer_training_capacity_per_batch: e.target.value }))} /></div>
+                  <div className="space-y-1 md:col-span-2"><label className="block text-text">Training Programmes Conducted Last Year</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.training_programmes_conducted_last_year} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, training_programmes_conducted_last_year: e.target.value }))} /></div>
+                  <div className="space-y-1 md:col-span-2"><label className="block text-text">On-Farm Trials/FLD Last Year</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.on_farm_trials_last_year} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, on_farm_trials_last_year: e.target.value }))} /></div>
+                  <div className="space-y-1 md:col-span-2"><label className="block text-text">Villages/GPs Covered</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.villages_covered} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, villages_covered: e.target.value }))} /></div>
+                  <div className="space-y-1 md:col-span-2"><label className="block text-text">Soil Health Cards Issued Last Year</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.soil_health_cards_issued_last_year} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, soil_health_cards_issued_last_year: e.target.value }))} /></div>
+                  <div className="space-y-1 md:col-span-2"><label className="block text-text">Farmers Served Last Year</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.farmers_served_last_year} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, farmers_served_last_year: e.target.value }))} /></div>
+                  <div className="space-y-1 md:col-span-2"><label className="block text-text">Remarks/Description</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.remarks} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, remarks: e.target.value }))} /></div>
+                  <div className="md:col-span-2">
+                    <button type="submit" disabled={creating} className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60">
+                      {creating ? 'Saving...' : editingAgricultureId ? 'Update facility' : 'Save facility'}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            )}
+
             <section className="rounded-lg border border-border bg-background p-4">
               <h2 className="text-sm font-semibold text-text">Bulk CSV upload</h2>
               <p className="mt-1 text-xs text-text-muted">
@@ -1168,7 +1391,9 @@ export default function DepartmentAdminPage() {
                     : 'Upload Education CSV for the selected sub-department. Organizations and profiles will be created or updated by name and location.'
                   : deptCode === 'HEALTH'
                     ? 'Upload Health minister CSV. Organizations and profiles will be created or updated by NAME, LATITUDE, LONGITUDE.'
-                    : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
+                    : deptCode === 'AGRICULTURE'
+                      ? 'Upload Agriculture CSV. Organizations and profiles will be created or updated by NAME, LATITUDE, LONGITUDE.'
+                      : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
               </p>
               <div className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center md:justify-between">
                 <button
@@ -1214,9 +1439,11 @@ export default function DepartmentAdminPage() {
                             : 'Institution Name'
                           : deptCode === 'HEALTH'
                             ? 'Facility Name'
-                            : 'AWC Name'}
+                            : deptCode === 'AGRICULTURE'
+                              ? 'Institution Name'
+                              : 'AWC Name'}
                       </th>
-                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH') && (
+                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'AGRICULTURE') && (
                         <>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
@@ -1337,6 +1564,25 @@ export default function DepartmentAdminPage() {
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Longitude</th>
                         </>
                       )}
+                      {deptCode === 'AGRICULTURE' && (
+                        <>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Sub Department</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Block / ULB</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Village</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Institution ID</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Host Institution</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">In-Charge Name</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">In-Charge Contact</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Total Staff</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Scientists/Officers</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Tech Staff</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Extension Workers</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Soil Testing</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Latitude</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Longitude</th>
+                        </>
+                      )}
                       <th className="px-2 py-1 text-left font-medium text-text">Actions</th>
                     </tr>
                   </thead>
@@ -1345,12 +1591,13 @@ export default function DepartmentAdminPage() {
                       const prof = orgProfiles[o.id];
                       const hp = healthProfiles[o.id];
                       const ep = educationProfiles[o.id];
+                      const ap = agricultureProfiles[o.id];
                       const _ = (v: string | number | null | undefined | unknown) => (v != null && String(v).trim() !== '' ? String(v) : '—');
                       return (
                         <tr key={o.id} className="border-b border-border/60">
                           <td className="px-2 py-1 text-text-muted">{page * PAGE_SIZE + idx + 1}</td>
                           <td className="px-2 py-1">{o.name}</td>
-                          {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH') && (
+                          {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'AGRICULTURE') && (
                             <>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ulb_block ?? prof?.block_name)}</td>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_name ?? prof?.gram_panchayat)}</td>
@@ -1488,9 +1735,28 @@ export default function DepartmentAdminPage() {
                               <td className="px-2 py-1 text-text-muted">{o.longitude != null ? o.longitude.toFixed(6) : '—'}</td>
                             </>
                           )}
+                          {deptCode === 'AGRICULTURE' && (
+                            <>
+                              <td className="px-2 py-1 text-text-muted">{_(ap?.sub_department ?? o.attributes?.sub_department)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(ap?.block_ulb ?? o.attributes?.ulb_block)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(ap?.gp_ward ?? o.attributes?.gp_name)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(ap?.village ?? o.attributes?.ward_village)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(ap?.institution_id)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(ap?.host_institution)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(ap?.in_charge_name)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(ap?.in_charge_contact)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(ap?.total_staff)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(ap?.scientists_officers)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(ap?.technical_staff)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(ap?.extension_workers)}</td>
+                              <td className="px-2 py-1 text-text-muted">{ap?.soil_testing ? 'Yes' : 'No'}</td>
+                              <td className="px-2 py-1 text-text-muted">{o.latitude != null ? o.latitude.toFixed(6) : '—'}</td>
+                              <td className="px-2 py-1 text-text-muted">{o.longitude != null ? o.longitude.toFixed(6) : '—'}</td>
+                            </>
+                          )}
                           <td className="px-2 py-1 space-x-1">
                             <Link href={`/organizations/${o.id}`} className="rounded border border-primary/50 px-2 py-0.5 text-[11px] text-primary hover:bg-primary/10">View profile</Link>
-                            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && (
+                            {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'AGRICULTURE') && (
                               <button
                                 type="button"
                                 className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
@@ -1611,6 +1877,69 @@ export default function DepartmentAdminPage() {
                                 Edit
                               </button>
                             )}
+                            {deptCode === 'AGRICULTURE' && (
+                              <button
+                                type="button"
+                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                onClick={async () => {
+                                  setEditingAgricultureId(o.id);
+                                  const p = await agricultureApi.getProfile(o.id) as Record<string, unknown> | undefined;
+                                  const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
+                                  const b = (x: unknown) => x ? 'Yes' : 'No';
+                                  setNewAgricultureOrg({
+                                    sub_department: v(p?.sub_department ?? o.attributes?.sub_department),
+                                    block_ulb: v(p?.block_ulb ?? o.attributes?.ulb_block),
+                                    gp_ward: v(p?.gp_ward ?? o.attributes?.gp_name),
+                                    village: v(p?.village ?? o.attributes?.ward_village),
+                                    address: v(p?.address ?? o.address),
+                                    latitude: o.latitude != null ? String(o.latitude) : '',
+                                    longitude: o.longitude != null ? String(o.longitude) : '',
+                                    name: v(p?.name ?? o.name),
+                                    institution_id: v(p?.institution_id),
+                                    host_institution: v(p?.host_institution),
+                                    established_year: v(p?.established_year),
+                                    pin_code: v(p?.pin_code),
+                                    in_charge_name: v(p?.in_charge_name),
+                                    in_charge_contact: v(p?.in_charge_contact),
+                                    in_charge_email: v(p?.in_charge_email),
+                                    office_phone: v(p?.office_phone),
+                                    office_email: v(p?.office_email),
+                                    website: v(p?.website),
+                                    campus_area_acres: v(p?.campus_area_acres),
+                                    training_hall: p?.training_hall != null ? b(p.training_hall) : '',
+                                    training_hall_capacity: v(p?.training_hall_capacity),
+                                    soil_testing: p?.soil_testing != null ? b(p.soil_testing) : '',
+                                    soil_samples_tested_per_year: v(p?.soil_samples_tested_per_year),
+                                    seed_distribution: p?.seed_distribution != null ? b(p.seed_distribution) : '',
+                                    seed_processing_unit: p?.seed_processing_unit != null ? b(p.seed_processing_unit) : '',
+                                    seed_storage_capacity_mt: v(p?.seed_storage_capacity_mt),
+                                    demo_units: v(p?.demo_units),
+                                    demo_farm: p?.demo_farm != null ? b(p.demo_farm) : '',
+                                    demo_farm_area_acres: v(p?.demo_farm_area_acres),
+                                    greenhouse_polyhouse: p?.greenhouse_polyhouse != null ? b(p.greenhouse_polyhouse) : '',
+                                    irrigation_facility: p?.irrigation_facility != null ? b(p.irrigation_facility) : '',
+                                    machinery_custom_hiring: p?.machinery_custom_hiring != null ? b(p.machinery_custom_hiring) : '',
+                                    computer_it_lab: p?.computer_it_lab != null ? b(p.computer_it_lab) : '',
+                                    library: p?.library != null ? b(p.library) : '',
+                                    key_schemes: v(p?.key_schemes),
+                                    total_staff: v(p?.total_staff),
+                                    scientists_officers: v(p?.scientists_officers),
+                                    technical_staff: v(p?.technical_staff),
+                                    extension_workers: v(p?.extension_workers),
+                                    farmer_training_capacity_per_batch: v(p?.farmer_training_capacity_per_batch),
+                                    training_programmes_conducted_last_year: v(p?.training_programmes_conducted_last_year),
+                                    on_farm_trials_last_year: v(p?.on_farm_trials_last_year),
+                                    villages_covered: v(p?.villages_covered),
+                                    soil_health_cards_issued_last_year: v(p?.soil_health_cards_issued_last_year),
+                                    farmers_served_last_year: v(p?.farmers_served_last_year),
+                                    remarks: v(p?.remarks),
+                                  });
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                              >
+                                Edit
+                              </button>
+                            )}
                             <button
                               type="button"
                               className="rounded border border-red-500 px-2 py-0.5 text-[11px] text-red-600 hover:bg-red-50"
@@ -1624,7 +1953,7 @@ export default function DepartmentAdminPage() {
                     })}
                     {!orgs.length && (
                       <tr>
-                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 21 : deptCode === 'HEALTH' ? 27 : deptCode === 'EDUCATION' ? 61 : 10}>
+                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 21 : deptCode === 'HEALTH' ? 27 : deptCode === 'AGRICULTURE' ? 16 : deptCode === 'EDUCATION' ? 61 : 10}>
                           No organizations yet for your department.
                         </td>
                       </tr>

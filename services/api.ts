@@ -770,3 +770,74 @@ export interface HealthMonthlyReport {
   remarks?: string | null;
   [key: string]: unknown;
 }
+
+// ----- Agriculture (organizations under Agriculture department) -----
+const agricultureBase = (orgId: number) => `/api/v1/agriculture/organizations/${orgId}`;
+export const agricultureApi = {
+  getFacilityMaster: (orgId: number) => apiFetch<AgricultureFacilityMaster | null>(`${agricultureBase(orgId)}/facility-master`).catch(() => null),
+  upsertFacilityMaster: (orgId: number, data: Partial<AgricultureFacilityMaster>) =>
+    apiFetch<AgricultureFacilityMaster>(`${agricultureBase(orgId)}/facility-master`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  getProfile: (orgId: number) =>
+    apiFetch<Record<string, unknown>>(`${agricultureBase(orgId)}/profile`).catch(() => ({})),
+  putProfile: (orgId: number, data: Record<string, unknown>) =>
+    apiFetch<Record<string, unknown>>(`${agricultureBase(orgId)}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  bulkCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ results?: Array<{ sheet: string; imported: number; skipped: number; errors: string[] }> }>('/api/v1/agriculture/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+};
+
+export interface AgricultureFacilityMaster {
+  id?: number;
+  organization_id: number;
+  institution_id?: string | null;
+  host_institution?: string | null;
+  established_year?: number | null;
+  pin_code?: string | null;
+  in_charge_name?: string | null;
+  in_charge_contact?: string | null;
+  in_charge_email?: string | null;
+  office_phone?: string | null;
+  office_email?: string | null;
+  website?: string | null;
+  campus_area_acres?: number | null;
+  training_hall?: boolean | null;
+  training_hall_capacity?: number | null;
+  soil_testing?: boolean | null;
+  soil_samples_tested_per_year?: number | null;
+  seed_distribution?: boolean | null;
+  seed_processing_unit?: boolean | null;
+  seed_storage_capacity_mt?: number | null;
+  demo_units?: string | null;
+  demo_farm?: boolean | null;
+  demo_farm_area_acres?: number | null;
+  greenhouse_polyhouse?: boolean | null;
+  irrigation_facility?: boolean | null;
+  machinery_custom_hiring?: boolean | null;
+  computer_it_lab?: boolean | null;
+  library?: boolean | null;
+  key_schemes?: string | null;
+  total_staff?: number | null;
+  scientists_officers?: number | null;
+  technical_staff?: number | null;
+  extension_workers?: number | null;
+  farmer_training_capacity_per_batch?: number | null;
+  training_programmes_conducted_last_year?: number | null;
+  on_farm_trials_last_year?: number | null;
+  villages_covered?: number | null;
+  soil_health_cards_issued_last_year?: number | null;
+  farmers_served_last_year?: number | null;
+  remarks?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}

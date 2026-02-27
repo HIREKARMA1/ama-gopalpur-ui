@@ -10,12 +10,14 @@ import {
   icdsApi,
   educationApi,
   healthApi,
+  agricultureApi,
   Organization,
   Department,
   CenterProfile,
   EducationSchoolMaster,
   EducationInfrastructure,
   EducationGovtRegistry,
+  AgricultureFacilityMaster,
   HealthFacilityMaster,
   HealthInfrastructure as HealthInfra,
 } from '../../../services/api';
@@ -30,6 +32,7 @@ import { Loader } from '../../../components/common/Loader';
 import { AwcPortfolioDashboard } from '../../../components/organization/AwcPortfolioDashboard';
 import { EducationPortfolioDashboard } from '../../../components/organization/EducationPortfolioDashboard';
 import { HealthPortfolioDashboard } from '../../../components/organization/HealthPortfolioDashboard';
+import { AgriculturePortfolioDashboard } from '../../../components/organization/AgriculturePortfolioDashboard';
 
 const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
@@ -163,6 +166,10 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [healthDailyExtraData, setHealthDailyExtraData] = useState<Awaited<ReturnType<typeof healthApi.listDailyExtraData>>>([]);
   const [educationProfile, setEducationProfile] = useState<Record<string, unknown>>({});
   const [healthProfile, setHealthProfile] = useState<Record<string, unknown>>({});
+
+  const [agriMaster, setAgriMaster] = useState<AgricultureFacilityMaster | null>(null);
+  const [agriProfile, setAgriProfile] = useState<Record<string, unknown>>({});
+
   const [snpDailyStock, setSnpDailyStock] = useState<Awaited<ReturnType<typeof icdsApi.listSnpDailyStock>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -259,6 +266,15 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           setHealthDailyAttendance(dailyAtt ?? []);
           setHealthDailyMedicineStock(dailyMed ?? []);
           setHealthDailyExtraData(dailyExtra ?? []);
+        } else if (code === 'AGRICULTURE') {
+          const [master, profile] = await Promise.all([
+            agricultureApi.getFacilityMaster(id),
+            agricultureApi.getProfile(id),
+          ]);
+          setAgriMaster(master ?? null);
+          setAgriProfile(
+            profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
+          );
         } else {
           // AWC / ICDS or other: try center profile and SNP daily stock
           try {
@@ -360,6 +376,25 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
     );
   }
 
+  if (deptCode === 'AGRICULTURE') {
+    const galleryImages = Array.isArray((agriProfile as any)?.gallery_images)
+      ? ((agriProfile as any).gallery_images as string[])
+      : [];
+    const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
+    return (
+      <div className="page-container">
+        <Navbar />
+        <AgriculturePortfolioDashboard
+          org={org}
+          facilityMaster={agriMaster}
+          agricultureProfile={agriProfile}
+          departmentName={departments.find((d) => d.id === org.department_id)?.name}
+          images={images}
+        />
+      </div>
+    );
+  }
+
   if (isAwc) {
     const galleryImages = Array.isArray((awcProfile as Record<string, unknown>)?.gallery_images)
       ? ((awcProfile as Record<string, unknown>).gallery_images as string[]).filter((u): u is string => typeof u === 'string')
@@ -410,7 +445,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
       </header>
 
       <main className="flex-1 p-4 space-y-6 max-w-[1920px] mx-auto">
-        {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ICDS' && deptCode !== 'AWC_ICDS' && org.type !== 'AWC' && (
+        {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'AGRICULTURE' && deptCode !== 'ICDS' && deptCode !== 'AWC_ICDS' && org.type !== 'AWC' && (
           <section className="space-y-3">
             <h2 className="text-base font-semibold text-text">Organization portfolio</h2>
             <p className="text-sm text-text-muted">No department-specific profile template for this organization type.</p>
