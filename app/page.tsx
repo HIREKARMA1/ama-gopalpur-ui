@@ -7,7 +7,7 @@ import { ConstituencyMap } from '../components/map/ConstituencyMap';
 import type { RoadFeature } from '../components/map/ConstituencyMap';
 import { DepartmentSidebar, getDepartmentIcon } from '../components/departments/DepartmentSidebar';
 import { useLanguage } from '../components/i18n/LanguageContext';
-import { departmentsApi, organizationsApi, Department, Organization } from '../services/api';
+import { departmentsApi, organizationsApi, healthApi, Department, Organization } from '../services/api';
 
 const ROADS_DATA_PATHS = [
   '/data/roads/kukudakhandi.json',
@@ -55,10 +55,40 @@ export default function HomePage() {
     } else {
       organizationsApi
         .listByDepartment(dept.id, { limit: 1000 })
-        .then((data) => {
-          setOrganizations(data);
+        .then(async (data) => {
+          let updatedData = data;
+
+          // For Health department, we need categories from profiles for correct map pins/filtering
+          if (dept.code?.toUpperCase() === 'HEALTH') {
+            try {
+              const enriched = await Promise.all(
+                data.map(async (org) => {
+                  try {
+                    const profile = await healthApi.getProfile(org.id);
+                    if (profile && typeof profile === 'object' && (profile as any).category) {
+                      return {
+                        ...org,
+                        attributes: {
+                          ...(org.attributes || {}),
+                          category: (profile as any).category,
+                        },
+                      };
+                    }
+                  } catch (e) {
+                    console.error(`Failed to fetch health profile for org ${org.id}`, e);
+                  }
+                  return org;
+                })
+              );
+              updatedData = enriched;
+            } catch (err) {
+              console.error('Failed to enrich health organizations with profile data', err);
+            }
+          }
+
+          setOrganizations(updatedData);
           setRoads([]);
-          setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: data.length }));
+          setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: updatedData.length }));
         })
         .finally(() => setLoading(false));
     }
