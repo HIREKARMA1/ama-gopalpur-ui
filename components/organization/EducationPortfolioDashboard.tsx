@@ -70,6 +70,9 @@ import {
   Radio,
   Settings,
   Bus,
+  Accessibility,
+  Speech,
+  FileText,
 } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -255,9 +258,87 @@ export function EducationPortfolioDashboard({
       anti_ragging_cell_head: { icon: Ban, color: 'rose' },
       anti_ragging_cell_head_contact: { icon: Phone, color: 'rose' },
       drinking_water: { icon: Droplets, color: 'sky' },
+
+      // ITI Specific
+      iti_code: { icon: Hash, color: 'slate' },
+      total_trades_count: { icon: Layers, color: 'violet' },
+      trades_offered: { icon: Factory, color: 'blue' },
+      total_seats_all_trades: { icon: GraduationCap, color: 'emerald' },
+      trade_wise_seats: { icon: Layers, color: 'sky' },
+      total_instructors: { icon: Users, color: 'orange' },
+      total_instructors_regular: { icon: UserCheck, color: 'emerald' },
+      total_instructors_contract: { icon: UserCog, color: 'slate' },
+      total_instructors_with_cits: { icon: Award, color: 'violet' },
+      total_instructors_with_nac_ntc_iti: { icon: HardHat, color: 'amber' },
+      total_instructors_with_industry_experience: { icon: Building, color: 'blue' },
+      total_workshop_staff: { icon: Wrench, color: 'rose' },
+      total_non_teaching_staff: { icon: Users, color: 'slate' },
+      no_of_theory_classrooms: { icon: School, color: 'indigo' },
+      no_of_workshops: { icon: Component, color: 'emerald' },
+      equipment_as_per_ncvt_norms: { icon: ShieldCheck, color: 'emerald' },
+      safety_equipment_available: { icon: Shield, color: 'rose' },
+      industry_partners_list: { icon: Factory, color: 'blue' },
+      mous_with_industry_count: { icon: CheckCircle2, color: 'violet' },
+      on_job_training_mandatory: { icon: Briefcase, color: 'emerald' },
+      trainees_completing_last_year_percent: { icon: TrendingUp, color: 'blue' },
+      campus_interviews_held_last_year_count: { icon: Speech, color: 'violet' }, // Note: Speech might not be imported, I'll use MessageSquare if not
+      average_salary_monthly: { icon: CreditCard, color: 'emerald' },
+      highest_salary_monthly: { icon: Award, color: 'amber' },
+      iti_phone: { icon: Phone, color: 'blue' },
+      iti_email: { icon: Phone, color: 'indigo' },
+      total_trainees_enrolled: { icon: Users, color: 'blue' },
+      male_trainees: { icon: Users, color: 'sky' },
+      female_trainees: { icon: Users, color: 'pink' },
+      sc_trainees: { icon: Tag, color: 'slate' },
+      st_trainees: { icon: Tag, color: 'slate' },
+      obc_trainees: { icon: Tag, color: 'slate' },
+      ews_trainees: { icon: Tag, color: 'slate' },
+      general_trainees: { icon: Users, color: 'slate' },
+      minority_trainees: { icon: Tag, color: 'slate' },
+      pwd_trainees: { icon: Accessibility, color: 'blue' },
+      host_state_trainees: { icon: Home, color: 'emerald' },
+      other_state_trainees: { icon: Globe, color: 'blue' },
+      minimum_entry_qualification: { icon: BookOpen, color: 'indigo' },
+      admission_mode: { icon: MessageSquare, color: 'slate' },
+      tuition_course_fee_per_year: { icon: CreditCard, color: 'blue' },
+      govt_scholarships: { icon: Award, color: 'emerald' },
+      institutional_scholarships: { icon: Award, color: 'violet' },
+      central_library_reading_room: { icon: Library, color: 'indigo' },
+      library_books_count: { icon: BookOpen, color: 'blue' },
+      digital_learning_materials: { icon: Monitor, color: 'emerald' },
+      computer_lab: { icon: Terminal, color: 'slate' },
+      total_computers: { icon: Monitor, color: 'blue' },
+      wifi_campus: { icon: Wifi, color: 'sky' },
+      power_supply: { icon: Zap, color: 'amber' },
+      power_backup: { icon: Zap, color: 'orange' },
+      toilets_details: { icon: UserCheck, color: 'blue' },
+      ramp_accessibility: { icon: Accessibility, color: 'emerald' },
+      facilities_for_pwd: { icon: Accessibility, color: 'sky' },
+      playground: { icon: Activity, color: 'emerald' },
+      indoor_games: { icon: Activity, color: 'violet' },
+      first_aid_health_room: { icon: Activity, color: 'rose' },
+      fire_safety_system: { icon: Shield, color: 'rose' },
+      career_guidance_cell: { icon: UserCog, color: 'violet' },
+      training_placement_cell: { icon: Briefcase, color: 'emerald' },
+      tpo_name: { icon: UserCheck, color: 'emerald' },
+      tpo_contact: { icon: Phone, color: 'teal' },
+      companies_visited_last_year: { icon: Building, color: 'slate' },
+      trainees_placed_last_year_count: { icon: Briefcase, color: 'blue' },
+      trainees_starting_self_employment_count: { icon: TrendingUp, color: 'emerald' },
+      trainees_going_for_higher_studies_count: { icon: GraduationCap, color: 'violet' },
+      soft_skills_training: { icon: UserCheck, color: 'blue' },
+      digital_ict_training: { icon: Monitor, color: 'sky' },
+      value_added_short_term_courses: { icon: BookOpen, color: 'indigo' },
+      awards_recognition: { icon: Trophy, color: 'amber' },
+      special_initiatives: { icon: Lightbulb, color: 'orange' },
+      clubs: { icon: Users, color: 'pink' },
+      principal_superintendent_name: { icon: UserCheck, color: 'emerald' },
+      industry_partner: { icon: Briefcase, color: 'blue' },
+      description: { icon: FileText, color: 'slate' },
     };
     return config[key] || { icon: Hash, color: 'slate' };
   };
+
   const [detailTab, setDetailTab] = useState<'profile' | 'academic' | 'faculty' | 'intake' | 'infrastructure' | 'admin' | 'placement'>('profile');
   const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY });
 
@@ -285,9 +366,40 @@ export function EducationPortfolioDashboard({
   }, [educationProfile]);
 
   const topStats = isCollege ? [
-    { label: t('edu.stat.totalIntake', language), value: totalIntake, icon: GraduationCap, color: 'blue' },
-    { label: t('edu.stat.placementPercent', language), value: toStatVal(educationProfile['placement_percentage'] || educationProfile['placement_percentage_last_year']), icon: TrendingUp, color: 'emerald' },
-    { label: t('edu.stat.highestPackage', language), value: toStatVal(educationProfile['highest_package_lpa'] || educationProfile['highest_package']), icon: Award, color: 'amber' },
+    {
+      label: t('edu.stat.totalIntake', language),
+      value: org.sub_department === 'ITI'
+        ? (educationProfile['total_seats_all_trades'] || totalIntake)
+        : totalIntake,
+      icon: GraduationCap,
+      color: 'blue'
+    },
+    {
+      label: t('edu.stat.placementPercent', language),
+      value: toStatVal(
+        educationProfile['placement_percentage']
+        || educationProfile['placement_percentage_last_year']
+        || educationProfile['trainees_placed_last_year_count']
+      ),
+      icon: TrendingUp,
+      color: 'emerald'
+    },
+    {
+      // For ITI, we show monthly highest salary instead of LPA package.
+      label: org.sub_department === 'ITI'
+        ? (language === 'or' ? 'ସର୍ବାଧିକ ଦରମା (ମାସିକ)' : 'Highest Salary (Monthly)')
+        : t('edu.stat.highestPackage', language),
+      value: org.sub_department === 'ITI'
+        ? toStatVal(
+            educationProfile['highest_salary_monthly']
+            || educationProfile['highest_salary_monthly_rs']
+            || educationProfile['average_salary_monthly']
+            || educationProfile['average_salary_monthly_rs']
+          )
+        : toStatVal(educationProfile['highest_package_lpa'] || educationProfile['highest_package']),
+      icon: Award,
+      color: 'amber'
+    },
   ] : [
     { label: t('edu.stat.teachers', language), value: toStatVal(educationProfile['no_of_ts']), icon: Users, color: 'emerald' },
     { label: t('edu.stat.classrooms', language), value: toStatVal(educationProfile['no_of_classrooms'] || educationProfile['no_of_rooms']), icon: School, color: 'indigo' },
@@ -329,83 +441,28 @@ export function EducationPortfolioDashboard({
                 {t('edu.details.title', language)}
               </h2>
               <div className="flex flex-wrap items-center justify-center sm:justify-start rounded-full bg-slate-100 p-1 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={() => setDetailTab('profile')}
-                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${detailTab === 'profile'
-                    ? 'bg-white text-[#0f172a] shadow-sm'
-                    : 'text-[#64748b] hover:text-[#0f172a]'
-                    }`}
-                >
-                  <Building size={14} />
-                  <span>{t('edu.tab.profile', language)}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDetailTab('academic')}
-                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${detailTab === 'academic'
-                    ? 'bg-white text-[#0f172a] shadow-sm'
-                    : 'text-[#64748b] hover:text-[#0f172a]'
-                    }`}
-                >
-                  <GraduationCap size={14} />
-                  <span>{t('edu.tab.academic', language)}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDetailTab('faculty')}
-                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${detailTab === 'faculty'
-                    ? 'bg-white text-[#0f172a] shadow-sm'
-                    : 'text-[#64748b] hover:text-[#0f172a]'
-                    }`}
-                >
-                  <Users size={14} />
-                  <span>{t('edu.tab.faculty', language)}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDetailTab('intake')}
-                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${detailTab === 'intake'
-                    ? 'bg-white text-[#0f172a] shadow-sm'
-                    : 'text-[#64748b] hover:text-[#0f172a]'
-                    }`}
-                >
-                  <Users size={14} />
-                  <span>{t('edu.tab.intake', language)}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDetailTab('infrastructure')}
-                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${detailTab === 'infrastructure'
-                    ? 'bg-white text-[#0f172a] shadow-sm'
-                    : 'text-[#64748b] hover:text-[#0f172a]'
-                    }`}
-                >
-                  <School size={14} />
-                  <span>{t('edu.tab.infra', language)}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDetailTab('admin')}
-                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${detailTab === 'admin'
-                    ? 'bg-white text-[#0f172a] shadow-sm'
-                    : 'text-[#64748b] hover:text-[#0f172a]'
-                    }`}
-                >
-                  <UserCheck size={14} />
-                  <span>{t('edu.tab.admin', language)}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDetailTab('placement')}
-                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${detailTab === 'placement'
-                    ? 'bg-white text-[#0f172a] shadow-sm'
-                    : 'text-[#64748b] hover:text-[#0f172a]'
-                    }`}
-                >
-                  <Briefcase size={14} />
-                  <span>{t('edu.tab.placement', language)}</span>
-                </button>
+                {[
+                  { id: 'profile', label: t('edu.tab.profile', language), icon: Building },
+                  ...(org.sub_department !== 'ITI' ? [{ id: 'academic', label: t('edu.tab.academic', language), icon: GraduationCap }] : []),
+                  { id: 'faculty', label: t('edu.tab.faculty', language), icon: Users },
+                  { id: 'intake', label: t('edu.tab.intake', language), icon: Users },
+                  { id: 'infrastructure', label: t('edu.tab.infra', language), icon: School },
+                  { id: 'admin', label: t('edu.tab.admin', language), icon: UserCheck },
+                  { id: 'placement', label: t('edu.tab.placement', language), icon: Briefcase },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setDetailTab(tab.id as any)}
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${detailTab === tab.id
+                      ? 'bg-white text-[#0f172a] shadow-sm'
+                      : 'text-[#64748b] hover:text-[#0f172a]'
+                      }`}
+                  >
+                    <tab.icon size={14} />
+                    <span>{tab.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -417,10 +474,28 @@ export function EducationPortfolioDashboard({
                   { label: t('govBar.title', language).includes('Odisha') ? 'ID' : 'ଆଇଡି', val: org.id, icon: Hash, color: 'slate' },
                   { label: getEducationProfileLabel('block_ulb', language), val: educationProfile['block_ulb'] || educationProfile['block'], icon: MapPin, color: 'emerald' },
                   { label: getEducationProfileLabel('gp_ward', language), val: educationProfile['gp_ward'] || educationProfile['gp_name'], icon: Home, color: 'amber' },
-                  { label: getEducationProfileLabel('village', language), val: educationProfile['village'] || educationProfile['ward_village'], icon: Home, color: 'sky' },
+                  { label: getEducationProfileLabel('village', language), val: educationProfile['village'] || educationProfile['ward_village'] || educationProfile['village_locality'], icon: Home, color: 'sky' },
+                  // ITI Only fields
+                  ...(org.sub_department === 'ITI' ? [
+                    { label: getEducationProfileLabel('state', language), val: educationProfile['state'], icon: Globe, color: 'blue' },
+                    { label: getEducationProfileLabel('district', language), val: educationProfile['district'], icon: MapPin, color: 'emerald' },
+                  ] : []),
                   { label: getEducationProfileLabel('established_year', language), val: educationProfile['established_year'] || educationProfile['esst_year'], icon: Calendar, color: 'blue' },
-                  { label: getEducationProfileLabel('affiliating_university', language), val: educationProfile['affiliating_university'], icon: Building, color: 'violet' },
-                  { label: getEducationProfileLabel('college_type', language), val: educationProfile['college_type'], icon: GraduationCap, color: 'indigo' },
+                  { label: getEducationProfileLabel('affiliating_university', language), val: educationProfile['affiliating_university'] || educationProfile['affiliating_body'], icon: Building, color: 'violet' },
+                  { label: getEducationProfileLabel('college_type', language), val: educationProfile['college_type'] || educationProfile['ownership'] || educationProfile['ownership_govt_private_aided'], icon: GraduationCap, color: 'indigo' },
+                  // ITI Only fields (Relocated from Academic tab)
+                  ...(org.sub_department === 'ITI' ? [
+                    { label: getEducationProfileLabel('iti_code', language), val: educationProfile['iti_code'], icon: Hash, color: 'slate' },
+                    { label: getEducationProfileLabel('total_trades_count', language), val: educationProfile['total_trades_count'], icon: Layers, color: 'violet' },
+                    { label: getEducationProfileLabel('minimum_entry_qualification', language), val: educationProfile['minimum_entry_qualification'], icon: GraduationCap, color: 'blue' },
+                    { label: getEducationProfileLabel('admission_mode', language), val: educationProfile['admission_mode'], icon: Users, color: 'emerald' },
+                    { label: getEducationProfileLabel('pin_code', language), val: educationProfile['pin_code'], icon: Hash, color: 'slate' },
+                    { label: getEducationProfileLabel('affiliation', language), val: educationProfile['affiliation'], icon: Building, color: 'violet' },
+                    { label: getEducationProfileLabel('affiliating_body', language), val: educationProfile['affiliating_body'], icon: Building, color: 'violet' },
+                    { label: getEducationProfileLabel('ownership', language), val: educationProfile['ownership'], icon: Building, color: 'indigo' },
+                    // { label: getEducationProfileLabel('trades_offered', language), val: educationProfile['trades_offered'], icon: Factory, color: 'blue' },
+                    { label: getEducationProfileLabel('description', language), val: educationProfile['description'], icon: FileText, color: 'slate' },
+                  ] : []),
                   { label: getEducationProfileLabel('latitude', language), val: org.latitude, icon: MapPin, color: 'rose' },
                   { label: getEducationProfileLabel('longitude', language), val: org.longitude, icon: MapPin, color: 'pink' },
                 ].map((item, idx) => (
@@ -437,6 +512,12 @@ export function EducationPortfolioDashboard({
                       'autonomous', 'autonomous_since_year', 'aicte_approval', 'naac', 'nba', 'nirf_ranking',
                       'aariia_atal_ranking', 'b_tech_branches_count', 'm_tech_programmes_count', 'ph_d', 'departments',
                       'description',
+                      // ITI Only academic fields (total_trades_count moved to header)
+                      ...(org.sub_department === 'ITI' ? [
+                        'trades_offered', 'minimum_entry_qualification', 'admission_mode',
+                        'tuition_course_fee_per_year', 'govt_scholarships', 'institutional_scholarships',
+                        'soft_skills_training', 'digital_ict_training', 'value_added_short_term_courses',
+                      ] : []),
                     ];
                     return academicKeys.includes(key) && v != null && String(v).trim() !== '' && String(v) !== '—' && String(v) !== '0';
                   })
@@ -452,12 +533,19 @@ export function EducationPortfolioDashboard({
                 {Object.entries(educationProfile || {})
                   .filter(([key, v]) => {
                     const facultyKeys = [
-                      'no_of_ts', 'no_of_nts', 'total_no_of_faculty_automobile_engineering',
+                      'no_of_ts', 'no_of_nts', 'total_non_teaching_staff',
+                      'total_no_of_faculty_automobile_engineering',
                       'total_no_of_faculty_chemical_engineering', 'total_no_of_faculty_civil_engineering',
                       'total_no_of_faculty_computer_science_engineering', 'total_no_of_faculty_electrical_engineering',
                       'total_no_of_faculty_electronics_telecommunication_engineering', 'total_no_of_faculty_mechanical_engineering',
                       'total_no_of_faculty_metallurgical_and_materials_engineering', 'total_no_of_faculty_production_engineering',
                       'total_no_of_faculty_basic_science', 'total_no_of_faculty_humanities_and_social_science',
+                      // ITI Only faculty fields
+                      ...(org.sub_department === 'ITI' ? [
+                        'total_instructors', 'total_instructors_regular', 'total_instructors_contract',
+                        'total_instructors_with_cits', 'total_instructors_with_nac_ntc_iti',
+                        'total_instructors_with_industry_experience', 'total_workshop_staff',
+                      ] : []),
                     ];
                     return facultyKeys.includes(key) && v != null && String(v).trim() !== '' && String(v) !== '—' && String(v) !== '0' && String(v) !== 'No of TS';
                   })
@@ -478,6 +566,13 @@ export function EducationPortfolioDashboard({
                       'total_intake_ug_electrical_engineering', 'total_intake_ug_electronics_telecommunication_engineering',
                       'total_intake_ug_mechanical_engineering', 'total_intake_ug_metallurgical_and_materials_engineering',
                       'total_intake_ug_production_engineering', 'total_intake_pg_departments_wise',
+                      // ITI Only intake fields
+                      ...(org.sub_department === 'ITI' ? [
+                        'total_seats_all_trades', 'trade_wise_seats', 'total_trainees_enrolled',
+                        'male_trainees', 'female_trainees', 'sc_trainees', 'st_trainees',
+                        'obc_trainees', 'ews_trainees', 'general_trainees', 'minority_trainees',
+                        'pwd_trainees', 'host_state_trainees', 'other_state_trainees',
+                      ] : []),
                     ];
                     return intakeKeys.includes(key) && v != null && String(v).trim() !== '' && String(v) !== '—' && String(v) !== '0';
                   })
@@ -501,6 +596,15 @@ export function EducationPortfolioDashboard({
                       'staff_accommodation', 'security', 'cctv', 'ramp', 'drinking_water',
                       'drinking_water_tw', 'drinking_water_tap', 'drinking_water_overhead_tap',
                       'drinking_water_aquaguard', 'electricity', 'cycle_stand',
+                      // ITI Only infra fields
+                      ...(org.sub_department === 'ITI' ? [
+                        'no_of_theory_classrooms', 'no_of_workshops', 'equipment_as_per_ncvt_norms',
+                        'safety_equipment_available', 'power_supply', 'power_backup',
+                        'toilets_details', 'ramp_accessibility', 'facilities_for_pwd',
+                        'playground', 'indoor_games', 'first_aid_health_room', 'fire_safety_system',
+                        'central_library_reading_room', 'library_books_count', 'digital_learning_materials',
+                        'computer_lab', 'total_computers', 'wifi_campus', 'canteen',
+                      ] : []),
                     ];
                     return infraKeys.includes(key) && v != null && String(v).trim() !== '' && String(v) !== '—';
                   })
@@ -516,10 +620,19 @@ export function EducationPortfolioDashboard({
                 {Object.entries(educationProfile || {})
                   .filter(([key, v]) => {
                     const adminKeys = [
-                      'principal_name', 'principal_contact', 'principal_email', 'college_phone', 'college_email',
+                      'principal_name', 'principal_superintendent_name', 'principal_contact', 'principal_email',
+                      'is_there_a_social_media_cell', 'nodal_officer_name', 'nodal_officer_contact',
+                      'college_phone', 'college_email',
                       'website', 'icc_head_name', 'icc_head_contact', 'grievance_cell_head', 'grievance_cell_head_contact',
                       'anti_ragging_cell_head', 'anti_ragging_cell_head_contact', 'deo_name', 'deo_contact', 'beo_name',
                       'beo_contact', 'dean_registrar_name', 'schorlaship_fascility',
+                      // ITI Only admin/fee fields (Relocated from Academic)
+                      ...(org.sub_department === 'ITI' ? [
+                        'tuition_course_fee_per_year', 'govt_scholarships', 'institutional_scholarships',
+                        'soft_skills_training', 'digital_ict_training', 'value_added_short_term_courses',
+                      ] : []),
+                      // ITI
+                      'iti_phone', 'iti_email',
                     ];
                     return adminKeys.includes(key) && v != null && String(v).trim() !== '' && String(v) !== '—' && String(v) !== '0';
                   })
@@ -540,6 +653,16 @@ export function EducationPortfolioDashboard({
                       'patents_count', 'mou_count', 'centre_of_excellence', 'centre_of_excellence_comma_separated',
                       'incubation_centre', 'notable_awards_or_achievements', 'innovation_and_startup_fascility',
                       'robotics_club', 'cultural_clubs', 'sports_and_athletics_fascility', 'nss', 'ncc',
+                      // ITI Only placement fields
+                      ...(org.sub_department === 'ITI' ? [
+                        'industry_partner', 'industry_partners_list', 'mous_with_industry_count',
+                        'career_guidance_cell', 'training_placement_cell', 'tpo_name', 'tpo_contact',
+                        'on_job_training_mandatory', 'trainees_completing_last_year_percent',
+                        'campus_interviews_held_last_year_count', 'companies_visited_last_year',
+                        'trainees_placed_last_year_count', 'average_salary_monthly',
+                        'highest_salary_monthly', 'trainees_starting_self_employment_count', 'trainees_going_for_higher_studies_count',
+                        'awards_recognition', 'special_initiatives', 'clubs',
+                      ] : []),
                     ];
                     return placementKeys.includes(key) && v != null && String(v).trim() !== '' && String(v) !== '—' && String(v) !== '0';
                   })
@@ -618,6 +741,6 @@ export function EducationPortfolioDashboard({
           </div>
         </div>
       </section>
-    </div>
+    </div >
   );
 }
