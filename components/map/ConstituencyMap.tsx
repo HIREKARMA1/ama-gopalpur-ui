@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   GoogleMap,
   useJsApiLoader,
@@ -91,6 +91,7 @@ export function ConstituencyMap({
   const [legendFilterType, setLegendFilterType] = useState<string | null>(null);
   /** When set, only show roads of this type (Roads legend click). Click again to clear. */
   const [roadLegendFilterType, setRoadLegendFilterType] = useState<RoadTypeKey | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   /** Load map in Odia when user has selected Odia. Read from localStorage so we use Odia on first paint after reload (context updates only in useEffect). Fixed at first mount so useJsApiLoader is never called with different options. */
@@ -104,6 +105,25 @@ export function ConstituencyMap({
     language: mapLanguage,
     region: 'IN',
   });
+
+  /** Handle clicks outside search container to close dropdown */
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowSearchDropdown(false);
+      }
+    }
+
+    if (showSearchDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSearchDropdown]);
 
   /** Only organizations with valid coordinates */
   const orgsWithLocation = useMemo(
@@ -239,7 +259,7 @@ export function ConstituencyMap({
   const searchSuggestions = useMemo(
     () => {
       const base = searchTerm.trim() ? filteredOrgs : orgsWithLocation;
-      return base.slice(0, 5);
+      return base;
     },
     [filteredOrgs, orgsWithLocation, searchTerm]
   );
@@ -335,7 +355,10 @@ export function ConstituencyMap({
         }
       `}</style>
       {selectedDepartmentCode && (
-        <div className="pointer-events-none sm:absolute sm:top-[10px] sm:left-4 sm:right-auto z-20 flex items-center justify-start px-4 sm:px-0 w-full sm:w-auto py-2 sm:py-0">
+        <div
+          ref={searchContainerRef}
+          className="pointer-events-none sm:absolute sm:top-[10px] sm:left-4 sm:right-auto z-20 flex items-center justify-start px-4 sm:px-0 w-full sm:w-auto py-2 sm:py-0"
+        >
           <form
             onSubmit={handleSearchSubmit}
             className="pointer-events-auto relative flex w-full max-w-xl items-center gap-2 rounded-sm bg-white/95 px-3 py-1.5 shadow-sm ring-1 ring-slate-200"
@@ -344,6 +367,8 @@ export function ConstituencyMap({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onFocus={() => setShowSearchDropdown(true)}
+              onClick={() => setShowSearchDropdown(true)}
               placeholder={`Search ${selectedDepartmentCode === 'AWC_ICDS' ? 'ICDS' : selectedDepartmentCode.charAt(0).toUpperCase() + selectedDepartmentCode.slice(1).toLowerCase()}…`}
               className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
             />
@@ -357,9 +382,6 @@ export function ConstituencyMap({
             </button>
             {showSearchDropdown && (
               <div className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg z-30 text-sm">
-                <div className="px-3 py-2 border-b border-slate-100 text-xs text-slate-500">
-                  Select a location ({filteredOrgs.length || orgsWithLocation.length} total) or continue typing to refine.
-                </div>
                 {searchSuggestions.length === 0 && (
                   <div className="px-3 py-3 text-xs text-slate-500">
                     No locations match your search yet.
