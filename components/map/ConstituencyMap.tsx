@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   GoogleMap,
   useJsApiLoader,
@@ -84,8 +84,14 @@ export function ConstituencyMap({
   const [infoWindowOrg, setInfoWindowOrg] = useState<MapOrganization | null>(null);
   const [selectedRoad, setSelectedRoad] = useState<RoadFeature | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+  /** When set, only show markers of this type (Education/Health legend click). Click again to clear. */
+  const [legendFilterType, setLegendFilterType] = useState<string | null>(null);
+  /** When set, only show roads of this type (Roads legend click). Click again to clear. */
+  const [roadLegendFilterType, setRoadLegendFilterType] = useState<RoadTypeKey | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   /** Load map in Odia when user has selected Odia. Read from localStorage so we use Odia on first paint after reload (context updates only in useEffect). Fixed at first mount so useJsApiLoader is never called with different options. */
@@ -99,6 +105,25 @@ export function ConstituencyMap({
     language: mapLanguage,
     region: 'IN',
   });
+
+  /** Handle clicks outside search container to close dropdown */
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowSearchDropdown(false);
+      }
+    }
+
+    if (showSearchDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSearchDropdown]);
 
   /** Only organizations with valid coordinates */
   const orgsWithLocation = useMemo(
@@ -114,6 +139,12 @@ export function ConstituencyMap({
   );
 
   const isRoadsDept = selectedDepartmentCode?.toUpperCase() === 'ROADS';
+
+  useEffect(() => {
+    setLegendFilterType(null);
+    setRoadLegendFilterType(null);
+  }, [selectedDepartmentCode]);
+
   /** Road path as Google Maps LatLng[] (GeoJSON is [lng, lat]) */
   const roadPaths = useMemo(
     () =>
@@ -215,6 +246,45 @@ export function ConstituencyMap({
     [orgsWithLocation, searchTerm, getTypeLabel]
   );
 
+  /** Apply legend filter: when user clicks a legend type, show only that type's markers */
+  const orgsToShow = useMemo(() => {
+    const code = selectedDepartmentCode?.toUpperCase();
+    if (!legendFilterType) return filteredOrgs;
+    if (code === 'EDUCATION' || code === 'HEALTH') {
+      return filteredOrgs.filter((org) => org.type === legendFilterType);
+    }
+    return filteredOrgs;
+  }, [filteredOrgs, legendFilterType, selectedDepartmentCode]);
+
+  const searchSuggestions = useMemo(
+    () => {
+      const base = searchTerm.trim() ? filteredOrgs : orgsWithLocation;
+      return base;
+    },
+    [filteredOrgs, orgsWithLocation, searchTerm]
+  );
+
+  const focusOrganization = useCallback(
+    (org: MapOrganization & { latitude: number; longitude: number }) => {
+      if (!mapInstance) return;
+      mapInstance.panTo({
+        lat: org.latitude,
+        lng: org.longitude,
+      });
+      if (
+        typeof mapInstance.getZoom === 'function' &&
+        typeof mapInstance.setZoom === 'function'
+      ) {
+        const currentZoom = mapInstance.getZoom() ?? DEFAULT_ZOOM;
+        if (currentZoom < 15) {
+          mapInstance.setZoom(15);
+        }
+      }
+      setInfoWindowOrg(org);
+    },
+    [mapInstance]
+  );
+
   if (!apiKey) {
     return (
       <div className="relative flex h-full min-h-[200px] w-full items-center justify-center bg-background-muted">
@@ -254,21 +324,12 @@ export function ConstituencyMap({
     if (!term) return;
 
     // Only auto-select if there is exactly one match OR an exact name match
-    const exactMatch = filteredOrgs.find(org => (org.name || '').toLowerCase() === term);
+    const exactMatch = filteredOrgs.find((org) => (org.name || '').toLowerCase() === term);
     const resultToSelect = exactMatch || (filteredOrgs.length === 1 ? filteredOrgs[0] : null);
 
-    if (resultToSelect && mapInstance) {
-      mapInstance.panTo({
-        lat: resultToSelect.latitude,
-        lng: resultToSelect.longitude,
-      });
-      if (typeof mapInstance.getZoom === 'function' && typeof mapInstance.setZoom === 'function') {
-        const currentZoom = mapInstance.getZoom() ?? DEFAULT_ZOOM;
-        if (currentZoom < 15) {
-          mapInstance.setZoom(15);
-        }
-      }
-      setInfoWindowOrg(resultToSelect);
+    if (resultToSelect) {
+      focusOrganization(resultToSelect);
+      setShowSearchDropdown(false);
     }
   };
 
@@ -294,25 +355,69 @@ export function ConstituencyMap({
         }
       `}</style>
       {selectedDepartmentCode && (
-        <div className="pointer-events-none sm:absolute sm:top-[10px] sm:left-4 sm:right-auto z-20 flex items-center justify-start px-4 sm:px-0 w-full sm:w-auto py-2 sm:py-0">
+        <div
+          ref={searchContainerRef}
+          className="pointer-events-none sm:absolute sm:top-[10px] sm:left-4 sm:right-auto z-20 flex items-center justify-start px-4 sm:px-0 w-full sm:w-auto py-2 sm:py-0"
+        >
           <form
             onSubmit={handleSearchSubmit}
-            className="pointer-events-auto flex w-full max-w-xl items-center gap-2 rounded-sm bg-white/95 px-3 py-1.5 shadow-sm ring-1 ring-slate-200"
+            className="pointer-events-auto relative flex w-full max-w-xl items-center gap-2 rounded-sm bg-white/95 px-3 py-1.5 shadow-sm ring-1 ring-slate-200"
           >
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onFocus={() => setShowSearchDropdown(true)}
+              onClick={() => setShowSearchDropdown(true)}
               placeholder={`Search ${selectedDepartmentCode === 'AWC_ICDS' ? 'ICDS' : selectedDepartmentCode.charAt(0).toUpperCase() + selectedDepartmentCode.slice(1).toLowerCase()}…`}
               className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
             />
             <button
-              type="submit"
+              type="button"
+              onClick={() => setShowSearchDropdown((open) => !open)}
               className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground hover:opacity-90"
-              aria-label="Search on map"
+              aria-label="Open location search"
             >
               <Search size={14} />
             </button>
+            {showSearchDropdown && (
+              <div className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg z-30 text-sm">
+                {searchSuggestions.length === 0 && (
+                  <div className="px-3 py-3 text-xs text-slate-500">
+                    No locations match your search yet.
+                  </div>
+                )}
+                {searchSuggestions.map((org) => (
+                  <button
+                    key={org.id}
+                    type="button"
+                    onClick={() => {
+                      focusOrganization(org as MapOrganization & { latitude: number; longitude: number });
+                      setShowSearchDropdown(false);
+                    }}
+                    className="w-full px-3 py-2 text-left hover:bg-slate-50"
+                  >
+                    <div className="font-medium text-slate-900 truncate">{org.name}</div>
+                    {(org.address || org.attributes?.ulb_block || org.attributes?.gp_name || org.attributes?.ward_village) && (
+                      <div className="mt-0.5 text-[11px] text-slate-500 truncate">
+                        {org.address ||
+                          [org.attributes?.ulb_block, org.attributes?.gp_name, org.attributes?.ward_village]
+                            .filter((v) => v != null && String(v).trim() !== '')
+                            .join(', ')}
+                      </div>
+                    )}
+                  </button>
+                ))}
+                {searchTerm.trim() && (
+                  <button
+                    type="submit"
+                    className="w-full px-3 py-2 text-left text-xs font-semibold text-primary border-t border-slate-100 hover:bg-slate-50"
+                  >
+                    Search “{searchTerm.trim()}”
+                  </button>
+                )}
+              </div>
+            )}
           </form>
         </div>
       )}
@@ -356,6 +461,7 @@ export function ConstituencyMap({
               const name = road.properties?.name ?? road.properties?.roadName ?? 'Road';
               const code = road.properties?.code ?? '';
               const roadType = getRoadType(name, code);
+              if (roadLegendFilterType != null && roadType !== roadLegendFilterType) return null;
               const color = ROAD_TYPE_COLORS[roadType];
               return (
                 <Polyline
@@ -372,7 +478,7 @@ export function ConstituencyMap({
               );
             })}
           {showContent && !isRoadsDept &&
-            filteredOrgs.map((org) => (
+            orgsToShow.map((org) => (
               <Marker
                 key={org.id}
                 position={{ lat: org.latitude, lng: org.longitude }}
@@ -451,28 +557,38 @@ export function ConstituencyMap({
         <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {Object.entries(EDUCATION_TYPE_LABELS).map(([type]) => (
-              <li key={type} className="flex items-center gap-1">
-                <span
-                  className="inline-block h-2 w-2 rounded-full"
-                  style={{
-                    backgroundColor:
-                      type === 'PRIMARY_SCHOOL'
-                        ? '#ea4335'
-                        : type === 'UPPER_PRIMARY_SCHOOL'
-                          ? '#4285f4'
-                          : type === 'HIGH_SCHOOL'
-                            ? '#34a853'
-                            : type === 'HIGHER_SECONDARY'
-                              ? '#fb8c00'
-                              : type === 'COLLEGE'
-                                ? '#9c27b0'
-                                : '#f9ab00',
-                  }}
-                />
-                {getTypeLabel(type, language)}
-              </li>
-            ))}
+            {Object.entries(EDUCATION_TYPE_LABELS).map(([type]) => {
+              const isSelected = legendFilterType === type;
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
+                    title={isSelected ? 'Show all' : `Show only ${getTypeLabel(type, language)}`}
+                  >
+                    <span
+                      className="inline-block h-2 w-2 rounded-full shrink-0"
+                      style={{
+                        backgroundColor:
+                          type === 'PRIMARY_SCHOOL'
+                            ? '#ea4335'
+                            : type === 'UPPER_PRIMARY_SCHOOL'
+                              ? '#4285f4'
+                              : type === 'HIGH_SCHOOL'
+                                ? '#34a853'
+                                : type === 'HIGHER_SECONDARY'
+                                  ? '#fb8c00'
+                                  : type === 'COLLEGE'
+                                    ? '#9c27b0'
+                                    : '#f9ab00',
+                      }}
+                    />
+                    {getTypeLabel(type, language)}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -489,18 +605,28 @@ export function ConstituencyMap({
         <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {Object.entries(HEALTH_TYPE_LABELS).map(([type]) => (
-              <li key={type} className="flex items-center gap-1">
-                <span
-                  className="inline-block h-2 w-2 rounded-full"
-                  style={{
-                    backgroundColor:
-                      type === 'HOSPITAL' ? '#ea4335' : type === 'HEALTH_CENTRE' ? '#4285f4' : '#34a853',
-                  }}
-                />
-                {getTypeLabel(type, language)}
-              </li>
-            ))}
+            {Object.entries(HEALTH_TYPE_LABELS).map(([type]) => {
+              const isSelected = legendFilterType === type;
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
+                    title={isSelected ? 'Show all' : `Show only ${getTypeLabel(type, language)}`}
+                  >
+                    <span
+                      className="inline-block h-2 w-2 rounded-full shrink-0"
+                      style={{
+                        backgroundColor:
+                          type === 'HOSPITAL' ? '#ea4335' : type === 'HEALTH_CENTRE' ? '#4285f4' : '#34a853',
+                      }}
+                    />
+                    {getTypeLabel(type, language)}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -508,15 +634,25 @@ export function ConstituencyMap({
         <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[220px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {(Object.entries(ROAD_TYPE_LABELS) as [RoadTypeKey, string][]).map(([type]) => (
-              <li key={type} className="flex items-center gap-1">
-                <span
-                  className="inline-block h-2 w-3 rounded-sm"
-                  style={{ backgroundColor: ROAD_TYPE_COLORS[type] }}
-                />
-                {ROAD_TYPE_LABELS[type]}
-              </li>
-            ))}
+            {(Object.entries(ROAD_TYPE_LABELS) as [RoadTypeKey, string][]).map(([type]) => {
+              const isSelected = roadLegendFilterType === type;
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() => setRoadLegendFilterType((prev) => (prev === type ? null : type))}
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
+                    title={isSelected ? 'Show all roads' : `Show only ${ROAD_TYPE_LABELS[type]}`}
+                  >
+                    <span
+                      className="inline-block h-2 w-3 rounded-sm shrink-0"
+                      style={{ backgroundColor: ROAD_TYPE_COLORS[type] }}
+                    />
+                    {ROAD_TYPE_LABELS[type]}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
