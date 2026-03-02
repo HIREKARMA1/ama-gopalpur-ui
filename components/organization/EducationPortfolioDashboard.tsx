@@ -73,6 +73,9 @@ import {
   Accessibility,
   Speech,
   FileText,
+  IdCard,
+  BadgeCheck,
+  Barcode,
 } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -139,7 +142,7 @@ export function EducationPortfolioDashboard({
 
   // Helper for resource config
   const getResourceConfig = (key: string) => {
-    const config: Record<string, { icon: any, color: string }> = {
+    const config: Record<string, { icon: any; color: string }> = {
       category: { icon: Tag, color: 'indigo' },
       esst_year: { icon: Calendar, color: 'blue' },
       established_year: { icon: Calendar, color: 'blue' },
@@ -164,7 +167,7 @@ export function EducationPortfolioDashboard({
       drinking_water_overhead_tap: { icon: Droplets, color: 'sky' },
       drinking_water_aquaguard: { icon: Droplets, color: 'sky' },
       cycle_stand: { icon: Bike, color: 'slate' },
-      institution_id: { icon: Hash, color: 'slate' },
+      institution_id: { icon: IdCard, color: 'slate' },
       campus_area_acres: { icon: MapPin, color: 'emerald' },
       affiliating_university: { icon: Building, color: 'violet' },
       autonomous: { icon: CheckCircle2, color: 'blue' },
@@ -204,6 +207,45 @@ export function EducationPortfolioDashboard({
       security: { icon: Shield, color: 'slate' },
       cctv: { icon: Video, color: 'rose' },
       electricity: { icon: Zap, color: 'amber' },
+
+      // University specific – identity & accreditation
+      university_type: { icon: GraduationCap, color: 'indigo' },
+      teaching_cum_affiliating: { icon: School, color: 'emerald' },
+      naac_grade: { icon: Award, color: 'amber' },
+      ugc_2f: { icon: Award, color: 'violet' },
+      ugc_12b: { icon: Award, color: 'violet' },
+      aishe_code: { icon: BadgeCheck, color: 'slate' },
+      nirf_university_rank: { icon: TrendingUp, color: 'blue' },
+      nirf_year: { icon: Calendar, color: 'sky' },
+
+      // University – structure & academics
+      total_faculties: { icon: Users, color: 'emerald' },
+      total_departments: { icon: Layers, color: 'indigo' },
+      total_research_centres: { icon: Microscope, color: 'violet' },
+      total_centres_of_excellence: { icon: Award, color: 'amber' },
+      total_constituent_colleges: { icon: Building, color: 'blue' },
+      total_affiliated_colleges: { icon: Building, color: 'slate' },
+      total_ug_programmes: { icon: BookOpen, color: 'indigo' },
+      total_pg_programmes: { icon: BookOpen, color: 'violet' },
+      total_integrated_programmes: { icon: BookOpen, color: 'emerald' },
+      total_diploma_certificate_programmes: { icon: BookOpen, color: 'sky' },
+      total_ph_d_programmes: { icon: GraduationCap, color: 'blue' },
+      d_litt_d_sc_yes_no: { icon: GraduationCap, color: 'rose' },
+
+      // University – intake & enrolment
+      total_sanctioned_intake_ug: { icon: Users, color: 'blue' },
+      total_sanctioned_intake_pg: { icon: Users, color: 'violet' },
+      ug_student_enrollment: { icon: Users, color: 'emerald' },
+      pg_student_enrollment: { icon: Users, color: 'amber' },
+      ph_d_student_enrollment: { icon: Users, color: 'rose' },
+      students_to_higher_studies_count: { icon: GraduationCap, color: 'indigo' },
+
+      // University – scholarships & quality
+      scholarships_govt: { icon: Award, color: 'emerald' },
+      scholarships_institutional: { icon: Award, color: 'violet' },
+      ug_completion_rate_percent: { icon: TrendingUp, color: 'blue' },
+      pg_completion_rate_percent: { icon: TrendingUp, color: 'teal' },
+      moocs_swayam_nptel: { icon: Monitor, color: 'sky' },
       grievance_cell_head: { icon: Megaphone, color: 'rose' },
       grievance_cell_head_contact: { icon: Phone, color: 'rose' },
       innovation_and_startup_fascility: { icon: Lightbulb, color: 'amber' },
@@ -250,6 +292,19 @@ export function EducationPortfolioDashboard({
       total_no_of_faculty_basic_science: { icon: Atom, color: 'violet' },
       total_no_of_faculty_humanities_and_social_science: { icon: Library, color: 'pink' },
 
+      // University – Faculty & staff metrics
+      total_teaching_staff: { icon: Users, color: 'emerald' },
+      total_permanent_teaching_staff: { icon: UserCheck, color: 'blue' },
+      total_contract_guest_faculty: { icon: UserPlus, color: 'violet' },
+      total_teaching_staff_prof: { icon: GraduationCap, color: 'indigo' },
+      total_teaching_staff_assoc_prof: { icon: GraduationCap, color: 'amber' },
+      total_teaching_staff_asst_prof: { icon: GraduationCap, color: 'sky' },
+      total_teachers_with_ph_d_count: { icon: Award, color: 'emerald' },
+      total_teachers_with_net_set_count: { icon: Award, color: 'rose' },
+      student_teacher_ratio: { icon: Users, color: 'slate' },
+      non_teaching_staff_count: { icon: Users, color: 'orange' },
+      technical_staff_count: { icon: Wrench, color: 'teal' },
+
       // Extra
       nss: { icon: Flag, color: 'rose' },
       ncc: { icon: ShieldCheck, color: 'emerald' },
@@ -260,7 +315,7 @@ export function EducationPortfolioDashboard({
       drinking_water: { icon: Droplets, color: 'sky' },
 
       // ITI Specific
-      iti_code: { icon: Hash, color: 'slate' },
+      iti_code: { icon: Barcode, color: 'slate' },
       total_trades_count: { icon: Layers, color: 'violet' },
       trades_offered: { icon: Factory, color: 'blue' },
       total_seats_all_trades: { icon: GraduationCap, color: 'emerald' },
@@ -336,7 +391,96 @@ export function EducationPortfolioDashboard({
       industry_partner: { icon: Briefcase, color: 'blue' },
       description: { icon: FileText, color: 'slate' },
     };
-    return config[key] || { icon: Hash, color: 'slate' };
+
+    // Direct mapping first
+    const direct = config[key];
+    if (direct) return direct;
+
+    // Heuristic fallback: choose icons based on key fragments so we avoid
+    // showing the same "#" icon for many different attributes.
+    const k = key.toLowerCase();
+
+    if (k.includes('state') || k.includes('district') || k.includes('block') || k.includes('village')) {
+      return { icon: MapPin, color: 'emerald' };
+    }
+    if (k.includes('university_type') || k.includes('college_type')) {
+      return { icon: GraduationCap, color: 'indigo' };
+    }
+    if (k.includes('naac') || k.includes('ugc_2') || k.includes('ugc_12')) {
+      return { icon: Award, color: 'amber' };
+    }
+    if (k.includes('aishe') || k.includes('code')) {
+      return { icon: Hash, color: 'slate' };
+    }
+    if (k.includes('nirf')) {
+      return { icon: TrendingUp, color: 'blue' };
+    }
+    if (k.includes('dept') || k.includes('department')) {
+      return { icon: Layers, color: 'indigo' };
+    }
+    if (k.includes('research')) {
+      return { icon: Microscope, color: 'violet' };
+    }
+    if (k.includes('centre_of_excellence') || k.includes('centre') || k.includes('center')) {
+      return { icon: Award, color: 'violet' };
+    }
+    if (k.includes('programme') || k.includes('programmes') || k.includes('course')) {
+      return { icon: BookOpen, color: 'indigo' };
+    }
+    if (k.includes('intake') || k.includes('enrollment') || k.includes('enrolment')) {
+      return { icon: Users, color: 'blue' };
+    }
+    if (k.includes('hostel')) {
+      return { icon: Bed, color: 'amber' };
+    }
+    if (k.includes('library')) {
+      return { icon: Library, color: 'indigo' };
+    }
+    if (k.includes('lab') || k.includes('laborator')) {
+      return { icon: FlaskConical, color: 'emerald' };
+    }
+    if (k.includes('wifi') || k.includes('internet') || k.includes('nkn')) {
+      return { icon: Wifi, color: 'sky' };
+    }
+    if (k.includes('sports') || k.includes('playground') || k.includes('gymnasium')) {
+      return { icon: Activity, color: 'emerald' };
+    }
+    if (k.includes('transport')) {
+      return { icon: Bus, color: 'blue' };
+    }
+    if (k.includes('parking')) {
+      return { icon: Car, color: 'slate' };
+    }
+    if (k.includes('security') || k.includes('cctv') || k.includes('fire_safety')) {
+      return { icon: Shield, color: 'rose' };
+    }
+    if (k.includes('ramp') || k.includes('accessibility') || k.includes('pwd')) {
+      return { icon: Accessibility, color: 'emerald' };
+    }
+    if (k.includes('drinking_water')) {
+      return { icon: Droplets, color: 'sky' };
+    }
+    if (k.includes('electricity') || k.includes('power') || k.includes('solar')) {
+      return { icon: Zap, color: 'amber' };
+    }
+    if (k.includes('placement') || k.includes('salary') || k.includes('package')) {
+      return { icon: Briefcase, color: 'emerald' };
+    }
+    if (k.includes('mou') || k.includes('industry_collaboration')) {
+      return { icon: Factory, color: 'indigo' };
+    }
+    if (k.includes('publication') || k.includes('patent')) {
+      return { icon: FileText, color: 'violet' };
+    }
+    if (k.includes('startup') || k.includes('incubation')) {
+      return { icon: Lightbulb, color: 'orange' };
+    }
+    if (k.includes('club') || k.includes('association') || k.includes('fest') || k.includes('cultural')) {
+      return { icon: Users, color: 'pink' };
+    }
+
+    // Final generic fallback
+    return { icon: Tag, color: 'slate' };
   };
 
   const [detailTab, setDetailTab] = useState<'profile' | 'academic' | 'faculty' | 'intake' | 'infrastructure' | 'admin' | 'placement'>('profile');
@@ -347,9 +491,21 @@ export function EducationPortfolioDashboard({
 
   // Stats for the top row
   const isCollege = ['ENGINEERING_COLLEGE', 'ITI', 'UNIVERSITY', 'DIPLOMA_COLLEGE'].includes(org.sub_department || '');
+  const isUniversity = org.sub_department === 'UNIVERSITY';
 
   // Calculate total intake for colleges
   const totalIntake = useMemo(() => {
+    // ITI uses total_seats_all_trades directly (handled separately in topStats)
+    if (org.sub_department === 'UNIVERSITY') {
+      // For universities, use sanctioned UG + PG intake (with fallbacks)
+      const ug =
+        Number(educationProfile['total_sanctioned_intake_ug'] ?? educationProfile['total_sanctioned_student_intake_ug'] ?? 0);
+      const pg =
+        Number(educationProfile['total_sanctioned_intake_pg'] ?? educationProfile['total_sanctioned_student_intake_pg'] ?? 0);
+      const sum = (Number.isFinite(ug) ? ug : 0) + (Number.isFinite(pg) ? pg : 0);
+      return sum > 0 ? sum : null;
+    }
+
     const intakeKeys = [
       'total_intake_ug_automobile_engineering', 'total_intake_ug_chemical_engineering',
       'total_intake_ug_civil_engineering', 'total_intake_ug_computer_science_engineering',
@@ -363,7 +519,7 @@ export function EducationPortfolioDashboard({
       if (!isNaN(val)) sum += val;
     });
     return sum > 0 ? sum : null;
-  }, [educationProfile]);
+  }, [educationProfile, org.sub_department]);
 
   const topStats = isCollege ? [
     {
@@ -379,6 +535,7 @@ export function EducationPortfolioDashboard({
       value: toStatVal(
         educationProfile['placement_percentage']
         || educationProfile['placement_percentage_last_year']
+        || educationProfile['placement_%_last_year']
         || educationProfile['trainees_placed_last_year_count']
       ),
       icon: TrendingUp,
@@ -471,7 +628,7 @@ export function EducationPortfolioDashboard({
                 {[
                   { label: t('govBar.title', language).includes('Odisha') ? 'Institution Name' : 'ଅନୁଷ୍ଠାନର ନାମ', val: org.name, icon: Building, color: 'blue' },
                   { label: t('govBar.title', language).includes('Odisha') ? 'Institution Type' : 'ଅନୁଷ୍ଠାନ ପ୍ରକାର', val: EDUCATION_TYPE_LABELS[org.type] || org.type, icon: GraduationCap, color: 'violet' },
-                  { label: t('govBar.title', language).includes('Odisha') ? 'ID' : 'ଆଇଡି', val: org.id, icon: Hash, color: 'slate' },
+                  { label: t('govBar.title', language).includes('Odisha') ? 'ID' : 'ଆଇଡି', val: org.id, icon: IdCard, color: 'slate' },
                   { label: getEducationProfileLabel('block_ulb', language), val: educationProfile['block_ulb'] || educationProfile['block'], icon: MapPin, color: 'emerald' },
                   { label: getEducationProfileLabel('gp_ward', language), val: educationProfile['gp_ward'] || educationProfile['gp_name'], icon: Home, color: 'amber' },
                   { label: getEducationProfileLabel('village', language), val: educationProfile['village'] || educationProfile['ward_village'] || educationProfile['village_locality'], icon: Home, color: 'sky' },
@@ -485,11 +642,11 @@ export function EducationPortfolioDashboard({
                   { label: getEducationProfileLabel('college_type', language), val: educationProfile['college_type'] || educationProfile['ownership'] || educationProfile['ownership_govt_private_aided'], icon: GraduationCap, color: 'indigo' },
                   // ITI Only fields (Relocated from Academic tab)
                   ...(org.sub_department === 'ITI' ? [
-                    { label: getEducationProfileLabel('iti_code', language), val: educationProfile['iti_code'], icon: Hash, color: 'slate' },
                     { label: getEducationProfileLabel('total_trades_count', language), val: educationProfile['total_trades_count'], icon: Layers, color: 'violet' },
                     { label: getEducationProfileLabel('minimum_entry_qualification', language), val: educationProfile['minimum_entry_qualification'], icon: GraduationCap, color: 'blue' },
                     { label: getEducationProfileLabel('admission_mode', language), val: educationProfile['admission_mode'], icon: Users, color: 'emerald' },
-                    { label: getEducationProfileLabel('pin_code', language), val: educationProfile['pin_code'], icon: Hash, color: 'slate' },
+                    { label: getEducationProfileLabel('iti_code', language), val: educationProfile['iti_code'], icon: Barcode, color: 'slate' },
+                    { label: getEducationProfileLabel('pin_code', language), val: educationProfile['pin_code'], icon: MapPin, color: 'slate' },
                     { label: getEducationProfileLabel('affiliation', language), val: educationProfile['affiliation'], icon: Building, color: 'violet' },
                     { label: getEducationProfileLabel('affiliating_body', language), val: educationProfile['affiliating_body'], icon: Building, color: 'violet' },
                     { label: getEducationProfileLabel('ownership', language), val: educationProfile['ownership'], icon: Building, color: 'indigo' },
@@ -505,9 +662,50 @@ export function EducationPortfolioDashboard({
             )}
 
             {detailTab === 'academic' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {Object.entries(educationProfile || {})
                   .filter(([key, v]) => {
+                    if (v == null || String(v).trim() === '' || String(v) === '—' || String(v) === '0') {
+                      return false;
+                    }
+                    // University: academic / programme / governance info
+                    if (isUniversity) {
+                      const k = String(key);
+                      const academicFragments = [
+                        'university_type',
+                        'teaching_cum_affiliating',
+                        'naac',
+                        'ugc_2',
+                        'ugc_12',
+                        'aishe_code',
+                        'nirf',
+                        'campus_area',
+                        'department',
+                        'research_centre',
+                        'centre_of_excellence',
+                        'ug_programmes',
+                        'pg_programmes',
+                        'integrated_programmes',
+                        'diploma_certificate_programmes',
+                        'ph_d_programmes',
+                        'd_litt',
+                        'admission_mode',
+                        'entrance_test',
+                        'academic_year_system',
+                        'result_declaration_timeline',
+                        'academic_calendar',
+                        'completion_rate',
+                        'student_enrollment',
+                        'students_from_other_states',
+                        'female_students',
+                        'scholarships_',
+                        'moocs',
+                        'value_added_courses',
+                        'notable_awards',
+                        'description',
+                      ];
+                      return academicFragments.some((frag) => k.includes(frag));
+                    }
                     const academicKeys = [
                       'autonomous', 'autonomous_since_year', 'aicte_approval', 'naac', 'nba', 'nirf_ranking',
                       'aariia_atal_ranking', 'b_tech_branches_count', 'm_tech_programmes_count', 'ph_d', 'departments',
@@ -519,7 +717,7 @@ export function EducationPortfolioDashboard({
                         'soft_skills_training', 'digital_ict_training', 'value_added_short_term_courses',
                       ] : []),
                     ];
-                    return academicKeys.includes(key) && v != null && String(v).trim() !== '' && String(v) !== '—' && String(v) !== '0';
+                    return academicKeys.includes(key);
                   })
                   .map(([key, value]) => {
                     const item = getResourceConfig(key);
@@ -532,6 +730,22 @@ export function EducationPortfolioDashboard({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {Object.entries(educationProfile || {})
                   .filter(([key, v]) => {
+                    if (v == null || String(v).trim() === '' || String(v) === '—' || String(v) === '0' || String(v) === 'No of TS') {
+                      return false;
+                    }
+                    // University: all staff / faculty metrics
+                    if (isUniversity) {
+                      const k = String(key);
+                      const facultyFragments = [
+                        'faculty',
+                        'teaching_staff',
+                        'teachers_with',
+                        'student_teacher_ratio',
+                        'non_teaching_staff',
+                        'technical_staff',
+                      ];
+                      return facultyFragments.some((frag) => k.includes(frag));
+                    }
                     const facultyKeys = [
                       'no_of_ts', 'no_of_nts', 'total_non_teaching_staff',
                       'total_no_of_faculty_automobile_engineering',
@@ -547,7 +761,7 @@ export function EducationPortfolioDashboard({
                         'total_instructors_with_industry_experience', 'total_workshop_staff',
                       ] : []),
                     ];
-                    return facultyKeys.includes(key) && v != null && String(v).trim() !== '' && String(v) !== '—' && String(v) !== '0' && String(v) !== 'No of TS';
+                    return facultyKeys.includes(key);
                   })
                   .map(([key, value]) => {
                     const item = getResourceConfig(key);
@@ -560,6 +774,20 @@ export function EducationPortfolioDashboard({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {Object.entries(educationProfile || {})
                   .filter(([key, v]) => {
+                    if (v == null || String(v).trim() === '' || String(v) === '—' || String(v) === '0') {
+                      return false;
+                    }
+                    // University: sanctioned intake, enrolment, higher studies
+                    if (isUniversity) {
+                      const k = String(key);
+                      const intakeFragments = [
+                        'intake_ug',
+                        'intake_pg',
+                        'student_enrollment',
+                        'students_to_higher_studies',
+                      ];
+                      return intakeFragments.some((frag) => k.includes(frag));
+                    }
                     const intakeKeys = [
                       'total_intake_ug_automobile_engineering', 'total_intake_ug_chemical_engineering',
                       'total_intake_ug_civil_engineering', 'total_intake_ug_computer_science_engineering',
@@ -574,7 +802,7 @@ export function EducationPortfolioDashboard({
                         'pwd_trainees', 'host_state_trainees', 'other_state_trainees',
                       ] : []),
                     ];
-                    return intakeKeys.includes(key) && v != null && String(v).trim() !== '' && String(v) !== '—' && String(v) !== '0';
+                    return intakeKeys.includes(key);
                   })
                   .map(([key, value]) => {
                     const item = getResourceConfig(key);
@@ -587,6 +815,46 @@ export function EducationPortfolioDashboard({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {Object.entries(educationProfile || {})
                   .filter(([key, v]) => {
+                    if (v == null || String(v).trim() === '' || String(v) === '—') {
+                      return false;
+                    }
+                    // University: physical and digital infrastructure
+                    if (isUniversity) {
+                      const k = String(key);
+                      const infraFragments = [
+                        'library',
+                        'computer_centre',
+                        'computer',
+                        'wifi',
+                        'nkn',
+                        'smart_classrooms',
+                        'seminar_halls',
+                        'laborator',
+                        'equipment',
+                        'workshop',
+                        'hostel',
+                        'staff_quarters',
+                        'guest_house',
+                        'health_centre',
+                        'canteen',
+                        'bank',
+                        'sports_facilities',
+                        'playground',
+                        'gymnasium',
+                        'transport_facility',
+                        'parking',
+                        'security',
+                        'cctv',
+                        'fire_safety',
+                        'ramp_accessibility',
+                        'facilities_for_pwd',
+                        'drinking_water',
+                        'electricity',
+                        'power_backup',
+                        'solar',
+                      ];
+                      return infraFragments.some((frag) => k.includes(frag));
+                    }
                     const infraKeys = [
                       'no_of_rooms', 'no_of_classrooms', 'no_of_smart_class_rooms', 'no_of_smart_classrooms',
                       'no_of_labs', 'no_of_labs_brach_wise', 'science_lab',
@@ -606,7 +874,7 @@ export function EducationPortfolioDashboard({
                         'computer_lab', 'total_computers', 'wifi_campus', 'canteen',
                       ] : []),
                     ];
-                    return infraKeys.includes(key) && v != null && String(v).trim() !== '' && String(v) !== '—';
+                    return infraKeys.includes(key);
                   })
                   .map(([key, value]) => {
                     const item = getResourceConfig(key);
@@ -619,6 +887,32 @@ export function EducationPortfolioDashboard({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {Object.entries(educationProfile || {})
                   .filter(([key, v]) => {
+                    if (v == null || String(v).trim() === '' || String(v) === '—' || String(v) === '0') {
+                      return false;
+                    }
+                    // University: leadership, cells, associations, clubs
+                    if (isUniversity) {
+                      const k = String(key);
+                      const adminFragments = [
+                        'chancellor',
+                        'vice_chancellor',
+                        'registrar',
+                        'finance_officer',
+                        'controller_of_exams',
+                        'iqac',
+                        'nodal_officer',
+                        'grievance_cell',
+                        'anti_ragging',
+                        'icc_head',
+                        'alumni_association',
+                        'student_clubs',
+                        'cultural_activities',
+                        'technical_fest',
+                        'nss',
+                        'ncc',
+                      ];
+                      return adminFragments.some((frag) => k.includes(frag));
+                    }
                     const adminKeys = [
                       'principal_name', 'principal_superintendent_name', 'principal_contact', 'principal_email',
                       'is_there_a_social_media_cell', 'nodal_officer_name', 'nodal_officer_contact',
@@ -634,7 +928,7 @@ export function EducationPortfolioDashboard({
                       // ITI
                       'iti_phone', 'iti_email',
                     ];
-                    return adminKeys.includes(key) && v != null && String(v).trim() !== '' && String(v) !== '—' && String(v) !== '0';
+                    return adminKeys.includes(key);
                   })
                   .map(([key, value]) => {
                     const item = getResourceConfig(key);
@@ -647,6 +941,28 @@ export function EducationPortfolioDashboard({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {Object.entries(educationProfile || {})
                   .filter(([key, v]) => {
+                    if (v == null || String(v).trim() === '' || String(v) === '—' || String(v) === '0') {
+                      return false;
+                    }
+                    // University: placement, industry collaboration, research & innovation
+                    if (isUniversity) {
+                      const k = String(key);
+                      const placementFragments = [
+                        'placement',
+                        'median_salary',
+                        'highest_package',
+                        'students_to_higher_studies',
+                        'industry_collaboration',
+                        'mous',
+                        'research_projects',
+                        'publications',
+                        'patents_',
+                        'startups',
+                        'incubation',
+                        'centre_of_excellence',
+                      ];
+                      return placementFragments.some((frag) => k.includes(frag));
+                    }
                     const placementKeys = [
                       'placement_officer_name', 'placement_officer_contact', 'placement_percentage',
                       'placement_percentage_last_year', 'highest_package_lpa', 'research_projects_count',
@@ -664,7 +980,7 @@ export function EducationPortfolioDashboard({
                         'awards_recognition', 'special_initiatives', 'clubs',
                       ] : []),
                     ];
-                    return placementKeys.includes(key) && v != null && String(v).trim() !== '' && String(v) !== '—' && String(v) !== '0';
+                    return placementKeys.includes(key);
                   })
                   .map(([key, value]) => {
                     const item = getResourceConfig(key);
