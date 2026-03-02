@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { authApi, organizationsApi, departmentsApi, profileApi, clearToken, getToken, educationApi, healthApi, Organization, User, Department, CenterProfile } from '../../../services/api';
+import { authApi, organizationsApi, departmentsApi, profileApi, clearToken, getToken, educationApi, healthApi, irrigationApi, Organization, User, Department, CenterProfile } from '../../../services/api';
 import { SuperAdminDashboardLayout } from '../../../components/layout/SuperAdminDashboardLayout';
 import { useLanguage } from '../../../components/i18n/LanguageContext';
 import { t } from '../../../components/i18n/messages';
@@ -18,6 +18,9 @@ const EDUCATION_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF SCHOOL,SCHOOL ID,ESST YEAR,CATEGORY,I,II,III,IV,V,VI,VII,VIII,IX,X,DEO NAME,DEO CONTACT,BEO NAME,BEO CONTACT,BRCC NAME,BRCC CONTACT,CRCC NAME,CRCC CONTACT,NAME OF HM,CONTACT OF HM,NO OF TS,NO OF NTS,NO OF TGP(PCM),NO OF TGP(CBZ),NO OF TGT(ARTS),BUILDING STATUS,NO OF ROOMS,NO OF SMART CLASS ROOMS,SCIENCE LAB,TOILET(M),TOILET(F),RAMP,MEETING HALL,STAFF COMMON ROOM,NCC,NSS,JRC,ECO CLUB,LIBRARY,ICC HEAD NAME,ICC HEAD CONTACT,PLAY GROUND,CYCLE STAND,DRINKING WATER(TW),DRINKING WATER(TAP),DRINKING WATER(OVERHEAD TAP),DRINKING WATER(AQUAGUARD),LATITUDE,LONGITUDE,DESCRIPTION\n';
 const HEALTH_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,LATITUDE,LONGITUDE,NAME,INSTITUTION ID,CATEGORY,INST HEAD NAME,INST HEAD CONTACT,NO OF TS,NO OF NTS,NO OF MO,NO OF PHARMACIST,NO OF ANM,NO OF HEALTH WORKER,NO OF PATHOLOGY,NO OF CLERK,NO OF SWEEPER,NO OF NW,NO OF BED,NO OF ICU,X-RAY AVAILABILTY,CT-SCAN AVAILABILITY,AVAILABILITY OF PATHOLOGY TESTING,DESCRIPTION\n';
+
+const IRRIGATION_CSV_HEADER =
+  'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,WORK ID,WORK NAME,CATEGORY,TYPE OF IRRIGATION (FLOW/LIFT/SOLAR),LATITUDE,LONGITUDE,LOCATION PRECISION (METER),COMMAND AREA / AYACUT (ACRES),WATER SPREAD AREA (ACRES),CANAL/DISTRIBUTORY LENGTH (KM),DESIGN DISCHARGE (CUSECS),INFLOW SOURCE (RIVER/RAIN/STREAM),YEAR OF COMMISSIONING,CURRENT PHYSICAL CONDITION (GOOD/REPAIR NEEDED/CRITICAL),FUNCTIONALITY STATUS (FUNCTIONAL/PARTIAL/NON-FUNCTIONAL),MANAGED BY (PANI PANCHAYAT/DEPT/WUA),NAME OF PANI PANCHAYAT / WUA,CONTACT PERSON (ENGINEER/PRESIDENT),CONTACT NUMBER,LAST MAINTENANCE/DESILTING YEAR,LAST GEOTAGGED DATE,BENEFICIARY FARMERS COUNT,BENEFICIARY HOUSEHOLDS,WATER AVAILABILITY (MONTHS/YEAR),SANCTIONED AMOUNT (LAKHS),EXPENDITURE TO DATE (LAKHS),FUNDING SCHEME (MGNREGS/STATE/CENTRAL),REMARKS/HISTORICAL BACKGROUND\n';
 
 const EDUCATION_ENGINEERING_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF COLLEGE,INSTITUTION ID,ESTABLISHED YEAR,CAMPUS AREA (ACRES),AFFILIATING UNIVERSITY,AUTONOMOUS (YES/NO),AUTONOMOUS SINCE YEAR,COLLEGE TYPE,PIN CODE,LATITUDE,LONGITUDE,PRINCIPAL NAME,PRINCIPAL CONTACT,PRINCIPAL EMAIL,COLLEGE PHONE,COLLEGE EMAIL,WEBSITE,AICTE APPROVAL(YES/NO),NAAC,NBA,NIRF RANKING,AARIIA-ATAL RANKING,B.TECH BRANCHES COUNT,M.TECH PROGRAMMES COUNT,PH.D. (YES/NO),DEPARTMENTS (COMMA SEPARATED),TOTAL INTAKE UG AUTOMOBILE ENGINEERING,TOTAL INTAKE UG CHEMICAL ENGINEERING,TOTAL INTAKE UG CIVIL ENGINEERING,TOTAL INTAKE UG COMPUTER SCIENCE ENGINEERING,TOTAL INTAKE UG ELECTRICAL ENGINEERING,TOTAL INTAKE UG ELECTRONICS & TELECOMMUNICATION ENGINEERING,TOTAL INTAKE UG MECHANICAL ENGINEERING,TOTAL INTAKE UG METALLURGICAL AND MATERIALS ENGINEERING,TOTAL INTAKE UG PRODUCTION ENGINEERING,TOTAL INTAKE PG DEPARTMENTS WISE (COMMA SEPARATED),TOTAL NO OF FACULTY AUTOMOBILE ENGINEERING,TOTAL NO OF FACULTY CHEMICAL ENGINEERING,TOTAL NO OF FACULTY CIVIL ENGINEERING,TOTAL NO OF FACULTY COMPUTER SCIENCE ENGINEERING,TOTAL NO OF FACULTY ELECTRICAL ENGINEERING,TOTAL NO OF FACULTY ELECTRONICS & TELECOMMUNICATION ENGINEERING,TOTAL NO OF FACULTY MECHANICAL ENGINEERING,TOTAL NO OF FACULTY METALLURGICAL AND MATERIALS ENGINEERING,TOTAL NO OF FACULTY PRODUCTION ENGINEERING,TOTAL NO OF FACULTY BASIC SCIENCE,TOTAL NO OF FACULTY HUMANITIES AND SOCIAL SCIENCE,NO OF CLASSROOMS,NO OF LABS BRACH WISE(COMMA SEPARATED),NO OF SMART CLASSROOMS,WORKSHOP,HOSTEL,HOSTEL CAPACITY BOYS,HOSTEL CAPACITY GIRLS,GUEST HOUSE,BANKING,CANTEEN,GYMNASIUM,WIFI AVAILABILITY,PLAYGROUND,GARDEN,TRANSPORT FASCILITY,PARKING FASCILITY,STAFF ACCOMMODATION,SECURITY,CCTV,RAMP (ACCESSIBILITY),DRINKING WATER,ELECTRICITY,NSS,NCC,IQAC,ICC,ICC HEAD NAME,ICC HEAD CONTACT,GRIEVANCE CELL HEAD,GRIEVANCE CELL HEAD CONTACT,ANTI-RAGGING CELL HEAD,ANTI-RAGGING CELL HEAD CONTACT,INNOVATION AND STARTUP FASCILITY,ROBOTICS CLUB,CULTURAL CLUBS,SPORTS AND ATHLETICS FASCILITY,E-MAGAZINE,TEQIP,RESEARCH PROJECTS COUNT,PATENTS COUNT,MOU COUNT,CENTRE OF EXCELLENCE(COMMA SEPARATED),INCUBATION CENTRE(AVAILABILITY),PLACEMENT CELL,PLACEMENT OFFICER NAME,PLACEMENT OFFICER CONTACT,PLACEMENT PERCENTAGE (LAST YEAR),HIGHEST PACKAGE (LPA),INTERNSHIP,NAME OF DEANS/PIC/FIC/OIC/REGISTRAR,SCHORLASHIP FASCILITY,NOTABLE AWARDS OR ACHIEVEMENTS,DESCRIPTION\n';
@@ -74,6 +77,7 @@ export default function DepartmentAdminPage() {
   const [orgProfiles, setOrgProfiles] = useState<Record<number, CenterProfile | null>>({});
   const [healthProfiles, setHealthProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [educationProfiles, setEducationProfiles] = useState<Record<number, Record<string, unknown>>>({});
+  const [irrigationProfiles, setIrrigationProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [icdsImageFile, setIcdsImageFile] = useState<File | null>(null);
   const [healthImageFile, setHealthImageFile] = useState<File | null>(null);
   const [educationImageFile, setEducationImageFile] = useState<File | null>(null);
@@ -126,6 +130,41 @@ export default function DepartmentAdminPage() {
   });
   const [newEducationOrg, setNewEducationOrg] = useState(emptyEducationOrg());
 
+  const emptyIrrigationOrg = () => ({
+    block_ulb: '',
+    gp_ward: '',
+    village_locality: '',
+    work_id: '',
+    work_name: '',
+    category: '',
+    type_of_irrigation_flow_lift_solar: '',
+    latitude: '',
+    longitude: '',
+    location_precision_meter: '',
+    command_area_ayacut_acres: '',
+    water_spread_area_acres: '',
+    canal_distributory_length_km: '',
+    design_discharge_cusecs: '',
+    inflow_source_river_rain_stream: '',
+    year_of_commissioning: '',
+    current_physical_condition_good_repair_needed_critical: '',
+    functionality_status_functional_partial_non_functional: '',
+    managed_by_pani_panchayat_dept_wua: '',
+    name_of_pani_panchayat_wua: '',
+    contact_person_engineer_president: '',
+    contact_number: '',
+    last_maintenance_desilting_year: '',
+    last_geotagged_date: '',
+    beneficiary_farmers_count: '',
+    beneficiary_households: '',
+    water_availability_months_year: '',
+    sanctioned_amount_lakhs: '',
+    expenditure_to_date_lakhs: '',
+    funding_scheme_mgnregs_state_central: '',
+    remarks_historical_background: '',
+  });
+  const [newIrrigationOrg, setNewIrrigationOrg] = useState(emptyIrrigationOrg());
+
   // Generic form values for non-school Education sub-departments (engineering, ITI, diploma, university)
   // Keys are snake_case versions of CSV column headers.
   const [eduFormValues, setEduFormValues] = useState<Record<string, string>>({});
@@ -169,7 +208,8 @@ export default function DepartmentAdminPage() {
   }, [router]);
 
   useEffect(() => {
-    if (deptCode === 'EDUCATION' || deptCode === 'HEALTH' || orgs.length === 0) return;
+    const isAwcDept = deptCode === 'ICDS' || deptCode === 'AWC_ICDS';
+    if (!isAwcDept || orgs.length === 0) return;
     let cancelled = false;
     (async () => {
       const profiles: Record<number, CenterProfile | null> = {};
@@ -205,6 +245,23 @@ export default function DepartmentAdminPage() {
         })
       );
       if (!cancelled) setHealthProfiles(profiles);
+    })();
+    return () => { cancelled = true; };
+  }, [deptCode, orgs]);
+
+  useEffect(() => {
+    if (deptCode !== 'IRRIGATION' || orgs.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const profiles: Record<number, Record<string, unknown>> = {};
+      await Promise.all(
+        orgs.map(async (o) => {
+          if (cancelled) return;
+          const p = await irrigationApi.getProfile(o.id);
+          profiles[o.id] = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
+        })
+      );
+      if (!cancelled) setIrrigationProfiles(profiles);
     })();
     return () => { cancelled = true; };
   }, [deptCode, orgs]);
@@ -271,7 +328,7 @@ export default function DepartmentAdminPage() {
         if (result.errors?.length) {
           setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
         }
-      } else {
+      } else if (deptCode === 'ICDS' || deptCode === 'AWC_ICDS') {
         // ICDS / AWC: bulk upload center profiles (minister CSV) for existing organizations
         const formData = new FormData();
         formData.append('file', file);
@@ -284,6 +341,11 @@ export default function DepartmentAdminPage() {
         if (!resp.ok) {
           const data = await resp.json().catch(() => ({}));
           throw new Error(data.detail || `Upload failed with status ${resp.status}`);
+        }
+      } else if (deptCode === 'IRRIGATION') {
+        const result = await irrigationApi.bulkCsv(file);
+        if (result.errors?.length) {
+          setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
         }
       }
       if (me?.department_id) {
@@ -330,6 +392,9 @@ export default function DepartmentAdminPage() {
     } else if (deptCode === 'HEALTH') {
       csvContent = HEALTH_CSV_HEADER;
       filename = 'health_template.csv';
+    } else if (deptCode === 'IRRIGATION') {
+      csvContent = IRRIGATION_CSV_HEADER;
+      filename = 'irrigation_template.csv';
     } else {
       csvContent = ICDS_CSV_HEADER + 'RANGEILUNDA,BADAKUSASTHALLI,BADAGUMULA,BADA GUMULLA-I,,,19.270275,84.781087,,,,,,,,,,KAMALAPUR,412630\n';
       filename = 'icds_awc_template.csv';
@@ -415,7 +480,7 @@ export default function DepartmentAdminPage() {
               </section>
             )}
 
-            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && (
+            {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS') && (
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual AWC entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
@@ -605,6 +670,374 @@ export default function DepartmentAdminPage() {
                       className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
                     >
                       {creating ? 'Saving...' : editingOrgId ? 'Update AWC' : 'Save AWC'}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            )}
+
+            {deptCode === 'IRRIGATION' && (
+              <section className="rounded-lg border border-border bg-background p-4">
+                <h2 className="text-sm font-semibold text-text">Manual Irrigation work entry</h2>
+                <p className="mt-1 text-xs text-text-muted">
+                  Add a single irrigation asset manually. Fields mirror the key CSV columns.
+                </p>
+                <form
+                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!me?.department_id) {
+                      setError('Department is not set for this admin user.');
+                      return;
+                    }
+                    if (!newIrrigationOrg.work_name.trim() || !newIrrigationOrg.latitude.trim() || !newIrrigationOrg.longitude.trim()) {
+                      setError('Work Name, Latitude and Longitude are required.');
+                      return;
+                    }
+                    setCreating(true);
+                    setError(null);
+                    try {
+                      const lat = Number(newIrrigationOrg.latitude);
+                      const lng = Number(newIrrigationOrg.longitude);
+                      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                        throw new Error('Latitude and Longitude must be valid numbers.');
+                      }
+                      const addressParts = [newIrrigationOrg.village_locality, newIrrigationOrg.gp_ward, newIrrigationOrg.block_ulb].filter(Boolean);
+                      const basePayload = {
+                        name: newIrrigationOrg.work_name.trim(),
+                        latitude: lat,
+                        longitude: lng,
+                        address: addressParts.length ? addressParts.join(', ') : undefined,
+                        attributes: {
+                          work_id: _s(newIrrigationOrg.work_id),
+                          category: _s(newIrrigationOrg.category),
+                          type_of_irrigation: _s(newIrrigationOrg.type_of_irrigation_flow_lift_solar),
+                          block_ulb: _s(newIrrigationOrg.block_ulb),
+                          gp_ward: _s(newIrrigationOrg.gp_ward),
+                          village_locality: _s(newIrrigationOrg.village_locality),
+                        } as Record<string, string | number | null>,
+                      };
+                      let updated: Organization;
+                      if (editingOrgId) {
+                        updated = await organizationsApi.update(editingOrgId, basePayload);
+                        setOrgs((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+                      } else {
+                        const created = await organizationsApi.create({
+                          department_id: me.department_id,
+                          type: 'OTHER',
+                          ...basePayload,
+                        });
+                        updated = created;
+                        setOrgs((prev) => [created, ...prev]);
+                      }
+
+                      const profileData: Record<string, unknown> = {
+                        block_ulb: _s(newIrrigationOrg.block_ulb),
+                        gp_ward: _s(newIrrigationOrg.gp_ward),
+                        village_locality: _s(newIrrigationOrg.village_locality),
+                        work_id: _s(newIrrigationOrg.work_id),
+                        work_name: _s(newIrrigationOrg.work_name),
+                        category: _s(newIrrigationOrg.category),
+                        type_of_irrigation_flow_lift_solar: _s(newIrrigationOrg.type_of_irrigation_flow_lift_solar),
+                        latitude: lat,
+                        longitude: lng,
+                        location_precision_meter: _n(newIrrigationOrg.location_precision_meter),
+                        command_area_ayacut_acres: _n(newIrrigationOrg.command_area_ayacut_acres),
+                        water_spread_area_acres: _n(newIrrigationOrg.water_spread_area_acres),
+                        canal_distributory_length_km: _n(newIrrigationOrg.canal_distributory_length_km),
+                        design_discharge_cusecs: _n(newIrrigationOrg.design_discharge_cusecs),
+                        inflow_source_river_rain_stream: _s(newIrrigationOrg.inflow_source_river_rain_stream),
+                        year_of_commissioning: _s(newIrrigationOrg.year_of_commissioning),
+                        current_physical_condition_good_repair_needed_critical: _s(newIrrigationOrg.current_physical_condition_good_repair_needed_critical),
+                        functionality_status_functional_partial_non_functional: _s(newIrrigationOrg.functionality_status_functional_partial_non_functional),
+                        managed_by_pani_panchayat_dept_wua: _s(newIrrigationOrg.managed_by_pani_panchayat_dept_wua),
+                        name_of_pani_panchayat_wua: _s(newIrrigationOrg.name_of_pani_panchayat_wua),
+                        contact_person_engineer_president: _s(newIrrigationOrg.contact_person_engineer_president),
+                        contact_number: _s(newIrrigationOrg.contact_number),
+                        last_maintenance_desilting_year: _s(newIrrigationOrg.last_maintenance_desilting_year),
+                        last_geotagged_date: _s(newIrrigationOrg.last_geotagged_date),
+                        beneficiary_farmers_count: _n(newIrrigationOrg.beneficiary_farmers_count),
+                        beneficiary_households: _n(newIrrigationOrg.beneficiary_households),
+                        water_availability_months_year: _s(newIrrigationOrg.water_availability_months_year),
+                        sanctioned_amount_lakhs: _n(newIrrigationOrg.sanctioned_amount_lakhs),
+                        expenditure_to_date_lakhs: _n(newIrrigationOrg.expenditure_to_date_lakhs),
+                        funding_scheme_mgnregs_state_central: _s(newIrrigationOrg.funding_scheme_mgnregs_state_central),
+                        remarks_historical_background: _s(newIrrigationOrg.remarks_historical_background),
+                      };
+                      await irrigationApi.putProfile(updated.id, profileData);
+                      setIrrigationProfiles((prev) => ({
+                        ...prev,
+                        [updated.id]: profileData,
+                      }));
+                      setNewIrrigationOrg(emptyIrrigationOrg());
+                      setEditingOrgId(null);
+                    } catch (err: any) {
+                      setError(err.message || 'Failed to save irrigation work');
+                    } finally {
+                      setCreating(false);
+                    }
+                  }}
+                >
+                  <div className="space-y-1">
+                    <label className="block text-text">Block / ULB</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.block_ulb}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, block_ulb: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">GP / Ward</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.gp_ward}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, gp_ward: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Village / Locality</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.village_locality}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, village_locality: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Work ID</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.work_id}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, work_id: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Work Name</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.work_name}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, work_name: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Category</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.category}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, category: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Type of irrigation (Flow/Lift/Solar)</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.type_of_irrigation_flow_lift_solar}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, type_of_irrigation_flow_lift_solar: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Location precision (meter)</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.location_precision_meter}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, location_precision_meter: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Latitude</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.latitude}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, latitude: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Longitude</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.longitude}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, longitude: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Command area / Ayacut (acres)</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.command_area_ayacut_acres}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, command_area_ayacut_acres: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Water spread area (acres)</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.water_spread_area_acres}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, water_spread_area_acres: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Canal / distributory length (km)</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.canal_distributory_length_km}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, canal_distributory_length_km: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Design discharge (cusecs)</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.design_discharge_cusecs}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, design_discharge_cusecs: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Inflow source (river/rain/stream)</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.inflow_source_river_rain_stream}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, inflow_source_river_rain_stream: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Year of commissioning</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.year_of_commissioning}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, year_of_commissioning: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Current physical condition</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.current_physical_condition_good_repair_needed_critical}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, current_physical_condition_good_repair_needed_critical: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Functionality status</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.functionality_status_functional_partial_non_functional}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, functionality_status_functional_partial_non_functional: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Managed by</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.managed_by_pani_panchayat_dept_wua}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, managed_by_pani_panchayat_dept_wua: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Pani Panchayat / WUA name</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.name_of_pani_panchayat_wua}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, name_of_pani_panchayat_wua: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Contact person (Engineer/President)</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.contact_person_engineer_president}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, contact_person_engineer_president: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Contact number</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.contact_number}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, contact_number: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Last maintenance / desilting year</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.last_maintenance_desilting_year}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, last_maintenance_desilting_year: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Last geotagged date</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.last_geotagged_date}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, last_geotagged_date: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Beneficiary farmers count</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.beneficiary_farmers_count}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, beneficiary_farmers_count: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Beneficiary households</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.beneficiary_households}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, beneficiary_households: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Water availability (months/year)</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.water_availability_months_year}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, water_availability_months_year: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Sanctioned amount (lakhs)</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.sanctioned_amount_lakhs}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, sanctioned_amount_lakhs: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Expenditure to date (lakhs)</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.expenditure_to_date_lakhs}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, expenditure_to_date_lakhs: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Funding scheme (MGNREGS/State/Central)</label>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      value={newIrrigationOrg.funding_scheme_mgnregs_state_central}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, funding_scheme_mgnregs_state_central: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="block text-text">Remarks / historical background</label>
+                    <textarea
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary min-h-[60px]"
+                      value={newIrrigationOrg.remarks_historical_background}
+                      onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, remarks_historical_background: e.target.value }))}
+                    />
+                  </div>
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <button
+                      type="submit"
+                      disabled={creating}
+                      className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                    >
+                      {creating ? 'Saving...' : editingOrgId ? 'Update' : 'Save'}
                     </button>
                   </div>
                 </form>
@@ -1221,7 +1654,7 @@ export default function DepartmentAdminPage() {
                             ? 'Facility Name'
                             : 'AWC Name'}
                       </th>
-                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH') && (
+                      {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS') && (
                         <>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
@@ -1342,6 +1775,19 @@ export default function DepartmentAdminPage() {
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Longitude</th>
                         </>
                       )}
+                      {deptCode === 'IRRIGATION' && (
+                        <>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Block / ULB</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Village / Locality</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Work ID</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Category</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Type of irrigation</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Command area (acres)</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Water spread (acres)</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Status</th>
+                        </>
+                      )}
                       <th className="px-2 py-1 text-left font-medium text-text">Actions</th>
                     </tr>
                   </thead>
@@ -1355,7 +1801,7 @@ export default function DepartmentAdminPage() {
                         <tr key={o.id} className="border-b border-border/60">
                           <td className="px-2 py-1 text-text-muted">{page * PAGE_SIZE + idx + 1}</td>
                           <td className="px-2 py-1">{o.name}</td>
-                          {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH') && (
+                          {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS') && (
                             <>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ulb_block ?? prof?.block_name)}</td>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_name ?? prof?.gram_panchayat)}</td>
@@ -1491,6 +1937,21 @@ export default function DepartmentAdminPage() {
                               <td className="px-2 py-1 text-text-muted">{_(hp?.availability_of_pathology_testing)}</td>
                               <td className="px-2 py-1 text-text-muted">{o.latitude != null ? o.latitude.toFixed(6) : '—'}</td>
                               <td className="px-2 py-1 text-text-muted">{o.longitude != null ? o.longitude.toFixed(6) : '—'}</td>
+                            </>
+                          )}
+                          {deptCode === 'IRRIGATION' && (
+                            <>
+                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.block_ulb ?? o.attributes?.block_ulb)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.gp_ward ?? o.attributes?.gp_ward)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.village_locality ?? o.attributes?.village_locality)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.work_id ?? o.attributes?.work_id)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.category ?? o.attributes?.category)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.type_of_irrigation ?? o.attributes?.type_of_irrigation)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.command_area_ayacut_acres)}</td>
+                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.water_spread_area_acres)}</td>
+                              <td className="px-2 py-1 text-text-muted">
+                                {_(irrigationProfiles[o.id]?.functionality_status_functional_partial_non_functional ?? irrigationProfiles[o.id]?.current_physical_condition_good_repair_needed_critical)}
+                              </td>
                             </>
                           )}
                           <td className="px-2 py-1 space-x-1">

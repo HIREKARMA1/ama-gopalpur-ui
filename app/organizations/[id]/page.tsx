@@ -10,6 +10,7 @@ import {
   icdsApi,
   educationApi,
   healthApi,
+  irrigationApi,
   Organization,
   Department,
   CenterProfile,
@@ -30,6 +31,7 @@ import { Loader } from '../../../components/common/Loader';
 import { AwcPortfolioDashboard } from '../../../components/organization/AwcPortfolioDashboard';
 import { EducationPortfolioDashboard } from '../../../components/organization/EducationPortfolioDashboard';
 import { HealthPortfolioDashboard } from '../../../components/organization/HealthPortfolioDashboard';
+import { IrrigationPortfolioDashboard } from '../../../components/organization/IrrigationPortfolioDashboard';
 
 const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
@@ -163,6 +165,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [healthDailyExtraData, setHealthDailyExtraData] = useState<Awaited<ReturnType<typeof healthApi.listDailyExtraData>>>([]);
   const [educationProfile, setEducationProfile] = useState<Record<string, unknown>>({});
   const [healthProfile, setHealthProfile] = useState<Record<string, unknown>>({});
+  const [irrigationProfile, setIrrigationProfile] = useState<Record<string, unknown>>({});
   const [snpDailyStock, setSnpDailyStock] = useState<Awaited<ReturnType<typeof icdsApi.listSnpDailyStock>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -259,6 +262,11 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           setHealthDailyAttendance(dailyAtt ?? []);
           setHealthDailyMedicineStock(dailyMed ?? []);
           setHealthDailyExtraData(dailyExtra ?? []);
+        } else if (code === 'IRRIGATION') {
+          const profile = await irrigationApi.getProfile(id);
+          setIrrigationProfile(
+            profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
+          );
         } else {
           // AWC / ICDS or other: try center profile and SNP daily stock
           try {
@@ -355,6 +363,18 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           dailyExtraData={healthDailyExtraData}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
+        />
+      </div>
+    );
+  }
+
+  if (deptCode === 'IRRIGATION') {
+    return (
+      <div className="page-container">
+        <Navbar />
+        <IrrigationPortfolioDashboard
+          org={org}
+          profile={irrigationProfile}
         />
       </div>
     );
