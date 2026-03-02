@@ -91,7 +91,7 @@ const HEALTH_LABELS: Record<string, string> = {
   no_of_nw: 'No of NW',
   no_of_bed: 'No of Bed',
   no_of_icu: 'No of ICU',
-  x_ray_availabilaty: 'X-Ray Availability',
+  x_ray_availabilty: 'X-Ray Availability',
   ct_scan_availability: 'CT-Scan Availability',
   availability_of_pathology_testing: 'Availability of Pathology Testing',
   description: 'Description',

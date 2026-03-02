@@ -8,6 +8,7 @@ import { SuperAdminDashboardLayout } from '../../../components/layout/SuperAdmin
 import { useLanguage } from '../../../components/i18n/LanguageContext';
 import { t } from '../../../components/i18n/messages';
 import { Loader } from '../../../components/common/Loader';
+import { compressImage } from '../../../lib/imageCompression';
 
 /** ICDS minister CSV: all attributes for AWC profile (no SL NO; use system-generated org id). */
 const ICDS_CSV_HEADER =
@@ -358,7 +359,12 @@ export default function DepartmentAdminPage() {
             { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
             { href: '/admin/dept/snp', labelKey: 'super.sidebar.snp' },
           ]
-          : [{ href: '/admin/dept', labelKey: 'super.sidebar.dashboard' }]
+          : deptCode === 'HEALTH'
+            ? [
+              { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
+              { href: '/admin/dept/health-monitoring', labelKey: 'health.monitoring.title' },
+            ]
+            : [{ href: '/admin/dept', labelKey: 'super.sidebar.dashboard' }]
       }
       onLogout={() => {
         clearToken();
@@ -484,7 +490,8 @@ export default function DepartmentAdminPage() {
                       };
                       await profileApi.putCenterProfile(updated.id, profilePayload);
                       if (icdsImageFile) {
-                        await organizationsApi.uploadCoverImage(updated.id, icdsImageFile);
+                        const compressed = await compressImage(icdsImageFile, { maxSizeMB: 0.5 });
+                        await organizationsApi.uploadCoverImage(updated.id, compressed);
                         setIcdsImageFile(null);
                       }
                       setOrgProfiles((prev) => ({ ...prev, [updated.id]: { ...profilePayload, organization_id: updated.id } as CenterProfile }));
@@ -687,7 +694,8 @@ export default function DepartmentAdminPage() {
                       };
                       await educationApi.putProfile(updated.id, profileData);
                       if (educationImageFile) {
-                        await organizationsApi.uploadCoverImage(updated.id, educationImageFile);
+                        const compressed = await compressImage(educationImageFile, { maxSizeMB: 0.5 });
+                        await organizationsApi.uploadCoverImage(updated.id, compressed);
                         setEducationImageFile(null);
                       }
                       setEducationProfiles((prev) => ({ ...prev, [updated.id]: profileData }));
@@ -800,12 +808,12 @@ export default function DepartmentAdminPage() {
                   {educationSubDept === 'ENGINEERING_COLLEGE'
                     ? 'Engineering College'
                     : educationSubDept === 'ITI'
-                    ? 'ITI'
-                    : educationSubDept === 'DIPLOMA_COLLEGE'
-                    ? 'Diploma College'
-                    : educationSubDept === 'UNIVERSITY'
-                    ? 'University'
-                    : 'Education'}{' '}
+                      ? 'ITI'
+                      : educationSubDept === 'DIPLOMA_COLLEGE'
+                        ? 'Diploma College'
+                        : educationSubDept === 'UNIVERSITY'
+                          ? 'University'
+                          : 'Education'}{' '}
                   entry
                 </h2>
                 <p className="mt-1 text-xs text-text-muted">
@@ -824,12 +832,12 @@ export default function DepartmentAdminPage() {
                       educationSubDept === 'ENGINEERING_COLLEGE'
                         ? 'NAME OF COLLEGE'
                         : educationSubDept === 'ITI'
-                        ? 'ITI NAME'
-                        : educationSubDept === 'DIPLOMA_COLLEGE'
-                        ? 'COLLEGE NAME'
-                        : educationSubDept === 'UNIVERSITY'
-                        ? 'UNIVERSITY NAME'
-                        : '';
+                          ? 'ITI NAME'
+                          : educationSubDept === 'DIPLOMA_COLLEGE'
+                            ? 'COLLEGE NAME'
+                            : educationSubDept === 'UNIVERSITY'
+                              ? 'UNIVERSITY NAME'
+                              : '';
                     const nameKey = nameHeader ? snakeFromHeader(nameHeader) : '';
                     const latKey = snakeFromHeader('LATITUDE');
                     const lngKey = snakeFromHeader('LONGITUDE');
@@ -971,6 +979,7 @@ export default function DepartmentAdminPage() {
                           ulb_block: newHealthOrg.block_ulb || null,
                           gp_name: newHealthOrg.gp_ward || null,
                           ward_village: newHealthOrg.village || null,
+                          category: newHealthOrg.category || null,
                         } as Record<string, string | number | null>,
                       };
                       let updated: Organization;
@@ -1016,7 +1025,8 @@ export default function DepartmentAdminPage() {
                       };
                       await healthApi.putProfile(updated.id, profileData);
                       if (healthImageFile) {
-                        await organizationsApi.uploadCoverImage(updated.id, healthImageFile);
+                        const compressed = await compressImage(healthImageFile, { maxSizeMB: 0.5 });
+                        await organizationsApi.uploadCoverImage(updated.id, compressed);
                         setHealthImageFile(null);
                       }
                       setNewHealthOrg(emptyHealthOrg());

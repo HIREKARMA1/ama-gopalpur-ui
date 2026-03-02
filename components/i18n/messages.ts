@@ -25,7 +25,17 @@ export type MessageKey =
   | 'map.edu.higherSecondary'
   | 'map.edu.college'
   | 'map.edu.university'
+  | 'map.edu.sub.school'
+  | 'map.edu.sub.engineeringCollege'
+  | 'map.edu.sub.iti'
+  | 'map.edu.sub.university'
+  | 'map.edu.sub.diplomaCollege'
   | 'map.health.hospital'
+  | 'map.health.chc'
+  | 'map.health.phc'
+  | 'map.health.sc'
+  | 'map.health.uaam'
+  | 'map.health.uphc'
   | 'map.health.healthCentre'
   | 'map.health.other'
   | 'map.awc.label'
@@ -135,7 +145,28 @@ export type MessageKey =
   | 'super.admins.active'
   | 'super.admins.inactive'
   | 'super.admins.empty'
-  | 'super.error.loadFailed';
+  | 'super.error.loadFailed'
+  | 'health.monitoring.title'
+  | 'health.monitoring.subtitle'
+  | 'health.monitoring.attendance.title'
+  | 'health.monitoring.medicine.title'
+  | 'health.monitoring.extra.title'
+  | 'health.monitoring.patients.title'
+  | 'health.monitoring.attendance.count'
+  | 'health.monitoring.attendance.doc'
+  | 'health.monitoring.medicine.name'
+  | 'health.monitoring.medicine.opening'
+  | 'health.monitoring.medicine.received'
+  | 'health.monitoring.medicine.issued'
+  | 'health.monitoring.medicine.closing'
+  | 'health.monitoring.extra.van'
+  | 'health.monitoring.extra.remarks'
+  | 'health.monitoring.patients.opd'
+  | 'health.monitoring.patients.ipd'
+  | 'health.monitoring.patients.surgeries'
+  | 'health.monitoring.patients.deliveries'
+  | 'health.monitoring.patients.refIn'
+  | 'health.monitoring.patients.refOut';
 
 const messages: Record<MessageKey, { en: string; or: string }> = {
   'govBar.title': {
@@ -208,7 +239,17 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.edu.higherSecondary': { en: 'Higher Secondary', or: 'ଉଚ୍ଚ ମାଧ୍ୟମିକ' },
   'map.edu.college': { en: 'College', or: 'ମହାବିଦ୍ୟାଳୟ' },
   'map.edu.university': { en: 'University', or: 'ବିଶ୍ୱବିଦ୍ୟାଳୟ' },
+  'map.edu.sub.school': { en: 'School', or: 'ବିଦ୍ୟାଳୟ' },
+  'map.edu.sub.engineeringCollege': { en: 'Engineering College', or: 'ଇଞ୍ଜିନିୟରିଂ କଲେଜ' },
+  'map.edu.sub.iti': { en: 'ITI', or: 'ଆଇ.ଟି.ଆଇ.' },
+  'map.edu.sub.university': { en: 'University', or: 'ବିଶ୍ୱବିଦ୍ୟାଳୟ' },
+  'map.edu.sub.diplomaCollege': { en: 'Diploma College', or: 'ଡିପ୍ଲୋମା କଲେଜ' },
   'map.health.hospital': { en: 'Hospital', or: 'ଡାକ୍ତରଖାନା' },
+  'map.health.chc': { en: 'CHC', or: 'ଗୋଷ୍ଠୀ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
+  'map.health.phc': { en: 'PHC', or: 'ପ୍ରାଥମିକ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
+  'map.health.sc': { en: 'SC', or: 'ସବ୍-ସେଣ୍ଟର' },
+  'map.health.uaam': { en: 'UAAM', or: 'UAAM' },
+  'map.health.uphc': { en: 'UPHC', or: 'ସହରାଞ୍ଚଳ ପ୍ରାଥମିକ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
   'map.health.healthCentre': { en: 'Health Centre', or: 'ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
   'map.health.other': { en: 'Other', or: 'ଅନ୍ୟ' },
   'map.awc.label': { en: 'Anganwadi Centre (AWC)', or: 'ଆଙ୍ଗନୱାଡି କେନ୍ଦ୍ର (AWC)' },
@@ -643,6 +684,90 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'super.error.loadFailed': {
     en: 'Failed to load admin data',
     or: 'ପ୍ରଶାସକ ତଥ୍ୟ ଲୋଡ୍ ବିଫଳ ହେଲା',
+  },
+  'health.monitoring.title': {
+    en: 'Daily Health Monitoring',
+    or: 'ଦୈନିକ ସ୍ୱାସ୍ଥ୍ୟ ଅନୁମାନ',
+  },
+  'health.monitoring.subtitle': {
+    en: 'Manage daily attendance, medicine stocks, and patient trends.',
+    or: 'ଦୈନିକ ଉପସ୍ଥାନ, ଔଷଧ ଷ୍ଟକ୍ ଏବଂ ରୋଗୀଙ୍କ ସଂଖ୍ୟା ପରିଚାଳନା କରନ୍ତୁ।',
+  },
+  'health.monitoring.attendance.title': {
+    en: 'Daily Attendance',
+    or: 'ଦୈନିକ ଉପସ୍ଥାନ',
+  },
+  'health.monitoring.medicine.title': {
+    en: 'Daily Medicine Stock',
+    or: 'ଦୈନିକ ଔଷଧ ଷ୍ଟକ୍',
+  },
+  'health.monitoring.extra.title': {
+    en: 'Daily Extra Data',
+    or: 'ଦୈନିକ ଅଧିକ ତଥ୍ୟ',
+  },
+  'health.monitoring.patients.title': {
+    en: 'Daily Patient Services',
+    or: 'ଦୈନିକ ରୋଗୀ ସେବା',
+  },
+  'health.monitoring.attendance.count': {
+    en: 'Staff present',
+    or: 'ଉପସ୍ଥିତ କର୍ମଚାରୀ',
+  },
+  'health.monitoring.attendance.doc': {
+    en: 'Doctor present',
+    or: 'ଡାକ୍ତର ଉପସ୍ଥିତ',
+  },
+  'health.monitoring.medicine.name': {
+    en: 'Medicine name',
+    or: 'ଔଷଧର ନାମ',
+  },
+  'health.monitoring.medicine.opening': {
+    en: 'Opening',
+    or: 'ଆରମ୍ଭିକ',
+  },
+  'health.monitoring.medicine.received': {
+    en: 'Received',
+    or: 'ପ୍ରାପ୍ତ',
+  },
+  'health.monitoring.medicine.issued': {
+    en: 'Issued',
+    or: 'ପ୍ରଦତ୍ତ',
+  },
+  'health.monitoring.medicine.closing': {
+    en: 'Closing',
+    or: 'ଶେଷ',
+  },
+  'health.monitoring.extra.van': {
+    en: 'Mobile van available',
+    or: 'ମୋବାଇଲ୍ ଭ୍ୟାନ୍ ଉପଲବ୍ଧ',
+  },
+  'health.monitoring.extra.remarks': {
+    en: 'Remarks',
+    or: 'ମନ୍ତବ୍ୟ',
+  },
+  'health.monitoring.patients.opd': {
+    en: 'OPD count',
+    or: 'OPD ସଂଖ୍ୟା',
+  },
+  'health.monitoring.patients.ipd': {
+    en: 'IPD count',
+    or: 'IPD ସଂଖ୍ୟା',
+  },
+  'health.monitoring.patients.surgeries': {
+    en: 'Surgeries',
+    or: 'ଅସ୍ତ୍ରୋପଚାର',
+  },
+  'health.monitoring.patients.deliveries': {
+    en: 'Deliveries',
+    or: 'ପ୍ରସବ',
+  },
+  'health.monitoring.patients.refIn': {
+    en: 'Referrals In',
+    or: 'Referrals In',
+  },
+  'health.monitoring.patients.refOut': {
+    en: 'Referrals Out',
+    or: 'Referrals Out',
   },
 };
 
