@@ -74,6 +74,11 @@ export const AWC_TYPE_LABEL = 'Anganwadi Centre (AWC)';
 /** Health organization types → marker icon (reuse pin colors) */
 export const HEALTH_MARKER_ICONS: Record<string, string> = {
   HOSPITAL: MARKER_COLORS.red,
+  CHC: MARKER_COLORS.blue,
+  PHC: MARKER_COLORS.yellow,
+  SC: MARKER_COLORS.green,
+  UAAM: MARKER_COLORS.orange,
+  UPHC: MARKER_COLORS.purple,
   HEALTH_CENTRE: MARKER_COLORS.blue,
   OTHER: MARKER_COLORS.green,
 };
@@ -81,6 +86,11 @@ export const HEALTH_MARKER_ICONS: Record<string, string> = {
 /** Human-readable labels for Health types */
 export const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
+  CHC: 'CHC',
+  PHC: 'PHC',
+  SC: 'SC',
+  UAAM: 'UAAM',
+  UPHC: 'UPHC',
   HEALTH_CENTRE: 'Health Centre',
   OTHER: 'Other',
 };

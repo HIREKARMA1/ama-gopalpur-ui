@@ -26,6 +26,11 @@ export type MessageKey =
   | 'map.edu.college'
   | 'map.edu.university'
   | 'map.health.hospital'
+  | 'map.health.chc'
+  | 'map.health.phc'
+  | 'map.health.sc'
+  | 'map.health.uaam'
+  | 'map.health.uphc'
   | 'map.health.healthCentre'
   | 'map.health.other'
   | 'map.awc.label'
@@ -230,6 +235,11 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.edu.college': { en: 'College', or: 'ମହାବିଦ୍ୟାଳୟ' },
   'map.edu.university': { en: 'University', or: 'ବିଶ୍ୱବିଦ୍ୟାଳୟ' },
   'map.health.hospital': { en: 'Hospital', or: 'ଡାକ୍ତରଖାନା' },
+  'map.health.chc': { en: 'CHC', or: 'ଗୋଷ୍ଠୀ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
+  'map.health.phc': { en: 'PHC', or: 'ପ୍ରାଥମିକ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
+  'map.health.sc': { en: 'SC', or: 'ସବ୍-ସେଣ୍ଟର' },
+  'map.health.uaam': { en: 'UAAM', or: 'UAAM' },
+  'map.health.uphc': { en: 'UPHC', or: 'ସହରାଞ୍ଚଳ ପ୍ରାଥମିକ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
   'map.health.healthCentre': { en: 'Health Centre', or: 'ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
   'map.health.other': { en: 'Other', or: 'ଅନ୍ୟ' },
   'map.awc.label': { en: 'Anganwadi Centre (AWC)', or: 'ଆଙ୍ଗନୱାଡି କେନ୍ଦ୍ର (AWC)' },

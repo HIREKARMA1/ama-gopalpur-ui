@@ -40,6 +40,11 @@ const EDUCATION_TYPE_KEYS: Record<string, MessageKey> = {
 };
 const HEALTH_TYPE_KEYS: Record<string, MessageKey> = {
   HOSPITAL: 'map.health.hospital',
+  CHC: 'map.health.chc',
+  PHC: 'map.health.phc',
+  SC: 'map.health.sc',
+  UAAM: 'map.health.uaam',
+  UPHC: 'map.health.uphc',
   HEALTH_CENTRE: 'map.health.healthCentre',
   OTHER: 'map.health.other',
 };
@@ -193,13 +198,14 @@ export function ConstituencyMap({
     []
   );
 
-  const getIconUrl = useCallback((type: string) => {
+  const getIconUrl = useCallback((type: string, attributes?: Record<string, any> | null) => {
     const code = selectedDepartmentCode?.toUpperCase();
     if (code === 'EDUCATION') {
       return EDUCATION_MARKER_ICONS[type] || EDUCATION_MARKER_ICONS.PRIMARY_SCHOOL;
     }
     if (code === 'HEALTH') {
-      return HEALTH_MARKER_ICONS[type] || HEALTH_MARKER_ICONS.HEALTH_CENTRE;
+      const category = (attributes?.category as string)?.toUpperCase();
+      return (category && HEALTH_MARKER_ICONS[category]) || HEALTH_MARKER_ICONS[type] || HEALTH_MARKER_ICONS.HEALTH_CENTRE;
     }
     if (code === 'AWC_ICDS' || code === 'ICDS' || type === 'AWC') {
       return AWC_MARKER_ICON;
@@ -208,12 +214,13 @@ export function ConstituencyMap({
   }, [selectedDepartmentCode]);
 
   const getTypeLabel = useCallback(
-    (type: string, lang: 'en' | 'or' = language) => {
+    (type: string, lang: 'en' | 'or' = language, attributes?: Record<string, any> | null) => {
       if (type === 'AWC') return t('map.awc.label', lang);
       const code = selectedDepartmentCode?.toUpperCase();
       if (code === 'HEALTH') {
-        const key = HEALTH_TYPE_KEYS[type];
-        return key ? t(key, lang) : HEALTH_TYPE_LABELS[type] || type.replace(/_/g, ' ');
+        const category = (attributes?.category as string)?.toUpperCase();
+        const key = category ? HEALTH_TYPE_KEYS[category] : HEALTH_TYPE_KEYS[type];
+        return key ? t(key, lang) : category || type.replace(/_/g, ' ');
       }
       const eduKey = EDUCATION_TYPE_KEYS[type];
       return eduKey ? t(eduKey, lang) : EDUCATION_TYPE_LABELS[type] || type.replace(/_/g, ' ');
@@ -228,7 +235,7 @@ export function ConstituencyMap({
       return orgsWithLocation.filter((org) => {
         const name = (org.name || '').toLowerCase();
         const address = (org.address || '').toLowerCase();
-        const typeLabel = getTypeLabel(org.type).toLowerCase();
+        const typeLabel = getTypeLabel(org.type, language, org.attributes).toLowerCase();
         const attributesText = org.attributes
           ? Object.values(org.attributes)
             .filter((v) => v != null)
@@ -251,7 +258,13 @@ export function ConstituencyMap({
     const code = selectedDepartmentCode?.toUpperCase();
     if (!legendFilterType) return filteredOrgs;
     if (code === 'EDUCATION' || code === 'HEALTH') {
-      return filteredOrgs.filter((org) => org.type === legendFilterType);
+      return filteredOrgs.filter((org) => {
+        if (code === 'HEALTH') {
+          const cat = (org.attributes?.category as string)?.toUpperCase();
+          return cat === legendFilterType || org.type === legendFilterType;
+        }
+        return org.type === legendFilterType;
+      });
     }
     return filteredOrgs;
   }, [filteredOrgs, legendFilterType, selectedDepartmentCode]);
@@ -483,7 +496,7 @@ export function ConstituencyMap({
                 key={org.id}
                 position={{ lat: org.latitude, lng: org.longitude }}
                 title={org.name}
-                icon={getIconUrl(org.type)}
+                icon={getIconUrl(org.type, org.attributes)}
                 onClick={() => {
                   setInfoWindowOrg(org);
                 }}
@@ -523,7 +536,7 @@ export function ConstituencyMap({
               <div className="min-w-[180px] max-w-[260px] py-1">
                 <p className="font-semibold text-gray-900">{infoWindowOrg.name}</p>
                 <p className="text-xs text-gray-600">
-                  {getTypeLabel(infoWindowOrg.type, language)}
+                  {getTypeLabel(infoWindowOrg.type, language, infoWindowOrg.attributes)}
                 </p>
                 {infoWindowOrg.type === 'AWC' && infoWindowOrg.attributes && (
                   <p className="mt-1 text-xs text-gray-500">
@@ -605,28 +618,36 @@ export function ConstituencyMap({
         <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {Object.entries(HEALTH_TYPE_LABELS).map(([type]) => {
-              const isSelected = legendFilterType === type;
-              return (
-                <li key={type}>
-                  <button
-                    type="button"
-                    onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
-                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
-                    title={isSelected ? 'Show all' : `Show only ${getTypeLabel(type, language)}`}
-                  >
-                    <span
-                      className="inline-block h-2 w-2 rounded-full shrink-0"
-                      style={{
-                        backgroundColor:
-                          type === 'HOSPITAL' ? '#ea4335' : type === 'HEALTH_CENTRE' ? '#4285f4' : '#34a853',
-                      }}
-                    />
-                    {getTypeLabel(type, language)}
-                  </button>
-                </li>
-              );
-            })}
+            {Object.entries(HEALTH_TYPE_LABELS)
+              .filter(([type]) => !['HOSPITAL', 'HEALTH_CENTRE', 'OTHER'].includes(type))
+              .map(([type]) => {
+                const isSelected = legendFilterType === type;
+                return (
+                  <li key={type}>
+                    <button
+                      type="button"
+                      onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
+                      className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
+                      title={isSelected ? 'Show all' : `Show only ${getTypeLabel(type, language)}`}
+                    >
+                      <span
+                        className="inline-block h-2 w-2 rounded-full shrink-0"
+                        style={{
+                          backgroundColor:
+                            type === 'HOSPITAL' ? '#ea4335' :
+                              type === 'CHC' ? '#1967d2' :
+                                type === 'PHC' ? '#fbbc04' :
+                                  type === 'SC' ? '#34a853' :
+                                    type === 'UAAM' ? '#ff9800' :
+                                      type === 'UPHC' ? '#9c27b0' :
+                                        type === 'HEALTH_CENTRE' ? '#1967d2' : '#34a853',
+                        }}
+                      />
+                      {getTypeLabel(type, language)}
+                    </button>
+                  </li>
+                );
+              })}
           </ul>
         </div>
       )}
