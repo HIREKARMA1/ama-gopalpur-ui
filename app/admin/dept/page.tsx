@@ -168,6 +168,7 @@ export default function DepartmentAdminPage() {
   // Generic form values for non-school Education sub-departments (engineering, ITI, diploma, university)
   // Keys are snake_case versions of CSV column headers.
   const [eduFormValues, setEduFormValues] = useState<Record<string, string>>({});
+  const [educationOtherImageFile, setEducationOtherImageFile] = useState<File | null>(null);
 
   const _n = (s: string) => (s.trim() ? (Number(s) || undefined) : undefined);
   const _s = (s: string) => (s.trim() || undefined);
@@ -1336,6 +1337,11 @@ export default function DepartmentAdminPage() {
                       profileData[latKey] = lat;
                       profileData[lngKey] = lng;
                       await educationApi.putProfile(org.id, profileData);
+                      if (educationOtherImageFile) {
+                        const compressed = await compressImage(educationOtherImageFile, { maxSizeMB: 0.5 });
+                        await organizationsApi.uploadCoverImage(org.id, compressed);
+                        setEducationOtherImageFile(null);
+                      }
                       setEducationProfiles((prev) => ({ ...prev, [org.id]: profileData }));
                       setEduFormValues({});
                       setEditingEducationId(null);
@@ -1361,6 +1367,17 @@ export default function DepartmentAdminPage() {
                       </div>
                     );
                   })}
+
+                  <div className="md:col-span-2 space-y-1">
+                    <label className="block text-text font-medium">Profile Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="w-full text-xs text-text file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                      onChange={(e) => setEducationOtherImageFile(e.target.files?.[0] || null)}
+                    />
+                  </div>
+
                   <div className="md:col-span-2">
                     <button
                       type="submit"
@@ -2051,6 +2068,43 @@ export default function DepartmentAdminPage() {
                                 Edit
                               </button>
                             )}
+                            {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
+                              <button
+                                type="button"
+                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                onClick={async () => {
+                                  setEditingEducationId(o.id);
+                                  const p = await educationApi.getProfile(o.id) as Record<string, unknown> | undefined;
+                                  const headers = getEducationHeadersForSubDept(educationSubDept);
+                                  const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
+                                  const values: Record<string, string> = {};
+                                  headers.forEach(h => {
+                                    const key = snakeFromHeader(h);
+                                    values[key] = v(p?.[key] ?? o.attributes?.[key]);
+                                  });
+
+                                  const latKey = snakeFromHeader('LATITUDE');
+                                  const lngKey = snakeFromHeader('LONGITUDE');
+                                  if (!values[latKey] && o.latitude) values[latKey] = String(o.latitude);
+                                  if (!values[lngKey] && o.longitude) values[lngKey] = String(o.longitude);
+
+                                  const nameHeader =
+                                    educationSubDept === 'ENGINEERING_COLLEGE' ? 'NAME OF COLLEGE' :
+                                      educationSubDept === 'ITI' ? 'ITI NAME' :
+                                        educationSubDept === 'DIPLOMA_COLLEGE' ? 'COLLEGE NAME' :
+                                          educationSubDept === 'UNIVERSITY' ? 'UNIVERSITY NAME' : '';
+                                  if (nameHeader) {
+                                    const nameKey = snakeFromHeader(nameHeader);
+                                    if (!values[nameKey]) values[nameKey] = o.name;
+                                  }
+
+                                  setEduFormValues(values);
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                              >
+                                Edit
+                              </button>
+                            )}
                             {deptCode === 'HEALTH' && (
                               <button
                                 type="button"
@@ -2159,7 +2213,7 @@ export default function DepartmentAdminPage() {
           </>
         )}
       </div>
-    </SuperAdminDashboardLayout>
+    </SuperAdminDashboardLayout >
   );
 }
 
