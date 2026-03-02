@@ -139,16 +139,6 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [departments, setDepartments] = useState<Department[]>([]);
   const [deptCode, setDeptCode] = useState<string | null>(null);
   const [awcProfile, setAwcProfile] = useState<CenterProfile | null>(null);
-  const [eduSchoolMaster, setEduSchoolMaster] = useState<EducationSchoolMaster | null>(null);
-  const [eduInfra, setEduInfra] = useState<EducationInfrastructure | null>(null);
-  const [eduGovt, setEduGovt] = useState<EducationGovtRegistry | null>(null);
-  const [eduTeachers, setEduTeachers] = useState<Awaited<ReturnType<typeof educationApi.listTeachers>>>([]);
-  const [eduScholarships, setEduScholarships] = useState<Awaited<ReturnType<typeof educationApi.listScholarships>>>([]);
-  const [eduMiddayMeals, setEduMiddayMeals] = useState<Awaited<ReturnType<typeof educationApi.listMiddayMeals>>>([]);
-  const [eduDigital, setEduDigital] = useState<Awaited<ReturnType<typeof educationApi.listDigitalLearning>>>([]);
-  const [eduProjects, setEduProjects] = useState<Awaited<ReturnType<typeof educationApi.listDevelopmentProjects>>>([]);
-  const [eduMonthly, setEduMonthly] = useState<Awaited<ReturnType<typeof educationApi.listMonthlyProgress>>>([]);
-  const [eduBeneficiary, setEduBeneficiary] = useState<Awaited<ReturnType<typeof educationApi.listBeneficiaryAnalytics>>>([]);
   const [healthMaster, setHealthMaster] = useState<HealthFacilityMaster | null>(null);
   const [healthInfra, setHealthInfra] = useState<HealthInfra | null>(null);
   const [healthStaff, setHealthStaff] = useState<Awaited<ReturnType<typeof healthApi.listStaff>>>([]);
@@ -188,29 +178,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
         setDeptCode(code ?? null);
 
         if (code === 'EDUCATION') {
-          const [master, infra, govt, teachers, scholarships, midday, digital, projects, monthly, beneficiary, profile] = await Promise.all([
-            educationApi.getSchoolMaster(id),
-            educationApi.getInfrastructure(id),
-            educationApi.getGovtRegistry(id),
-            educationApi.listTeachers(id),
-            educationApi.listScholarships(id),
-            educationApi.listMiddayMeals(id),
-            educationApi.listDigitalLearning(id),
-            educationApi.listDevelopmentProjects(id),
-            educationApi.listMonthlyProgress(id),
-            educationApi.listBeneficiaryAnalytics(id),
-            educationApi.getProfile(id),
-          ]);
-          setEduSchoolMaster(master ?? null);
-          setEduInfra(infra ?? null);
-          setEduGovt(govt ?? null);
-          setEduTeachers(teachers ?? []);
-          setEduScholarships(scholarships ?? []);
-          setEduMiddayMeals(midday ?? []);
-          setEduDigital(digital ?? []);
-          setEduProjects(projects ?? []);
-          setEduMonthly(monthly ?? []);
-          setEduBeneficiary(beneficiary ?? []);
+          const profile = await educationApi.getProfile(id);
           setEducationProfile(
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
@@ -320,15 +288,8 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
         <Navbar />
         <EducationPortfolioDashboard
           org={org}
-          schoolMaster={eduSchoolMaster}
-          infra={eduInfra}
           educationProfile={educationProfile}
-          departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
-          govtRegistry={eduGovt}
-          teachers={eduTeachers}
-          monthly={eduMonthly}
-          beneficiaryAnalytics={eduBeneficiary}
         />
       </div>
     );
