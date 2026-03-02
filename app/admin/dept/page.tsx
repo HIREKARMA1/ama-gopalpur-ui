@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { authApi, organizationsApi, departmentsApi, profileApi, clearToken, getToken, educationApi, healthApi, Organization, User, Department, CenterProfile } from '../../../services/api';
+import { authApi, organizationsApi, departmentsApi, profileApi, clearToken, getToken, educationApi, healthApi, electricityApi, Organization, User, Department, CenterProfile } from '../../../services/api';
 import { SuperAdminDashboardLayout } from '../../../components/layout/SuperAdminDashboardLayout';
 import { useLanguage } from '../../../components/i18n/LanguageContext';
 import { t } from '../../../components/i18n/messages';
@@ -30,6 +30,8 @@ const EDUCATION_DIPLOMA_CSV_HEADER =
 
 const EDUCATION_UNIVERSITY_CSV_HEADER =
   'UNIVERSITY NAME,UNIVERSITY TYPE (STATE/CENTRAL/PRIVATE/DEEMED),TEACHING-CUM-AFFILIATING (YES/NO),ESTABLISHED YEAR,OWNERSHIP (GOVT/PRIVATE),NAAC GRADE,UGC 2(F) (YES/NO),UGC 12(B) (YES/NO),AISHE CODE,NIRF UNIVERSITY RANK,NIRF YEAR,STATE,DISTRICT,BLOCK/ULB,GP/WARD,VILLAGE,PIN CODE,LATITUDE,LONGITUDE,WEBSITE,UNIVERSITY EMAIL,PHONE NUMBER,CHANCELLOR NAME,VICE-CHANCELLOR NAME,REGISTRAR NAME,FINANCE OFFICER NAME,CONTROLLER OF EXAMS NAME,IQAC COORDINATOR NAME,NODAL OFFICER (AISHE) NAME,NODAL OFFICER CONTACT,CAMPUS AREA (ACRES),NO OF CAMPUSES/UNITS,OFF-CAMPUS CENTRES (COUNT),OFF-CAMPUS LOCATIONS (LIST),DISTANCE EDUCATION (YES/NO),ONLINE PROGRAMMES (YES/NO),TOTAL FACULTIES,TOTAL DEPARTMENTS,DEPARTMENTS (COMMA SEPARATED),TOTAL RESEARCH CENTRES,RESEARCH CENTRES (COMMA SEPARATED),TOTAL CENTRES OF EXCELLENCE,CENTRES OF EXCELLENCE (COMMA SEPARARTED),TOTAL CONSTITUENT COLLEGES,TOTAL AFFILIATED COLLEGES,TOTAL UG PROGRAMMES,UG PROGRAMMES (COMMA SEPARATED),TOTAL PG PROGRAMMES,PG PROGRAMMES (COMMA SEPARATED),TOTAL INTEGRATED PROGRAMMES,INTEGRATED PROGRAMMES (COMMA SEPARATED),TOTAL DIPLOMA/CERTIFICATE PROGRAMMES,DIPLOMA/CERTIFICATE PROGRAMMES (COMMA SEPARATED),TOTAL PH.D. PROGRAMMES,PH.D. PROGRAMMES (COMMA SEPARATED),D.LITT./D.SC. (YES/NO),D.LITT./D.SC. (COMMA SEPARATED),TOTAL SANCTIONED STUDENT INTAKE UG,TOTAL SANCTIONED STUDENT INTAKE PG,ADMISSION MODE (ENTRANCE/MERIT/BOTH),ENTRANCE TEST NAME,ACADEMIC YEAR SYSTEM (SEMESTER/TRIMESTER/ANNUAL),RESULT DECLARATION TIMELINE,ACADEMIC CALENDAR (URL),EXAMINATION CELL (YES/NO),UG COMPLETION RATE (%),PG COMPLETION RATE (%),TOTAL STUDENT ENROLLMENT,UG STUDENT ENROLLMENT,PG STUDENT ENROLLMENT,PH.D. STUDENT ENROLLMENT,STUDENTS FROM OTHER STATES (%),FEMALE STUDENTS (%),SC STUDENTS (COUNT),ST STUDENTS (COUNT),OBC STUDENTS (COUNT),EWS STUDENTS (COUNT),GENERAL STUDENTS (COUNT),MINORITY STUDENTS (COUNT),PWD STUDENTS (COUNT),SCHOLARSHIPS (GOVT) (YES/NO),SCHOLARSHIPS (INSTITUTIONAL) (YES/NO),TOTAL TEACHING STAFF,TOTAL PERMANENT TEACHING STAFF,TOTAL CONTRACT/GUEST FACULTY,TOTAL TEACHING STAFF (PROF),TOTAL TEACHING STAFF (ASSOC PROF),TOTAL TEACHING STAFF (ASST PROF),TOTAL TEACHERS WITH PH.D. (COUNT),TOTAL TEACHERS WITH NET/SET (COUNT),STUDENT-TEACHER RATIO,NON-TEACHING STAFF (COUNT),TECHNICAL STAFF (COUNT),LIBRARY (YES/NO),CENTRAL LIBRARY NAME,LIBRARY BOOKS (COUNT),LIBRARY JOURNALS (COUNT),E-JOURNALS (YES/NO),E-BOOKS (YES/NO),LIBRARY SOFTWARE (KOHA/RFID/OTHER),DIGITAL LIBRARY (YES/NO),COMPUTER CENTRE (YES/NO),TOTAL COMPUTERS,WIFI CAMPUS (YES/NO),NKN CONNECTIVITY (YES/NO),SMART CLASSROOMS (COUNT),SEMINAR HALLS (COUNT),AUDITORIUM (YES/NO),LABORATORIES (COUNT),MAJOR EQUIPMENT/INSTRUMENTATION (LIST COMMA SEPARATED),WORKSHOPS (COUNT),HOSTELS (YES/NO),HOSTEL COUNT,HOSTEL CAPACITY BOYS,HOSTEL CAPACITY GIRLS,STAFF QUARTERS (YES/NO),GUEST HOUSE (YES/NO),HEALTH CENTRE (YES/NO),CANTEEN (YES/NO),BANK/ATM (YES/NO),SPORTS FACILITIES (YES/NO),PLAYGROUND (YES/NO),GYMNASIUM (YES/NO),TRANSPORT FACILITY (YES/NO),PARKING (YES/NO),SECURITY (YES/NO),CCTV (YES/NO),FIRE SAFETY (YES/NO),RAMP/ACCESSIBILITY (YES/NO),FACILITIES FOR PWD (LIST),DRINKING WATER (YES/NO),ELECTRICITY (YES/NO),POWER BACKUP (YES/NO),SOLAR (YES/NO),IQAC (YES/NO),GRIEVANCE CELL (YES/NO),ANTI-RAGGING CELL (YES/NO),ICC HEAD NAME,ICC HEAD CONTACT,ALUMNI ASSOCIATION (YES/NO),NSS (YES/NO),NCC (YES/NO),STUDENT CLUBS (LIST COMMA SEPARATED),CULTURAL ACTIVITIES (YES/NO),TECHNICAL FEST/EVENTS (LIST COMMA SEPARATED),INDUSTRY COLLABORATION (MoUs) (COUNT),MoUs (LIST COMMA SEPARATED),RESEARCH PROJECTS (COUNT),PUBLICATIONS (LAST YEAR),PATENTS FILED,PATENTS GRANTED,STARTUPS/INCUBATION (YES/NO),INCUBATION CENTRE NAME(LIST COMMA SEPARATED),PLACEMENT CELL (YES/NO),PLACEMENT OFFICER NAME,PLACEMENT OFFICER CONTACT,PLACEMENT % (LAST YEAR),MEDIAN SALARY (LPA),HIGHEST PACKAGE (LPA),STUDENTS TO HIGHER STUDIES (COUNT),MOOCs/SWAYAM/NPTEL (YES/NO),VALUE-ADDED COURSES (COUNT),NOTABLE AWARDS/ACHIEVEMENTS,DESCRIPTION\n';
+const ELECTRICITY_CSV_HEADER =
+  'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID/CODE,OWNERSHIP,PARENT ORGANIZATION,HIERARCHY LEVEL,HOST INSTITUTION (IF TRAINING CENTER),ESTABLISHED YEAR,COMMISSIONED YEAR (SUBSTATIONS),FULL ADDRESS,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE DESIGNATION,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,OFFICE HOURS,TOLL-FREE/CUSTOMER CARE NUMBER,HELPLINE AVAILABLE (YES/NO),VOLTAGE LEVEL PRIMARY (kV),VOLTAGE LEVEL SECONDARY (kV),INSTALLED CAPACITY (MVA),NO OF TRANSFORMERS,TRANSFORMER RATINGS MVA (COMMA SEPARATED),NO OF INCOMING FEEDERS,NO OF OUTGOING FEEDERS,TOTAL FEEDERS,BAYS (COUNT),SWITCHGEAR TYPE (GIS/AIS/HYBRID),33kV FEEDER LENGTH (KM),11kV FEEDER LENGTH (KM),LT LINE LENGTH (KM),NO OF DISTRIBUTION TRANSFORMERS (DTs),DT TOTAL CAPACITY (kVA),FEEDER METERING (YES/NO),FEEDER METERS (COUNT),DT METERING (YES/NO),DT METERS (COUNT),SMART METERS INSTALLED (COUNT),PREPAID METERS (COUNT),CONSUMER METERS TOTAL (COUNT),CONSUMERS UNDER JURISDICTION (APPROX),CONSUMERS DOMESTIC (COUNT),CONSUMERS COMMERCIAL (COUNT),CONSUMERS INDUSTRIAL (COUNT),CONSUMERS AGRICULTURAL (COUNT),CONSUMERS OTHER (COUNT),HT CONSUMERS (COUNT),LT CONSUMERS (COUNT),CONNECTED LOAD (MW),AT&C LOSS PERCENT,BILLING EFFICIENCY PERCENT,COLLECTION EFFICIENCY PERCENT,HOURS OF SUPPLY RURAL,HOURS OF SUPPLY URBAN,COMPLAINTS REGISTERED LAST YEAR,COMPLAINTS REDRESSED LAST YEAR,CONSUMER CARE COUNTER (YES/NO),BILLING FACILITY (YES/NO),ONLINE PAYMENT (YES/NO),MOBILE APP (YES/NO),ONLINE COMPLAINT PORTAL (YES/NO),CUSTOMER CARE EMAIL,GRIEVANCE REDRESSAL FORUM (YES/NO),TOTAL STAFF (COUNT),ENGINEERS (COUNT),TECHNICAL STAFF (COUNT),LINEMEN (COUNT),CONTRACT STAFF (COUNT),ADMIN/OFFICE STAFF (COUNT),VILLAGES/LOCALITIES COVERED (COUNT),GPs COVERED (COUNT),AREA COVERED SQ KM,BUILDING TYPE (OWN/RENTED),TOTAL FLOORS,OFFICE AREA SQ FT,TRAINING CENTER (YES/NO),TRAINING CAPACITY SEATS,WORKSHOP/GARAGE (YES/NO),STORE (YES/NO),DG SET (YES/NO),SOLAR (YES/NO),VEHICLES (COUNT),TWO-WHEELERS (COUNT),ANNUAL REVENUE CR (APPROX),BILLING CR LAST YEAR,DATA AS ON (YYYY-MM-DD),REMARKS/DESCRIPTION\n';
 
 const splitHeader = (header: string): string[] =>
   header.trim().replace(/\n$/, '').split(',').map((h) => h.trim());
@@ -74,9 +76,11 @@ export default function DepartmentAdminPage() {
   const [orgProfiles, setOrgProfiles] = useState<Record<number, CenterProfile | null>>({});
   const [healthProfiles, setHealthProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [educationProfiles, setEducationProfiles] = useState<Record<number, Record<string, unknown>>>({});
+  const [electricityProfiles, setElectricityProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [icdsImageFile, setIcdsImageFile] = useState<File | null>(null);
   const [healthImageFile, setHealthImageFile] = useState<File | null>(null);
   const [educationImageFile, setEducationImageFile] = useState<File | null>(null);
+  const [electricityImageFile, setElectricityImageFile] = useState<File | null>(null);
   const [newOrg, setNewOrg] = useState({
     ulb_block: '',
     gp_name: '',
@@ -130,6 +134,8 @@ export default function DepartmentAdminPage() {
   // Keys are snake_case versions of CSV column headers.
   const [eduFormValues, setEduFormValues] = useState<Record<string, string>>({});
   const [educationOtherImageFile, setEducationOtherImageFile] = useState<File | null>(null);
+  const [elecFormValues, setElecFormValues] = useState<Record<string, string>>({});
+  const [editingElectricityId, setEditingElectricityId] = useState<number | null>(null);
 
   const _n = (s: string) => (s.trim() ? (Number(s) || undefined) : undefined);
   const _s = (s: string) => (s.trim() || undefined);
@@ -227,6 +233,23 @@ export default function DepartmentAdminPage() {
     return () => { cancelled = true; };
   }, [deptCode, orgs]);
 
+  useEffect(() => {
+    if (deptCode !== 'ELECTRICITY' || orgs.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const profiles: Record<number, Record<string, unknown>> = {};
+      await Promise.all(
+        orgs.map(async (o) => {
+          if (cancelled) return;
+          const p = await electricityApi.getMaster(o.id);
+          profiles[o.id] = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
+        })
+      );
+      if (!cancelled) setElectricityProfiles(profiles);
+    })();
+    return () => { cancelled = true; };
+  }, [deptCode, orgs]);
+
   const handleDelete = async (id: number) => {
     if (!window.confirm('Delete this organization?')) return;
     try {
@@ -264,6 +287,11 @@ export default function DepartmentAdminPage() {
         } else {
           result = await educationApi.bulkCsv(file);
         }
+        if (result.errors?.length) {
+          setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
+        }
+      } else if (deptCode === 'ELECTRICITY') {
+        const result = await electricityApi.bulkCsv(file);
         if (result.errors?.length) {
           setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
         }
@@ -331,6 +359,9 @@ export default function DepartmentAdminPage() {
     } else if (deptCode === 'HEALTH') {
       csvContent = HEALTH_CSV_HEADER;
       filename = 'health_template.csv';
+    } else if (deptCode === 'ELECTRICITY') {
+      csvContent = ELECTRICITY_CSV_HEADER;
+      filename = 'electricity_template.csv';
     } else {
       csvContent = ICDS_CSV_HEADER + 'RANGEILUNDA,BADAKUSASTHALLI,BADAGUMULA,BADA GUMULLA-I,,,19.270275,84.781087,,,,,,,,,,KAMALAPUR,412630\n';
       filename = 'icds_awc_template.csv';
@@ -1181,6 +1212,132 @@ export default function DepartmentAdminPage() {
               </section>
             )}
 
+            {deptCode === 'ELECTRICITY' && (
+              <section className="rounded-lg border border-border bg-background p-4">
+                <h2 className="text-sm font-semibold text-text">Manual Electricity entry</h2>
+                <p className="mt-1 text-xs text-text-muted">
+                  Add a single Electricity office/center manually. Fields mirror the CSV columns.
+                </p>
+                <form
+                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!me?.department_id) {
+                      setError('Department is not set for this admin user.');
+                      return;
+                    }
+                    const headers = splitHeader(ELECTRICITY_CSV_HEADER);
+                    const nameKey = snakeFromHeader('NAME OF OFFICE/CENTER');
+                    const latKey = snakeFromHeader('LATITUDE');
+                    const lngKey = snakeFromHeader('LONGITUDE');
+                    const name = (elecFormValues[nameKey] || '').trim();
+                    const latStr = elecFormValues[latKey] || '';
+                    const lngStr = elecFormValues[lngKey] || '';
+                    if (!name || !latStr.trim() || !lngStr.trim()) {
+                      setError('Name of Office/Center, Latitude and Longitude are required.');
+                      return;
+                    }
+                    setCreating(true);
+                    setError(null);
+                    try {
+                      const lat = Number(latStr);
+                      const lng = Number(lngStr);
+                      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                        throw new Error('Latitude and Longitude must be valid numbers.');
+                      }
+                      const blockKey = snakeFromHeader('BLOCK/ULB');
+                      const gpKey = snakeFromHeader('GP/WARD');
+                      const villageKey = snakeFromHeader('VILLAGE/LOCALITY');
+                      const block = elecFormValues[blockKey] || '';
+                      const gp = elecFormValues[gpKey] || '';
+                      const village = elecFormValues[villageKey] || '';
+                      const addressParts = [block, gp, village].filter((p) => p && p.trim());
+                      const basePayload = {
+                        name,
+                        latitude: lat,
+                        longitude: lng,
+                        address: addressParts.length ? addressParts.join(', ') : undefined,
+                        attributes: {
+                          ulb_block: block || null,
+                          gp_name: gp || null,
+                          ward_village: village || null,
+                        } as Record<string, string | number | null>,
+                      };
+                      let org: Organization;
+                      if (editingElectricityId) {
+                        org = await organizationsApi.update(editingElectricityId, basePayload);
+                        setOrgs((prev) => prev.map((o) => (o.id === org.id ? org : o)));
+                      } else {
+                        org = await organizationsApi.create({
+                          department_id: me.department_id,
+                          type: 'ELECTRICITY_OFFICE',
+                          ...basePayload,
+                        });
+                        setOrgs((prev) => [org, ...prev]);
+                      }
+                      const profileData: Record<string, unknown> = {};
+                      headers.forEach((h) => {
+                        const key = snakeFromHeader(h);
+                        const val = elecFormValues[key];
+                        if (val != null && String(val).trim() !== '') {
+                          profileData[key] = val;
+                        }
+                      });
+                      profileData[latKey] = lat;
+                      profileData[lngKey] = lng;
+                      await electricityApi.putMaster(org.id, profileData);
+                      if (electricityImageFile) {
+                        const compressed = await compressImage(electricityImageFile, { maxSizeMB: 0.5 });
+                        await organizationsApi.uploadCoverImage(org.id, compressed);
+                        setElectricityImageFile(null);
+                      }
+                      setElectricityProfiles((prev) => ({ ...prev, [org.id]: profileData }));
+                      setElecFormValues({});
+                      setEditingElectricityId(null);
+                    } catch (err: any) {
+                      setError(err.message || 'Failed to save organization');
+                    } finally {
+                      setCreating(false);
+                    }
+                  }}
+                >
+                  {splitHeader(ELECTRICITY_CSV_HEADER).map((header) => {
+                    const key = snakeFromHeader(header);
+                    return (
+                      <div key={key} className="space-y-1">
+                        <label className="block text-text">{header}</label>
+                        <input
+                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                          value={elecFormValues[key] ?? ''}
+                          onChange={(e) =>
+                            setElecFormValues((prev) => ({ ...prev, [key]: e.target.value }))
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                  <div className="md:col-span-2 space-y-1">
+                    <label className="block text-text font-medium">Profile Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="w-full text-xs text-text file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                      onChange={(e) => setElectricityImageFile(e.target.files?.[0] || null)}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <button
+                      type="submit"
+                      disabled={creating}
+                      className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                    >
+                      {creating ? 'Saving...' : editingElectricityId ? 'Update Electricity Entry' : 'Save Electricity Entry'}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            )}
+
             <section className="rounded-lg border border-border bg-background p-4">
               <h2 className="text-sm font-semibold text-text">Bulk CSV upload</h2>
               <p className="mt-1 text-xs text-text-muted">
@@ -1190,7 +1347,9 @@ export default function DepartmentAdminPage() {
                     : 'Upload Education CSV for the selected sub-department. Organizations and profiles will be created or updated by name and location.'
                   : deptCode === 'HEALTH'
                     ? 'Upload Health minister CSV. Organizations and profiles will be created or updated by NAME, LATITUDE, LONGITUDE.'
-                    : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
+                    : deptCode === 'ELECTRICITY'
+                      ? 'Upload Electricity CSV. Organizations and profiles will be created or updated by NAME OF OFFICE/CENTER, LATITUDE, LONGITUDE.'
+                      : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
               </p>
               <div className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center md:justify-between">
                 <button
@@ -1236,9 +1395,11 @@ export default function DepartmentAdminPage() {
                             : 'Institution Name'
                           : deptCode === 'HEALTH'
                             ? 'Facility Name'
-                            : 'AWC Name'}
+                            : deptCode === 'ELECTRICITY'
+                              ? 'Office Name'
+                              : 'AWC Name'}
                       </th>
-                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH') && (
+                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY') && (
                         <>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
@@ -1372,7 +1533,7 @@ export default function DepartmentAdminPage() {
                         <tr key={o.id} className="border-b border-border/60">
                           <td className="px-2 py-1 text-text-muted">{page * PAGE_SIZE + idx + 1}</td>
                           <td className="px-2 py-1">{o.name}</td>
-                          {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH') && (
+                          {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY') && (
                             <>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ulb_block ?? prof?.block_name)}</td>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_name ?? prof?.gram_panchayat)}</td>
@@ -1482,6 +1643,33 @@ export default function DepartmentAdminPage() {
                               })}
                             </>
                           )}
+                          {deptCode === 'ELECTRICITY' && (
+                            <>
+                              {splitHeader(ELECTRICITY_CSV_HEADER).map((header) => {
+                                const key = snakeFromHeader(header);
+                                const val = electricityProfiles[o.id] ? electricityProfiles[o.id][key] : undefined;
+                                if (key === 'latitude') {
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {o.latitude != null ? o.latitude.toFixed(6) : '—'}
+                                    </td>
+                                  );
+                                }
+                                if (key === 'longitude') {
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {o.longitude != null ? o.longitude.toFixed(6) : '—'}
+                                    </td>
+                                  );
+                                }
+                                return (
+                                  <td key={key} className="px-2 py-1 text-text-muted">
+                                    {_(val)}
+                                  </td>
+                                );
+                              })}
+                            </>
+                          )}
                           {deptCode === 'HEALTH' && (
                             <>
                               <td className="px-2 py-1 text-text-muted">{_(hp?.block_ulb ?? o.attributes?.ulb_block)}</td>
@@ -1512,7 +1700,7 @@ export default function DepartmentAdminPage() {
                           )}
                           <td className="px-2 py-1 space-x-1">
                             <Link href={`/organizations/${o.id}`} className="rounded border border-primary/50 px-2 py-0.5 text-[11px] text-primary hover:bg-primary/10">View profile</Link>
-                            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && (
+                            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY' && (
                               <button
                                 type="button"
                                 className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
@@ -1541,6 +1729,34 @@ export default function DepartmentAdminPage() {
                                     awh_contact_no: String(p?.awh_contact_no ?? ''),
                                     description: String(p?.description ?? ''),
                                   });
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                              >
+                                Edit
+                              </button>
+                            )}
+                            {deptCode === 'ELECTRICITY' && (
+                              <button
+                                type="button"
+                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                onClick={async () => {
+                                  setEditingElectricityId(o.id);
+                                  const p = (electricityProfiles[o.id] || await electricityApi.getMaster(o.id)) as Record<string, unknown>;
+                                  const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
+                                  const vals: Record<string, string> = {};
+                                  splitHeader(ELECTRICITY_CSV_HEADER).forEach(h => {
+                                    const k = snakeFromHeader(h);
+                                    vals[k] = v(p[k]);
+                                  });
+                                  // Ensure name and coordinates are set from organization if missing in profile
+                                  const nameKey = snakeFromHeader('NAME OF OFFICE/CENTER');
+                                  const latKey = snakeFromHeader('LATITUDE');
+                                  const lngKey = snakeFromHeader('LONGITUDE');
+                                  if (!vals[nameKey]) vals[nameKey] = o.name;
+                                  if (!vals[latKey]) vals[latKey] = o.latitude != null ? String(o.latitude) : '';
+                                  if (!vals[lngKey]) vals[lngKey] = o.longitude != null ? String(o.longitude) : '';
+
+                                  setElecFormValues(vals);
                                   window.scrollTo({ top: 0, behavior: 'smooth' });
                                 }}
                               >

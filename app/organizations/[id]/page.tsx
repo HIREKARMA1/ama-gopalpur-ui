@@ -10,6 +10,7 @@ import {
   icdsApi,
   educationApi,
   healthApi,
+  electricityApi,
   Organization,
   Department,
   CenterProfile,
@@ -18,6 +19,7 @@ import {
   EducationGovtRegistry,
   HealthFacilityMaster,
   HealthInfrastructure as HealthInfra,
+  ElectricityMaster,
 } from '../../../services/api';
 import { EDUCATION_TYPE_LABELS } from '../../../lib/mapConfig';
 import {
@@ -30,6 +32,7 @@ import { Loader } from '../../../components/common/Loader';
 import { AwcPortfolioDashboard } from '../../../components/organization/AwcPortfolioDashboard';
 import { EducationPortfolioDashboard } from '../../../components/organization/EducationPortfolioDashboard';
 import { HealthPortfolioDashboard } from '../../../components/organization/HealthPortfolioDashboard';
+import { ElectricityPortfolioDashboard } from '../../../components/organization/ElectricityPortfolioDashboard';
 
 const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
@@ -163,6 +166,11 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [healthDailyExtraData, setHealthDailyExtraData] = useState<Awaited<ReturnType<typeof healthApi.listDailyExtraData>>>([]);
   const [educationProfile, setEducationProfile] = useState<Record<string, unknown>>({});
   const [healthProfile, setHealthProfile] = useState<Record<string, unknown>>({});
+  const [electricityProfile, setElectricityProfile] = useState<Record<string, unknown>>({});
+  const [electricityMaster, setElectricityMaster] = useState<ElectricityMaster | null>(null);
+  const [electricityStaff, setElectricityStaff] = useState<Awaited<ReturnType<typeof electricityApi.listStaff>>>([]);
+  const [electricityDaily, setElectricityDaily] = useState<Awaited<ReturnType<typeof electricityApi.listDaily>>>([]);
+  const [electricityMonthly, setElectricityMonthly] = useState<Awaited<ReturnType<typeof electricityApi.listMonthly>>>([]);
   const [snpDailyStock, setSnpDailyStock] = useState<Awaited<ReturnType<typeof icdsApi.listSnpDailyStock>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -259,6 +267,19 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           setHealthDailyAttendance(dailyAtt ?? []);
           setHealthDailyMedicineStock(dailyMed ?? []);
           setHealthDailyExtraData(dailyExtra ?? []);
+        } else if (code === 'ELECTRICITY') {
+          const [master, prof, staff, daily, monthly] = await Promise.all([
+            electricityApi.getMaster(id),
+            electricityApi.getProfile(id),
+            electricityApi.listStaff(id),
+            electricityApi.listDaily(id),
+            electricityApi.listMonthly(id),
+          ]);
+          setElectricityMaster(master);
+          setElectricityProfile(prof || {});
+          setElectricityStaff(staff || []);
+          setElectricityDaily(daily || []);
+          setElectricityMonthly(monthly || []);
         } else {
           // AWC / ICDS or other: try center profile and SNP daily stock
           try {
@@ -378,6 +399,27 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
           snpDailyStock={snpDailyStock}
+        />
+      </div>
+    );
+  }
+
+  if (deptCode === 'ELECTRICITY') {
+    const galleryImages = Array.isArray((electricityProfile as any)?.gallery_images)
+      ? ((electricityProfile as any).gallery_images as string[])
+      : [];
+    const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
+    return (
+      <div className="page-container">
+        <Navbar />
+        <ElectricityPortfolioDashboard
+          org={org}
+          electricityMaster={electricityMaster}
+          electricityProfile={electricityProfile}
+          staff={electricityStaff}
+          dailyReports={electricityDaily}
+          monthlyReports={electricityMonthly}
+          images={images}
         />
       </div>
     );
