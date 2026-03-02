@@ -369,12 +369,17 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   }
 
   if (deptCode === 'IRRIGATION') {
+    const galleryImages = Array.isArray((irrigationProfile as Record<string, unknown>)?.gallery_images)
+      ? ((irrigationProfile as Record<string, unknown>).gallery_images as string[]).filter((u): u is string => typeof u === 'string')
+      : [];
+    const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
     return (
       <div className="page-container">
         <Navbar />
         <IrrigationPortfolioDashboard
           org={org}
           profile={irrigationProfile}
+          images={images}
         />
       </div>
     );

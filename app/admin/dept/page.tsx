@@ -1029,8 +1029,6 @@ export default function DepartmentAdminPage() {
                       onChange={(e) => setNewIrrigationOrg((s) => ({ ...s, remarks_historical_background: e.target.value }))}
                     />
                   </div>
-                    />
-                  </div>
                   <div className="md:col-span-2">
                     <button
                       type="submit"
@@ -1652,7 +1650,9 @@ export default function DepartmentAdminPage() {
                             : 'Institution Name'
                           : deptCode === 'HEALTH'
                             ? 'Facility Name'
-                            : 'AWC Name'}
+                            : deptCode === 'IRRIGATION'
+                              ? 'Work Name'
+                              : 'AWC Name'}
                       </th>
                       {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS') && (
                         <>
@@ -1777,15 +1777,16 @@ export default function DepartmentAdminPage() {
                       )}
                       {deptCode === 'IRRIGATION' && (
                         <>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Block / ULB</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Village / Locality</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Work ID</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Category</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Type of irrigation</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Command area (acres)</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Water spread (acres)</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Status</th>
+                          {splitHeader(IRRIGATION_CSV_HEADER)
+                            .filter((h) => h !== 'WORK NAME')
+                            .map((header) => (
+                              <th
+                                key={header}
+                                className="px-2 py-1 text-left font-medium text-text whitespace-nowrap"
+                              >
+                                {header}
+                              </th>
+                            ))}
                         </>
                       )}
                       <th className="px-2 py-1 text-left font-medium text-text">Actions</th>
@@ -1941,17 +1942,32 @@ export default function DepartmentAdminPage() {
                           )}
                           {deptCode === 'IRRIGATION' && (
                             <>
-                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.block_ulb ?? o.attributes?.block_ulb)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.gp_ward ?? o.attributes?.gp_ward)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.village_locality ?? o.attributes?.village_locality)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.work_id ?? o.attributes?.work_id)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.category ?? o.attributes?.category)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.type_of_irrigation ?? o.attributes?.type_of_irrigation)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.command_area_ayacut_acres)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(irrigationProfiles[o.id]?.water_spread_area_acres)}</td>
-                              <td className="px-2 py-1 text-text-muted">
-                                {_(irrigationProfiles[o.id]?.functionality_status_functional_partial_non_functional ?? irrigationProfiles[o.id]?.current_physical_condition_good_repair_needed_critical)}
-                              </td>
+                              {splitHeader(IRRIGATION_CSV_HEADER)
+                                .filter((h) => h !== 'WORK NAME')
+                                .map((header) => {
+                                  const key = snakeFromHeader(header);
+                                  const ip = irrigationProfiles[o.id];
+                                  const val = ip?.[key] ?? o.attributes?.[key];
+                                  if (key === 'latitude') {
+                                    return (
+                                      <td key={key} className="px-2 py-1 text-text-muted">
+                                        {o.latitude != null ? o.latitude.toFixed(6) : '—'}
+                                      </td>
+                                    );
+                                  }
+                                  if (key === 'longitude') {
+                                    return (
+                                      <td key={key} className="px-2 py-1 text-text-muted">
+                                        {o.longitude != null ? o.longitude.toFixed(6) : '—'}
+                                      </td>
+                                    );
+                                  }
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {_(val)}
+                                    </td>
+                                  );
+                                })}
                             </>
                           )}
                           <td className="px-2 py-1 space-x-1">
