@@ -25,7 +25,17 @@ export type MessageKey =
   | 'map.edu.higherSecondary'
   | 'map.edu.college'
   | 'map.edu.university'
+  | 'map.edu.sub.school'
+  | 'map.edu.sub.engineeringCollege'
+  | 'map.edu.sub.iti'
+  | 'map.edu.sub.university'
+  | 'map.edu.sub.diplomaCollege'
   | 'map.health.hospital'
+  | 'map.health.chc'
+  | 'map.health.phc'
+  | 'map.health.sc'
+  | 'map.health.uaam'
+  | 'map.health.uphc'
   | 'map.health.healthCentre'
   | 'map.health.other'
   | 'map.awc.label'
@@ -229,7 +239,17 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.edu.higherSecondary': { en: 'Higher Secondary', or: 'ଉଚ୍ଚ ମାଧ୍ୟମିକ' },
   'map.edu.college': { en: 'College', or: 'ମହାବିଦ୍ୟାଳୟ' },
   'map.edu.university': { en: 'University', or: 'ବିଶ୍ୱବିଦ୍ୟାଳୟ' },
+  'map.edu.sub.school': { en: 'School', or: 'ବିଦ୍ୟାଳୟ' },
+  'map.edu.sub.engineeringCollege': { en: 'Engineering College', or: 'ଇଞ୍ଜିନିୟରିଂ କଲେଜ' },
+  'map.edu.sub.iti': { en: 'ITI', or: 'ଆଇ.ଟି.ଆଇ.' },
+  'map.edu.sub.university': { en: 'University', or: 'ବିଶ୍ୱବିଦ୍ୟାଳୟ' },
+  'map.edu.sub.diplomaCollege': { en: 'Diploma College', or: 'ଡିପ୍ଲୋମା କଲେଜ' },
   'map.health.hospital': { en: 'Hospital', or: 'ଡାକ୍ତରଖାନା' },
+  'map.health.chc': { en: 'CHC', or: 'ଗୋଷ୍ଠୀ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
+  'map.health.phc': { en: 'PHC', or: 'ପ୍ରାଥମିକ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
+  'map.health.sc': { en: 'SC', or: 'ସବ୍-ସେଣ୍ଟର' },
+  'map.health.uaam': { en: 'UAAM', or: 'UAAM' },
+  'map.health.uphc': { en: 'UPHC', or: 'ସହରାଞ୍ଚଳ ପ୍ରାଥମିକ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
   'map.health.healthCentre': { en: 'Health Centre', or: 'ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
   'map.health.other': { en: 'Other', or: 'ଅନ୍ୟ' },
   'map.awc.label': { en: 'Anganwadi Centre (AWC)', or: 'ଆଙ୍ଗନୱାଡି କେନ୍ଦ୍ର (AWC)' },

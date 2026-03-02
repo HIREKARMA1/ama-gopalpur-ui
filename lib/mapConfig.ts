@@ -55,7 +55,6 @@ export const EDUCATION_MARKER_ICONS: Record<string, string> = {
   UNIVERSITY: MARKER_COLORS.yellow,
 };
 
-/** Human-readable labels for Education types (for tooltips/legend) */
 export const EDUCATION_TYPE_LABELS: Record<string, string> = {
   PRIMARY_SCHOOL: 'Primary School',
   UPPER_PRIMARY_SCHOOL: 'Upper Primary School',
@@ -63,6 +62,24 @@ export const EDUCATION_TYPE_LABELS: Record<string, string> = {
   HIGHER_SECONDARY: 'Higher Secondary',
   COLLEGE: 'College',
   UNIVERSITY: 'University',
+};
+
+/** Education sub-departments for top-level legend/filtering */
+export const EDUCATION_SUB_DEPT_LABELS: Record<string, string> = {
+  SCHOOL: 'School',
+  ENGINEERING_COLLEGE: 'Engineering College',
+  ITI: 'ITI',
+  UNIVERSITY: 'University',
+  DIPLOMA_COLLEGE: 'Diploma College',
+};
+
+/** Marker colors for Education sub-departments */
+export const EDUCATION_SUB_DEPT_MARKERS: Record<string, string> = {
+  SCHOOL: MARKER_COLORS.red,
+  ENGINEERING_COLLEGE: MARKER_COLORS.blue,
+  ITI: MARKER_COLORS.green,
+  UNIVERSITY: MARKER_COLORS.yellow,
+  DIPLOMA_COLLEGE: MARKER_COLORS.purple,
 };
 
 /** Single marker for AWC (ICDS) – Anganwadi Centres */
@@ -74,6 +91,11 @@ export const AWC_TYPE_LABEL = 'Anganwadi Centre (AWC)';
 /** Health organization types → marker icon (reuse pin colors) */
 export const HEALTH_MARKER_ICONS: Record<string, string> = {
   HOSPITAL: MARKER_COLORS.red,
+  CHC: MARKER_COLORS.blue,
+  PHC: MARKER_COLORS.yellow,
+  SC: MARKER_COLORS.green,
+  UAAM: MARKER_COLORS.orange,
+  UPHC: MARKER_COLORS.purple,
   HEALTH_CENTRE: MARKER_COLORS.blue,
   OTHER: MARKER_COLORS.green,
 };
@@ -81,6 +103,11 @@ export const HEALTH_MARKER_ICONS: Record<string, string> = {
 /** Human-readable labels for Health types */
 export const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
+  CHC: 'CHC',
+  PHC: 'PHC',
+  SC: 'SC',
+  UAAM: 'UAAM',
+  UPHC: 'UPHC',
   HEALTH_CENTRE: 'Health Centre',
   OTHER: 'Other',
 };

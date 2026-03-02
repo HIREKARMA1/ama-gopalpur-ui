@@ -979,6 +979,7 @@ export default function DepartmentAdminPage() {
                           ulb_block: newHealthOrg.block_ulb || null,
                           gp_name: newHealthOrg.gp_ward || null,
                           ward_village: newHealthOrg.village || null,
+                          category: newHealthOrg.category || null,
                         } as Record<string, string | number | null>,
                       };
                       let updated: Organization;
