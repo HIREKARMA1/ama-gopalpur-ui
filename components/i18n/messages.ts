@@ -25,6 +25,11 @@ export type MessageKey =
   | 'map.edu.higherSecondary'
   | 'map.edu.college'
   | 'map.edu.university'
+  | 'map.edu.sub.school'
+  | 'map.edu.sub.engineeringCollege'
+  | 'map.edu.sub.iti'
+  | 'map.edu.sub.university'
+  | 'map.edu.sub.diplomaCollege'
   | 'map.health.hospital'
   | 'map.health.chc'
   | 'map.health.phc'
@@ -234,6 +239,11 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.edu.higherSecondary': { en: 'Higher Secondary', or: 'ଉଚ୍ଚ ମାଧ୍ୟମିକ' },
   'map.edu.college': { en: 'College', or: 'ମହାବିଦ୍ୟାଳୟ' },
   'map.edu.university': { en: 'University', or: 'ବିଶ୍ୱବିଦ୍ୟାଳୟ' },
+  'map.edu.sub.school': { en: 'School', or: 'ବିଦ୍ୟାଳୟ' },
+  'map.edu.sub.engineeringCollege': { en: 'Engineering College', or: 'ଇଞ୍ଜିନିୟରିଂ କଲେଜ' },
+  'map.edu.sub.iti': { en: 'ITI', or: 'ଆଇ.ଟି.ଆଇ.' },
+  'map.edu.sub.university': { en: 'University', or: 'ବିଶ୍ୱବିଦ୍ୟାଳୟ' },
+  'map.edu.sub.diplomaCollege': { en: 'Diploma College', or: 'ଡିପ୍ଲୋମା କଲେଜ' },
   'map.health.hospital': { en: 'Hospital', or: 'ଡାକ୍ତରଖାନା' },
   'map.health.chc': { en: 'CHC', or: 'ଗୋଷ୍ଠୀ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
   'map.health.phc': { en: 'PHC', or: 'ପ୍ରାଥମିକ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },

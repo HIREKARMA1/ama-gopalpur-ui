@@ -17,6 +17,8 @@ import {
   DEFAULT_ZOOM,
   EDUCATION_MARKER_ICONS,
   EDUCATION_TYPE_LABELS,
+  EDUCATION_SUB_DEPT_LABELS,
+  EDUCATION_SUB_DEPT_MARKERS,
   AWC_MARKER_ICON,
   MARKER_COLORS,
   HEALTH_MARKER_ICONS,
@@ -38,6 +40,13 @@ const EDUCATION_TYPE_KEYS: Record<string, MessageKey> = {
   COLLEGE: 'map.edu.college',
   UNIVERSITY: 'map.edu.university',
 };
+const EDUCATION_SUB_DEPT_KEYS: Record<string, MessageKey> = {
+  SCHOOL: 'map.edu.sub.school',
+  ENGINEERING_COLLEGE: 'map.edu.sub.engineeringCollege',
+  ITI: 'map.edu.sub.iti',
+  UNIVERSITY: 'map.edu.sub.university',
+  DIPLOMA_COLLEGE: 'map.edu.sub.diplomaCollege',
+};
 const HEALTH_TYPE_KEYS: Record<string, MessageKey> = {
   HOSPITAL: 'map.health.hospital',
   CHC: 'map.health.chc',
@@ -56,6 +65,7 @@ export interface MapOrganization {
   latitude?: number | null;
   longitude?: number | null;
   address?: string | null;
+  sub_department?: string | null;
   attributes?: Record<string, string | number | null> | null;
 }
 
@@ -198,10 +208,11 @@ export function ConstituencyMap({
     []
   );
 
-  const getIconUrl = useCallback((type: string, attributes?: Record<string, any> | null) => {
+  const getIconUrl = useCallback((type: string, attributes?: Record<string, any> | null, subDept?: string | null) => {
     const code = selectedDepartmentCode?.toUpperCase();
     if (code === 'EDUCATION') {
-      return EDUCATION_MARKER_ICONS[type] || EDUCATION_MARKER_ICONS.PRIMARY_SCHOOL;
+      const sub = subDept?.toUpperCase();
+      return (sub && EDUCATION_SUB_DEPT_MARKERS[sub]) || EDUCATION_MARKER_ICONS[type] || EDUCATION_MARKER_ICONS.PRIMARY_SCHOOL;
     }
     if (code === 'HEALTH') {
       const category = (attributes?.category as string)?.toUpperCase();
@@ -214,9 +225,16 @@ export function ConstituencyMap({
   }, [selectedDepartmentCode]);
 
   const getTypeLabel = useCallback(
-    (type: string, lang: 'en' | 'or' = language, attributes?: Record<string, any> | null) => {
+    (type: string, lang: 'en' | 'or' = language, attributes?: Record<string, any> | null, subDept?: string | null) => {
       if (type === 'AWC') return t('map.awc.label', lang);
       const code = selectedDepartmentCode?.toUpperCase();
+      if (code === 'EDUCATION') {
+        const sub = subDept?.toUpperCase();
+        const subKey = sub ? EDUCATION_SUB_DEPT_KEYS[sub] : null;
+        if (subKey) return t(subKey, lang);
+        const eduKey = EDUCATION_TYPE_KEYS[type];
+        return eduKey ? t(eduKey, lang) : EDUCATION_TYPE_LABELS[type] || type.replace(/_/g, ' ');
+      }
       if (code === 'HEALTH') {
         const category = (attributes?.category as string)?.toUpperCase();
         const key = category ? HEALTH_TYPE_KEYS[category] : HEALTH_TYPE_KEYS[type];
@@ -231,11 +249,25 @@ export function ConstituencyMap({
   const filteredOrgs = useMemo(
     () => {
       const term = searchTerm.trim().toLowerCase();
-      if (!term) return orgsWithLocation;
-      return orgsWithLocation.filter((org) => {
+      let result = orgsWithLocation;
+
+      // Legend type filtering
+      if (legendFilterType) {
+        const code = selectedDepartmentCode?.toUpperCase();
+        if (code === 'HEALTH') {
+          result = result.filter((org) => (org.attributes?.category as string)?.toUpperCase() === legendFilterType);
+        } else if (code === 'EDUCATION') {
+          result = result.filter((org) => (org.sub_department || '').toUpperCase() === legendFilterType);
+        } else {
+          result = result.filter((org) => org.type === legendFilterType);
+        }
+      }
+
+      if (!term) return result;
+      return result.filter((org) => {
         const name = (org.name || '').toLowerCase();
         const address = (org.address || '').toLowerCase();
-        const typeLabel = getTypeLabel(org.type, language, org.attributes).toLowerCase();
+        const typeLabel = getTypeLabel(org.type, language, org.attributes, org.sub_department).toLowerCase();
         const attributesText = org.attributes
           ? Object.values(org.attributes)
             .filter((v) => v != null)
@@ -250,24 +282,10 @@ export function ConstituencyMap({
         );
       });
     },
-    [orgsWithLocation, searchTerm, getTypeLabel]
+    [orgsWithLocation, searchTerm, getTypeLabel, language, legendFilterType, selectedDepartmentCode]
   );
 
-  /** Apply legend filter: when user clicks a legend type, show only that type's markers */
-  const orgsToShow = useMemo(() => {
-    const code = selectedDepartmentCode?.toUpperCase();
-    if (!legendFilterType) return filteredOrgs;
-    if (code === 'EDUCATION' || code === 'HEALTH') {
-      return filteredOrgs.filter((org) => {
-        if (code === 'HEALTH') {
-          const cat = (org.attributes?.category as string)?.toUpperCase();
-          return cat === legendFilterType || org.type === legendFilterType;
-        }
-        return org.type === legendFilterType;
-      });
-    }
-    return filteredOrgs;
-  }, [filteredOrgs, legendFilterType, selectedDepartmentCode]);
+  const orgsToShow = filteredOrgs;
 
   const searchSuggestions = useMemo(
     () => {
@@ -496,7 +514,7 @@ export function ConstituencyMap({
                 key={org.id}
                 position={{ lat: org.latitude, lng: org.longitude }}
                 title={org.name}
-                icon={getIconUrl(org.type, org.attributes)}
+                icon={getIconUrl(org.type, org.attributes, org.sub_department)}
                 onClick={() => {
                   setInfoWindowOrg(org);
                 }}
@@ -536,7 +554,7 @@ export function ConstituencyMap({
               <div className="min-w-[180px] max-w-[260px] py-1">
                 <p className="font-semibold text-gray-900">{infoWindowOrg.name}</p>
                 <p className="text-xs text-gray-600">
-                  {getTypeLabel(infoWindowOrg.type, language, infoWindowOrg.attributes)}
+                  {getTypeLabel(infoWindowOrg.type, language, infoWindowOrg.attributes, infoWindowOrg.sub_department)}
                 </p>
                 {infoWindowOrg.type === 'AWC' && infoWindowOrg.attributes && (
                   <p className="mt-1 text-xs text-gray-500">
@@ -567,10 +585,11 @@ export function ConstituencyMap({
         </GoogleMap>
       </div>
       {selectedDepartmentCode?.toUpperCase() === 'EDUCATION' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[300px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {Object.entries(EDUCATION_TYPE_LABELS).map(([type]) => {
+            {Object.entries(EDUCATION_SUB_DEPT_LABELS).map(([sub, label]) => {
+              const type = sub; // sub is used as filter type here
               const isSelected = legendFilterType === type;
               return (
                 <li key={type}>
@@ -578,26 +597,20 @@ export function ConstituencyMap({
                     type="button"
                     onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
                     className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
-                    title={isSelected ? 'Show all' : `Show only ${getTypeLabel(type, language)}`}
+                    title={isSelected ? 'Show all' : `Show only ${t(EDUCATION_SUB_DEPT_KEYS[type] as any, language)}`}
                   >
                     <span
                       className="inline-block h-2 w-2 rounded-full shrink-0"
                       style={{
                         backgroundColor:
-                          type === 'PRIMARY_SCHOOL'
-                            ? '#ea4335'
-                            : type === 'UPPER_PRIMARY_SCHOOL'
-                              ? '#4285f4'
-                              : type === 'HIGH_SCHOOL'
-                                ? '#34a853'
-                                : type === 'HIGHER_SECONDARY'
-                                  ? '#fb8c00'
-                                  : type === 'COLLEGE'
-                                    ? '#9c27b0'
-                                    : '#f9ab00',
+                          type === 'SCHOOL' ? '#ea4335' :
+                            type === 'ENGINEERING_COLLEGE' ? '#1967d2' :
+                              type === 'ITI' ? '#34a853' :
+                                type === 'UNIVERSITY' ? '#fbbc04' :
+                                  type === 'DIPLOMA_COLLEGE' ? '#9c27b0' : '#ea4335',
                       }}
                     />
-                    {getTypeLabel(type, language)}
+                    {t(EDUCATION_SUB_DEPT_KEYS[type] as any, language)}
                   </button>
                 </li>
               );
