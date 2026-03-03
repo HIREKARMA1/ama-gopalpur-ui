@@ -336,7 +336,8 @@ export type MessageKey =
   | 'map.legend.showOnly'
   | 'map.info.sector'
   | 'map.info.gp'
-  | 'map.info.block';
+  | 'map.info.block'
+  | 'map.electricity.office';
 
 const messages: Record<MessageKey, { en: string; or: string }> = {
   'govBar.title': {
@@ -742,6 +743,7 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.info.sector': { en: 'Sector', or: 'ସେକ୍ଟର' },
   'map.info.gp': { en: 'GP', or: 'ଜି.ପି.' },
   'map.info.block': { en: 'Block', or: 'ବ୍ଲକ' },
+  'map.electricity.office': { en: 'Electricity Office', or: 'ବିଦ୍ୟୁତ କାର୍ଯ୍ୟାଳୟ' },
   'login.email': {
     en: 'Email',
     or: 'ଇମେଲ୍',

@@ -101,9 +101,11 @@ function createDepartmentSvgIcon(deptCode: string, fillColor: string): string {
         ? 'H'
         : deptCode === 'AWC_ICDS' || deptCode === 'ICDS'
           ? 'A'
-          : deptCode === 'ROADS'
-            ? 'R'
-            : 'D';
+          : deptCode === 'ELECTRICITY'
+            ? 'E'
+            : deptCode === 'ROADS'
+              ? 'R'
+              : 'D';
 
   const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
@@ -311,7 +313,7 @@ export function ConstituencyMap({
         return key ? t(key, lang) : category || type.replace(/_/g, ' ');
       }
       if (code === 'ELECTRICITY') {
-        return ELECTRICITY_TYPE_LABEL;
+        return t('map.electricity.office', lang);
       }
       const eduKey = EDUCATION_TYPE_KEYS[type];
       return eduKey ? t(eduKey, lang) : EDUCATION_TYPE_LABELS[type] || type.replace(/_/g, ' ');
@@ -331,6 +333,9 @@ export function ConstituencyMap({
           result = result.filter((org) => (org.attributes?.category as string)?.toUpperCase() === legendFilterType);
         } else if (code === 'EDUCATION') {
           result = result.filter((org) => (org.sub_department || '').toUpperCase() === legendFilterType);
+        } else if (code === 'ELECTRICITY') {
+          // Only one electricity type at present; legend click is visual only
+          // so we don't further filter markers here.
         } else {
           result = result.filter((org) => org.type === legendFilterType);
         }
@@ -701,12 +706,30 @@ export function ConstituencyMap({
         </div>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'ELECTRICITY' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[220px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
-          <p className="flex items-center gap-2 text-slate-700">
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-yellow-400" />
-            {ELECTRICITY_TYPE_LABEL}
-          </p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            <li>
+              <button
+                type="button"
+                onClick={() =>
+                  setLegendFilterType((prev) => (prev === ELECTRICITY_TYPE_LABEL ? null : ELECTRICITY_TYPE_LABEL))
+                }
+                className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${legendFilterType === ELECTRICITY_TYPE_LABEL
+                    ? 'ring-1 ring-slate-400 bg-slate-100 font-medium'
+                    : 'hover:bg-slate-50'
+                  }`}
+                title={
+                  legendFilterType === ELECTRICITY_TYPE_LABEL
+                    ? t('map.legend.showAll', language)
+                    : `${t('map.legend.showOnly', language)} ${t('map.electricity.office', language)}`
+                }
+              >
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-yellow-400" />
+                {t('map.electricity.office', language)}
+              </button>
+            </li>
+          </ul>
         </div>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'HEALTH' && orgsWithLocation.length > 0 && (
