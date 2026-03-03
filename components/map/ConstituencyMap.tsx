@@ -22,6 +22,7 @@ import {
   AWC_MARKER_ICON,
   MARKER_COLORS,
   HEALTH_MARKER_ICONS,
+  DEPARTMENT_MARKER_ICONS,
   HEALTH_TYPE_LABELS,
   getRoadType,
   ROAD_TYPE_COLORS,
@@ -88,6 +89,40 @@ interface ConstituencyMapProps {
 }
 
 const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
+
+/** Build a circular SVG marker with a department initial in the center. */
+function createDepartmentSvgIcon(deptCode: string, fillColor: string): string {
+  const initial =
+    deptCode === 'EDUCATION'
+      ? 'E'
+      : deptCode === 'HEALTH'
+        ? 'H'
+        : deptCode === 'AWC_ICDS' || deptCode === 'ICDS'
+          ? 'A'
+          : deptCode === 'ROADS'
+            ? 'R'
+            : 'D';
+
+  const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="rgba(15,23,42,0.5)"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <circle cx="20" cy="16" r="10" fill="${fillColor}" />
+    <circle cx="20" cy="16" r="10" fill="url(#grad)" opacity="0.9"/>
+    <circle cx="20" cy="16" r="10" fill="${fillColor}" />
+    <text x="20" y="20" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" font-weight="700" fill="#ffffff">
+      ${initial}
+    </text>
+  </g>
+  <path d="M20 26 L18 30 L22 30 Z" fill="${fillColor}" />
+</svg>`;
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
 
 export function ConstituencyMap({
   selectedDepartmentCode,
@@ -208,21 +243,54 @@ export function ConstituencyMap({
     []
   );
 
-  const getIconUrl = useCallback((type: string, attributes?: Record<string, any> | null, subDept?: string | null) => {
-    const code = selectedDepartmentCode?.toUpperCase();
-    if (code === 'EDUCATION') {
-      const sub = subDept?.toUpperCase();
-      return (sub && EDUCATION_SUB_DEPT_MARKERS[sub]) || EDUCATION_MARKER_ICONS[type] || EDUCATION_MARKER_ICONS.PRIMARY_SCHOOL;
-    }
-    if (code === 'HEALTH') {
-      const category = (attributes?.category as string)?.toUpperCase();
-      return (category && HEALTH_MARKER_ICONS[category]) || HEALTH_MARKER_ICONS[type] || HEALTH_MARKER_ICONS.HEALTH_CENTRE;
-    }
-    if (code === 'AWC_ICDS' || code === 'ICDS' || type === 'AWC') {
-      return AWC_MARKER_ICON;
-    }
-    return MARKER_COLORS.red;
-  }, [selectedDepartmentCode]);
+  const getIconUrl = useCallback(
+    (type: string, attributes?: Record<string, any> | null, subDept?: string | null) => {
+      const code = selectedDepartmentCode?.toUpperCase();
+      if (!code) return MARKER_COLORS.red;
+
+      // EDUCATION – match legend colors exactly
+      if (code === 'EDUCATION') {
+        const sub = (subDept || '').toUpperCase();
+        const color =
+          sub === 'SCHOOL' ? '#ea4335' :
+            sub === 'ENGINEERING_COLLEGE' ? '#1967d2' :
+              sub === 'ITI' ? '#34a853' :
+                sub === 'UNIVERSITY' ? '#fbbc04' :
+                  sub === 'DIPLOMA_COLLEGE' ? '#9c27b0' :
+                    '#ea4335';
+        return createDepartmentSvgIcon('EDUCATION', color);
+      }
+
+      // HEALTH – match legend colors exactly
+      if (code === 'HEALTH') {
+        const category = ((attributes?.category as string) || type || '').toUpperCase();
+        const color =
+          category === 'HOSPITAL' ? '#ea4335' :
+            category === 'CHC' ? '#1967d2' :
+              category === 'PHC' ? '#fbbc04' :
+                category === 'SC' ? '#34a853' :
+                  category === 'UAAM' ? '#ff9800' :
+                    category === 'UPHC' ? '#9c27b0' :
+                      category === 'HEALTH_CENTRE' ? '#1967d2' :
+                        '#34a853';
+        return createDepartmentSvgIcon('HEALTH', color);
+      }
+
+      // ICDS / AWC – single pink color, matching legend
+      if (code === 'AWC_ICDS' || code === 'ICDS' || type === 'AWC') {
+        return createDepartmentSvgIcon('AWC_ICDS', '#ec4899');
+      }
+
+      // Other departments – fall back to per-dept PNG icon if configured,
+      // otherwise a generic teal pin.
+      if (DEPARTMENT_MARKER_ICONS[code]) {
+        return DEPARTMENT_MARKER_ICONS[code];
+      }
+
+      return createDepartmentSvgIcon(code, '#0f766e');
+    },
+    [selectedDepartmentCode]
+  );
 
   const getTypeLabel = useCallback(
     (type: string, lang: 'en' | 'or' = language, attributes?: Record<string, any> | null, subDept?: string | null) => {
