@@ -388,15 +388,20 @@ export default function DepartmentAdminPage() {
       navItems={
         deptCode === 'ICDS' || deptCode === 'AWC_ICDS'
           ? [
-            { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
-            { href: '/admin/dept/snp', labelKey: 'super.sidebar.snp' },
-          ]
+              { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
+              { href: '/admin/dept/snp', labelKey: 'super.sidebar.snp' },
+            ]
           : deptCode === 'HEALTH'
-            ? [
+          ? [
               { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
               { href: '/admin/dept/health-monitoring', labelKey: 'health.monitoring.title' },
             ]
-            : [{ href: '/admin/dept', labelKey: 'super.sidebar.dashboard' }]
+          : deptCode === 'ELECTRICITY'
+          ? [
+              { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
+              { href: '/admin/dept/electricity-monitoring', labelKey: 'electricity.monitoring.title' },
+            ]
+          : [{ href: '/admin/dept', labelKey: 'super.sidebar.dashboard' }]
       }
       onLogout={() => {
         clearToken();
@@ -1270,7 +1275,7 @@ export default function DepartmentAdminPage() {
                       } else {
                         org = await organizationsApi.create({
                           department_id: me.department_id,
-                          type: 'ELECTRICITY_OFFICE',
+                          type: 'OTHER',
                           ...basePayload,
                         });
                         setOrgs((prev) => [org, ...prev]);

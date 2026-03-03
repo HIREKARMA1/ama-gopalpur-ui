@@ -516,14 +516,20 @@ export const electricityApi = {
   createDaily: (orgId: number, data: Partial<ElectricityDaily>) =>
     apiFetch<ElectricityDaily>(`${electricityBase(orgId)}/daily`, {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        ...data,
+        organization_id: orgId,
+      }),
     }),
   listMonthly: (orgId: number) =>
     apiFetch<ElectricityMonthly[]>(`${electricityBase(orgId)}/monthly`).catch(() => []),
   createMonthly: (orgId: number, data: Partial<ElectricityMonthly>) =>
     apiFetch<ElectricityMonthly>(`${electricityBase(orgId)}/monthly`, {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        ...data,
+        organization_id: orgId,
+      }),
     }),
 };
 
