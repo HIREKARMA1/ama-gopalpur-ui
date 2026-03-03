@@ -473,6 +473,137 @@ export interface EducationMonthlyProgress {
   [key: string]: unknown;
 }
 
+// ----- Electricity (organizations under Electricity department) -----
+const electricityBase = (orgId: number) => `/api/v1/electricity/organizations/${orgId}`;
+export const electricityApi = {
+  getProfile: (orgId: number) =>
+    apiFetch<Record<string, unknown>>(`${electricityBase(orgId)}/profile`).catch(() => ({})),
+  putProfile: (orgId: number, data: Record<string, unknown>) =>
+    apiFetch<Record<string, unknown>>(`${electricityBase(orgId)}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  getMaster: (orgId: number) =>
+    apiFetch<ElectricityMaster | null>(`${electricityBase(orgId)}/master`).catch(() => null),
+  putMaster: (orgId: number, data: Partial<ElectricityMaster>) =>
+    apiFetch<ElectricityMaster>(`${electricityBase(orgId)}/master`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  bulkCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/electricity/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+  listStaff: (orgId: number) =>
+    apiFetch<ElectricityStaff[]>(`${electricityBase(orgId)}/staff`).catch(() => []),
+  createStaff: (orgId: number, data: Partial<ElectricityStaff>) =>
+    apiFetch<ElectricityStaff>(`${electricityBase(orgId)}/staff`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  listDaily: (orgId: number, start?: string, end?: string) => {
+    let url = `${electricityBase(orgId)}/daily`;
+    const params = new URLSearchParams();
+    if (start) params.append('start_date', start);
+    if (end) params.append('end_date', end);
+    if (params.toString()) url += `?${params.toString()}`;
+    return apiFetch<ElectricityDaily[]>(url).catch(() => []);
+  },
+  createDaily: (orgId: number, data: Partial<ElectricityDaily>) =>
+    apiFetch<ElectricityDaily>(`${electricityBase(orgId)}/daily`, {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        organization_id: orgId,
+      }),
+    }),
+  listMonthly: (orgId: number) =>
+    apiFetch<ElectricityMonthly[]>(`${electricityBase(orgId)}/monthly`).catch(() => []),
+  createMonthly: (orgId: number, data: Partial<ElectricityMonthly>) =>
+    apiFetch<ElectricityMonthly>(`${electricityBase(orgId)}/monthly`, {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        organization_id: orgId,
+      }),
+    }),
+};
+
+export interface ElectricityMaster {
+  organization_id: number;
+  block_ulb?: string | null;
+  gp_ward?: string | null;
+  village_locality?: string | null;
+  institution_type?: string | null;
+  institution_id_code?: string | null;
+  ownership?: string | null;
+  full_address?: string | null;
+  in_charge_name?: string | null;
+  in_charge_contact?: string | null;
+  office_phone?: string | null;
+  office_email?: string | null;
+  voltage_level_primary?: number | null;
+  voltage_level_secondary?: number | null;
+  installed_capacity_mva?: number | null;
+  no_of_transformers?: number | null;
+  consumers_total?: number | null;
+  feeder_length_33kv?: number | null;
+  feeder_length_11kv?: number | null;
+  smart_meters_count?: number | null;
+  prepaid_meters_count?: number | null;
+  billing_efficiency_percent?: number | null;
+  hours_supply_urban?: number | null;
+  at_c_loss_percent?: number | null;
+  [key: string]: unknown;
+}
+
+export interface ElectricityStaff {
+  id: number;
+  organization_id: number;
+  staff_id?: string | null;
+  name?: string | null;
+  role?: string | null;
+  qualification?: string | null;
+  gender?: string | null;
+  contact?: string | null;
+  email?: string | null;
+  joining_date?: string | null;
+  employment_type?: string | null;
+}
+
+export interface ElectricityDaily {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  supply_hours_urban?: number | null;
+  supply_hours_rural?: number | null;
+  peak_load_mw?: number | null;
+  outages_count?: number | null;
+  outages_duration_min?: number | null;
+  complaints_received?: number | null;
+  complaints_resolved?: number | null;
+  remarks?: string | null;
+}
+
+export interface ElectricityMonthly {
+  id: number;
+  organization_id: number;
+  month: number;
+  year: number;
+  units_input_mu?: number | null;
+  units_billed_mu?: number | null;
+  revenue_billed_cr?: number | null;
+  revenue_collected_cr?: number | null;
+  at_c_loss_percent?: number | null;
+  billing_efficiency_percent?: number | null;
+  collection_efficiency_percent?: number | null;
+  remarks?: string | null;
+}
+
 export interface HealthDailyAttendance {
   id: number;
   organization_id: number;
