@@ -408,7 +408,7 @@ export function ConstituencyMap({
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => setShowSearchDropdown(true)}
               onClick={() => setShowSearchDropdown(true)}
-              placeholder={`Search ${selectedDepartmentCode === 'AWC_ICDS' ? 'ICDS' : selectedDepartmentCode.charAt(0).toUpperCase() + selectedDepartmentCode.slice(1).toLowerCase()}…`}
+              placeholder={t('map.search.placeholder', language).replace('{dept}', selectedDepartmentCode === 'AWC_ICDS' ? 'ICDS' : selectedDepartmentCode.charAt(0).toUpperCase() + selectedDepartmentCode.slice(1).toLowerCase())}
               className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
             />
             <button
@@ -423,7 +423,7 @@ export function ConstituencyMap({
               <div className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg z-30 text-sm">
                 {searchSuggestions.length === 0 && (
                   <div className="px-3 py-3 text-xs text-slate-500">
-                    No locations match your search yet.
+                    {t('map.search.noResults', language)}
                   </div>
                 )}
                 {searchSuggestions.map((org) => (
@@ -452,7 +452,7 @@ export function ConstituencyMap({
                     type="submit"
                     className="w-full px-3 py-2 text-left text-xs font-semibold text-primary border-t border-slate-100 hover:bg-slate-50"
                   >
-                    Search “{searchTerm.trim()}”
+                    {t('map.search.submit', language)} “{searchTerm.trim()}”
                   </button>
                 )}
               </div>
@@ -546,7 +546,7 @@ export function ConstituencyMap({
                 <div className="min-w-[200px] max-w-[280px] py-1">
                   <p className="font-semibold text-gray-900">{name}</p>
                   {code && <p className="text-xs text-gray-600">{ROAD_TYPE_LABELS[roadType]} · {code}</p>}
-                  {block && <p className="mt-1 text-xs text-gray-500">Block: {block}</p>}
+                  {block && <p className="mt-1 text-xs text-gray-500">{t('map.info.block', language)}: {block}</p>}
                 </div>
               </InfoWindow>
             );
@@ -566,9 +566,9 @@ export function ConstituencyMap({
                 </p>
                 {infoWindowOrg.type === 'AWC' && infoWindowOrg.attributes && (
                   <p className="mt-1 text-xs text-gray-500">
-                    Sector: {String(infoWindowOrg.attributes.sector || '–')}
+                    {t('map.info.sector', language)}: {String(infoWindowOrg.attributes.sector || '–')}
                     {(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village) && (
-                      <> · GP: {String(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village)}</>
+                      <> · {t('map.info.gp', language)}: {String(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village)}</>
                     )}
                   </p>
                 )}
@@ -605,7 +605,7 @@ export function ConstituencyMap({
                     type="button"
                     onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
                     className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
-                    title={isSelected ? 'Show all' : `Show only ${t(EDUCATION_SUB_DEPT_KEYS[type] as any, language)}`}
+                    title={isSelected ? t('map.legend.showAll', language) : `${t('map.legend.showOnly', language)} ${t(EDUCATION_SUB_DEPT_KEYS[type] as any, language)}`}
                   >
                     <span
                       className="inline-block h-2 w-2 rounded-full shrink-0"
@@ -658,7 +658,7 @@ export function ConstituencyMap({
                       type="button"
                       onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
                       className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
-                      title={isSelected ? 'Show all' : `Show only ${getTypeLabel(type, language)}`}
+                      title={isSelected ? t('map.legend.showAll', language) : `${t('map.legend.showOnly', language)} ${getTypeLabel(type, language)}`}
                     >
                       <span
                         className="inline-block h-2 w-2 rounded-full shrink-0"
@@ -693,7 +693,7 @@ export function ConstituencyMap({
                     type="button"
                     onClick={() => setRoadLegendFilterType((prev) => (prev === type ? null : type))}
                     className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
-                    title={isSelected ? 'Show all roads' : `Show only ${ROAD_TYPE_LABELS[type]}`}
+                    title={isSelected ? t('map.legend.showAll', language) : `${t('map.legend.showOnly', language)} ${ROAD_TYPE_LABELS[type]}`}
                   >
                     <span
                       className="inline-block h-2 w-3 rounded-sm shrink-0"

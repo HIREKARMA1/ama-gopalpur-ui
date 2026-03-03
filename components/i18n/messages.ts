@@ -167,7 +167,30 @@ export type MessageKey =
   | 'health.monitoring.patients.surgeries'
   | 'health.monitoring.patients.deliveries'
   | 'health.monitoring.patients.refIn'
-  | 'health.monitoring.patients.refOut';
+  | 'health.monitoring.patients.refOut'
+  | 'edu.tab.profile'
+  | 'edu.tab.academic'
+  | 'edu.tab.faculty'
+  | 'edu.tab.intake'
+  | 'edu.tab.infra'
+  | 'edu.tab.admin'
+  | 'edu.tab.placement'
+  | 'edu.dashboard.title'
+  | 'edu.dashboard.subtitle'
+  | 'edu.stat.totalIntake'
+  | 'edu.stat.placementPercent'
+  | 'edu.stat.highestPackage'
+  | 'edu.location.title'
+  | 'edu.location.subtitle'
+  | 'edu.details.title'
+  | 'map.search.placeholder'
+  | 'map.search.noResults'
+  | 'map.search.submit'
+  | 'map.legend.showAll'
+  | 'map.legend.showOnly'
+  | 'map.info.sector'
+  | 'map.info.gp'
+  | 'map.info.block';
 
 const messages: Record<MessageKey, { en: string; or: string }> = {
   'govBar.title': {
@@ -550,6 +573,29 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     en: 'Use your department admin credentials to manage organizations for your department.',
     or: 'ଆପଣଙ୍କ ବିଭାଗର ସଂସ୍ଥାଗୁଡିକ ପରିଚାଳନା କରିବାକୁ ବିଭାଗ ପ୍ରଶାସକ ପ୍ରମାଣପତ୍ର ବ୍ୟବହାର କରନ୍ତୁ।',
   },
+  'edu.tab.profile': { en: 'Facility Profile', or: 'ସଂସ୍ଥା ପ୍ରୋଫାଇଲ୍' },
+  'edu.tab.academic': { en: 'Academic', or: 'ଶିକ୍ଷାଗତ' },
+  'edu.tab.faculty': { en: 'Faculty', or: 'ଅଧ୍ୟାପକ/ଅଧ୍ୟାପିକା' },
+  'edu.tab.intake': { en: 'Intake', or: 'ନାମଲେଖା' },
+  'edu.tab.infra': { en: 'Infrastructure', or: 'ଭିତ୍ତିଭୂମି' },
+  'edu.tab.admin': { en: 'Administration', or: 'ପ୍ରଶାସନ' },
+  'edu.tab.placement': { en: 'Placement & Activities', or: 'ନିଯୁକ୍ତି ଏବଂ ଅନ୍ୟାନ୍ୟ' },
+  'edu.dashboard.title': { en: 'Education Facility Dashboard', or: 'ଶିକ୍ଷା ଅନୁଷ୍ଠାନ ଡ୍ୟାସବୋର୍ଡ' },
+  'edu.dashboard.subtitle': { en: 'Institution details and resources from available data', or: 'ଉପଲବ୍ଧ ତଥ୍ୟରୁ ଅନୁଷ୍ଠାନର ବିବରଣୀ ଏବଂ ସମ୍ପତ୍ତି' },
+  'edu.stat.totalIntake': { en: 'Total Intake', or: 'ମୋଟ ନାମଲେଖା' },
+  'edu.stat.placementPercent': { en: 'Placement Percentage', or: 'ନିଯୁକ୍ତି ପ୍ରତିଶତ' },
+  'edu.stat.highestPackage': { en: 'Highest Package (LPA)', or: 'ସର୍ବାଧିକ ପ୍ୟାକେଜ୍' },
+  'edu.location.title': { en: 'Institution Location', or: 'ଅନୁଷ୍ଠାନର ଅବସ୍ଥିତି' },
+  'edu.location.subtitle': { en: 'Geographic coordinates and mapping details', or: 'ଭୌଗୋଳିକ ସଂଯୋଜକ ଏବଂ ମାନଚିତ୍ର ବିବରଣୀ' },
+  'edu.details.title': { en: 'Institution Details', or: 'ଅନୁଷ୍ଠାନର ବିବରଣୀ' },
+  'map.search.placeholder': { en: 'Search {dept}…', or: '{dept} ସନ୍ଧାନ କରନ୍ତୁ…' },
+  'map.search.noResults': { en: 'No locations match your search yet.', or: 'ଆପଣଙ୍କ ସନ୍ଧାନ ସହିତ କୌଣସି ସ୍ଥାନ ମେଳ ଖାଉ ନାହିଁ' },
+  'map.search.submit': { en: 'Search', or: 'ସନ୍ଧାନ' },
+  'map.legend.showAll': { en: 'Show all', or: 'ସବୁ ଦେଖାନ୍ତୁ' },
+  'map.legend.showOnly': { en: 'Show only', or: 'କେବଳ ଦେଖାନ୍ତୁ' },
+  'map.info.sector': { en: 'Sector', or: 'ସେକ୍ଟର' },
+  'map.info.gp': { en: 'GP', or: 'ଜି.ପି.' },
+  'map.info.block': { en: 'Block', or: 'ବ୍ଲକ' },
   'login.email': {
     en: 'Email',
     or: 'ଇମେଲ୍',
