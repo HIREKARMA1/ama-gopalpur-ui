@@ -473,6 +473,46 @@ export interface EducationMonthlyProgress {
   [key: string]: unknown;
 }
 
+// ----- Electricity (organizations under Electricity department) -----
+const electricityBase = (orgId: number) => `/api/v1/electricity/organizations/${orgId}`;
+export const electricityApi = {
+  getProfile: (orgId: number) =>
+    apiFetch<Record<string, unknown>>(`${electricityBase(orgId)}/profile`).catch(() => ({})),
+  putProfile: (orgId: number, data: Record<string, unknown>) =>
+    apiFetch<Record<string, unknown>>(`${electricityBase(orgId)}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  bulkCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/organizations/electricity/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+};
+
+// ----- Drainage (organizations under Drainage department) -----
+const drainageBase = (orgId: number) => `/api/v1/drainage/organizations/${orgId}`;
+export const drainageApi = {
+  getProfile: (orgId: number) =>
+    apiFetch<Record<string, unknown>>(`${drainageBase(orgId)}/profile`).catch(() => ({})),
+  putProfile: (orgId: number, data: Record<string, unknown>) =>
+    apiFetch<Record<string, unknown>>(`${drainageBase(orgId)}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  bulkCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/drainage/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+};
+
 export interface HealthDailyAttendance {
   id: number;
   organization_id: number;

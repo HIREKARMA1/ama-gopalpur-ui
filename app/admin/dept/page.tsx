@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { authApi, organizationsApi, departmentsApi, profileApi, clearToken, getToken, educationApi, healthApi, Organization, User, Department, CenterProfile } from '../../../services/api';
+import { authApi, organizationsApi, departmentsApi, profileApi, clearToken, getToken, educationApi, healthApi, electricityApi, drainageApi, Organization, User, Department, CenterProfile } from '../../../services/api';
 import { SuperAdminDashboardLayout } from '../../../components/layout/SuperAdminDashboardLayout';
 import { useLanguage } from '../../../components/i18n/LanguageContext';
 import { t } from '../../../components/i18n/messages';
@@ -18,6 +18,9 @@ const EDUCATION_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF SCHOOL,SCHOOL ID,ESST YEAR,CATEGORY,I,II,III,IV,V,VI,VII,VIII,IX,X,DEO NAME,DEO CONTACT,BEO NAME,BEO CONTACT,BRCC NAME,BRCC CONTACT,CRCC NAME,CRCC CONTACT,NAME OF HM,CONTACT OF HM,NO OF TS,NO OF NTS,NO OF TGP(PCM),NO OF TGP(CBZ),NO OF TGT(ARTS),BUILDING STATUS,NO OF ROOMS,NO OF SMART CLASS ROOMS,SCIENCE LAB,TOILET(M),TOILET(F),RAMP,MEETING HALL,STAFF COMMON ROOM,NCC,NSS,JRC,ECO CLUB,LIBRARY,ICC HEAD NAME,ICC HEAD CONTACT,PLAY GROUND,CYCLE STAND,DRINKING WATER(TW),DRINKING WATER(TAP),DRINKING WATER(OVERHEAD TAP),DRINKING WATER(AQUAGUARD),LATITUDE,LONGITUDE,DESCRIPTION\n';
 const HEALTH_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,LATITUDE,LONGITUDE,NAME,INSTITUTION ID,CATEGORY,INST HEAD NAME,INST HEAD CONTACT,NO OF TS,NO OF NTS,NO OF MO,NO OF PHARMACIST,NO OF ANM,NO OF HEALTH WORKER,NO OF PATHOLOGY,NO OF CLERK,NO OF SWEEPER,NO OF NW,NO OF BED,NO OF ICU,X-RAY AVAILABILTY,CT-SCAN AVAILABILITY,AVAILABILITY OF PATHOLOGY TESTING,DESCRIPTION\n';
+
+const DRAINAGE_CSV_HEADER =
+  'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,DRAIN ID,DRAIN NAME,DRAIN TYPE,HIERARCHY LEVEL,PROJECT NAME,AUTHORITY,START LATITUDE,START LONGITUDE,END LATITUDE,END LONGITUDE,TOTAL LENGTH KM,CATCHMENT AREA SQKM,DRAIN WIDTH M,DRAIN DEPTH M,BED LEVEL M,TOP LEVEL M,DESIGN DISCHARGE M3S,FLOW DIRECTION,DRAIN CONSTRUCTION TYPE,OPEN OR COVERED,MATERIAL TYPE,EMBANKMENT TYPE,OUTFALL TYPE,OUTFALL NAME,SILTATION LEVEL,ENCROACHMENT STATUS,BLOCKAGE RISK LEVEL,FLOOD RISK LEVEL,MAINTENANCE FREQUENCY,NEARBY WATER BODY,NEARBY RIVER,WATER LOGGING AREA,SENSITIVE AREA SCHOOL HOSPITAL,FLOW SENSOR,WATER LEVEL SENSOR,SCADA INTEGRATED,REMARKS\n';
 
 const EDUCATION_ENGINEERING_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF COLLEGE,INSTITUTION ID,ESTABLISHED YEAR,CAMPUS AREA (ACRES),AFFILIATING UNIVERSITY,AUTONOMOUS (YES/NO),AUTONOMOUS SINCE YEAR,COLLEGE TYPE,PIN CODE,LATITUDE,LONGITUDE,PRINCIPAL NAME,PRINCIPAL CONTACT,PRINCIPAL EMAIL,COLLEGE PHONE,COLLEGE EMAIL,WEBSITE,AICTE APPROVAL(YES/NO),NAAC,NBA,NIRF RANKING,AARIIA-ATAL RANKING,B.TECH BRANCHES COUNT,M.TECH PROGRAMMES COUNT,PH.D. (YES/NO),DEPARTMENTS (COMMA SEPARATED),TOTAL INTAKE UG AUTOMOBILE ENGINEERING,TOTAL INTAKE UG CHEMICAL ENGINEERING,TOTAL INTAKE UG CIVIL ENGINEERING,TOTAL INTAKE UG COMPUTER SCIENCE ENGINEERING,TOTAL INTAKE UG ELECTRICAL ENGINEERING,TOTAL INTAKE UG ELECTRONICS & TELECOMMUNICATION ENGINEERING,TOTAL INTAKE UG MECHANICAL ENGINEERING,TOTAL INTAKE UG METALLURGICAL AND MATERIALS ENGINEERING,TOTAL INTAKE UG PRODUCTION ENGINEERING,TOTAL INTAKE PG DEPARTMENTS WISE (COMMA SEPARATED),TOTAL NO OF FACULTY AUTOMOBILE ENGINEERING,TOTAL NO OF FACULTY CHEMICAL ENGINEERING,TOTAL NO OF FACULTY CIVIL ENGINEERING,TOTAL NO OF FACULTY COMPUTER SCIENCE ENGINEERING,TOTAL NO OF FACULTY ELECTRICAL ENGINEERING,TOTAL NO OF FACULTY ELECTRONICS & TELECOMMUNICATION ENGINEERING,TOTAL NO OF FACULTY MECHANICAL ENGINEERING,TOTAL NO OF FACULTY METALLURGICAL AND MATERIALS ENGINEERING,TOTAL NO OF FACULTY PRODUCTION ENGINEERING,TOTAL NO OF FACULTY BASIC SCIENCE,TOTAL NO OF FACULTY HUMANITIES AND SOCIAL SCIENCE,NO OF CLASSROOMS,NO OF LABS BRACH WISE(COMMA SEPARATED),NO OF SMART CLASSROOMS,WORKSHOP,HOSTEL,HOSTEL CAPACITY BOYS,HOSTEL CAPACITY GIRLS,GUEST HOUSE,BANKING,CANTEEN,GYMNASIUM,WIFI AVAILABILITY,PLAYGROUND,GARDEN,TRANSPORT FASCILITY,PARKING FASCILITY,STAFF ACCOMMODATION,SECURITY,CCTV,RAMP (ACCESSIBILITY),DRINKING WATER,ELECTRICITY,NSS,NCC,IQAC,ICC,ICC HEAD NAME,ICC HEAD CONTACT,GRIEVANCE CELL HEAD,GRIEVANCE CELL HEAD CONTACT,ANTI-RAGGING CELL HEAD,ANTI-RAGGING CELL HEAD CONTACT,INNOVATION AND STARTUP FASCILITY,ROBOTICS CLUB,CULTURAL CLUBS,SPORTS AND ATHLETICS FASCILITY,E-MAGAZINE,TEQIP,RESEARCH PROJECTS COUNT,PATENTS COUNT,MOU COUNT,CENTRE OF EXCELLENCE(COMMA SEPARATED),INCUBATION CENTRE(AVAILABILITY),PLACEMENT CELL,PLACEMENT OFFICER NAME,PLACEMENT OFFICER CONTACT,PLACEMENT PERCENTAGE (LAST YEAR),HIGHEST PACKAGE (LPA),INTERNSHIP,NAME OF DEANS/PIC/FIC/OIC/REGISTRAR,SCHORLASHIP FASCILITY,NOTABLE AWARDS OR ACHIEVEMENTS,DESCRIPTION\n';
@@ -74,6 +77,7 @@ export default function DepartmentAdminPage() {
   const [orgProfiles, setOrgProfiles] = useState<Record<number, CenterProfile | null>>({});
   const [healthProfiles, setHealthProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [educationProfiles, setEducationProfiles] = useState<Record<number, Record<string, unknown>>>({});
+  const [drainageProfiles, setDrainageProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [icdsImageFile, setIcdsImageFile] = useState<File | null>(null);
   const [healthImageFile, setHealthImageFile] = useState<File | null>(null);
   const [educationImageFile, setEducationImageFile] = useState<File | null>(null);
@@ -104,6 +108,7 @@ export default function DepartmentAdminPage() {
   const [hasMore, setHasMore] = useState(true);
 
   const [editingHealthId, setEditingHealthId] = useState<number | null>(null);
+  const [editingDrainageId, setEditingDrainageId] = useState<number | null>(null);
   const emptyHealthOrg = () => ({
     block_ulb: '', gp_ward: '', village: '', latitude: '', longitude: '', name: '', institution_id: '', category: '',
     inst_head_name: '', inst_head_contact: '', no_of_ts: '', no_of_nts: '', no_of_mo: '', no_of_pharmacist: '',
@@ -130,6 +135,8 @@ export default function DepartmentAdminPage() {
   // Keys are snake_case versions of CSV column headers.
   const [eduFormValues, setEduFormValues] = useState<Record<string, string>>({});
   const [educationOtherImageFile, setEducationOtherImageFile] = useState<File | null>(null);
+  const [drainageFormValues, setDrainageFormValues] = useState<Record<string, string>>({});
+  const [drainageImageFile, setDrainageImageFile] = useState<File | null>(null);
 
   const _n = (s: string) => (s.trim() ? (Number(s) || undefined) : undefined);
   const _s = (s: string) => (s.trim() || undefined);
@@ -227,6 +234,23 @@ export default function DepartmentAdminPage() {
     return () => { cancelled = true; };
   }, [deptCode, orgs]);
 
+  useEffect(() => {
+    if (deptCode !== 'DRAINAGE' || orgs.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const profiles: Record<number, Record<string, unknown>> = {};
+      await Promise.all(
+        orgs.map(async (o) => {
+          if (cancelled) return;
+          const p = await drainageApi.getProfile(o.id);
+          profiles[o.id] = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
+        })
+      );
+      if (!cancelled) setDrainageProfiles(profiles);
+    })();
+    return () => { cancelled = true; };
+  }, [deptCode, orgs]);
+
   const handleDelete = async (id: number) => {
     if (!window.confirm('Delete this organization?')) return;
     try {
@@ -269,6 +293,11 @@ export default function DepartmentAdminPage() {
         }
       } else if (deptCode === 'HEALTH') {
         const result = await healthApi.bulkCsv(file);
+        if (result.errors?.length) {
+          setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
+        }
+      } else if (deptCode === 'DRAINAGE') {
+        const result = await drainageApi.bulkCsv(file);
         if (result.errors?.length) {
           setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
         }
@@ -331,6 +360,9 @@ export default function DepartmentAdminPage() {
     } else if (deptCode === 'HEALTH') {
       csvContent = HEALTH_CSV_HEADER;
       filename = 'health_template.csv';
+    } else if (deptCode === 'DRAINAGE') {
+      csvContent = DRAINAGE_CSV_HEADER;
+      filename = 'drainage_template.csv';
     } else {
       csvContent = ICDS_CSV_HEADER + 'RANGEILUNDA,BADAKUSASTHALLI,BADAGUMULA,BADA GUMULLA-I,,,19.270275,84.781087,,,,,,,,,,KAMALAPUR,412630\n';
       filename = 'icds_awc_template.csv';
@@ -416,7 +448,7 @@ export default function DepartmentAdminPage() {
               </section>
             )}
 
-            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && (
+            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'DRAINAGE' && (
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual AWC entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
@@ -606,6 +638,134 @@ export default function DepartmentAdminPage() {
                       className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
                     >
                       {creating ? 'Saving...' : editingOrgId ? 'Update AWC' : 'Save AWC'}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            )}
+
+            {deptCode === 'DRAINAGE' && (
+              <section className="rounded-lg border border-border bg-background p-4">
+                <h2 className="text-sm font-semibold text-text">Manual Drain entry</h2>
+                <p className="mt-1 text-xs text-text-muted">
+                  Add a single Drainage asset manually. Fields mirror the Drainage CSV columns.
+                </p>
+                <form
+                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!me?.department_id) {
+                      setError('Department is not set for this admin user.');
+                      return;
+                    }
+                    const headers = splitHeader(DRAINAGE_CSV_HEADER);
+                    const nameKey = snakeFromHeader('DRAIN NAME');
+                    const latKey = snakeFromHeader('START LATITUDE');
+                    const lngKey = snakeFromHeader('START LONGITUDE');
+                    const name = (drainageFormValues[nameKey] || '').trim();
+                    const latStr = drainageFormValues[latKey] || '';
+                    const lngStr = drainageFormValues[lngKey] || '';
+                    if (!name || !latStr.trim() || !lngStr.trim()) {
+                      setError('Drain Name, Start Latitude and Start Longitude are required.');
+                      return;
+                    }
+                    setCreating(true);
+                    setError(null);
+                    try {
+                      const lat = Number(latStr);
+                      const lng = Number(lngStr);
+                      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                        throw new Error('Start Latitude and Start Longitude must be valid numbers.');
+                      }
+                      const blockKey = snakeFromHeader('BLOCK/ULB');
+                      const gpKey = snakeFromHeader('GP/WARD');
+                      const villageKey = snakeFromHeader('VILLAGE/LOCALITY');
+                      const block = drainageFormValues[blockKey] || '';
+                      const gp = drainageFormValues[gpKey] || '';
+                      const village = drainageFormValues[villageKey] || '';
+                      const addressParts = [block, gp, village].filter((p) => p && p.trim());
+                      const basePayload = {
+                        name,
+                        latitude: lat,
+                        longitude: lng,
+                        address: addressParts.length ? addressParts.join(', ') : undefined,
+                        attributes: {
+                          ulb_block: block || null,
+                          gp_name: gp || null,
+                          ward_village: village || null,
+                        } as Record<string, string | number | null>,
+                      };
+                      let org: Organization;
+                      if (editingDrainageId) {
+                        org = await organizationsApi.update(editingDrainageId, basePayload);
+                        setOrgs((prev) => prev.map((o) => (o.id === org.id ? org : o)));
+                      } else {
+                        org = await organizationsApi.create({
+                          department_id: me.department_id,
+                          type: 'DRAINAGE',
+                          ...basePayload,
+                        });
+                        setOrgs((prev) => [org, ...prev]);
+                      }
+                      const profileData: Record<string, unknown> = {};
+                      headers.forEach((h) => {
+                        const key = snakeFromHeader(h);
+                        const val = drainageFormValues[key];
+                        if (val != null && String(val).trim() !== '') {
+                          profileData[key] = val;
+                        }
+                      });
+                      profileData[latKey] = lat;
+                      profileData[lngKey] = lng;
+                      await drainageApi.putProfile(org.id, profileData);
+                      if (drainageImageFile) {
+                        const compressed = await compressImage(drainageImageFile, { maxSizeMB: 0.5 });
+                        await organizationsApi.uploadCoverImage(org.id, compressed);
+                        setDrainageImageFile(null);
+                      }
+                      setDrainageProfiles((prev) => ({ ...prev, [org.id]: profileData }));
+                      setDrainageFormValues({});
+                      setEditingDrainageId(null);
+                    } catch (err: any) {
+                      setError(err.message || 'Failed to save drainage organization');
+                    } finally {
+                      setCreating(false);
+                    }
+                  }}
+                >
+                  {splitHeader(DRAINAGE_CSV_HEADER).map((header) => {
+                    const key = snakeFromHeader(header);
+                    return (
+                      <div key={key} className="space-y-1">
+                        <label className="block text-text">{header}</label>
+                        <input
+                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                          value={drainageFormValues[key] ?? ''}
+                          onChange={(e) =>
+                            setDrainageFormValues((prev) => ({ ...prev, [key]: e.target.value }))
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+
+                  <div className="md:col-span-2 space-y-1">
+                    <label className="block text-text font-medium">Profile Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="w-full text-xs text-text file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                      onChange={(e) => setDrainageImageFile(e.target.files?.[0] || null)}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <button
+                      type="submit"
+                      disabled={creating}
+                      className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                    >
+                      {creating ? 'Saving...' : editingDrainageId ? 'Update Drain' : 'Save Drain'}
                     </button>
                   </div>
                 </form>
@@ -1190,7 +1350,9 @@ export default function DepartmentAdminPage() {
                     : 'Upload Education CSV for the selected sub-department. Organizations and profiles will be created or updated by name and location.'
                   : deptCode === 'HEALTH'
                     ? 'Upload Health minister CSV. Organizations and profiles will be created or updated by NAME, LATITUDE, LONGITUDE.'
-                    : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
+                    : deptCode === 'DRAINAGE'
+                      ? 'Upload Drainage CSV. Drains will be created or updated by DRAIN NAME, START LATITUDE, START LONGITUDE.'
+                      : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
               </p>
               <div className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center md:justify-between">
                 <button
@@ -1236,9 +1398,11 @@ export default function DepartmentAdminPage() {
                             : 'Institution Name'
                           : deptCode === 'HEALTH'
                             ? 'Facility Name'
-                            : 'AWC Name'}
+                            : deptCode === 'DRAINAGE'
+                              ? 'Drain Name'
+                              : 'AWC Name'}
                       </th>
-                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH') && (
+                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'DRAINAGE') && (
                         <>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
@@ -1258,6 +1422,13 @@ export default function DepartmentAdminPage() {
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">AWH contact</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Sector</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">LGD Code</th>
+                        </>
+                      )}
+                      {deptCode === 'DRAINAGE' && (
+                        <>
+                          {splitHeader(DRAINAGE_CSV_HEADER).filter(h => h !== 'DRAIN NAME').map((header) => (
+                            <th key={header} className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">{header}</th>
+                          ))}
                         </>
                       )}
                       {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
@@ -1364,7 +1535,7 @@ export default function DepartmentAdminPage() {
                   </thead>
                   <tbody>
                     {orgs.map((o, idx) => {
-                      const prof = orgProfiles[o.id];
+                      const prof = deptCode === 'DRAINAGE' ? (drainageProfiles[o.id] as Record<string, unknown> | undefined) : orgProfiles[o.id];
                       const hp = healthProfiles[o.id];
                       const ep = educationProfiles[o.id];
                       const _ = (v: string | number | null | undefined | unknown) => (v != null && String(v).trim() !== '' ? String(v) : '—');
@@ -1372,7 +1543,7 @@ export default function DepartmentAdminPage() {
                         <tr key={o.id} className="border-b border-border/60">
                           <td className="px-2 py-1 text-text-muted">{page * PAGE_SIZE + idx + 1}</td>
                           <td className="px-2 py-1">{o.name}</td>
-                          {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH') && (
+                          {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'DRAINAGE') && (
                             <>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ulb_block ?? prof?.block_name)}</td>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_name ?? prof?.gram_panchayat)}</td>
@@ -1392,6 +1563,19 @@ export default function DepartmentAdminPage() {
                               <td className="px-2 py-1 text-text-muted">{_(prof?.awh_contact_no)}</td>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.sector ?? prof?.sector)}</td>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.lgd_code)}</td>
+                            </>
+                          )}
+                          {deptCode === 'DRAINAGE' && (
+                            <>
+                              {splitHeader(DRAINAGE_CSV_HEADER).filter(h => h !== 'DRAIN NAME').map((header) => {
+                                const key = snakeFromHeader(header);
+                                const val = prof ? (prof as Record<string, unknown>)[key] : undefined;
+                                return (
+                                  <td key={key} className="px-2 py-1 text-text-muted">
+                                    {val != null && String(val).trim() !== '' ? String(val) : '—'}
+                                  </td>
+                                );
+                              })}
                             </>
                           )}
                           {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
@@ -1512,7 +1696,7 @@ export default function DepartmentAdminPage() {
                           )}
                           <td className="px-2 py-1 space-x-1">
                             <Link href={`/organizations/${o.id}`} className="rounded border border-primary/50 px-2 py-0.5 text-[11px] text-primary hover:bg-primary/10">View profile</Link>
-                            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && (
+                            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'DRAINAGE' && (
                               <button
                                 type="button"
                                 className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
@@ -1664,6 +1848,34 @@ export default function DepartmentAdminPage() {
                                     availability_of_pathology_testing: v(p?.availability_of_pathology_testing),
                                     description: v(p?.description),
                                   });
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                              >
+                                Edit
+                              </button>
+                            )}
+                            {deptCode === 'DRAINAGE' && (
+                              <button
+                                type="button"
+                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                onClick={async () => {
+                                  setEditingDrainageId(o.id);
+                                  const p = await drainageApi.getProfile(o.id) as Record<string, unknown> | undefined;
+                                  const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
+                                  const headers = splitHeader(DRAINAGE_CSV_HEADER);
+                                  const values: Record<string, string> = {};
+                                  headers.forEach((h) => {
+                                    const key = snakeFromHeader(h);
+                                    const raw = p?.[key] ?? o.attributes?.[key];
+                                    values[key] = v(raw);
+                                  });
+                                  const latKey = snakeFromHeader('START LATITUDE');
+                                  const lngKey = snakeFromHeader('START LONGITUDE');
+                                  if (!values[latKey] && o.latitude != null) values[latKey] = String(o.latitude);
+                                  if (!values[lngKey] && o.longitude != null) values[lngKey] = String(o.longitude);
+                                  const nameKey = snakeFromHeader('DRAIN NAME');
+                                  if (!values[nameKey]) values[nameKey] = o.name;
+                                  setDrainageFormValues(values);
                                   window.scrollTo({ top: 0, behavior: 'smooth' });
                                 }}
                               >
