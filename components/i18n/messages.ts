@@ -16,6 +16,7 @@ export type MessageKey =
   | 'dept.health'
   | 'dept.icds'
   | 'dept.roads'
+  | 'dept.electricity'
   | 'shell.departmentsTab'
   | 'map.legend'
   | 'map.viewProfile'
@@ -147,6 +148,7 @@ export type MessageKey =
   | 'super.admins.empty'
   | 'super.error.loadFailed'
   | 'health.monitoring.title'
+  | 'electricity.monitoring.title'
   | 'health.monitoring.subtitle'
   | 'health.monitoring.attendance.title'
   | 'health.monitoring.medicine.title'
@@ -182,6 +184,151 @@ export type MessageKey =
   | 'edu.location.title'
   | 'edu.location.subtitle'
   | 'edu.details.title'
+  | 'electricity.dashboard.title'
+  | 'electricity.dashboard.subtitle'
+  | 'electricity.details.title'
+  | 'electricity.tab.profile'
+  | 'electricity.tab.staff'
+  | 'electricity.top.powerStatus'
+  | 'electricity.top.transformers'
+  | 'electricity.top.complaintsToday'
+  | 'electricity.top.avgResolution'
+  | 'electricity.status.noData'
+  | 'electricity.status.available'
+  | 'electricity.status.partial'
+  | 'electricity.status.outage'
+  | 'electricity.stat.officeName'
+  | 'electricity.stat.blockUlb'
+  | 'electricity.stat.gpWard'
+  | 'electricity.stat.locality'
+  | 'electricity.stat.type'
+  | 'electricity.stat.capacity'
+  | 'electricity.stat.voltage'
+  | 'electricity.stat.coordinates'
+  | 'electricity.main.voltagePrimary'
+  | 'electricity.main.totalFeeders'
+  | 'electricity.main.totalConsumers'
+  | 'electricity.main.atcLoss'
+  | 'electricity.ops.title'
+  | 'electricity.ops.subtitle'
+  | 'electricity.ops.dailySupplyTitle'
+  | 'electricity.ops.dailySupplySubtitle'
+  | 'electricity.ops.legend.urban'
+  | 'electricity.ops.legend.rural'
+  | 'electricity.ops.bar.urban'
+  | 'electricity.ops.bar.rural'
+  | 'electricity.ops.dailyComplaintTitle'
+  | 'electricity.ops.dailyComplaintSubtitle'
+  | 'electricity.ops.line.received'
+  | 'electricity.ops.line.resolved'
+  | 'electricity.monthly.title'
+  | 'electricity.monthly.col.month'
+  | 'electricity.monthly.col.units'
+  | 'electricity.monthly.col.revenue'
+  | 'electricity.monthly.col.loss'
+  | 'electricity.monthly.col.efficiency'
+  | 'electricity.monthly.empty'
+  | 'electricity.map.title'
+  | 'electricity.map.subtitle'
+  | 'electricity.map.loading'
+  | 'electricity.staff.empty'
+  | 'electricity.staff.role.inCharge'
+  | 'electricity.staff.role.engineer'
+  | 'electricity.staff.role.technical'
+  | 'electricity.staff.role.lineman'
+  | 'electricity.staff.role.admin'
+  | 'electricity.group.adminOrg'
+  | 'electricity.group.locationContact'
+  | 'electricity.group.technicalInfra'
+  | 'electricity.group.serviceConsumer'
+  | 'electricity.group.performanceBilling'
+  | 'electricity.group.staffingCoverage'
+  | 'electricity.group.assetsFacilities'
+  | 'electricity.group.financialsRecords'
+  | 'electricity.field.institutionType'
+  | 'electricity.field.institutionIdCode'
+  | 'electricity.field.ownership'
+  | 'electricity.field.parentOrganization'
+  | 'electricity.field.hierarchyLevel'
+  | 'electricity.field.hostInstitution'
+  | 'electricity.field.establishedYear'
+  | 'electricity.field.commissionedYearSubstations'
+  | 'electricity.field.fullAddress'
+  | 'electricity.field.pinCode'
+  | 'electricity.field.latitude'
+  | 'electricity.field.longitude'
+  | 'electricity.field.inChargeName'
+  | 'electricity.field.inChargeDesignation'
+  | 'electricity.field.inChargeContact'
+  | 'electricity.field.inChargeEmail'
+  | 'electricity.field.officePhone'
+  | 'electricity.field.officeEmail'
+  | 'electricity.field.website'
+  | 'electricity.field.officeHours'
+  | 'electricity.field.voltageLevelPrimary'
+  | 'electricity.field.voltageLevelSecondary'
+  | 'electricity.field.installedCapacity'
+  | 'electricity.field.noOfTransformers'
+  | 'electricity.field.transformerRatings'
+  | 'electricity.field.noOfIncomingFeeders'
+  | 'electricity.field.noOfOutgoingFeeders'
+  | 'electricity.field.totalFeedersLabel'
+  | 'electricity.field.baysCount'
+  | 'electricity.field.switchgearType'
+  | 'electricity.field.feeder33kvLength'
+  | 'electricity.field.feeder11kvLength'
+  | 'electricity.field.ltLineLength'
+  | 'electricity.field.noOfDistributionTransformers'
+  | 'electricity.field.dtTotalCapacity'
+  | 'electricity.field.tollFreeNumber'
+  | 'electricity.field.helplineAvailable'
+  | 'electricity.field.consumersUnderJurisdiction'
+  | 'electricity.field.consumersDomestic'
+  | 'electricity.field.consumersCommercial'
+  | 'electricity.field.consumersIndustrial'
+  | 'electricity.field.consumersAgricultural'
+  | 'electricity.field.consumersOther'
+  | 'electricity.field.htConsumers'
+  | 'electricity.field.ltConsumers'
+  | 'electricity.field.connectedLoad'
+  | 'electricity.field.atcLossPercent'
+  | 'electricity.field.billingEfficiencyPercent'
+  | 'electricity.field.collectionEfficiencyPercent'
+  | 'electricity.field.hoursSupplyRural'
+  | 'electricity.field.hoursSupplyUrban'
+  | 'electricity.field.complaintsRegisteredLastYear'
+  | 'electricity.field.complaintsRedressedLastYear'
+  | 'electricity.field.consumerCareCounter'
+  | 'electricity.field.billingFacility'
+  | 'electricity.field.onlinePayment'
+  | 'electricity.field.mobileApp'
+  | 'electricity.field.onlineComplaintPortal'
+  | 'electricity.field.customerCareEmail'
+  | 'electricity.field.grievanceRedressalForum'
+  | 'electricity.field.totalStaff'
+  | 'electricity.field.engineersCountLabel'
+  | 'electricity.field.technicalStaffCountLabel'
+  | 'electricity.field.linemanCount'
+  | 'electricity.field.contractStaffCount'
+  | 'electricity.field.adminOfficeStaffCount'
+  | 'electricity.field.villagesCovered'
+  | 'electricity.field.gpsCovered'
+  | 'electricity.field.areaCoveredSqKm'
+  | 'electricity.field.buildingType'
+  | 'electricity.field.totalFloorsLabel'
+  | 'electricity.field.officeAreaSqFt'
+  | 'electricity.field.trainingCenter'
+  | 'electricity.field.trainingCapacitySeats'
+  | 'electricity.field.workshopGarage'
+  | 'electricity.field.store'
+  | 'electricity.field.dgSet'
+  | 'electricity.field.solar'
+  | 'electricity.field.vehiclesCountLabel'
+  | 'electricity.field.twoWheelersCount'
+  | 'electricity.field.annualRevenueCr'
+  | 'electricity.field.billingCrLastYear'
+  | 'electricity.field.dataAsOn'
+  | 'electricity.field.remarksDescriptionLabel'
   | 'map.search.placeholder'
   | 'map.search.noResults'
   | 'map.search.submit'
@@ -247,6 +394,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'dept.roads': {
     en: 'Roads',
     or: 'ରାସ୍ତା',
+  },
+  'dept.electricity': {
+    en: 'Electricity',
+    or: 'ବିଦ୍ୟୁତ',
   },
   'map.legend': {
     en: 'Legend',
@@ -734,6 +885,590 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'health.monitoring.title': {
     en: 'Daily Health Monitoring',
     or: 'ଦୈନିକ ସ୍ୱାସ୍ଥ୍ୟ ଅନୁମାନ',
+  },
+  'electricity.monitoring.title': {
+    en: 'Electricity Operations Monitoring',
+    or: 'ବିଦ୍ୟୁତ ସେବା ନିରୀକ୍ଷଣ',
+  },
+  'electricity.dashboard.title': {
+    en: 'Electricity Portfolio Dashboard',
+    or: 'ବିଦ୍ୟୁତ ପୋର୍ଟଫୋଲିଓ ଡ୍ୟାସବୋର୍ଡ',
+  },
+  'electricity.dashboard.subtitle': {
+    en: 'Power infrastructure and operational metrics for this office.',
+    or: 'ଏହି କାର୍ଯ୍ୟାଳୟ ପାଇଁ ବିଦ୍ୟୁତ ପାଇପ୍ରଣାଳୀ ଓ କାର୍ଯ୍ୟପାଳନ ସଂକେତ।',
+  },
+  'electricity.details.title': {
+    en: 'Facility details',
+    or: 'ସୁବିଧା ବିବରଣୀ',
+  },
+  'electricity.tab.profile': {
+    en: 'Profile',
+    or: 'ପ୍ରୋଫାଇଲ',
+  },
+  'electricity.tab.staff': {
+    en: 'Staff & Contact',
+    or: 'କର୍ମଚାରୀ ଏବଂ ଯୋଗାଯୋଗ',
+  },
+  'electricity.top.powerStatus': {
+    en: 'Power Supply Status',
+    or: 'ବିଦ୍ୟୁତ ଯୋଗାଣ ଅବସ୍ଥା',
+  },
+  'electricity.top.transformers': {
+    en: 'Transformers Working',
+    or: 'ଟ୍ରାନ୍ସଫର୍ମାର କାର୍ଯ୍ୟରତ',
+  },
+  'electricity.top.complaintsToday': {
+    en: 'Fault Complaints Today',
+    or: 'ଆଜିର ତ୍ରୁଟି ଅଭିଯୋଗ',
+  },
+  'electricity.top.avgResolution': {
+    en: 'Avg Resolution Time',
+    or: 'ଔସତ ସମାଧାନ ସମୟ',
+  },
+  'electricity.status.noData': {
+    en: 'No data',
+    or: 'ତଥ୍ୟ ନାହିଁ',
+  },
+  'electricity.status.available': {
+    en: 'Available',
+    or: 'ପୂର୍ଣ୍ଣ ଯୋଗାଣ',
+  },
+  'electricity.status.partial': {
+    en: 'Partial',
+    or: 'ଆଂଶିକ ଯୋଗାଣ',
+  },
+  'electricity.status.outage': {
+    en: 'Outage',
+    or: 'ବିଦ୍ୟୁତ ବନ୍ଦ',
+  },
+  'electricity.stat.officeName': {
+    en: 'Office Name',
+    or: 'କାର୍ଯ୍ୟାଳୟ ନାମ',
+  },
+  'electricity.stat.blockUlb': {
+    en: 'Block / ULB',
+    or: 'ବ୍ଲକ୍ / ULB',
+  },
+  'electricity.stat.gpWard': {
+    en: 'GP / Ward',
+    or: 'ଗ୍ରାମପଞ୍ଚାୟତ / ୱାର୍ଡ',
+  },
+  'electricity.stat.locality': {
+    en: 'Locality',
+    or: 'ଅଞ୍ଚଳ',
+  },
+  'electricity.stat.type': {
+    en: 'Type',
+    or: 'ପ୍ରକାର',
+  },
+  'electricity.stat.capacity': {
+    en: 'Capacity',
+    or: 'କ୍ଷମତା',
+  },
+  'electricity.stat.voltage': {
+    en: 'Voltage',
+    or: 'ଭୋଲ୍ଟେଜ୍',
+  },
+  'electricity.stat.coordinates': {
+    en: 'Coordinates',
+    or: 'ଅବସ୍ଥାନ ନିର୍ଦ୍ଦେଶାଙ୍କ',
+  },
+  'electricity.main.voltagePrimary': {
+    en: 'Voltage Primary',
+    or: 'ପ୍ରାଥମିକ ଭୋଲ୍ଟେଜ୍',
+  },
+  'electricity.main.totalFeeders': {
+    en: 'Total Feeders',
+    or: 'ମୋଟ ଫିଡର',
+  },
+  'electricity.main.totalConsumers': {
+    en: 'Total Consumers',
+    or: 'ମୋଟ ଉପଭୋକ୍ତା',
+  },
+  'electricity.main.atcLoss': {
+    en: 'AT&C Loss',
+    or: 'AT&C କ୍ଷୟ',
+  },
+  'electricity.ops.title': {
+    en: 'Daily Operations Monitoring',
+    or: 'ଦୈନିକ କାର୍ଯ୍ୟ ସମୀକ୍ଷା',
+  },
+  'electricity.ops.subtitle': {
+    en: 'Operational data including supply hours, outages, and complaints resolution.',
+    or: 'ଯୋଗାଣ ଘଣ୍ଟା, ବନ୍ଦ ଅବସ୍ଥା ଓ ଅଭିଯୋଗ ସମାଧାନ ସହିତ କାର୍ଯ୍ୟ ସୂଚନା।',
+  },
+  'electricity.ops.dailySupplyTitle': {
+    en: 'Daily Supply Hours',
+    or: 'ଦୈନିକ ବିଦ୍ୟୁତ ଯୋଗାଣ (ଘଣ୍ଟା)',
+  },
+  'electricity.ops.dailySupplySubtitle': {
+    en: 'Urban vs rural supply (Last 15 records)',
+    or: 'ଶହର ଓ ଗ୍ରାମୀଣ ଯୋଗାଣ (ଶେଷ ୧୫ ତଥ୍ୟ)',
+  },
+  'electricity.ops.legend.urban': {
+    en: 'Urban',
+    or: 'ଶହର',
+  },
+  'electricity.ops.legend.rural': {
+    en: 'Rural',
+    or: 'ଗ୍ରାମୀଣ',
+  },
+  'electricity.ops.bar.urban': {
+    en: 'Urban supply',
+    or: 'ଶହର ଯୋଗାଣ',
+  },
+  'electricity.ops.bar.rural': {
+    en: 'Rural supply',
+    or: 'ଗ୍ରାମୀଣ ଯୋଗାଣ',
+  },
+  'electricity.ops.dailyComplaintTitle': {
+    en: 'Daily Complaint Status',
+    or: 'ଦୈନିକ ଅଭିଯୋଗ ସ୍ଥିତି',
+  },
+  'electricity.ops.dailyComplaintSubtitle': {
+    en: 'Complaints received vs resolved (Last 15 records)',
+    or: 'ପ୍ରାପ୍ତ ଓ ସମାଧାନ ହୋଇଥିବା ଅଭିଯୋଗ (ଶେଷ ୧୫ ତଥ୍ୟ)',
+  },
+  'electricity.ops.line.received': {
+    en: 'Complaints received',
+    or: 'ପ୍ରାପ୍ତ ଅଭିଯୋଗ',
+  },
+  'electricity.ops.line.resolved': {
+    en: 'Complaints resolved',
+    or: 'ସମାଧାନ ହୋଇଥିବା ଅଭିଯୋଗ',
+  },
+  'electricity.monthly.title': {
+    en: 'Financial & Performance Metrics',
+    or: 'ଆର୍ଥିକ ଓ କାର୍ଯ୍ୟଦକ୍ଷତା ସୂଚକ',
+  },
+  'electricity.monthly.col.month': {
+    en: 'Month/Year',
+    or: 'ମାସ/ବର୍ଷ',
+  },
+  'electricity.monthly.col.units': {
+    en: 'Units Billed (MU)',
+    or: 'ବିଲ୍ ଇଉନିଟ୍ (MU)',
+  },
+  'electricity.monthly.col.revenue': {
+    en: 'Revenue (Cr.)',
+    or: 'ଆୟ (କୋଟି ଟଙ୍କା)',
+  },
+  'electricity.monthly.col.loss': {
+    en: 'AT&C Loss %',
+    or: 'AT&C କ୍ଷୟ %',
+  },
+  'electricity.monthly.col.efficiency': {
+    en: 'Efficiency',
+    or: 'କାର୍ଯ୍ୟଦକ୍ଷତା',
+  },
+  'electricity.monthly.empty': {
+    en: 'No monthly records available',
+    or: 'କୌଣସି ମାସିକ ତଥ୍ୟ ଉପଲବ୍ଧ ନାହିଁ',
+  },
+  'electricity.map.title': {
+    en: 'Regional Office Location',
+    or: 'କ୍ଷେତ୍ରୀୟ କାର୍ଯ୍ୟାଳୟ ଅବସ୍ଥିତି',
+  },
+  'electricity.map.subtitle': {
+    en: 'Geographic location of the electricity establishment.',
+    or: 'ବିଦ୍ୟୁତ ସଂସ୍ଥାନର ଭୌଗୋଳିକ ଅବସ୍ଥାନ।',
+  },
+  'electricity.map.loading': {
+    en: 'Loading map…',
+    or: 'ମାନଚିତ୍ର ଲୋଡ୍ ହେଉଛି…',
+  },
+  'electricity.staff.empty': {
+    en: 'No staff information recorded',
+    or: 'କୌଣସି ସ୍ଟାଫ୍ ସମ୍ପର୍କିତ ତଥ୍ୟ ରହିନାହିଁ',
+  },
+  'electricity.staff.role.inCharge': {
+    en: 'In-charge',
+    or: 'ଇଂଚାର୍ଜ',
+  },
+  'electricity.staff.role.engineer': {
+    en: 'Engineer',
+    or: 'ଇଞ୍ଜିନିୟର',
+  },
+  'electricity.staff.role.technical': {
+    en: 'Technical Staff',
+    or: 'ତକନିକୀ କର୍ମଚାରୀ',
+  },
+  'electricity.staff.role.lineman': {
+    en: 'Lineman',
+    or: 'ଲାଇନମ୍ୟାନ୍',
+  },
+  'electricity.staff.role.admin': {
+    en: 'Admin Staff',
+    or: 'ପ୍ରଶାସନିକ କର୍ମଚାରୀ',
+  },
+  'electricity.group.adminOrg': {
+    en: 'Administration & Organization',
+    or: 'ପ୍ରଶାସନ ଏବଂ ସଂଗଠନ',
+  },
+  'electricity.group.locationContact': {
+    en: 'Location & Primary Contact',
+    or: 'ଅବସ୍ଥାନ ଏବଂ ପ୍ରାଥମିକ ଯୋଗାଯୋଗ',
+  },
+  'electricity.group.technicalInfra': {
+    en: 'Technical Infrastructure',
+    or: 'ତକନିକୀ ଢାଞ୍ଚା',
+  },
+  'electricity.group.serviceConsumer': {
+    en: 'Service & Consumer Metrics',
+    or: 'ସେବା ଏବଂ ଉପଭୋକ୍ତା ସୂଚକ',
+  },
+  'electricity.group.performanceBilling': {
+    en: 'Performance & Billing',
+    or: 'କାର୍ଯ୍ୟଦକ୍ଷତା ଏବଂ ବିଲିଂ',
+  },
+  'electricity.group.staffingCoverage': {
+    en: 'Staffing & Coverage',
+    or: 'କର୍ମଚାରୀ ଏବଂ ଆବର୍ତ୍ତନ',
+  },
+  'electricity.group.assetsFacilities': {
+    en: 'Assets & Facilities',
+    or: 'ସମ୍ପତ୍ତି ଏବଂ ସୁବିଧା',
+  },
+  'electricity.group.financialsRecords': {
+    en: 'Financials & Records',
+    or: 'ଆର୍ଥିକ ଏବଂ ରେକର୍ଡ',
+  },
+  'electricity.field.institutionType': {
+    en: 'Institution type',
+    or: 'ସଂସ୍ଥାର ପ୍ରକାର',
+  },
+  'electricity.field.institutionIdCode': {
+    en: 'Institution ID/Code',
+    or: 'ସଂସ୍ଥା ID/କୋଡ୍',
+  },
+  'electricity.field.ownership': {
+    en: 'Ownership',
+    or: 'ମାଲିକାନା',
+  },
+  'electricity.field.parentOrganization': {
+    en: 'Parent organization',
+    or: 'ମୂଳ ସଂଗଠନ',
+  },
+  'electricity.field.hierarchyLevel': {
+    en: 'Hierarchy level',
+    or: 'ସିଢ଼ିକ୍ରମ ସ୍ତର',
+  },
+  'electricity.field.hostInstitution': {
+    en: 'Host institution (if training centre)',
+    or: 'ହୋଷ୍ଟ ସଂସ୍ଥା (ଯଦି ପ୍ରଶିକ୍ଷଣ କେନ୍ଦ୍ର)',
+  },
+  'electricity.field.establishedYear': {
+    en: 'Established year',
+    or: 'ସ୍ଥାପିତ ବର୍ଷ',
+  },
+  'electricity.field.commissionedYearSubstations': {
+    en: 'Commissioned year (substations)',
+    or: 'କାର୍ଯ୍ୟରତ ବର୍ଷ (ସବ୍-ଷ୍ଟେସନ୍)',
+  },
+  'electricity.field.fullAddress': {
+    en: 'Full address',
+    or: 'ପୂର୍ଣ୍ଣ ଠିକଣା',
+  },
+  'electricity.field.pinCode': {
+    en: 'PIN code',
+    or: 'ପିନ୍ କୋଡ୍',
+  },
+  'electricity.field.latitude': {
+    en: 'Latitude',
+    or: 'ଅକ୍ଷାଂଶ',
+  },
+  'electricity.field.longitude': {
+    en: 'Longitude',
+    or: 'ଦ୍ରାଘିମାଂଶ',
+  },
+  'electricity.field.inChargeName': {
+    en: 'In-charge name',
+    or: 'ଇଂଚାର୍ଜ ନାମ',
+  },
+  'electricity.field.inChargeDesignation': {
+    en: 'In-charge designation',
+    or: 'ଇଂଚାର୍ଜ ପଦବୀ',
+  },
+  'electricity.field.inChargeContact': {
+    en: 'In-charge contact',
+    or: 'ଇଂଚାର୍ଜ ଯୋଗାଯୋଗ',
+  },
+  'electricity.field.inChargeEmail': {
+    en: 'In-charge email',
+    or: 'ଇଂଚାର୍ଜ ଇମେଲ୍',
+  },
+  'electricity.field.officePhone': {
+    en: 'Office phone',
+    or: 'କାର୍ଯ୍ୟାଳୟ ଫୋନ୍',
+  },
+  'electricity.field.officeEmail': {
+    en: 'Office email',
+    or: 'କାର୍ଯ୍ୟାଳୟ ଇମେଲ୍',
+  },
+  'electricity.field.website': {
+    en: 'Website',
+    or: 'ଵେବସାଇଟ୍',
+  },
+  'electricity.field.officeHours': {
+    en: 'Office hours',
+    or: 'କାର୍ଯ୍ୟାଳୟ ସମୟ',
+  },
+  'electricity.field.voltageLevelPrimary': {
+    en: 'Voltage level – primary (kV)',
+    or: 'ଭୋଲ୍ଟେଜ୍ ସ୍ତର – ପ୍ରାଥମିକ (kV)',
+  },
+  'electricity.field.voltageLevelSecondary': {
+    en: 'Voltage level – secondary (kV)',
+    or: 'ଭୋଲ୍ଟେଜ୍ ସ୍ତର – ଦ୍ୱିତୀୟ (kV)',
+  },
+  'electricity.field.installedCapacity': {
+    en: 'Installed capacity (MVA)',
+    or: 'ସ୍ଥାପିତ କ୍ଷମତା (MVA)',
+  },
+  'electricity.field.noOfTransformers': {
+    en: 'No. of transformers',
+    or: 'ଟ୍ରାନ୍ସଫର୍ମାର ସଂଖ୍ୟା',
+  },
+  'electricity.field.transformerRatings': {
+    en: 'Transformer ratings MVA (comma separated)',
+    or: 'ଟ୍ରାନ୍ସଫର୍ମାର କ୍ଷମତା MVA (କମା ଦ୍ୱାରା ବିଭକ୍ତ)',
+  },
+  'electricity.field.noOfIncomingFeeders': {
+    en: 'No. of incoming feeders',
+    or: 'ଇନକମିଂ ଫିଡର ସଂଖ୍ୟା',
+  },
+  'electricity.field.noOfOutgoingFeeders': {
+    en: 'No. of outgoing feeders',
+    or: 'ଆଉଟଗୋଇଂ ଫିଡର ସଂଖ୍ୟା',
+  },
+  'electricity.field.totalFeedersLabel': {
+    en: 'Total feeders',
+    or: 'ମୋଟ ଫିଡର',
+  },
+  'electricity.field.baysCount': {
+    en: 'Bays (count)',
+    or: 'ବେ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.switchgearType': {
+    en: 'Switchgear type (GIS/AIS/Hybrid)',
+    or: 'ସ୍ୱିଚଗିୟର ପ୍ରକାର (GIS/AIS/Hybrid)',
+  },
+  'electricity.field.feeder33kvLength': {
+    en: '33kV feeder length (km)',
+    or: '33kV ଫିଡର ଲମ୍ବ (କି.ମି.)',
+  },
+  'electricity.field.feeder11kvLength': {
+    en: '11kV feeder length (km)',
+    or: '11kV ଫିଡର ଲମ୍ବ (କି.ମି.)',
+  },
+  'electricity.field.ltLineLength': {
+    en: 'LT line length (km)',
+    or: 'LT ଲାଇନ୍ ଲମ୍ବ (କି.ମି.)',
+  },
+  'electricity.field.noOfDistributionTransformers': {
+    en: 'No. of distribution transformers (DTs)',
+    or: 'ଡିସ୍ଟ୍ରିବ୍ୟୁସନ୍ ଟ୍ରାନ୍ସଫର୍ମାର (DTs) ସଂଖ୍ୟା',
+  },
+  'electricity.field.dtTotalCapacity': {
+    en: 'DT total capacity (kVA)',
+    or: 'DT ମୋଟ କ୍ଷମତା (kVA)',
+  },
+  'electricity.field.tollFreeNumber': {
+    en: 'Toll-free / customer care number',
+    or: 'ଟୋଲ୍-ଫ୍ରି / କଷ୍ଟମର୍ କେୟାର ନମ୍ବର',
+  },
+  'electricity.field.helplineAvailable': {
+    en: 'Helpline available (Yes/No)',
+    or: 'ହେଲ୍ପଲାଇନ୍ ଉପଲବ୍ଧ (ହଁ/ନା)',
+  },
+  'electricity.field.consumersUnderJurisdiction': {
+    en: 'Consumers under jurisdiction (approx)',
+    or: 'ଆଧିନସ୍ଥ ଉପଭୋକ୍ତା (ଆନୁମାନିକ)',
+  },
+  'electricity.field.consumersDomestic': {
+    en: 'Consumers – domestic (count)',
+    or: 'ଉପଭୋକ୍ତା – ଘରୋଇ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.consumersCommercial': {
+    en: 'Consumers – commercial (count)',
+    or: 'ଉପଭୋକ୍ତା – ବାଣିଜ୍ୟିକ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.consumersIndustrial': {
+    en: 'Consumers – industrial (count)',
+    or: 'ଉପଭୋକ୍ତା – ଶିଳ୍ପ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.consumersAgricultural': {
+    en: 'Consumers – agricultural (count)',
+    or: 'ଉପଭୋକ୍ତା – କୃଷି (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.consumersOther': {
+    en: 'Consumers – other (count)',
+    or: 'ଉପଭୋକ୍ତା – ଅନ୍ୟ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.htConsumers': {
+    en: 'HT consumers (count)',
+    or: 'HT ଉପଭୋକ୍ତା (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.ltConsumers': {
+    en: 'LT consumers (count)',
+    or: 'LT ଉପଭୋକ୍ତା (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.connectedLoad': {
+    en: 'Connected load (MW)',
+    or: 'ସଂଯୁକ୍ତ ଲୋଡ୍ (MW)',
+  },
+  'electricity.field.atcLossPercent': {
+    en: 'AT&C loss percent',
+    or: 'AT&C କ୍ଷୟ ପ୍ରତିଶତ',
+  },
+  'electricity.field.billingEfficiencyPercent': {
+    en: 'Billing efficiency percent',
+    or: 'ବିଲିଂ କାର୍ଯ୍ୟଦକ୍ଷତା ପ୍ରତିଶତ',
+  },
+  'electricity.field.collectionEfficiencyPercent': {
+    en: 'Collection efficiency percent',
+    or: 'ସଂଗ୍ରହ କାର୍ଯ୍ୟଦକ୍ଷତା ପ୍ରତିଶତ',
+  },
+  'electricity.field.hoursSupplyRural': {
+    en: 'Hours of supply – rural',
+    or: 'ଯୋଗାଣ ଘଣ୍ଟା – ଗ୍ରାମୀଣ',
+  },
+  'electricity.field.hoursSupplyUrban': {
+    en: 'Hours of supply – urban',
+    or: 'ଯୋଗାଣ ଘଣ୍ଟା – ଶହର',
+  },
+  'electricity.field.complaintsRegisteredLastYear': {
+    en: 'Complaints registered last year',
+    or: 'ଗତ ବର୍ଷ ତିରସ୍କୃତ ଅଭିଯୋଗ',
+  },
+  'electricity.field.complaintsRedressedLastYear': {
+    en: 'Complaints redressed last year',
+    or: 'ଗତ ବର୍ଷ ସମାଧାନ ହୋଇଥିବା ଅଭିଯୋଗ',
+  },
+  'electricity.field.consumerCareCounter': {
+    en: 'Consumer care counter (Yes/No)',
+    or: 'କନ୍ସୁମର୍ କେୟାର କାଉଣ୍ଟର (ହଁ/ନା)',
+  },
+  'electricity.field.billingFacility': {
+    en: 'Billing facility (Yes/No)',
+    or: 'ବିଲିଂ ସୁବିଧା (ହଁ/ନା)',
+  },
+  'electricity.field.onlinePayment': {
+    en: 'Online payment (Yes/No)',
+    or: 'ଅନଲାଇନ୍ ପେମେଣ୍ଟ (ହଁ/ନା)',
+  },
+  'electricity.field.mobileApp': {
+    en: 'Mobile app (Yes/No)',
+    or: 'ମୋବାଇଲ୍ ଆପ୍ (ହଁ/ନା)',
+  },
+  'electricity.field.onlineComplaintPortal': {
+    en: 'Online complaint portal (Yes/No)',
+    or: 'ଅନଲାଇନ୍ ଅଭିଯୋଗ ପୋର୍ଟାଲ୍ (ହଁ/ନା)',
+  },
+  'electricity.field.customerCareEmail': {
+    en: 'Customer care email',
+    or: 'କଷ୍ଟମର୍ କେୟାର ଇମେଲ୍',
+  },
+  'electricity.field.grievanceRedressalForum': {
+    en: 'Grievance redressal forum (Yes/No)',
+    or: 'ଅଭିଯୋଗ ନିରାକରଣ ଫୋରମ୍ (ହଁ/ନା)',
+  },
+  'electricity.field.totalStaff': {
+    en: 'Total staff (count)',
+    or: 'ମୋଟ କର୍ମଚାରୀ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.engineersCountLabel': {
+    en: 'Engineers (count)',
+    or: 'ଇଞ୍ଜିନିୟର (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.technicalStaffCountLabel': {
+    en: 'Technical staff (count)',
+    or: 'ତକନିକୀ କର୍ମଚାରୀ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.linemanCount': {
+    en: 'Lineman (count)',
+    or: 'ଲାଇନମ୍ୟାନ୍ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.contractStaffCount': {
+    en: 'Contract staff (count)',
+    or: 'ଠିକା କର୍ମଚାରୀ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.adminOfficeStaffCount': {
+    en: 'Admin/office staff (count)',
+    or: 'ପ୍ରଶାସନ / କାର୍ଯ୍ୟାଳୟ କର୍ମଚାରୀ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.villagesCovered': {
+    en: 'Villages/localities covered (count)',
+    or: 'ଆବର୍ତ୍ତନ ହୋଇଥିବା ଗ୍ରାମ/ଅଞ୍ଚଳ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.gpsCovered': {
+    en: 'GPs covered (count)',
+    or: 'ଆବର୍ତ୍ତନ ହୋଇଥିବା ଗ୍ରାମପଞ୍ଚାୟତ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.areaCoveredSqKm': {
+    en: 'Area covered (sq. km)',
+    or: 'ଆବର୍ତ୍ତନ ଅଞ୍ଚଳ (ଚ.କି.ମି.)',
+  },
+  'electricity.field.buildingType': {
+    en: 'Building type (own/rented)',
+    or: 'ଭବନ ପ୍ରକାର (ନିଜ/ଭଡା)',
+  },
+  'electricity.field.totalFloorsLabel': {
+    en: 'Total floors',
+    or: 'ମୋଟ ତଳ',
+  },
+  'electricity.field.officeAreaSqFt': {
+    en: 'Office area (sq. ft)',
+    or: 'କାର୍ଯ୍ୟାଳୟ କ୍ଷେତ୍ରଫଳ (ଚ.ଫୁଟ୍)',
+  },
+  'electricity.field.trainingCenter': {
+    en: 'Training centre (Yes/No)',
+    or: 'ପ୍ରଶିକ୍ଷଣ କେନ୍ଦ୍ର (ହଁ/ନା)',
+  },
+  'electricity.field.trainingCapacitySeats': {
+    en: 'Training capacity (seats)',
+    or: 'ପ୍ରଶିକ୍ଷଣ କ୍ଷମତା (ସୀଟ୍)',
+  },
+  'electricity.field.workshopGarage': {
+    en: 'Workshop/garage (Yes/No)',
+    or: 'ୱର୍କସପ୍ / ଗାରାଜ (ହଁ/ନା)',
+  },
+  'electricity.field.store': {
+    en: 'Store (Yes/No)',
+    or: 'ଷ୍ଟୋର୍ (ହଁ/ନା)',
+  },
+  'electricity.field.dgSet': {
+    en: 'DG set (Yes/No)',
+    or: 'DG ସେଟ୍ (ହଁ/ନା)',
+  },
+  'electricity.field.solar': {
+    en: 'Solar (Yes/No)',
+    or: 'ସୋଲାର (ହଁ/ନା)',
+  },
+  'electricity.field.vehiclesCountLabel': {
+    en: 'Vehicles (count)',
+    or: 'ଯାନବାହନ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.twoWheelersCount': {
+    en: 'Two-wheelers (count)',
+    or: 'ଦୁଇଚକିଆ ଯାନ (ସଂଖ୍ୟା)',
+  },
+  'electricity.field.annualRevenueCr': {
+    en: 'Annual revenue (Cr, approx)',
+    or: 'ବାର୍ଷିକ ଆୟ (କୋଟି, ଆନୁମାନିକ)',
+  },
+  'electricity.field.billingCrLastYear': {
+    en: 'Billing Cr last year',
+    or: 'ଗତ ବର୍ଷର ବିଲିଂ (କୋଟି)',
+  },
+  'electricity.field.dataAsOn': {
+    en: 'Data as on (YYYY-MM-DD)',
+    or: 'ତାରିଖ ଅନୁଯାୟୀ ତଥ୍ୟ (YYYY-MM-DD)',
+  },
+  'electricity.field.remarksDescriptionLabel': {
+    en: 'Remarks / description',
+    or: 'ମନ୍ତବ୍ୟ / ବିବରଣୀ',
   },
   'health.monitoring.subtitle': {
     en: 'Manage daily attendance, medicine stocks, and patient trends.',
