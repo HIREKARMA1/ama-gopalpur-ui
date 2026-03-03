@@ -128,7 +128,7 @@ export const HEALTH_TYPE_LABELS: Record<string, string> = {
 /** Electricity marker icon */
 export const ELECTRICITY_MARKER_ICON = MARKER_COLORS.yellow;
 
-/** Label for Electricity org type */
+/** Backend type for Electricity orgs; label now comes from i18n */
 export const ELECTRICITY_TYPE_LABEL = 'Electricity Office';
 
 /** Road types derived from name/code (NH, PWD, RD, etc.) for coloring */
