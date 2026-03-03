@@ -10,6 +10,7 @@ import {
   icdsApi,
   educationApi,
   healthApi,
+  watcoApi,
   Organization,
   Department,
   CenterProfile,
@@ -30,6 +31,7 @@ import { Loader } from '../../../components/common/Loader';
 import { AwcPortfolioDashboard } from '../../../components/organization/AwcPortfolioDashboard';
 import { EducationPortfolioDashboard } from '../../../components/organization/EducationPortfolioDashboard';
 import { HealthPortfolioDashboard } from '../../../components/organization/HealthPortfolioDashboard';
+import { WaterPortfolioDashboard } from '../../../components/organization/WaterPortfolioDashboard';
 
 const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
@@ -153,6 +155,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [healthDailyExtraData, setHealthDailyExtraData] = useState<Awaited<ReturnType<typeof healthApi.listDailyExtraData>>>([]);
   const [educationProfile, setEducationProfile] = useState<Record<string, unknown>>({});
   const [healthProfile, setHealthProfile] = useState<Record<string, unknown>>({});
+  const [waterProfile, setWaterProfile] = useState<Record<string, unknown>>({});
   const [snpDailyStock, setSnpDailyStock] = useState<Awaited<ReturnType<typeof icdsApi.listSnpDailyStock>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -227,6 +230,11 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           setHealthDailyAttendance(dailyAtt ?? []);
           setHealthDailyMedicineStock(dailyMed ?? []);
           setHealthDailyExtraData(dailyExtra ?? []);
+        } else if (code === 'WATCO_RWSS') {
+          const profile = await watcoApi.getProfile(id);
+          setWaterProfile(
+            profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
+          );
         } else {
           // AWC / ICDS or other: try center profile and SNP daily stock
           try {
@@ -319,6 +327,23 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           dailyMedicineStock={healthDailyMedicineStock}
           dailyExtraData={healthDailyExtraData}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
+          images={images}
+        />
+      </div>
+    );
+  }
+
+  if (deptCode === 'WATCO_RWSS') {
+    const galleryImages = Array.isArray((waterProfile as any)?.gallery_images)
+      ? ((waterProfile as any).gallery_images as string[])
+      : [];
+    const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
+    return (
+      <div className="page-container">
+        <Navbar />
+        <WaterPortfolioDashboard
+          org={org}
+          waterProfile={waterProfile}
           images={images}
         />
       </div>

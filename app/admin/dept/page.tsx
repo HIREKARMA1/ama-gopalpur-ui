@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { authApi, organizationsApi, departmentsApi, profileApi, clearToken, getToken, educationApi, healthApi, Organization, User, Department, CenterProfile } from '../../../services/api';
+import { authApi, organizationsApi, departmentsApi, profileApi, clearToken, getToken, educationApi, healthApi, watcoApi, Organization, User, Department, CenterProfile } from '../../../services/api';
 import { SuperAdminDashboardLayout } from '../../../components/layout/SuperAdminDashboardLayout';
 import { useLanguage } from '../../../components/i18n/LanguageContext';
 import { t } from '../../../components/i18n/messages';
@@ -18,6 +18,9 @@ const EDUCATION_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF SCHOOL,SCHOOL ID,ESST YEAR,CATEGORY,I,II,III,IV,V,VI,VII,VIII,IX,X,DEO NAME,DEO CONTACT,BEO NAME,BEO CONTACT,BRCC NAME,BRCC CONTACT,CRCC NAME,CRCC CONTACT,NAME OF HM,CONTACT OF HM,NO OF TS,NO OF NTS,NO OF TGP(PCM),NO OF TGP(CBZ),NO OF TGT(ARTS),BUILDING STATUS,NO OF ROOMS,NO OF SMART CLASS ROOMS,SCIENCE LAB,TOILET(M),TOILET(F),RAMP,MEETING HALL,STAFF COMMON ROOM,NCC,NSS,JRC,ECO CLUB,LIBRARY,ICC HEAD NAME,ICC HEAD CONTACT,PLAY GROUND,CYCLE STAND,DRINKING WATER(TW),DRINKING WATER(TAP),DRINKING WATER(OVERHEAD TAP),DRINKING WATER(AQUAGUARD),LATITUDE,LONGITUDE,DESCRIPTION\n';
 const HEALTH_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,LATITUDE,LONGITUDE,NAME,INSTITUTION ID,CATEGORY,INST HEAD NAME,INST HEAD CONTACT,NO OF TS,NO OF NTS,NO OF MO,NO OF PHARMACIST,NO OF ANM,NO OF HEALTH WORKER,NO OF PATHOLOGY,NO OF CLERK,NO OF SWEEPER,NO OF NW,NO OF BED,NO OF ICU,X-RAY AVAILABILTY,CT-SCAN AVAILABILITY,AVAILABILITY OF PATHOLOGY TESTING,DESCRIPTION\n';
+
+const WATCO_CSV_HEADER =
+  'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,STATION ID,STATION NAME,DIVISION,SUB-DIVISION,LOCATION,DISTRICT,STATE,LATITUDE,LONGITUDE,COMMISSIONING DATE,SCHEME NAME,POPULATION SERVED,SOURCE TYPE,SOURCE NAME,INTAKE CAPACITY (MLD),TURBIDITY,PH,TDS,HARDNESS,IRON,FLUORIDE,SEASONAL VARIATION NOTES,WTP TYPE,DESIGN CAPACITY (MLD),OPERATIONAL CAPACITY (MLD),FLASH MIXER,CLARIFLOCCULATOR,RSF UNITS,CHLORINATION SYSTEM,SLUDGE DISPOSAL METHOD,PUMP TYPE,NO. OF WORKING PUMPS,NO. OF STANDBY PUMPS,PUMP CAPACITY (M3/HR),HEAD (M),MOTOR RATING (KW),POWER SOURCE,DG CAPACITY (KVA),NO. OF ESR,ESR CAPACITY (KL),GLR CAPACITY (KL),TOTAL PIPELINE LENGTH (KM),PIPE MATERIAL,ZONES/DMAS,HOUSEHOLDS COVERED,TOTAL CONNECTIONS,SUPPLY HOURS/DAY,PER CAPITA SUPPLY (LPCD),NRW (%),COMPLAINTS/MONTH,CAPEX COST,ANNUAL O&M COST,ELECTRICITY COST/MONTH,CHEMICAL COST/MONTH,MANPOWER COST,REVENUE COLLECTION\n';
 
 const EDUCATION_ENGINEERING_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF COLLEGE,INSTITUTION ID,ESTABLISHED YEAR,CAMPUS AREA (ACRES),AFFILIATING UNIVERSITY,AUTONOMOUS (YES/NO),AUTONOMOUS SINCE YEAR,COLLEGE TYPE,PIN CODE,LATITUDE,LONGITUDE,PRINCIPAL NAME,PRINCIPAL CONTACT,PRINCIPAL EMAIL,COLLEGE PHONE,COLLEGE EMAIL,WEBSITE,AICTE APPROVAL(YES/NO),NAAC,NBA,NIRF RANKING,AARIIA-ATAL RANKING,B.TECH BRANCHES COUNT,M.TECH PROGRAMMES COUNT,PH.D. (YES/NO),DEPARTMENTS (COMMA SEPARATED),TOTAL INTAKE UG AUTOMOBILE ENGINEERING,TOTAL INTAKE UG CHEMICAL ENGINEERING,TOTAL INTAKE UG CIVIL ENGINEERING,TOTAL INTAKE UG COMPUTER SCIENCE ENGINEERING,TOTAL INTAKE UG ELECTRICAL ENGINEERING,TOTAL INTAKE UG ELECTRONICS & TELECOMMUNICATION ENGINEERING,TOTAL INTAKE UG MECHANICAL ENGINEERING,TOTAL INTAKE UG METALLURGICAL AND MATERIALS ENGINEERING,TOTAL INTAKE UG PRODUCTION ENGINEERING,TOTAL INTAKE PG DEPARTMENTS WISE (COMMA SEPARATED),TOTAL NO OF FACULTY AUTOMOBILE ENGINEERING,TOTAL NO OF FACULTY CHEMICAL ENGINEERING,TOTAL NO OF FACULTY CIVIL ENGINEERING,TOTAL NO OF FACULTY COMPUTER SCIENCE ENGINEERING,TOTAL NO OF FACULTY ELECTRICAL ENGINEERING,TOTAL NO OF FACULTY ELECTRONICS & TELECOMMUNICATION ENGINEERING,TOTAL NO OF FACULTY MECHANICAL ENGINEERING,TOTAL NO OF FACULTY METALLURGICAL AND MATERIALS ENGINEERING,TOTAL NO OF FACULTY PRODUCTION ENGINEERING,TOTAL NO OF FACULTY BASIC SCIENCE,TOTAL NO OF FACULTY HUMANITIES AND SOCIAL SCIENCE,NO OF CLASSROOMS,NO OF LABS BRACH WISE(COMMA SEPARATED),NO OF SMART CLASSROOMS,WORKSHOP,HOSTEL,HOSTEL CAPACITY BOYS,HOSTEL CAPACITY GIRLS,GUEST HOUSE,BANKING,CANTEEN,GYMNASIUM,WIFI AVAILABILITY,PLAYGROUND,GARDEN,TRANSPORT FASCILITY,PARKING FASCILITY,STAFF ACCOMMODATION,SECURITY,CCTV,RAMP (ACCESSIBILITY),DRINKING WATER,ELECTRICITY,NSS,NCC,IQAC,ICC,ICC HEAD NAME,ICC HEAD CONTACT,GRIEVANCE CELL HEAD,GRIEVANCE CELL HEAD CONTACT,ANTI-RAGGING CELL HEAD,ANTI-RAGGING CELL HEAD CONTACT,INNOVATION AND STARTUP FASCILITY,ROBOTICS CLUB,CULTURAL CLUBS,SPORTS AND ATHLETICS FASCILITY,E-MAGAZINE,TEQIP,RESEARCH PROJECTS COUNT,PATENTS COUNT,MOU COUNT,CENTRE OF EXCELLENCE(COMMA SEPARATED),INCUBATION CENTRE(AVAILABILITY),PLACEMENT CELL,PLACEMENT OFFICER NAME,PLACEMENT OFFICER CONTACT,PLACEMENT PERCENTAGE (LAST YEAR),HIGHEST PACKAGE (LPA),INTERNSHIP,NAME OF DEANS/PIC/FIC/OIC/REGISTRAR,SCHORLASHIP FASCILITY,NOTABLE AWARDS OR ACHIEVEMENTS,DESCRIPTION\n';
@@ -74,9 +77,12 @@ export default function DepartmentAdminPage() {
   const [orgProfiles, setOrgProfiles] = useState<Record<number, CenterProfile | null>>({});
   const [healthProfiles, setHealthProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [educationProfiles, setEducationProfiles] = useState<Record<number, Record<string, unknown>>>({});
+  const [waterProfiles, setWaterProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [icdsImageFile, setIcdsImageFile] = useState<File | null>(null);
   const [healthImageFile, setHealthImageFile] = useState<File | null>(null);
   const [educationImageFile, setEducationImageFile] = useState<File | null>(null);
+  const [waterFormValues, setWaterFormValues] = useState<Record<string, string>>({});
+  const [waterImageFile, setWaterImageFile] = useState<File | null>(null);
   const [newOrg, setNewOrg] = useState({
     ulb_block: '',
     gp_name: '',
@@ -227,6 +233,23 @@ export default function DepartmentAdminPage() {
     return () => { cancelled = true; };
   }, [deptCode, orgs]);
 
+  useEffect(() => {
+    if (deptCode !== 'WATCO_RWSS' || orgs.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const profiles: Record<number, Record<string, unknown>> = {};
+      await Promise.all(
+        orgs.map(async (o) => {
+          if (cancelled) return;
+          const p = await watcoApi.getProfile(o.id);
+          profiles[o.id] = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
+        })
+      );
+      if (!cancelled) setWaterProfiles(profiles);
+    })();
+    return () => { cancelled = true; };
+  }, [deptCode, orgs]);
+
   const handleDelete = async (id: number) => {
     if (!window.confirm('Delete this organization?')) return;
     try {
@@ -269,6 +292,11 @@ export default function DepartmentAdminPage() {
         }
       } else if (deptCode === 'HEALTH') {
         const result = await healthApi.bulkCsv(file);
+        if (result.errors?.length) {
+          setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
+        }
+      } else if (deptCode === 'WATCO_RWSS') {
+        const result = await watcoApi.bulkCsv(file);
         if (result.errors?.length) {
           setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
         }
@@ -331,6 +359,9 @@ export default function DepartmentAdminPage() {
     } else if (deptCode === 'HEALTH') {
       csvContent = HEALTH_CSV_HEADER;
       filename = 'health_template.csv';
+    } else if (deptCode === 'WATCO_RWSS') {
+      csvContent = WATCO_CSV_HEADER;
+      filename = 'watco_rwss_template.csv';
     } else {
       csvContent = ICDS_CSV_HEADER + 'RANGEILUNDA,BADAKUSASTHALLI,BADAGUMULA,BADA GUMULLA-I,,,19.270275,84.781087,,,,,,,,,,KAMALAPUR,412630\n';
       filename = 'icds_awc_template.csv';
@@ -416,7 +447,7 @@ export default function DepartmentAdminPage() {
               </section>
             )}
 
-            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && (
+            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'DRAINAGE' && deptCode !== 'WATCO_RWSS' && (
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual AWC entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
@@ -606,6 +637,123 @@ export default function DepartmentAdminPage() {
                       className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
                     >
                       {creating ? 'Saving...' : editingOrgId ? 'Update AWC' : 'Save AWC'}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            )}
+
+            {deptCode === 'WATCO_RWSS' && (
+              <section className="rounded-lg border border-border bg-background p-4">
+                <h2 className="text-sm font-semibold text-text">Manual Water scheme entry</h2>
+                <p className="mt-1 text-xs text-text-muted">
+                  Add a single WATCO/RWSS scheme manually. Fields mirror the key WATCO CSV columns.
+                </p>
+                <form
+                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!me?.department_id) {
+                      setError('Department is not set for this admin user.');
+                      return;
+                    }
+                    const nameKey = snakeFromHeader('STATION NAME');
+                    const latKey = snakeFromHeader('LATITUDE');
+                    const lngKey = snakeFromHeader('LONGITUDE');
+                    const name = (waterFormValues[nameKey] || '').trim();
+                    const latStr = waterFormValues[latKey] || '';
+                    const lngStr = waterFormValues[lngKey] || '';
+                    if (!name || !latStr.trim() || !lngStr.trim()) {
+                      setError('Station Name, Latitude and Longitude are required.');
+                      return;
+                    }
+                    setCreating(true);
+                    setError(null);
+                    try {
+                      const lat = Number(latStr);
+                      const lng = Number(lngStr);
+                      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                        throw new Error('Latitude and Longitude must be valid numbers.');
+                      }
+                      const block = waterFormValues[snakeFromHeader('BLOCK/ULB')] || '';
+                      const gp = waterFormValues[snakeFromHeader('GP/WARD')] || '';
+                      const village = waterFormValues[snakeFromHeader('VILLAGE/LOCALITY')] || '';
+                      const addressParts = [block, gp, village].filter((p) => p && p.trim());
+                      const basePayload = {
+                        name,
+                        latitude: lat,
+                        longitude: lng,
+                        address: addressParts.length ? addressParts.join(', ') : undefined,
+                        attributes: {
+                          ulb_block: block || null,
+                          gp_name: gp || null,
+                          ward_village: village || null,
+                        } as Record<string, string | number | null>,
+                      };
+
+                      const org = await organizationsApi.create({
+                        department_id: me.department_id,
+                        type: 'OTHER',
+                        ...basePayload,
+                      });
+                      setOrgs((prev) => [org, ...prev]);
+
+                      const profileData: Record<string, unknown> = {};
+                      splitHeader(WATCO_CSV_HEADER).forEach((header) => {
+                        const key = snakeFromHeader(header);
+                        const val = waterFormValues[key];
+                        if (val != null && String(val).trim() !== '') {
+                          profileData[key] = val;
+                        }
+                      });
+                      profileData[latKey] = lat;
+                      profileData[lngKey] = lng;
+                      profileData[nameKey] = name;
+                      await watcoApi.putProfile(org.id, profileData);
+                      if (waterImageFile) {
+                        const compressed = await compressImage(waterImageFile, { maxSizeMB: 0.5 });
+                        await organizationsApi.uploadCoverImage(org.id, compressed);
+                        setWaterImageFile(null);
+                      }
+                      setWaterFormValues({});
+                    } catch (err: any) {
+                      setError(err.message || 'Failed to save water scheme');
+                    } finally {
+                      setCreating(false);
+                    }
+                  }}
+                >
+                  {splitHeader(WATCO_CSV_HEADER).map((header) => {
+                    const key = snakeFromHeader(header);
+                    return (
+                      <div key={key} className="space-y-1">
+                        <label className="block text-text">{header}</label>
+                        <input
+                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                          value={waterFormValues[key] ?? ''}
+                          onChange={(e) =>
+                            setWaterFormValues((prev) => ({ prev, [key]: e.target.value, ...prev }))
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                  <div className="md:col-span-2 space-y-1">
+                    <label className="block text-text">Profile Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="w-full text-xs"
+                      onChange={(e) => setWaterImageFile(e.target.files?.[0] ?? null)}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <button
+                      type="submit"
+                      disabled={creating}
+                      className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                    >
+                      {creating ? 'Saving...' : 'Save scheme'}
                     </button>
                   </div>
                 </form>
@@ -1190,7 +1338,9 @@ export default function DepartmentAdminPage() {
                     : 'Upload Education CSV for the selected sub-department. Organizations and profiles will be created or updated by name and location.'
                   : deptCode === 'HEALTH'
                     ? 'Upload Health minister CSV. Organizations and profiles will be created or updated by NAME, LATITUDE, LONGITUDE.'
-                    : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
+                    : deptCode === 'WATCO_RWSS'
+                      ? 'Upload WATCO/RWSS water supply CSV. Schemes will be created or updated by STATION NAME, LATITUDE, LONGITUDE.'
+                      : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
               </p>
               <div className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center md:justify-between">
                 <button
@@ -1236,9 +1386,11 @@ export default function DepartmentAdminPage() {
                             : 'Institution Name'
                           : deptCode === 'HEALTH'
                             ? 'Facility Name'
-                            : 'AWC Name'}
+                            : deptCode === 'WATCO_RWSS'
+                              ? 'Station Name'
+                              : 'AWC Name'}
                       </th>
-                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH') && (
+                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'WATCO_RWSS') && (
                         <>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
@@ -1258,6 +1410,15 @@ export default function DepartmentAdminPage() {
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">AWH contact</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Sector</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">LGD Code</th>
+                        </>
+                      )}
+                      {deptCode === 'WATCO_RWSS' && (
+                        <>
+                          {splitHeader(WATCO_CSV_HEADER).filter(h => h !== 'STATION NAME').map((header) => (
+                            <th key={header} className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">
+                              {header}
+                            </th>
+                          ))}
                         </>
                       )}
                       {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
@@ -1367,12 +1528,13 @@ export default function DepartmentAdminPage() {
                       const prof = orgProfiles[o.id];
                       const hp = healthProfiles[o.id];
                       const ep = educationProfiles[o.id];
+                      const wp = waterProfiles[o.id];
                       const _ = (v: string | number | null | undefined | unknown) => (v != null && String(v).trim() !== '' ? String(v) : '—');
                       return (
                         <tr key={o.id} className="border-b border-border/60">
                           <td className="px-2 py-1 text-text-muted">{page * PAGE_SIZE + idx + 1}</td>
                           <td className="px-2 py-1">{o.name}</td>
-                          {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH') && (
+                          {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'WATCO_RWSS') && (
                             <>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ulb_block ?? prof?.block_name)}</td>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_name ?? prof?.gram_panchayat)}</td>
@@ -1392,6 +1554,19 @@ export default function DepartmentAdminPage() {
                               <td className="px-2 py-1 text-text-muted">{_(prof?.awh_contact_no)}</td>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.sector ?? prof?.sector)}</td>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.lgd_code)}</td>
+                            </>
+                          )}
+                          {deptCode === 'WATCO_RWSS' && (
+                            <>
+                              {splitHeader(WATCO_CSV_HEADER).filter(h => h !== 'STATION NAME').map((header) => {
+                                const key = snakeFromHeader(header);
+                                const val = wp ? (wp as Record<string, unknown>)[key] : undefined;
+                                return (
+                                  <td key={key} className="px-2 py-1 text-text-muted">
+                                    {val != null && String(val).trim() !== '' ? String(val) : '—'}
+                                  </td>
+                                );
+                              })}
                             </>
                           )}
                           {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (

@@ -248,6 +248,14 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     en: 'Roads',
     or: 'ରାସ୍ତା',
   },
+  'dept.drainage': {
+    en: 'Drainage',
+    or: 'ନିସ୍କାଷଣ',
+  },
+  'dept.water': {
+    en: 'Water Supply (WATCO/RWSS)',
+    or: 'ଜଳ ଯୋଗାଣ (WATCO/RWSS)',
+  },
   'map.legend': {
     en: 'Legend',
     or: 'ସୂଚନା',

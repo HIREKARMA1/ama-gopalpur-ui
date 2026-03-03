@@ -687,6 +687,26 @@ export interface HealthFacilityMaster {
   facility_status?: string | null;
   [key: string]: unknown;
 }
+
+// ----- WATCO/RWSS (water supply schemes under WATCO/RWSS department) -----
+const watcoBase = (orgId: number) => `/api/v1/watco/organizations/${orgId}`;
+export const watcoApi = {
+  getProfile: (orgId: number) =>
+    apiFetch<Record<string, unknown>>(`${watcoBase(orgId)}/profile`).catch(() => ({})),
+  putProfile: (orgId: number, data: Record<string, unknown>) =>
+    apiFetch<Record<string, unknown>>(`${watcoBase(orgId)}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  bulkCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/watco/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+};
 export interface HealthInfrastructure {
   id: number;
   organization_id: number;
