@@ -26,6 +26,8 @@ import {
   getRoadType,
   ROAD_TYPE_COLORS,
   ROAD_TYPE_LABELS,
+  ELECTRICITY_MARKER_ICON,
+  ELECTRICITY_TYPE_LABEL,
 } from '../../lib/mapConfig';
 import type { RoadTypeKey } from '../../lib/mapConfig';
 import type { MessageKey } from '../i18n/messages';
@@ -221,6 +223,9 @@ export function ConstituencyMap({
     if (code === 'AWC_ICDS' || code === 'ICDS' || type === 'AWC') {
       return AWC_MARKER_ICON;
     }
+    if (code === 'ELECTRICITY') {
+      return ELECTRICITY_MARKER_ICON;
+    }
     return MARKER_COLORS.red;
   }, [selectedDepartmentCode]);
 
@@ -239,6 +244,9 @@ export function ConstituencyMap({
         const category = (attributes?.category as string)?.toUpperCase();
         const key = category ? HEALTH_TYPE_KEYS[category] : HEALTH_TYPE_KEYS[type];
         return key ? t(key, lang) : category || type.replace(/_/g, ' ');
+      }
+      if (code === 'ELECTRICITY') {
+        return ELECTRICITY_TYPE_LABEL;
       }
       const eduKey = EDUCATION_TYPE_KEYS[type];
       return eduKey ? t(eduKey, lang) : EDUCATION_TYPE_LABELS[type] || type.replace(/_/g, ' ');
@@ -624,6 +632,15 @@ export function ConstituencyMap({
           <p className="flex items-center gap-2 text-slate-700">
             <span className="inline-block h-2.5 w-2.5 rounded-full bg-pink-500" />
             {t('map.awc.label', language)}
+          </p>
+        </div>
+      )}
+      {selectedDepartmentCode?.toUpperCase() === 'ELECTRICITY' && orgsWithLocation.length > 0 && (
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <p className="flex items-center gap-2 text-slate-700">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-yellow-400" />
+            {ELECTRICITY_TYPE_LABEL}
           </p>
         </div>
       )}

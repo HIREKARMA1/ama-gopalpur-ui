@@ -88,7 +88,85 @@ export function ElectricityPortfolioDashboard({
     images = [],
 }: ElectricityPortfolioDashboardProps) {
     const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY });
-    const [detailTab, setDetailTab] = useState<'profile' | 'resources'>('profile');
+    const [detailTab, setDetailTab] = useState<'profile' | 'resources' | 'full'>('profile');
+
+    const snakeFromHeader = (label: string): string =>
+        label
+            .trim()
+            .replace(/[-\s/]+/g, '_')
+            .replace(/[()]/g, '')
+            .replace(/[?]/g, '')
+            .toLowerCase()
+            .replace(/^_+|_+$/g, '');
+
+    const ELECTRICITY_GROUPS = [
+        {
+            title: "Administration & Organization",
+            fields: [
+                "INSTITUTION TYPE", "INSTITUTION ID/CODE", "OWNERSHIP", "PARENT ORGANIZATION",
+                "HIERARCHY LEVEL", "HOST INSTITUTION (IF TRAINING CENTER)", "ESTABLISHED YEAR", "COMMISSIONED YEAR (SUBSTATIONS)"
+            ]
+        },
+        {
+            title: "Location & Primary Contact",
+            fields: [
+                "FULL ADDRESS", "PIN CODE", "LATITUDE", "LONGITUDE", "IN-CHARGE NAME",
+                "IN-CHARGE DESIGNATION", "IN-CHARGE CONTACT", "IN-CHARGE EMAIL", "OFFICE PHONE",
+                "OFFICE EMAIL", "WEBSITE", "OFFICE HOURS"
+            ]
+        },
+        {
+            title: "Technical Infrastructure",
+            fields: [
+                "VOLTAGE LEVEL PRIMARY (kV)", "VOLTAGE LEVEL SECONDARY (kV)", "INSTALLED CAPACITY (MVA)",
+                "NO OF TRANSFORMERS", "TRANSFORMER RATINGS MVA (COMMA SEPARATED)", "NO OF INCOMING FEEDERS",
+                "NO OF OUTGOING FEEDERS", "TOTAL FEEDERS", "BAYS (COUNT)", "SWITCHGEAR TYPE (GIS/AIS/HYBRID)",
+                "33kV FEEDER LENGTH (KM)", "11kV FEEDER LENGTH (KM)", "LT LINE LENGTH (KM)",
+                "NO OF DISTRIBUTION TRANSFORMERS (DTs)", "DT TOTAL CAPACITY (kVA)"
+            ]
+        },
+        {
+            title: "Service & Consumer Metrics",
+            fields: [
+                "TOLL-FREE/CUSTOMER CARE NUMBER", "HELPLINE AVAILABLE (YES/NO)", "CONSUMERS UNDER JURISDICTION (APPROX)",
+                "CONSUMERS DOMESTIC (COUNT)", "CONSUMERS COMMERCIAL (COUNT)", "CONSUMERS INDUSTRIAL (COUNT)",
+                "CONSUMERS AGRICULTURAL (COUNT)", "CONSUMERS OTHER (COUNT)", "HT CONSUMERS (COUNT)",
+                "LT CONSUMERS (COUNT)", "CONNECTED LOAD (MW)"
+            ]
+        },
+        {
+            title: "Performance & Billing",
+            fields: [
+                "AT&C LOSS PERCENT", "BILLING EFFICIENCY PERCENT", "COLLECTION EFFICIENCY PERCENT",
+                "HOURS OF SUPPLY RURAL", "HOURS OF SUPPLY URBAN", "COMPLAINTS REGISTERED LAST YEAR",
+                "COMPLAINTS REDRESSED LAST YEAR", "CONSUMER CARE COUNTER (YES/NO)", "BILLING FACILITY (YES/NO)",
+                "ONLINE PAYMENT (YES/NO)", "MOBILE APP (YES/NO)", "ONLINE COMPLAINT PORTAL (YES/NO)",
+                "CUSTOMER CARE EMAIL", "GRIEVANCE REDRESSAL FORUM (YES/NO)"
+            ]
+        },
+        {
+            title: "Staffing & Coverage",
+            fields: [
+                "TOTAL STAFF (COUNT)", "ENGINEERS (COUNT)", "TECHNICAL STAFF (COUNT)", "LINEMEN (COUNT)",
+                "CONTRACT STAFF (COUNT)", "ADMIN/OFFICE STAFF (COUNT)", "VILLAGES/LOCALITIES COVERED (COUNT)",
+                "GPs COVERED (COUNT)", "AREA COVERED SQ KM"
+            ]
+        },
+        {
+            title: "Assets & Facilities",
+            fields: [
+                "BUILDING TYPE (OWN/RENTED)", "TOTAL FLOORS", "OFFICE AREA SQ FT", "TRAINING CENTER (YES/NO)",
+                "TRAINING CAPACITY SEATS", "WORKSHOP/GARAGE (YES/NO)", "STORE (YES/NO)", "DG SET (YES/NO)",
+                "SOLAR (YES/NO)", "VEHICLES (COUNT)", "TWO-WHEELERS (COUNT)"
+            ]
+        },
+        {
+            title: "Financials & Records",
+            fields: [
+                "ANNUAL REVENUE CR (APPROX)", "BILLING CR LAST YEAR", "DATA AS ON (YYYY-MM-DD)", "REMARKS/DESCRIPTION"
+            ]
+        }
+    ];
     const [monitorDate, setMonitorDate] = useState(new Date().toISOString().slice(0, 10));
 
     // Map center
@@ -182,6 +260,12 @@ export function ElectricityPortfolioDashboard({
                                 >
                                     <Users size={14} /> <span>Staff & Contact</span>
                                 </button>
+                                <button
+                                    onClick={() => setDetailTab('full')}
+                                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition ${detailTab === 'full' ? 'bg-white text-[#0f172a] shadow-sm' : 'text-[#64748b]'}`}
+                                >
+                                    <FileText size={14} /> <span>Detailed Specs</span>
+                                </button>
                             </div>
                         </div>
 
@@ -215,6 +299,31 @@ export function ElectricityPortfolioDashboard({
                                 {displayStaff.length === 0 && (
                                     <p className="col-span-full text-center text-slate-400 py-8 italic font-medium">No staff information recorded</p>
                                 )}
+                            </div>
+                        )}
+
+                        {detailTab === 'full' && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                {ELECTRICITY_GROUPS.map((group, gIdx) => (
+                                    <div key={gIdx} className="space-y-4">
+                                        <h3 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 flex items-center gap-2">
+                                            <div className="w-1.5 h-4 bg-yellow-400 rounded-full"></div>
+                                            {group.title}
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
+                                            {group.fields.map((field, fIdx) => {
+                                                const key = snakeFromHeader(field);
+                                                const val = profile[key];
+                                                return (
+                                                    <div key={fIdx} className="flex justify-between items-center py-1.5 border-b border-slate-100/50">
+                                                        <span className="text-[11px] text-slate-500 font-semibold">{field}</span>
+                                                        <span className="text-[11px] font-bold text-slate-800 text-right ml-4">{formatVal(val)}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>

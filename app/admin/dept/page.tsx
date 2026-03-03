@@ -241,7 +241,7 @@ export default function DepartmentAdminPage() {
       await Promise.all(
         orgs.map(async (o) => {
           if (cancelled) return;
-          const p = await electricityApi.getMaster(o.id);
+          const p = await electricityApi.getProfile(o.id);
           profiles[o.id] = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
         })
       );
@@ -447,7 +447,7 @@ export default function DepartmentAdminPage() {
               </section>
             )}
 
-            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && (
+            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY' && (
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual AWC entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
@@ -1285,7 +1285,7 @@ export default function DepartmentAdminPage() {
                       });
                       profileData[latKey] = lat;
                       profileData[lngKey] = lng;
-                      await electricityApi.putMaster(org.id, profileData);
+                      await electricityApi.putProfile(org.id, profileData);
                       if (electricityImageFile) {
                         const compressed = await compressImage(electricityImageFile, { maxSizeMB: 0.5 });
                         await organizationsApi.uploadCoverImage(org.id, compressed);
@@ -1520,6 +1520,21 @@ export default function DepartmentAdminPage() {
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Longitude</th>
                         </>
                       )}
+                      {deptCode === 'ELECTRICITY' && (
+                        <>
+                          {splitHeader(ELECTRICITY_CSV_HEADER).map((header) => {
+                            if (header === 'NAME OF OFFICE/CENTER') return null;
+                            return (
+                              <th
+                                key={header}
+                                className="px-2 py-1 text-left font-medium text-text whitespace-nowrap"
+                              >
+                                {header}
+                              </th>
+                            );
+                          })}
+                        </>
+                      )}
                       <th className="px-2 py-1 text-left font-medium text-text">Actions</th>
                     </tr>
                   </thead>
@@ -1646,6 +1661,7 @@ export default function DepartmentAdminPage() {
                           {deptCode === 'ELECTRICITY' && (
                             <>
                               {splitHeader(ELECTRICITY_CSV_HEADER).map((header) => {
+                                if (header === 'NAME OF OFFICE/CENTER') return null;
                                 const key = snakeFromHeader(header);
                                 const val = electricityProfiles[o.id] ? electricityProfiles[o.id][key] : undefined;
                                 if (key === 'latitude') {
@@ -1741,7 +1757,7 @@ export default function DepartmentAdminPage() {
                                 className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
                                 onClick={async () => {
                                   setEditingElectricityId(o.id);
-                                  const p = (electricityProfiles[o.id] || await electricityApi.getMaster(o.id)) as Record<string, unknown>;
+                                  const p = (electricityProfiles[o.id] || await electricityApi.getProfile(o.id)) as Record<string, unknown>;
                                   const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
                                   const vals: Record<string, string> = {};
                                   splitHeader(ELECTRICITY_CSV_HEADER).forEach(h => {
@@ -1899,7 +1915,7 @@ export default function DepartmentAdminPage() {
                     })}
                     {!orgs.length && (
                       <tr>
-                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 21 : deptCode === 'HEALTH' ? 27 : deptCode === 'EDUCATION' ? 61 : 10}>
+                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 21 : deptCode === 'HEALTH' ? 27 : deptCode === 'EDUCATION' ? 61 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 2 : 10}>
                           No organizations yet for your department.
                         </td>
                       </tr>
