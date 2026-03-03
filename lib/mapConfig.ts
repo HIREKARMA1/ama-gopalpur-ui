@@ -88,6 +88,19 @@ export const AWC_MARKER_ICON = `${PIN_BASE}/pink-dot.png`;
 /** Label for AWC org type */
 export const AWC_TYPE_LABEL = 'Anganwadi Centre (AWC)';
 
+/**
+ * Default marker icon per top-level department.
+ * Used when a department does not have a more specific
+ * per-type icon mapping (unlike Education / Health / ICDS).
+ */
+export const DEPARTMENT_MARKER_ICONS: Record<string, string> = {
+  EDUCATION: MARKER_COLORS.blue,
+  HEALTH: MARKER_COLORS.green,
+  ICDS: AWC_MARKER_ICON,
+  AWC_ICDS: AWC_MARKER_ICON,
+  ROADS: MARKER_COLORS.orange,
+};
+
 /** Health organization types → marker icon (reuse pin colors) */
 export const HEALTH_MARKER_ICONS: Record<string, string> = {
   HOSPITAL: MARKER_COLORS.red,
