@@ -150,6 +150,7 @@ export type MessageKey =
   | 'super.admins.empty'
   | 'super.error.loadFailed'
   | 'health.monitoring.title'
+  | 'water.monitoring.title'
   | 'electricity.monitoring.title'
   | 'health.monitoring.subtitle'
   | 'health.monitoring.attendance.title'
@@ -897,6 +898,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'health.monitoring.title': {
     en: 'Daily Health Monitoring',
     or: 'ଦୈନିକ ସ୍ୱାସ୍ଥ୍ୟ ଅନୁମାନ',
+  },
+  'water.monitoring.title': {
+    en: 'Daily Water Monitoring Data',
+    or: 'ଦୈନିକ ଜଳ ଯୋଗାଣ ତଥ୍ୟ',
   },
   'electricity.monitoring.title': {
     en: 'Electricity Operations Monitoring',

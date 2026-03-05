@@ -164,6 +164,9 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [electricityDaily, setElectricityDaily] = useState<Awaited<ReturnType<typeof electricityApi.listDaily>>>([]);
   const [electricityMonthly, setElectricityMonthly] = useState<Awaited<ReturnType<typeof electricityApi.listMonthly>>>([]);
   const [waterProfile, setWaterProfile] = useState<Record<string, unknown>>({});
+  const [waterDailyOperations, setWaterDailyOperations] = useState<Awaited<ReturnType<typeof watcoApi.listDailyOperations>>>([]);
+  const [waterDailyPumpLogs, setWaterDailyPumpLogs] = useState<Awaited<ReturnType<typeof watcoApi.listDailyPumpLogs>>>([]);
+  const [waterDailyTankLevels, setWaterDailyTankLevels] = useState<Awaited<ReturnType<typeof watcoApi.listDailyTankLevels>>>([]);
   const [snpDailyStock, setSnpDailyStock] = useState<Awaited<ReturnType<typeof icdsApi.listSnpDailyStock>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -252,10 +255,18 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           setElectricityDaily(daily || []);
           setElectricityMonthly(monthly || []);
         } else if (code === 'WATCO_RWSS') {
-          const profile = await watcoApi.getProfile(id);
+          const [profile, ops, pumps, tanks] = await Promise.all([
+            watcoApi.getProfile(id),
+            watcoApi.listDailyOperations(id),
+            watcoApi.listDailyPumpLogs(id),
+            watcoApi.listDailyTankLevels(id),
+          ]);
           setWaterProfile(
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
+          setWaterDailyOperations(ops || []);
+          setWaterDailyPumpLogs(pumps || []);
+          setWaterDailyTankLevels(tanks || []);
         } else {
           // AWC / ICDS or other: try center profile and SNP daily stock
           try {
@@ -366,6 +377,10 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           org={org}
           waterProfile={waterProfile}
           images={images}
+          departmentName={departments.find((d) => d.id === org.department_id)?.name}
+          dailyOperations={waterDailyOperations}
+          dailyPumpLogs={waterDailyPumpLogs}
+          dailyTankLevels={waterDailyTankLevels}
         />
       </div>
     );

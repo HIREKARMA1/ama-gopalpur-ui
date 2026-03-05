@@ -420,20 +420,25 @@ export default function DepartmentAdminPage() {
       navItems={
         deptCode === 'ICDS' || deptCode === 'AWC_ICDS'
           ? [
-              { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
-              { href: '/admin/dept/snp', labelKey: 'super.sidebar.snp' },
-            ]
+            { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
+            { href: '/admin/dept/snp', labelKey: 'super.sidebar.snp' },
+          ]
           : deptCode === 'HEALTH'
-          ? [
+            ? [
               { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
               { href: '/admin/dept/health-monitoring', labelKey: 'health.monitoring.title' },
             ]
-          : deptCode === 'ELECTRICITY'
-          ? [
-              { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
-              { href: '/admin/dept/electricity-monitoring', labelKey: 'electricity.monitoring.title' },
-            ]
-          : [{ href: '/admin/dept', labelKey: 'super.sidebar.dashboard' }]
+            : deptCode === 'ELECTRICITY'
+              ? [
+                { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
+                { href: '/admin/dept/electricity-monitoring', labelKey: 'electricity.monitoring.title' },
+              ]
+              : deptCode === 'WATCO_RWSS'
+                ? [
+                  { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
+                  { href: '/admin/dept/water-monitoring', labelKey: 'Daily Water Monitoring Data' },
+                ]
+                : [{ href: '/admin/dept', labelKey: 'super.sidebar.dashboard' }]
       }
       onLogout={() => {
         clearToken();
@@ -1518,8 +1523,8 @@ export default function DepartmentAdminPage() {
                     : deptCode === 'ELECTRICITY'
                       ? 'Upload Electricity CSV. Organizations and profiles will be created or updated by NAME OF OFFICE/CENTER, LATITUDE, LONGITUDE.'
                       : deptCode === 'WATCO_RWSS'
-                      ? 'Upload WATCO/RWSS water supply CSV. Schemes will be created or updated by STATION NAME, LATITUDE, LONGITUDE.'
-                      : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
+                        ? 'Upload WATCO/RWSS water supply CSV. Schemes will be created or updated by STATION NAME, LATITUDE, LONGITUDE.'
+                        : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
               </p>
               <div className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center md:justify-between">
                 <button
@@ -1568,8 +1573,8 @@ export default function DepartmentAdminPage() {
                             : deptCode === 'ELECTRICITY'
                               ? 'Office Name'
                               : deptCode === 'WATCO_RWSS'
-                              ? 'Station Name'
-                              : 'AWC Name'}
+                                ? 'Station Name'
+                                : 'AWC Name'}
                       </th>
                       {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY' && deptCode !== 'WATCO_RWSS') && (
                         <>
