@@ -17,6 +17,8 @@ export type MessageKey =
   | 'dept.icds'
   | 'dept.roads'
   | 'dept.electricity'
+  | 'dept.drainage'
+  | 'dept.water'
   | 'shell.departmentsTab'
   | 'map.legend'
   | 'map.viewProfile'

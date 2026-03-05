@@ -768,7 +768,10 @@ export default function DepartmentAdminPage() {
                           className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
                           value={waterFormValues[key] ?? ''}
                           onChange={(e) =>
-                            setWaterFormValues((prev) => ({ prev, [key]: e.target.value, ...prev }))
+                            setWaterFormValues((prev) => ({
+                              ...prev,
+                              [key]: e.target.value,
+                            }))
                           }
                         />
                       </div>
