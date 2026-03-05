@@ -87,6 +87,7 @@ export default function DepartmentAdminPage() {
   const [electricityImageFile, setElectricityImageFile] = useState<File | null>(null);
   const [waterFormValues, setWaterFormValues] = useState<Record<string, string>>({});
   const [waterImageFile, setWaterImageFile] = useState<File | null>(null);
+  const [editingWaterId, setEditingWaterId] = useState<number | null>(null);
   const [newOrg, setNewOrg] = useState({
     ulb_block: '',
     gp_name: '',
@@ -715,25 +716,31 @@ export default function DepartmentAdminPage() {
                       const gp = waterFormValues[snakeFromHeader('GP/WARD')] || '';
                       const village = waterFormValues[snakeFromHeader('VILLAGE/LOCALITY')] || '';
                       const addressParts = [block, gp, village].filter((p) => p && p.trim());
-                      const basePayload = {
-                        name,
-                        latitude: lat,
-                        longitude: lng,
-                        address: addressParts.length ? addressParts.join(', ') : undefined,
-                        attributes: {
-                          ulb_block: block || null,
-                          gp_name: gp || null,
-                          ward_village: village || null,
-                        } as Record<string, string | number | null>,
-                      };
 
-                      const org = await organizationsApi.create({
-                        department_id: me.department_id,
-                        type: 'OTHER',
-                        ...basePayload,
-                      });
-                      setOrgs((prev) => [org, ...prev]);
+                      let orgId: number;
+                      if (editingWaterId) {
+                        orgId = editingWaterId;
+                      } else {
+                        const basePayload = {
+                          name,
+                          latitude: lat,
+                          longitude: lng,
+                          address: addressParts.length ? addressParts.join(', ') : undefined,
+                          attributes: {
+                            ulb_block: block || null,
+                            gp_name: gp || null,
+                            ward_village: village || null,
+                          } as Record<string, string | number | null>,
+                        };
 
+                        const org = await organizationsApi.create({
+                          department_id: me.department_id,
+                          type: 'OTHER',
+                          ...basePayload,
+                        });
+                        orgId = org.id;
+                        setOrgs((prev) => [org, ...prev]);
+                      }
                       const profileData: Record<string, unknown> = {};
                       splitHeader(WATCO_CSV_HEADER).forEach((header) => {
                         const key = snakeFromHeader(header);
@@ -745,13 +752,18 @@ export default function DepartmentAdminPage() {
                       profileData[latKey] = lat;
                       profileData[lngKey] = lng;
                       profileData[nameKey] = name;
-                      await watcoApi.putProfile(org.id, profileData);
+                      const saved = await watcoApi.putProfile(orgId, profileData);
+                      setWaterProfiles((prev) => ({
+                        ...prev,
+                        [orgId]: (saved && typeof saved === 'object' ? saved : profileData) as Record<string, unknown>,
+                      }));
                       if (waterImageFile) {
                         const compressed = await compressImage(waterImageFile, { maxSizeMB: 0.5 });
-                        await organizationsApi.uploadCoverImage(org.id, compressed);
+                        await organizationsApi.uploadCoverImage(orgId, compressed);
                         setWaterImageFile(null);
                       }
                       setWaterFormValues({});
+                      setEditingWaterId(null);
                     } catch (err: any) {
                       setError(err.message || 'Failed to save water scheme');
                     } finally {
@@ -1899,7 +1911,7 @@ export default function DepartmentAdminPage() {
                           )}
                           <td className="px-2 py-1 space-x-1">
                             <Link href={`/organizations/${o.id}`} className="rounded border border-primary/50 px-2 py-0.5 text-[11px] text-primary hover:bg-primary/10">View profile</Link>
-                            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY' && (
+                            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY' && deptCode !== 'WATCO_RWSS' && (
                               <button
                                 type="button"
                                 className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
@@ -2079,6 +2091,37 @@ export default function DepartmentAdminPage() {
                                     availability_of_pathology_testing: v(p?.availability_of_pathology_testing),
                                     description: v(p?.description),
                                   });
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                              >
+                                Edit
+                              </button>
+                            )}
+                            {deptCode === 'WATCO_RWSS' && (
+                              <button
+                                type="button"
+                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                onClick={async () => {
+                                  setEditingWaterId(o.id);
+                                  const existingProfile =
+                                    waterProfiles[o.id] ||
+                                    ((await watcoApi.getProfile(o.id)) as Record<string, unknown> | undefined);
+                                  const v = (x: unknown) =>
+                                    x != null && String(x).trim() !== '' ? String(x) : '';
+                                  const vals: Record<string, string> = {};
+                                  splitHeader(WATCO_CSV_HEADER).forEach((header) => {
+                                    const key = snakeFromHeader(header);
+                                    if (key === snakeFromHeader('STATION NAME')) {
+                                      vals[key] = v(existingProfile?.[key] ?? o.name);
+                                    } else if (key === snakeFromHeader('LATITUDE')) {
+                                      vals[key] = v(existingProfile?.[key] ?? (o.latitude != null ? String(o.latitude) : ''));
+                                    } else if (key === snakeFromHeader('LONGITUDE')) {
+                                      vals[key] = v(existingProfile?.[key] ?? (o.longitude != null ? String(o.longitude) : ''));
+                                    } else {
+                                      vals[key] = v(existingProfile?.[key]);
+                                    }
+                                  });
+                                  setWaterFormValues(vals);
                                   window.scrollTo({ top: 0, behavior: 'smooth' });
                                 }}
                               >
