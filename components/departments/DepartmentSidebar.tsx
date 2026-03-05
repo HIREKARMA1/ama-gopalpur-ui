@@ -13,6 +13,7 @@ const DEPT_MESSAGE_KEYS: Record<string, MessageKey> = {
   ICDS: 'dept.icds',
   AWC_ICDS: 'dept.icds',
   ROADS: 'dept.roads',
+  ELECTRICITY: 'dept.electricity',
   DRAINAGE: 'dept.drainage',
   WATCO_RWSS: 'dept.water',
 };
@@ -76,59 +77,57 @@ export function DepartmentSidebar({
         ) : (
           <ul className="space-y-3">
             {departments.map((dept) => {
-                const isSelected = dept.id === selectedId;
-                const count = countByDepartmentId[dept.id];
-                const Icon = getDepartmentIcon(dept.code, dept.name);
+              const isSelected = dept.id === selectedId;
+              const count = countByDepartmentId[dept.id];
+              const Icon = getDepartmentIcon(dept.code, dept.name);
 
-                return (
-                  <li key={dept.id}>
-                    <button
-                      type="button"
-                      onClick={() => onSelect(dept)}
-                      className={`flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left shadow-sm transition-all duration-200 ${
-                        isSelected
-                          ? 'bg-orange-500 text-white shadow-md'
-                          : 'bg-slate-800/80 text-slate-100 hover:bg-slate-800'
+              return (
+                <li key={dept.id}>
+                  <button
+                    type="button"
+                    onClick={() => onSelect(dept)}
+                    className={`flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left shadow-sm transition-all duration-200 ${isSelected
+                        ? 'bg-orange-500 text-white shadow-md'
+                        : 'bg-slate-800/80 text-slate-100 hover:bg-slate-800'
                       }`}
-                    >
-                      <span
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                          isSelected ? 'bg-white/15' : 'bg-slate-700'
+                  >
+                    <span
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isSelected ? 'bg-white/15' : 'bg-slate-700'
                         }`}
-                      >
-                        <Icon className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-slate-100'}`} />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-slate-100'}`}>
-                          {getDepartmentLabel(dept, language)}
-                        </p>
-                        {count != null && (
-                          <p className={`mt-0.5 text-xs ${isSelected ? 'text-orange-50' : 'text-slate-400'}`}>
-                            {count} {language === 'or' ? t('sidebar.total', language) : countLabel}
-                          </p>
-                        )}
-                      </div>
+                    >
+                      <Icon className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-slate-100'}`} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-slate-100'}`}>
+                        {getDepartmentLabel(dept, language)}
+                      </p>
                       {count != null && (
-                        <span
-                          className={`ml-1 inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${isSelected ? 'bg-white/20 text-white' : 'bg-orange-50 text-orange-700'
-                            }`}
-                        >
-                          {count}
-                        </span>
+                        <p className={`mt-0.5 text-xs ${isSelected ? 'text-orange-50' : 'text-slate-400'}`}>
+                          {count} {language === 'or' ? t('sidebar.total', language) : countLabel}
+                        </p>
                       )}
-                      <span className={isSelected ? 'text-orange-50' : 'text-slate-400'}>
-                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fillRule="evenodd"
-                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
+                    </div>
+                    {count != null && (
+                      <span
+                        className={`ml-1 inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${isSelected ? 'bg-white/20 text-white' : 'bg-orange-50 text-orange-700'
+                          }`}
+                      >
+                        {count}
                       </span>
-                    </button>
-                  </li>
-                );
-              })}
+                    )}
+                    <span className={isSelected ? 'text-orange-50' : 'text-slate-400'}>
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </nav>

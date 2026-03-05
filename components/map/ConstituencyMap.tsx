@@ -27,6 +27,8 @@ import {
   getRoadType,
   ROAD_TYPE_COLORS,
   ROAD_TYPE_LABELS,
+  ELECTRICITY_MARKER_ICON,
+  ELECTRICITY_TYPE_LABEL,
 } from '../../lib/mapConfig';
 import type { RoadTypeKey } from '../../lib/mapConfig';
 import type { MessageKey } from '../i18n/messages';
@@ -99,9 +101,11 @@ function createDepartmentSvgIcon(deptCode: string, fillColor: string): string {
         ? 'H'
         : deptCode === 'AWC_ICDS' || deptCode === 'ICDS'
           ? 'A'
-          : deptCode === 'ROADS'
-            ? 'R'
-            : 'D';
+          : deptCode === 'ELECTRICITY'
+            ? 'E'
+            : deptCode === 'ROADS'
+              ? 'R'
+              : 'D';
 
   const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
@@ -308,6 +312,9 @@ export function ConstituencyMap({
         const key = category ? HEALTH_TYPE_KEYS[category] : HEALTH_TYPE_KEYS[type];
         return key ? t(key, lang) : category || type.replace(/_/g, ' ');
       }
+      if (code === 'ELECTRICITY') {
+        return t('map.electricity.office', lang);
+      }
       const eduKey = EDUCATION_TYPE_KEYS[type];
       return eduKey ? t(eduKey, lang) : EDUCATION_TYPE_LABELS[type] || type.replace(/_/g, ' ');
     },
@@ -326,6 +333,9 @@ export function ConstituencyMap({
           result = result.filter((org) => (org.attributes?.category as string)?.toUpperCase() === legendFilterType);
         } else if (code === 'EDUCATION') {
           result = result.filter((org) => (org.sub_department || '').toUpperCase() === legendFilterType);
+        } else if (code === 'ELECTRICITY') {
+          // Only one electricity type at present; legend click is visual only
+          // so we don't further filter markers here.
         } else {
           result = result.filter((org) => org.type === legendFilterType);
         }
@@ -532,6 +542,10 @@ export function ConstituencyMap({
               setZoom(mapInstance.getZoom());
             }
           }}
+          onClick={() => {
+            setInfoWindowOrg(null);
+            setSelectedRoad(null);
+          }}
         >
           <Polyline
             path={GOPALPUR_BORDER}
@@ -572,7 +586,13 @@ export function ConstituencyMap({
                     strokeOpacity: 0.9,
                     clickable: true,
                   }}
-                  onClick={() => setSelectedRoad(road)}
+                  onClick={(e) => {
+                    if (e?.domEvent && 'stopPropagation' in e.domEvent && typeof e.domEvent.stopPropagation === 'function') {
+                      e.domEvent.stopPropagation();
+                    }
+                    setSelectedRoad(road);
+                    setInfoWindowOrg(null);
+                  }}
                 />
               );
             })}
@@ -583,8 +603,13 @@ export function ConstituencyMap({
                 position={{ lat: org.latitude, lng: org.longitude }}
                 title={org.name}
                 icon={getIconUrl(org.type, org.attributes, org.sub_department)}
-                onClick={() => {
+                onClick={(e) => {
+                  // Prevent map-level click from also firing (which would close the info window).
+                  if (e?.domEvent && 'stopPropagation' in e.domEvent && typeof e.domEvent.stopPropagation === 'function') {
+                    e.domEvent.stopPropagation();
+                  }
                   setInfoWindowOrg(org);
+                  setSelectedRoad(null);
                 }}
                 cursor="pointer"
               />
@@ -603,10 +628,20 @@ export function ConstituencyMap({
                 position={{ lat, lng }}
                 onCloseClick={() => setSelectedRoad(null)}
               >
-                <div className="min-w-[200px] max-w-[280px] py-1">
-                  <p className="font-semibold text-gray-900">{name}</p>
-                  {code && <p className="text-xs text-gray-600">{ROAD_TYPE_LABELS[roadType]} · {code}</p>}
-                  {block && <p className="mt-1 text-xs text-gray-500">{t('map.info.block', language)}: {block}</p>}
+                <div className="min-w-[190px] max-w-[260px]">
+                  <div className="rounded-2xl bg-white shadow-md border border-slate-200 px-3 py-0.5">
+                    <p className="text-[13px] font-semibold text-slate-900">{name}</p>
+                    {code && (
+                      <p className="mt-0.5 text-[11px] font-medium text-slate-600">
+                        {ROAD_TYPE_LABELS[roadType]} · <span className="font-mono text-[11px]">{code}</span>
+                      </p>
+                    )}
+                    {block && (
+                      <p className="mt-0.5 text-[11px] text-slate-500">
+                        {t('map.info.block', language)}: {block}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </InfoWindow>
             );
@@ -619,34 +654,47 @@ export function ConstituencyMap({
               }}
               onCloseClick={() => setInfoWindowOrg(null)}
             >
-              <div className="min-w-[180px] max-w-[260px] py-1">
-                <p className="font-semibold text-gray-900">{infoWindowOrg.name}</p>
-                <p className="text-xs text-gray-600">
-                  {getTypeLabel(infoWindowOrg.type, language, infoWindowOrg.attributes, infoWindowOrg.sub_department)}
-                </p>
-                {infoWindowOrg.type === 'AWC' && infoWindowOrg.attributes && (
-                  <p className="mt-1 text-xs text-gray-500">
-                    {t('map.info.sector', language)}: {String(infoWindowOrg.attributes.sector || '–')}
-                    {(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village) && (
-                      <> · {t('map.info.gp', language)}: {String(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village)}</>
+              <div className="min-w-[190px] max-w-[260px]">
+                <div className="rounded-2xl bg-white shadow-md border border-slate-200 px-3 py-2.5">
+                  <p className="text-[13px] font-semibold text-slate-900">{infoWindowOrg.name}</p>
+                  <p className="mt-0.5 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-700">
+                    {getTypeLabel(
+                      infoWindowOrg.type,
+                      language,
+                      infoWindowOrg.attributes,
+                      infoWindowOrg.sub_department
                     )}
                   </p>
-                )}
-                {infoWindowOrg.address && (
-                  <p className="mt-1 text-xs text-gray-500">{infoWindowOrg.address}</p>
-                )}
-                {onSelectOrganization && (
-                  <button
-                    type="button"
-                    className="mt-2 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
-                    onClick={() => {
-                      onSelectOrganization(infoWindowOrg.id);
-                      setInfoWindowOrg(null);
-                    }}
-                  >
-                    {t('map.viewProfile', language)}
-                  </button>
-                )}
+                  {infoWindowOrg.type === 'AWC' && infoWindowOrg.attributes && (
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                      {t('map.info.sector', language)}: {String(infoWindowOrg.attributes.sector || '–')}
+                      {(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village) && (
+                        <>
+                          {' '}
+                          · {t('map.info.gp', language)}:{' '}
+                          {String(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village)}
+                        </>
+                      )}
+                    </p>
+                  )}
+                  {infoWindowOrg.address && (
+                    <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
+                      {infoWindowOrg.address}
+                    </p>
+                  )}
+                  {onSelectOrganization && (
+                    <button
+                      type="button"
+                      className="mt-2 inline-flex items-center justify-center rounded-full bg-orange-500 px-3 py-1.5 text-[10px] font-semibold text-white shadow-sm hover:bg-orange-600"
+                      onClick={() => {
+                        onSelectOrganization(infoWindowOrg.id);
+                        setInfoWindowOrg(null);
+                      }}
+                    >
+                      {t('map.viewProfile', language)}
+                    </button>
+                  )}
+                </div>
               </div>
             </InfoWindow>
           )}
@@ -693,6 +741,33 @@ export function ConstituencyMap({
             <span className="inline-block h-2.5 w-2.5 rounded-full bg-pink-500" />
             {t('map.awc.label', language)}
           </p>
+        </div>
+      )}
+      {selectedDepartmentCode?.toUpperCase() === 'ELECTRICITY' && orgsWithLocation.length > 0 && (
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[220px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            <li>
+              <button
+                type="button"
+                onClick={() =>
+                  setLegendFilterType((prev) => (prev === ELECTRICITY_TYPE_LABEL ? null : ELECTRICITY_TYPE_LABEL))
+                }
+                className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${legendFilterType === ELECTRICITY_TYPE_LABEL
+                  ? 'ring-1 ring-slate-400 bg-slate-100 font-medium'
+                  : 'hover:bg-slate-50'
+                  }`}
+                title={
+                  legendFilterType === ELECTRICITY_TYPE_LABEL
+                    ? t('map.legend.showAll', language)
+                    : `${t('map.legend.showOnly', language)} ${t('map.electricity.office', language)}`
+                }
+              >
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-yellow-400" />
+                {t('map.electricity.office', language)}
+              </button>
+            </li>
+          </ul>
         </div>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'HEALTH' && orgsWithLocation.length > 0 && (
