@@ -838,6 +838,36 @@ export const watcoApi = {
     });
   },
 };
+
+// ----- Minor Irrigation (MIPs under Minor Irrigation department) -----
+const minorIrrigationBase = (orgId: number) =>
+  `/api/v1/minor-irrigation/organizations/${orgId}`;
+
+export const minorIrrigationApi = {
+  getProfile: (orgId: number) =>
+    apiFetch<Record<string, unknown>>(
+      `${minorIrrigationBase(orgId)}/profile`,
+    ).catch(() => ({})),
+  putProfile: (orgId: number, data: Record<string, unknown>) =>
+    apiFetch<Record<string, unknown>>(
+      `${minorIrrigationBase(orgId)}/profile`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      },
+    ),
+  bulkCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>(
+      '/api/v1/minor-irrigation/bulk-csv',
+      {
+        method: 'POST',
+        body: form,
+      },
+    );
+  },
+};
 export interface HealthInfrastructure {
   id: number;
   organization_id: number;
