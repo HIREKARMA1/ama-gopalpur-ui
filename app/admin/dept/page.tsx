@@ -467,7 +467,7 @@ export default function DepartmentAdminPage() {
               : deptCode === 'WATCO_RWSS'
                 ? [
                   { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
-                  { href: '/admin/dept/water-monitoring', labelKey: 'Daily Water Monitoring Data' },
+                  { href: '/admin/dept/water-monitoring', labelKey: 'water.monitoring.title' },
                 ]
                 : [{ href: '/admin/dept', labelKey: 'super.sidebar.dashboard' }]
       }
@@ -1676,8 +1676,6 @@ export default function DepartmentAdminPage() {
                     : deptCode === 'ELECTRICITY'
                       ? 'Upload Electricity CSV. Organizations and profiles will be created or updated by NAME OF OFFICE/CENTER, LATITUDE, LONGITUDE.'
                       : deptCode === 'WATCO_RWSS'
-                        ? 'Upload WATCO/RWSS water supply CSV. Schemes will be created or updated by STATION NAME, LATITUDE, LONGITUDE.'
-                        : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
                         ? 'Upload WATCO/RWSS water supply CSV. Schemes will be created or updated by STATION NAME, LATITUDE, LONGITUDE.'
                         : deptCode === 'MINOR_IRRIGATION'
                           ? 'Upload Minor Irrigation CSV. Projects will be created or updated by NAME OF M.I.P, LATITUDE, LONGITUDE.'
