@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { authApi, organizationsApi, departmentsApi, profileApi, clearToken, getToken, educationApi, healthApi, electricityApi, watcoApi, Organization, User, Department, CenterProfile } from '../../../services/api';
+import { authApi, organizationsApi, departmentsApi, profileApi, clearToken, getToken, educationApi, healthApi, electricityApi, watcoApi, minorIrrigationApi, Organization, User, Department, CenterProfile } from '../../../services/api';
 import { SuperAdminDashboardLayout } from '../../../components/layout/SuperAdminDashboardLayout';
 import { useLanguage } from '../../../components/i18n/LanguageContext';
 import { t } from '../../../components/i18n/messages';
@@ -35,6 +35,9 @@ const EDUCATION_UNIVERSITY_CSV_HEADER =
   'UNIVERSITY NAME,UNIVERSITY TYPE (STATE/CENTRAL/PRIVATE/DEEMED),TEACHING-CUM-AFFILIATING (YES/NO),ESTABLISHED YEAR,OWNERSHIP (GOVT/PRIVATE),NAAC GRADE,UGC 2(F) (YES/NO),UGC 12(B) (YES/NO),AISHE CODE,NIRF UNIVERSITY RANK,NIRF YEAR,STATE,DISTRICT,BLOCK/ULB,GP/WARD,VILLAGE,PIN CODE,LATITUDE,LONGITUDE,WEBSITE,UNIVERSITY EMAIL,PHONE NUMBER,CHANCELLOR NAME,VICE-CHANCELLOR NAME,REGISTRAR NAME,FINANCE OFFICER NAME,CONTROLLER OF EXAMS NAME,IQAC COORDINATOR NAME,NODAL OFFICER (AISHE) NAME,NODAL OFFICER CONTACT,CAMPUS AREA (ACRES),NO OF CAMPUSES/UNITS,OFF-CAMPUS CENTRES (COUNT),OFF-CAMPUS LOCATIONS (LIST),DISTANCE EDUCATION (YES/NO),ONLINE PROGRAMMES (YES/NO),TOTAL FACULTIES,TOTAL DEPARTMENTS,DEPARTMENTS (COMMA SEPARATED),TOTAL RESEARCH CENTRES,RESEARCH CENTRES (COMMA SEPARATED),TOTAL CENTRES OF EXCELLENCE,CENTRES OF EXCELLENCE (COMMA SEPARARTED),TOTAL CONSTITUENT COLLEGES,TOTAL AFFILIATED COLLEGES,TOTAL UG PROGRAMMES,UG PROGRAMMES (COMMA SEPARATED),TOTAL PG PROGRAMMES,PG PROGRAMMES (COMMA SEPARATED),TOTAL INTEGRATED PROGRAMMES,INTEGRATED PROGRAMMES (COMMA SEPARATED),TOTAL DIPLOMA/CERTIFICATE PROGRAMMES,DIPLOMA/CERTIFICATE PROGRAMMES (COMMA SEPARATED),TOTAL PH.D. PROGRAMMES,PH.D. PROGRAMMES (COMMA SEPARATED),D.LITT./D.SC. (YES/NO),D.LITT./D.SC. (COMMA SEPARATED),TOTAL SANCTIONED STUDENT INTAKE UG,TOTAL SANCTIONED STUDENT INTAKE PG,ADMISSION MODE (ENTRANCE/MERIT/BOTH),ENTRANCE TEST NAME,ACADEMIC YEAR SYSTEM (SEMESTER/TRIMESTER/ANNUAL),RESULT DECLARATION TIMELINE,ACADEMIC CALENDAR (URL),EXAMINATION CELL (YES/NO),UG COMPLETION RATE (%),PG COMPLETION RATE (%),TOTAL STUDENT ENROLLMENT,UG STUDENT ENROLLMENT,PG STUDENT ENROLLMENT,PH.D. STUDENT ENROLLMENT,STUDENTS FROM OTHER STATES (%),FEMALE STUDENTS (%),SC STUDENTS (COUNT),ST STUDENTS (COUNT),OBC STUDENTS (COUNT),EWS STUDENTS (COUNT),GENERAL STUDENTS (COUNT),MINORITY STUDENTS (COUNT),PWD STUDENTS (COUNT),SCHOLARSHIPS (GOVT) (YES/NO),SCHOLARSHIPS (INSTITUTIONAL) (YES/NO),TOTAL TEACHING STAFF,TOTAL PERMANENT TEACHING STAFF,TOTAL CONTRACT/GUEST FACULTY,TOTAL TEACHING STAFF (PROF),TOTAL TEACHING STAFF (ASSOC PROF),TOTAL TEACHING STAFF (ASST PROF),TOTAL TEACHERS WITH PH.D. (COUNT),TOTAL TEACHERS WITH NET/SET (COUNT),STUDENT-TEACHER RATIO,NON-TEACHING STAFF (COUNT),TECHNICAL STAFF (COUNT),LIBRARY (YES/NO),CENTRAL LIBRARY NAME,LIBRARY BOOKS (COUNT),LIBRARY JOURNALS (COUNT),E-JOURNALS (YES/NO),E-BOOKS (YES/NO),LIBRARY SOFTWARE (KOHA/RFID/OTHER),DIGITAL LIBRARY (YES/NO),COMPUTER CENTRE (YES/NO),TOTAL COMPUTERS,WIFI CAMPUS (YES/NO),NKN CONNECTIVITY (YES/NO),SMART CLASSROOMS (COUNT),SEMINAR HALLS (COUNT),AUDITORIUM (YES/NO),LABORATORIES (COUNT),MAJOR EQUIPMENT/INSTRUMENTATION (LIST COMMA SEPARATED),WORKSHOPS (COUNT),HOSTELS (YES/NO),HOSTEL COUNT,HOSTEL CAPACITY BOYS,HOSTEL CAPACITY GIRLS,STAFF QUARTERS (YES/NO),GUEST HOUSE (YES/NO),HEALTH CENTRE (YES/NO),CANTEEN (YES/NO),BANK/ATM (YES/NO),SPORTS FACILITIES (YES/NO),PLAYGROUND (YES/NO),GYMNASIUM (YES/NO),TRANSPORT FACILITY (YES/NO),PARKING (YES/NO),SECURITY (YES/NO),CCTV (YES/NO),FIRE SAFETY (YES/NO),RAMP/ACCESSIBILITY (YES/NO),FACILITIES FOR PWD (LIST),DRINKING WATER (YES/NO),ELECTRICITY (YES/NO),POWER BACKUP (YES/NO),SOLAR (YES/NO),IQAC (YES/NO),GRIEVANCE CELL (YES/NO),ANTI-RAGGING CELL (YES/NO),ICC HEAD NAME,ICC HEAD CONTACT,ALUMNI ASSOCIATION (YES/NO),NSS (YES/NO),NCC (YES/NO),STUDENT CLUBS (LIST COMMA SEPARATED),CULTURAL ACTIVITIES (YES/NO),TECHNICAL FEST/EVENTS (LIST COMMA SEPARATED),INDUSTRY COLLABORATION (MoUs) (COUNT),MoUs (LIST COMMA SEPARATED),RESEARCH PROJECTS (COUNT),PUBLICATIONS (LAST YEAR),PATENTS FILED,PATENTS GRANTED,STARTUPS/INCUBATION (YES/NO),INCUBATION CENTRE NAME(LIST COMMA SEPARATED),PLACEMENT CELL (YES/NO),PLACEMENT OFFICER NAME,PLACEMENT OFFICER CONTACT,PLACEMENT % (LAST YEAR),MEDIAN SALARY (LPA),HIGHEST PACKAGE (LPA),STUDENTS TO HIGHER STUDIES (COUNT),MOOCs/SWAYAM/NPTEL (YES/NO),VALUE-ADDED COURSES (COUNT),NOTABLE AWARDS/ACHIEVEMENTS,DESCRIPTION\n';
 const ELECTRICITY_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID/CODE,OWNERSHIP,PARENT ORGANIZATION,HIERARCHY LEVEL,HOST INSTITUTION (IF TRAINING CENTER),ESTABLISHED YEAR,COMMISSIONED YEAR (SUBSTATIONS),FULL ADDRESS,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE DESIGNATION,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,OFFICE HOURS,TOLL-FREE/CUSTOMER CARE NUMBER,HELPLINE AVAILABLE (YES/NO),VOLTAGE LEVEL PRIMARY (kV),VOLTAGE LEVEL SECONDARY (kV),INSTALLED CAPACITY (MVA),NO OF TRANSFORMERS,TRANSFORMER RATINGS MVA (COMMA SEPARATED),NO OF INCOMING FEEDERS,NO OF OUTGOING FEEDERS,TOTAL FEEDERS,BAYS (COUNT),SWITCHGEAR TYPE (GIS/AIS/HYBRID),33kV FEEDER LENGTH (KM),11kV FEEDER LENGTH (KM),LT LINE LENGTH (KM),NO OF DISTRIBUTION TRANSFORMERS (DTs),DT TOTAL CAPACITY (kVA),FEEDER METERING (YES/NO),FEEDER METERS (COUNT),DT METERING (YES/NO),DT METERS (COUNT),SMART METERS INSTALLED (COUNT),PREPAID METERS (COUNT),CONSUMER METERS TOTAL (COUNT),CONSUMERS UNDER JURISDICTION (APPROX),CONSUMERS DOMESTIC (COUNT),CONSUMERS COMMERCIAL (COUNT),CONSUMERS INDUSTRIAL (COUNT),CONSUMERS AGRICULTURAL (COUNT),CONSUMERS OTHER (COUNT),HT CONSUMERS (COUNT),LT CONSUMERS (COUNT),CONNECTED LOAD (MW),AT&C LOSS PERCENT,BILLING EFFICIENCY PERCENT,COLLECTION EFFICIENCY PERCENT,HOURS OF SUPPLY RURAL,HOURS OF SUPPLY URBAN,COMPLAINTS REGISTERED LAST YEAR,COMPLAINTS REDRESSED LAST YEAR,CONSUMER CARE COUNTER (YES/NO),BILLING FACILITY (YES/NO),ONLINE PAYMENT (YES/NO),MOBILE APP (YES/NO),ONLINE COMPLAINT PORTAL (YES/NO),CUSTOMER CARE EMAIL,GRIEVANCE REDRESSAL FORUM (YES/NO),TOTAL STAFF (COUNT),ENGINEERS (COUNT),TECHNICAL STAFF (COUNT),LINEMEN (COUNT),CONTRACT STAFF (COUNT),ADMIN/OFFICE STAFF (COUNT),VILLAGES/LOCALITIES COVERED (COUNT),GPs COVERED (COUNT),AREA COVERED SQ KM,BUILDING TYPE (OWN/RENTED),TOTAL FLOORS,OFFICE AREA SQ FT,TRAINING CENTER (YES/NO),TRAINING CAPACITY SEATS,WORKSHOP/GARAGE (YES/NO),STORE (YES/NO),DG SET (YES/NO),SOLAR (YES/NO),VEHICLES (COUNT),TWO-WHEELERS (COUNT),ANNUAL REVENUE CR (APPROX),BILLING CR LAST YEAR,DATA AS ON (YYYY-MM-DD),REMARKS/DESCRIPTION\n';
+
+const MINOR_IRRIGATION_CSV_HEADER =
+  'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,MIP ID,NAME OF M.I.P,CATEGORY/TYPE,LATITUDE,LONGITUDE,LOCATION PRECISION (METER),CATCHMENT AREA (SQ KM),COMMAND AREA KHARIF (ACRES),COMMAND AREA RABI (ACRES),TOTAL AYACUT (ACRES),STORAGE CAPACITY (MCUM),MWL (FT),FRL (FT),TBL (FT),SPILLWAY TYPE,SPILLWAY WIDTH (FT),NO OF SLUICES,SLUICE TYPE,CONDITION,FUNCTIONALITY,MANAGED BY,LAST MAINTENANCE,SENSORS INSTALLED,LAST GEOTAGGED DATE,BENEFICIARY FARMERS COUNT,BENEFICIARY SC/ST COUNT,SANCTIONED AMT (LAKHS),EXPENDITURE (LAKHS),FOREST CLEARANCE (Y/N),REMARKS\n';
 
 const splitHeader = (header: string): string[] =>
   header.trim().replace(/\n$/, '').split(',').map((h) => h.trim());
@@ -80,6 +83,7 @@ export default function DepartmentAdminPage() {
   const [healthProfiles, setHealthProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [educationProfiles, setEducationProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [electricityProfiles, setElectricityProfiles] = useState<Record<number, Record<string, unknown>>>({});
+  const [minorIrrigationProfiles, setMinorIrrigationProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [waterProfiles, setWaterProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [icdsImageFile, setIcdsImageFile] = useState<File | null>(null);
   const [healthImageFile, setHealthImageFile] = useState<File | null>(null);
@@ -143,6 +147,8 @@ export default function DepartmentAdminPage() {
   const [educationOtherImageFile, setEducationOtherImageFile] = useState<File | null>(null);
   const [elecFormValues, setElecFormValues] = useState<Record<string, string>>({});
   const [editingElectricityId, setEditingElectricityId] = useState<number | null>(null);
+  const [minorFormValues, setMinorFormValues] = useState<Record<string, string>>({});
+  const [editingMinorId, setEditingMinorId] = useState<number | null>(null);
 
   const _n = (s: string) => (s.trim() ? (Number(s) || undefined) : undefined);
   const _s = (s: string) => (s.trim() || undefined);
@@ -258,6 +264,23 @@ export default function DepartmentAdminPage() {
   }, [deptCode, orgs]);
 
   useEffect(() => {
+    if (deptCode !== 'MINOR_IRRIGATION' || orgs.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const profiles: Record<number, Record<string, unknown>> = {};
+      await Promise.all(
+        orgs.map(async (o) => {
+          if (cancelled) return;
+          const p = await minorIrrigationApi.getProfile(o.id);
+          profiles[o.id] = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
+        })
+      );
+      if (!cancelled) setMinorIrrigationProfiles(profiles);
+    })();
+    return () => { cancelled = true; };
+  }, [deptCode, orgs]);
+
+  useEffect(() => {
     if (deptCode !== 'WATCO_RWSS' || orgs.length === 0) return;
     let cancelled = false;
     (async () => {
@@ -316,6 +339,11 @@ export default function DepartmentAdminPage() {
         }
       } else if (deptCode === 'ELECTRICITY') {
         const result = await electricityApi.bulkCsv(file);
+        if (result.errors?.length) {
+          setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
+        }
+      } else if (deptCode === 'MINOR_IRRIGATION') {
+        const result = await minorIrrigationApi.bulkCsv(file);
         if (result.errors?.length) {
           setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
         }
@@ -391,6 +419,9 @@ export default function DepartmentAdminPage() {
     } else if (deptCode === 'ELECTRICITY') {
       csvContent = ELECTRICITY_CSV_HEADER;
       filename = 'electricity_template.csv';
+    } else if (deptCode === 'MINOR_IRRIGATION') {
+      csvContent = MINOR_IRRIGATION_CSV_HEADER;
+      filename = 'minor_irrigation_template.csv';
     } else if (deptCode === 'WATCO_RWSS') {
       csvContent = WATCO_CSV_HEADER;
       filename = 'watco_rwss_template.csv';
@@ -489,7 +520,7 @@ export default function DepartmentAdminPage() {
               </section>
             )}
 
-            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'DRAINAGE' && deptCode !== 'WATCO_RWSS' && deptCode !== 'ELECTRICITY' && (
+            {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS') && (
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual AWC entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
@@ -810,6 +841,126 @@ export default function DepartmentAdminPage() {
                       className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
                     >
                       {creating ? 'Saving...' : 'Save scheme'}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            )}
+
+            {deptCode === 'MINOR_IRRIGATION' && (
+              <section className="rounded-lg border border-border bg-background p-4">
+                <h2 className="text-sm font-semibold text-text">Manual Minor Irrigation entry</h2>
+                <p className="mt-1 text-xs text-text-muted">
+                  Add a single Minor Irrigation Project (MIP) manually. Fields mirror the key Minor Irrigation CSV columns.
+                </p>
+                <form
+                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!me?.department_id) {
+                      setError('Department is not set for this admin user.');
+                      return;
+                    }
+                    const nameKey = snakeFromHeader('NAME OF M.I.P');
+                    const latKey = snakeFromHeader('LATITUDE');
+                    const lngKey = snakeFromHeader('LONGITUDE');
+                    const name = (minorFormValues[nameKey] || '').trim();
+                    const latStr = minorFormValues[latKey] || '';
+                    const lngStr = minorFormValues[lngKey] || '';
+                    if (!name || !latStr.trim() || !lngStr.trim()) {
+                      setError('Name of M.I.P, Latitude and Longitude are required.');
+                      return;
+                    }
+                    setCreating(true);
+                    setError(null);
+                    try {
+                      const lat = Number(latStr);
+                      const lng = Number(lngStr);
+                      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                        throw new Error('Latitude and Longitude must be valid numbers.');
+                      }
+                      const block = minorFormValues[snakeFromHeader('BLOCK/ULB')] || '';
+                      const gp = minorFormValues[snakeFromHeader('GP/WARD')] || '';
+                      const village = minorFormValues[snakeFromHeader('VILLAGE/LOCALITY')] || '';
+                      const addressParts = [block, gp, village].filter((p) => p && p.trim());
+
+                      let orgId: number;
+                      if (editingMinorId) {
+                        orgId = editingMinorId;
+                      } else {
+                        const basePayload = {
+                          name,
+                          latitude: lat,
+                          longitude: lng,
+                          address: addressParts.length ? addressParts.join(', ') : undefined,
+                          attributes: {
+                            ulb_block: block || null,
+                            gp_name: gp || null,
+                            ward_village: village || null,
+                          } as Record<string, string | number | null>,
+                        };
+
+                        const org = await organizationsApi.create({
+                          department_id: me.department_id,
+                          type: 'OTHER',
+                          ...basePayload,
+                        });
+                        orgId = org.id;
+                        setOrgs((prev) => [org, ...prev]);
+                      }
+
+                      const profileData: Record<string, unknown> = {};
+                      splitHeader(MINOR_IRRIGATION_CSV_HEADER).forEach((header) => {
+                        const key = snakeFromHeader(header);
+                        const val = minorFormValues[key];
+                        if (val != null && String(val).trim() !== '') {
+                          profileData[key] = val;
+                        }
+                      });
+                      profileData[latKey] = lat;
+                      profileData[lngKey] = lng;
+                      profileData[nameKey] = name;
+
+                      const saved = await minorIrrigationApi.putProfile(orgId, profileData);
+                      setMinorIrrigationProfiles((prev) => ({
+                        ...prev,
+                        [orgId]: (saved && typeof saved === 'object' ? saved : profileData) as Record<string, unknown>,
+                      }));
+
+                      setMinorFormValues({});
+                      setEditingMinorId(null);
+                    } catch (err: any) {
+                      setError(err.message || 'Failed to save minor irrigation entry');
+                    } finally {
+                      setCreating(false);
+                    }
+                  }}
+                >
+                  {splitHeader(MINOR_IRRIGATION_CSV_HEADER).map((header) => {
+                    const key = snakeFromHeader(header);
+                    return (
+                      <div key={key} className="space-y-1">
+                        <label className="block text-text">{header}</label>
+                        <input
+                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                          value={minorFormValues[key] ?? ''}
+                          onChange={(e) =>
+                            setMinorFormValues((prev) => ({
+                              ...prev,
+                              [key]: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                  <div className="md:col-span-2">
+                    <button
+                      type="submit"
+                      disabled={creating}
+                      className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                    >
+                      {creating ? 'Saving...' : editingMinorId ? 'Update MIP' : 'Save MIP'}
                     </button>
                   </div>
                 </form>
@@ -1525,6 +1676,10 @@ export default function DepartmentAdminPage() {
                       : deptCode === 'WATCO_RWSS'
                         ? 'Upload WATCO/RWSS water supply CSV. Schemes will be created or updated by STATION NAME, LATITUDE, LONGITUDE.'
                         : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
+                        ? 'Upload WATCO/RWSS water supply CSV. Schemes will be created or updated by STATION NAME, LATITUDE, LONGITUDE.'
+                        : deptCode === 'MINOR_IRRIGATION'
+                          ? 'Upload Minor Irrigation CSV. Projects will be created or updated by NAME OF M.I.P, LATITUDE, LONGITUDE.'
+                          : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
               </p>
               <div className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center md:justify-between">
                 <button
@@ -1572,11 +1727,13 @@ export default function DepartmentAdminPage() {
                             ? 'Facility Name'
                             : deptCode === 'ELECTRICITY'
                               ? 'Office Name'
-                              : deptCode === 'WATCO_RWSS'
+                              : deptCode === 'WATCO' || deptCode === 'WATCO_RWSS'
                                 ? 'Station Name'
-                                : 'AWC Name'}
+                                : deptCode === 'MINOR_IRRIGATION'
+                                  ? 'MIP Name'
+                                  : 'AWC Name'}
                       </th>
-                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY' && deptCode !== 'WATCO_RWSS') && (
+                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY' && deptCode !== 'WATCO_RWSS' && deptCode !== 'MINOR_IRRIGATION') && (
                         <>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
@@ -1663,9 +1820,9 @@ export default function DepartmentAdminPage() {
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">DW(Overhead)</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">DW(Aquaguard)</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Latitude</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Longitude</th>
-                        </>
-                      )}
+                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Longitude</th>
+                    </>
+                  )}
                       {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
                         <>
                           {getEducationHeadersForSubDept(educationSubDept).map((header) => (
@@ -1721,6 +1878,21 @@ export default function DepartmentAdminPage() {
                           })}
                         </>
                       )}
+                      {deptCode === 'MINOR_IRRIGATION' && (
+                        <>
+                          {splitHeader(MINOR_IRRIGATION_CSV_HEADER).map((header) => {
+                            if (header === 'NAME OF M.I.P') return null;
+                            return (
+                              <th
+                                key={header}
+                                className="px-2 py-1 text-left font-medium text-text whitespace-nowrap"
+                              >
+                                {header}
+                              </th>
+                            );
+                          })}
+                        </>
+                      )}
                       <th className="px-2 py-1 text-left font-medium text-text">Actions</th>
                     </tr>
                   </thead>
@@ -1730,12 +1902,13 @@ export default function DepartmentAdminPage() {
                       const hp = healthProfiles[o.id];
                       const ep = educationProfiles[o.id];
                       const wp = waterProfiles[o.id];
+                      const mp = minorIrrigationProfiles[o.id];
                       const _ = (v: string | number | null | undefined | unknown) => (v != null && String(v).trim() !== '' ? String(v) : '—');
                       return (
                         <tr key={o.id} className="border-b border-border/60">
                           <td className="px-2 py-1 text-text-muted">{page * PAGE_SIZE + idx + 1}</td>
                           <td className="px-2 py-1">{o.name}</td>
-                          {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'WATCO_RWSS' && deptCode !== 'ELECTRICITY') && (
+                          {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'WATCO_RWSS' && deptCode !== 'ELECTRICITY' && deptCode !== 'MINOR_IRRIGATION') && (
                             <>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ulb_block ?? prof?.block_name)}</td>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_name ?? prof?.gram_panchayat)}</td>
@@ -1765,6 +1938,30 @@ export default function DepartmentAdminPage() {
                                 return (
                                   <td key={key} className="px-2 py-1 text-text-muted">
                                     {val != null && String(val).trim() !== '' ? String(val) : '—'}
+                                  </td>
+                                );
+                              })}
+                            </>
+                          )}
+                          {deptCode === 'MINOR_IRRIGATION' && (
+                            <>
+                              {splitHeader(MINOR_IRRIGATION_CSV_HEADER).map((header) => {
+                                if (header === 'NAME OF M.I.P') return null;
+                                const key = snakeFromHeader(header);
+                                const data = mp as Record<string, unknown> | undefined;
+                                let val: unknown = data ? data[key] : undefined;
+                                if (header === 'MIP ID') {
+                                  val = data ? data[key] : undefined;
+                                }
+                                if (header === 'LATITUDE') {
+                                  val = o.latitude != null ? o.latitude : val;
+                                }
+                                if (header === 'LONGITUDE') {
+                                  val = o.longitude != null ? o.longitude : val;
+                                }
+                                return (
+                                  <td key={key} className="px-2 py-1 text-text-muted">
+                                    {_(val)}
                                   </td>
                                 );
                               })}
@@ -1915,8 +2112,18 @@ export default function DepartmentAdminPage() {
                             </>
                           )}
                           <td className="px-2 py-1 space-x-1">
-                            <Link href={`/organizations/${o.id}`} className="rounded border border-primary/50 px-2 py-0.5 text-[11px] text-primary hover:bg-primary/10">View profile</Link>
-                            {deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY' && deptCode !== 'WATCO_RWSS' && (
+                            <Link
+                              href={`/organizations/${o.id}`}
+                              className="rounded border border-primary/50 px-2 py-0.5 text-[11px] text-primary hover:bg-primary/10"
+                            >
+                              View profile
+                            </Link>
+                            {/* ICDS / non-specialized departments (not Health, Education, Electricity, Water, Minor Irrigation) */}
+                            {deptCode !== 'EDUCATION' &&
+                              deptCode !== 'HEALTH' &&
+                              deptCode !== 'ELECTRICITY' &&
+                              deptCode !== 'WATCO_RWSS' &&
+                              deptCode !== 'MINOR_IRRIGATION' && (
                               <button
                                 type="button"
                                 className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
@@ -1945,6 +2152,41 @@ export default function DepartmentAdminPage() {
                                     awh_contact_no: String(p?.awh_contact_no ?? ''),
                                     description: String(p?.description ?? ''),
                                   });
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                              >
+                                Edit
+                              </button>
+                            )}
+                            {/* Minor Irrigation edit – populate Minor Irrigation manual form */}
+                            {deptCode === 'MINOR_IRRIGATION' && (
+                              <button
+                                type="button"
+                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                onClick={async () => {
+                                  setEditingMinorId(o.id);
+                                  const existingProfile =
+                                    mp ||
+                                    ((await minorIrrigationApi.getProfile(
+                                      o.id,
+                                    )) as Record<string, unknown> | null);
+                                  const v = (x: unknown) =>
+                                    x != null && String(x).trim() !== '' ? String(x) : '';
+                                  const vals: Record<string, string> = {};
+                                  splitHeader(MINOR_IRRIGATION_CSV_HEADER).forEach((header) => {
+                                    const k = snakeFromHeader(header);
+                                    vals[k] = v(existingProfile?.[k]);
+                                  });
+                                  const nameKey = snakeFromHeader('NAME OF M.I.P');
+                                  const latKey = snakeFromHeader('LATITUDE');
+                                  const lngKey = snakeFromHeader('LONGITUDE');
+                                  if (!vals[nameKey]) vals[nameKey] = o.name;
+                                  if (!vals[latKey] && o.latitude != null)
+                                    vals[latKey] = String(o.latitude);
+                                  if (!vals[lngKey] && o.longitude != null)
+                                    vals[lngKey] = String(o.longitude);
+
+                                  setMinorFormValues(vals);
                                   window.scrollTo({ top: 0, behavior: 'smooth' });
                                 }}
                               >

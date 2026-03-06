@@ -19,6 +19,7 @@ export type MessageKey =
   | 'dept.electricity'
   | 'dept.drainage'
   | 'dept.water'
+  | 'dept.minorIrrigation'
   | 'shell.departmentsTab'
   | 'map.legend'
   | 'map.viewProfile'
@@ -402,6 +403,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'dept.electricity': {
     en: 'Electricity',
     or: 'ବିଦ୍ୟୁତ',
+  },
+  'dept.minorIrrigation': {
+    en: 'Minor Irrigation',
+    or: 'ସାନ ଜଳସେଚନ',
   },
   'dept.drainage': {
     en: 'Drainage',
