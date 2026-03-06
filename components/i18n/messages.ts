@@ -413,8 +413,8 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     or: 'ନିସ୍କାଷଣ',
   },
   'dept.water': {
-    en: 'Water Supply (WATCO/RWSS)',
-    or: 'ଜଳ ଯୋଗାଣ (WATCO/RWSS)',
+    en: 'WATCO/RWSS',
+    or: 'ଜଳ ଯୋଗାଣ',
   },
   'map.legend': {
     en: 'Legend',
