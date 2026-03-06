@@ -61,6 +61,14 @@ const HEALTH_TYPE_KEYS: Record<string, MessageKey> = {
   OTHER: 'map.health.other',
 };
 
+const WATCO_STATION_TYPES = [
+  'MEGA ESR',
+  'EXISTING ESR',
+  'IBPS PUMP HOUSE',
+  'INTAKE WELL',
+  'PRODUCTION WELL',
+] as const;
+
 export interface MapOrganization {
   id: number;
   name: string;
@@ -336,6 +344,8 @@ export function ConstituencyMap({
         } else if (code === 'ELECTRICITY') {
           // Only one electricity type at present; legend click is visual only
           // so we don't further filter markers here.
+        } else if (code === 'WATCO_RWSS') {
+          result = result.filter((org) => ((org.attributes?.station_type as string) || '').toUpperCase() === legendFilterType);
         } else {
           result = result.filter((org) => org.type === legendFilterType);
         }
@@ -767,6 +777,52 @@ export function ConstituencyMap({
                 {t('map.electricity.office', language)}
               </button>
             </li>
+          </ul>
+        </div>
+      )}
+      {selectedDepartmentCode?.toUpperCase() === 'WATCO_RWSS' && orgsWithLocation.length > 0 && (
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            {WATCO_STATION_TYPES.map((type) => {
+              const value = type.toUpperCase();
+              const isSelected = legendFilterType === value;
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLegendFilterType((prev) => (prev === value ? null : value))
+                    }
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
+                      isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
+                    }`}
+                    title={
+                      isSelected
+                        ? t('map.legend.showAll', language)
+                        : `${t('map.legend.showOnly', language)} ${type}`
+                    }
+                  >
+                    <span
+                      className="inline-block h-2 w-2 rounded-full shrink-0"
+                      style={{
+                        backgroundColor:
+                          type === 'MEGA ESR'
+                            ? '#0ea5e9'
+                            : type === 'EXISTING ESR'
+                              ? '#22c55e'
+                              : type === 'IBPS PUMP HOUSE'
+                                ? '#f97316'
+                                : type === 'INTAKE WELL'
+                                  ? '#6366f1'
+                                  : '#e11d48',
+                      }}
+                    />
+                    {type}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
