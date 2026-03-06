@@ -88,6 +88,19 @@ export const AWC_MARKER_ICON = `${PIN_BASE}/pink-dot.png`;
 /** Label for AWC org type */
 export const AWC_TYPE_LABEL = 'Anganwadi Centre (AWC)';
 
+/**
+ * Default marker icon per top-level department.
+ * Used when a department does not have a more specific
+ * per-type icon mapping (unlike Education / Health / ICDS).
+ */
+export const DEPARTMENT_MARKER_ICONS: Record<string, string> = {
+  EDUCATION: MARKER_COLORS.blue,
+  HEALTH: MARKER_COLORS.green,
+  ICDS: AWC_MARKER_ICON,
+  AWC_ICDS: AWC_MARKER_ICON,
+  ROADS: MARKER_COLORS.orange,
+};
+
 /** Health organization types → marker icon (reuse pin colors) */
 export const HEALTH_MARKER_ICONS: Record<string, string> = {
   HOSPITAL: MARKER_COLORS.red,
@@ -111,6 +124,12 @@ export const HEALTH_TYPE_LABELS: Record<string, string> = {
   HEALTH_CENTRE: 'Health Centre',
   OTHER: 'Other',
 };
+
+/** Electricity marker icon */
+export const ELECTRICITY_MARKER_ICON = MARKER_COLORS.yellow;
+
+/** Backend type for Electricity orgs; label now comes from i18n */
+export const ELECTRICITY_TYPE_LABEL = 'Electricity Office';
 
 /** Road types derived from name/code (NH, PWD, RD, etc.) for coloring */
 export type RoadTypeKey = 'NH' | 'PWD' | 'RD' | 'OTHER';

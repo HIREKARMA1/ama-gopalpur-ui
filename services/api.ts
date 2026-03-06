@@ -493,6 +493,137 @@ export interface EducationMonthlyProgress {
   [key: string]: unknown;
 }
 
+// ----- Electricity (organizations under Electricity department) -----
+const electricityBase = (orgId: number) => `/api/v1/electricity/organizations/${orgId}`;
+export const electricityApi = {
+  getProfile: (orgId: number) =>
+    apiFetch<Record<string, unknown>>(`${electricityBase(orgId)}/profile`).catch(() => ({})),
+  putProfile: (orgId: number, data: Record<string, unknown>) =>
+    apiFetch<Record<string, unknown>>(`${electricityBase(orgId)}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  getMaster: (orgId: number) =>
+    apiFetch<ElectricityMaster | null>(`${electricityBase(orgId)}/master`).catch(() => null),
+  putMaster: (orgId: number, data: Partial<ElectricityMaster>) =>
+    apiFetch<ElectricityMaster>(`${electricityBase(orgId)}/master`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  bulkCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/electricity/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+  listStaff: (orgId: number) =>
+    apiFetch<ElectricityStaff[]>(`${electricityBase(orgId)}/staff`).catch(() => []),
+  createStaff: (orgId: number, data: Partial<ElectricityStaff>) =>
+    apiFetch<ElectricityStaff>(`${electricityBase(orgId)}/staff`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  listDaily: (orgId: number, start?: string, end?: string) => {
+    let url = `${electricityBase(orgId)}/daily`;
+    const params = new URLSearchParams();
+    if (start) params.append('start_date', start);
+    if (end) params.append('end_date', end);
+    if (params.toString()) url += `?${params.toString()}`;
+    return apiFetch<ElectricityDaily[]>(url).catch(() => []);
+  },
+  createDaily: (orgId: number, data: Partial<ElectricityDaily>) =>
+    apiFetch<ElectricityDaily>(`${electricityBase(orgId)}/daily`, {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        organization_id: orgId,
+      }),
+    }),
+  listMonthly: (orgId: number) =>
+    apiFetch<ElectricityMonthly[]>(`${electricityBase(orgId)}/monthly`).catch(() => []),
+  createMonthly: (orgId: number, data: Partial<ElectricityMonthly>) =>
+    apiFetch<ElectricityMonthly>(`${electricityBase(orgId)}/monthly`, {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        organization_id: orgId,
+      }),
+    }),
+};
+
+export interface ElectricityMaster {
+  organization_id: number;
+  block_ulb?: string | null;
+  gp_ward?: string | null;
+  village_locality?: string | null;
+  institution_type?: string | null;
+  institution_id_code?: string | null;
+  ownership?: string | null;
+  full_address?: string | null;
+  in_charge_name?: string | null;
+  in_charge_contact?: string | null;
+  office_phone?: string | null;
+  office_email?: string | null;
+  voltage_level_primary?: number | null;
+  voltage_level_secondary?: number | null;
+  installed_capacity_mva?: number | null;
+  no_of_transformers?: number | null;
+  consumers_total?: number | null;
+  feeder_length_33kv?: number | null;
+  feeder_length_11kv?: number | null;
+  smart_meters_count?: number | null;
+  prepaid_meters_count?: number | null;
+  billing_efficiency_percent?: number | null;
+  hours_supply_urban?: number | null;
+  at_c_loss_percent?: number | null;
+  [key: string]: unknown;
+}
+
+export interface ElectricityStaff {
+  id: number;
+  organization_id: number;
+  staff_id?: string | null;
+  name?: string | null;
+  role?: string | null;
+  qualification?: string | null;
+  gender?: string | null;
+  contact?: string | null;
+  email?: string | null;
+  joining_date?: string | null;
+  employment_type?: string | null;
+}
+
+export interface ElectricityDaily {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  supply_hours_urban?: number | null;
+  supply_hours_rural?: number | null;
+  peak_load_mw?: number | null;
+  outages_count?: number | null;
+  outages_duration_min?: number | null;
+  complaints_received?: number | null;
+  complaints_resolved?: number | null;
+  remarks?: string | null;
+}
+
+export interface ElectricityMonthly {
+  id: number;
+  organization_id: number;
+  month: number;
+  year: number;
+  units_input_mu?: number | null;
+  units_billed_mu?: number | null;
+  revenue_billed_cr?: number | null;
+  revenue_collected_cr?: number | null;
+  at_c_loss_percent?: number | null;
+  billing_efficiency_percent?: number | null;
+  collection_efficiency_percent?: number | null;
+  remarks?: string | null;
+}
+
 export interface HealthDailyAttendance {
   id: number;
   organization_id: number;
@@ -542,6 +673,32 @@ export interface EducationGovtRegistry {
   block_code?: string | null;
   [key: string]: unknown;
 }
+
+// ----- Minor Irrigation (projects under Minor Irrigation department) -----
+const minorIrrigationBase = (orgId: number) => `/api/v1/minor-irrigation/organizations/${orgId}`;
+
+export const minorIrrigationApi = {
+  getProfile: (orgId: number) =>
+    apiFetch<Record<string, unknown>>(`${minorIrrigationBase(orgId)}/profile`).catch(
+      () => ({}),
+    ),
+  putProfile: (orgId: number, data: Record<string, unknown>) =>
+    apiFetch<Record<string, unknown>>(`${minorIrrigationBase(orgId)}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  bulkCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>(
+      '/api/v1/minor-irrigation/bulk-csv',
+      {
+        method: 'POST',
+        body: form,
+      },
+    );
+  },
+};
 
 // ----- Health (organizations under Health department) -----
 const healthBase = (orgId: number) => `/api/v1/health/organizations/${orgId}`;
@@ -706,6 +863,131 @@ export interface HealthFacilityMaster {
   operating_hours?: string | null;
   facility_status?: string | null;
   [key: string]: unknown;
+}
+
+// ----- WATCO/RWSS (water supply schemes under WATCO/RWSS department) -----
+const watcoBase = (orgId: number) => `/api/v1/watco/organizations/${orgId}`;
+export const watcoApi = {
+  getProfile: (orgId: number) =>
+    apiFetch<Record<string, unknown>>(`${watcoBase(orgId)}/profile`).catch(() => ({})),
+  putProfile: (orgId: number, data: Record<string, unknown>) =>
+    apiFetch<Record<string, unknown>>(`${watcoBase(orgId)}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  bulkCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/watco/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  // Daily Operations
+  listDailyOperations: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<WatcoDailyOperation[]>(`${watcoBase(orgId)}/daily-operations?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 50}`),
+  listDailyOperationsForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.organization_id != null) p.set('organization_id', String(params.organization_id));
+    if (params?.skip != null) p.set('skip', String(params.skip));
+    if (params?.limit != null) p.set('limit', String(params.limit ?? 50));
+    return apiFetch<WatcoDailyOperation[]>(`/api/v1/watco/daily-operations?${p}`);
+  },
+  createDailyOperation: (data: Partial<WatcoDailyOperation>) =>
+    apiFetch<WatcoDailyOperation>('/api/v1/watco/daily-operations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  bulkDailyOperationsCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/watco/daily-operations/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  // Daily Pump Logs
+  listDailyPumpLogs: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<WatcoDailyPumpLog[]>(`${watcoBase(orgId)}/daily-pump-logs?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 50}`),
+  listDailyPumpLogsForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.organization_id != null) p.set('organization_id', String(params.organization_id));
+    if (params?.skip != null) p.set('skip', String(params.skip));
+    if (params?.limit != null) p.set('limit', String(params.limit ?? 50));
+    return apiFetch<WatcoDailyPumpLog[]>(`/api/v1/watco/daily-pump-logs?${p}`);
+  },
+  createDailyPumpLog: (data: Partial<WatcoDailyPumpLog>) =>
+    apiFetch<WatcoDailyPumpLog>('/api/v1/watco/daily-pump-logs', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  bulkDailyPumpLogsCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/watco/daily-pump-logs/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  // Daily Tank Levels
+  listDailyTankLevels: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<WatcoDailyTankLevel[]>(`${watcoBase(orgId)}/daily-tank-levels?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 50}`),
+  listDailyTankLevelsForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.organization_id != null) p.set('organization_id', String(params.organization_id));
+    if (params?.skip != null) p.set('skip', String(params.skip));
+    if (params?.limit != null) p.set('limit', String(params.limit ?? 50));
+    return apiFetch<WatcoDailyTankLevel[]>(`/api/v1/watco/daily-tank-levels?${p}`);
+  },
+  createDailyTankLevel: (data: Partial<WatcoDailyTankLevel>) =>
+    apiFetch<WatcoDailyTankLevel>('/api/v1/watco/daily-tank-levels', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  bulkDailyTankLevelsCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/watco/daily-tank-levels/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+};
+
+export interface WatcoDailyOperation {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  water_produced_mld?: number | null;
+  water_supplied_mld?: number | null;
+  active_leakages?: number | null;
+  pumps_operational?: number | null;
+  pumps_total?: number | null;
+  created_at?: string;
+}
+
+export interface WatcoDailyPumpLog {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  total_running_hours?: number | null;
+  power_outage_hours?: number | null;
+  created_at?: string;
+}
+
+export interface WatcoDailyTankLevel {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  tank_name: string;
+  opening_level_ml?: number | null;
+  intake_ml?: number | null;
+  distributed_ml?: number | null;
+  closing_level_ml?: number | null;
+  created_at?: string;
 }
 export interface HealthInfrastructure {
   id: number;
