@@ -8,6 +8,7 @@ import { SuperAdminDashboardLayout } from '../../../components/layout/SuperAdmin
 import { useLanguage } from '../../../components/i18n/LanguageContext';
 import { t } from '../../../components/i18n/messages';
 import { Loader } from '../../../components/common/Loader';
+import { compressImage } from '../../../lib/imageCompression';
 
 /** ICDS minister CSV: all attributes for AWC profile (no SL NO; use system-generated org id). */
 const ICDS_CSV_HEADER =
@@ -537,7 +538,7 @@ export default function DepartmentAdminPage() {
               </section>
             )}
 
-            {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS') && deptCode !== 'AGRICULTURE' && (
+            {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS') && (
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual AWC entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
