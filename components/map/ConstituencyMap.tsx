@@ -1,27 +1,34 @@
 'use client';
 
-import { FormEvent, useCallback, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   GoogleMap,
   useJsApiLoader,
   Marker,
   InfoWindow,
   Polyline,
+  Polygon,
 } from '@react-google-maps/api';
 import { Search } from 'lucide-react';
 import {
   GOPALPUR_BOUNDS,
   GOPALPUR_CENTER,
+  GOPALPUR_BORDER,
   DEFAULT_ZOOM,
   EDUCATION_MARKER_ICONS,
   EDUCATION_TYPE_LABELS,
+  EDUCATION_SUB_DEPT_LABELS,
+  EDUCATION_SUB_DEPT_MARKERS,
   AWC_MARKER_ICON,
   MARKER_COLORS,
   HEALTH_MARKER_ICONS,
+  DEPARTMENT_MARKER_ICONS,
   HEALTH_TYPE_LABELS,
   getRoadType,
   ROAD_TYPE_COLORS,
   ROAD_TYPE_LABELS,
+  ELECTRICITY_MARKER_ICON,
+  ELECTRICITY_TYPE_LABEL,
 } from '../../lib/mapConfig';
 import type { RoadTypeKey } from '../../lib/mapConfig';
 import type { MessageKey } from '../i18n/messages';
@@ -36,11 +43,31 @@ const EDUCATION_TYPE_KEYS: Record<string, MessageKey> = {
   COLLEGE: 'map.edu.college',
   UNIVERSITY: 'map.edu.university',
 };
+const EDUCATION_SUB_DEPT_KEYS: Record<string, MessageKey> = {
+  SCHOOL: 'map.edu.sub.school',
+  ENGINEERING_COLLEGE: 'map.edu.sub.engineeringCollege',
+  ITI: 'map.edu.sub.iti',
+  UNIVERSITY: 'map.edu.sub.university',
+  DIPLOMA_COLLEGE: 'map.edu.sub.diplomaCollege',
+};
 const HEALTH_TYPE_KEYS: Record<string, MessageKey> = {
   HOSPITAL: 'map.health.hospital',
+  CHC: 'map.health.chc',
+  PHC: 'map.health.phc',
+  SC: 'map.health.sc',
+  UAAM: 'map.health.uaam',
+  UPHC: 'map.health.uphc',
   HEALTH_CENTRE: 'map.health.healthCentre',
   OTHER: 'map.health.other',
 };
+
+const WATCO_STATION_TYPES = [
+  'MEGA ESR',
+  'EXISTING ESR',
+  'IBPS PUMP HOUSE',
+  'INTAKE WELL',
+  'PRODUCTION WELL',
+] as const;
 
 export interface MapOrganization {
   id: number;
@@ -49,6 +76,7 @@ export interface MapOrganization {
   latitude?: number | null;
   longitude?: number | null;
   address?: string | null;
+  sub_department?: string | null;
   attributes?: Record<string, string | number | null> | null;
 }
 
@@ -72,6 +100,42 @@ interface ConstituencyMapProps {
 
 const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
 
+/** Build a circular SVG marker with a department initial in the center. */
+function createDepartmentSvgIcon(deptCode: string, fillColor: string): string {
+  const initial =
+    deptCode === 'EDUCATION'
+      ? 'E'
+      : deptCode === 'HEALTH'
+        ? 'H'
+        : deptCode === 'AWC_ICDS' || deptCode === 'ICDS'
+          ? 'A'
+          : deptCode === 'ELECTRICITY'
+            ? 'E'
+            : deptCode === 'ROADS'
+              ? 'R'
+              : 'D';
+
+  const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="rgba(15,23,42,0.5)"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <circle cx="20" cy="16" r="10" fill="${fillColor}" />
+    <circle cx="20" cy="16" r="10" fill="url(#grad)" opacity="0.9"/>
+    <circle cx="20" cy="16" r="10" fill="${fillColor}" />
+    <text x="20" y="20" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" font-weight="700" fill="#ffffff">
+      ${initial}
+    </text>
+  </g>
+  <path d="M20 26 L18 30 L22 30 Z" fill="${fillColor}" />
+</svg>`;
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
 export function ConstituencyMap({
   selectedDepartmentCode,
   organizations = [],
@@ -82,7 +146,14 @@ export function ConstituencyMap({
   const [infoWindowOrg, setInfoWindowOrg] = useState<MapOrganization | null>(null);
   const [selectedRoad, setSelectedRoad] = useState<RoadFeature | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [mapInstance, setMapInstance] = useState<any>(null);
+  const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+  /** When set, only show markers of this type (Education/Health legend click). Click again to clear. */
+  const [legendFilterType, setLegendFilterType] = useState<string | null>(null);
+  /** When set, only show roads of this type (Roads legend click). Click again to clear. */
+  const [roadLegendFilterType, setRoadLegendFilterType] = useState<RoadTypeKey | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   /** Load map in Odia when user has selected Odia. Read from localStorage so we use Odia on first paint after reload (context updates only in useEffect). Fixed at first mount so useJsApiLoader is never called with different options. */
@@ -96,6 +167,25 @@ export function ConstituencyMap({
     language: mapLanguage,
     region: 'IN',
   });
+
+  /** Handle clicks outside search container to close dropdown */
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowSearchDropdown(false);
+      }
+    }
+
+    if (showSearchDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSearchDropdown]);
 
   /** Only organizations with valid coordinates */
   const orgsWithLocation = useMemo(
@@ -111,6 +201,12 @@ export function ConstituencyMap({
   );
 
   const isRoadsDept = selectedDepartmentCode?.toUpperCase() === 'ROADS';
+
+  useEffect(() => {
+    setLegendFilterType(null);
+    setRoadLegendFilterType(null);
+  }, [selectedDepartmentCode]);
+
   /** Road path as Google Maps LatLng[] (GeoJSON is [lng, lat]) */
   const roadPaths = useMemo(
     () =>
@@ -138,38 +234,94 @@ export function ConstituencyMap({
         { featureType: 'transit', elementType: 'all', stylers: [{ visibility: 'off' }] },
       ],
       disableDefaultUI: false,
-      zoomControl: true,
+      zoomControl: false,
       mapTypeControl: true,
+      mapTypeControlOptions: {
+        position: 3, // google.maps.ControlPosition.TOP_RIGHT
+      },
       scaleControl: true,
       fullscreenControl: true,
+      fullscreenControlOptions: {
+        position: 3,
+      },
       streetViewControl: false,
+      rotateControl: true,
+      rotateControlOptions: {
+        position: 3, // TOP_RIGHT
+      },
       minZoom: 11,
       maxZoom: 18,
     }),
     []
   );
 
-  const getIconUrl = useCallback((type: string) => {
-    const code = selectedDepartmentCode?.toUpperCase();
-    if (code === 'EDUCATION') {
-      return EDUCATION_MARKER_ICONS[type] || EDUCATION_MARKER_ICONS.PRIMARY_SCHOOL;
-    }
-    if (code === 'HEALTH') {
-      return HEALTH_MARKER_ICONS[type] || HEALTH_MARKER_ICONS.HEALTH_CENTRE;
-    }
-    if (code === 'AWC_ICDS' || code === 'ICDS' || type === 'AWC') {
-      return AWC_MARKER_ICON;
-    }
-    return MARKER_COLORS.red;
-  }, [selectedDepartmentCode]);
+  const getIconUrl = useCallback(
+    (type: string, attributes?: Record<string, any> | null, subDept?: string | null) => {
+      const code = selectedDepartmentCode?.toUpperCase();
+      if (!code) return MARKER_COLORS.red;
+
+      // EDUCATION – match legend colors exactly
+      if (code === 'EDUCATION') {
+        const sub = (subDept || '').toUpperCase();
+        const color =
+          sub === 'SCHOOL' ? '#ea4335' :
+            sub === 'ENGINEERING_COLLEGE' ? '#1967d2' :
+              sub === 'ITI' ? '#34a853' :
+                sub === 'UNIVERSITY' ? '#fbbc04' :
+                  sub === 'DIPLOMA_COLLEGE' ? '#9c27b0' :
+                    '#ea4335';
+        return createDepartmentSvgIcon('EDUCATION', color);
+      }
+
+      // HEALTH – match legend colors exactly
+      if (code === 'HEALTH') {
+        const category = ((attributes?.category as string) || type || '').toUpperCase();
+        const color =
+          category === 'HOSPITAL' ? '#ea4335' :
+            category === 'CHC' ? '#1967d2' :
+              category === 'PHC' ? '#fbbc04' :
+                category === 'SC' ? '#34a853' :
+                  category === 'UAAM' ? '#ff9800' :
+                    category === 'UPHC' ? '#9c27b0' :
+                      category === 'HEALTH_CENTRE' ? '#1967d2' :
+                        '#34a853';
+        return createDepartmentSvgIcon('HEALTH', color);
+      }
+
+      // ICDS / AWC – single pink color, matching legend
+      if (code === 'AWC_ICDS' || code === 'ICDS' || type === 'AWC') {
+        return createDepartmentSvgIcon('AWC_ICDS', '#ec4899');
+      }
+
+      // Other departments – fall back to per-dept PNG icon if configured,
+      // otherwise a generic teal pin.
+      if (DEPARTMENT_MARKER_ICONS[code]) {
+        return DEPARTMENT_MARKER_ICONS[code];
+      }
+
+      return createDepartmentSvgIcon(code, '#0f766e');
+    },
+    [selectedDepartmentCode]
+  );
 
   const getTypeLabel = useCallback(
-    (type: string, lang: 'en' | 'or' = language) => {
+    (type: string, lang: 'en' | 'or' = language, attributes?: Record<string, any> | null, subDept?: string | null) => {
       if (type === 'AWC') return t('map.awc.label', lang);
       const code = selectedDepartmentCode?.toUpperCase();
+      if (code === 'EDUCATION') {
+        const sub = subDept?.toUpperCase();
+        const subKey = sub ? EDUCATION_SUB_DEPT_KEYS[sub] : null;
+        if (subKey) return t(subKey, lang);
+        const eduKey = EDUCATION_TYPE_KEYS[type];
+        return eduKey ? t(eduKey, lang) : EDUCATION_TYPE_LABELS[type] || type.replace(/_/g, ' ');
+      }
       if (code === 'HEALTH') {
-        const key = HEALTH_TYPE_KEYS[type];
-        return key ? t(key, lang) : HEALTH_TYPE_LABELS[type] || type.replace(/_/g, ' ');
+        const category = (attributes?.category as string)?.toUpperCase();
+        const key = category ? HEALTH_TYPE_KEYS[category] : HEALTH_TYPE_KEYS[type];
+        return key ? t(key, lang) : category || type.replace(/_/g, ' ');
+      }
+      if (code === 'ELECTRICITY') {
+        return t('map.electricity.office', lang);
       }
       const eduKey = EDUCATION_TYPE_KEYS[type];
       return eduKey ? t(eduKey, lang) : EDUCATION_TYPE_LABELS[type] || type.replace(/_/g, ' ');
@@ -180,11 +332,30 @@ export function ConstituencyMap({
   const filteredOrgs = useMemo(
     () => {
       const term = searchTerm.trim().toLowerCase();
-      if (!term) return orgsWithLocation;
-      return orgsWithLocation.filter((org) => {
+      let result = orgsWithLocation;
+
+      // Legend type filtering
+      if (legendFilterType) {
+        const code = selectedDepartmentCode?.toUpperCase();
+        if (code === 'HEALTH') {
+          result = result.filter((org) => (org.attributes?.category as string)?.toUpperCase() === legendFilterType);
+        } else if (code === 'EDUCATION') {
+          result = result.filter((org) => (org.sub_department || '').toUpperCase() === legendFilterType);
+        } else if (code === 'ELECTRICITY') {
+          // Only one electricity type at present; legend click is visual only
+          // so we don't further filter markers here.
+        } else if (code === 'WATCO_RWSS') {
+          result = result.filter((org) => ((org.attributes?.station_type as string) || '').toUpperCase() === legendFilterType);
+        } else {
+          result = result.filter((org) => org.type === legendFilterType);
+        }
+      }
+
+      if (!term) return result;
+      return result.filter((org) => {
         const name = (org.name || '').toLowerCase();
         const address = (org.address || '').toLowerCase();
-        const typeLabel = getTypeLabel(org.type).toLowerCase();
+        const typeLabel = getTypeLabel(org.type, language, org.attributes, org.sub_department).toLowerCase();
         const attributesText = org.attributes
           ? Object.values(org.attributes)
             .filter((v) => v != null)
@@ -199,7 +370,38 @@ export function ConstituencyMap({
         );
       });
     },
-    [orgsWithLocation, searchTerm, getTypeLabel]
+    [orgsWithLocation, searchTerm, getTypeLabel, language, legendFilterType, selectedDepartmentCode]
+  );
+
+  const orgsToShow = filteredOrgs;
+
+  const searchSuggestions = useMemo(
+    () => {
+      const base = searchTerm.trim() ? filteredOrgs : orgsWithLocation;
+      return base;
+    },
+    [filteredOrgs, orgsWithLocation, searchTerm]
+  );
+
+  const focusOrganization = useCallback(
+    (org: MapOrganization & { latitude: number; longitude: number }) => {
+      if (!mapInstance) return;
+      mapInstance.panTo({
+        lat: org.latitude,
+        lng: org.longitude,
+      });
+      if (
+        typeof mapInstance.getZoom === 'function' &&
+        typeof mapInstance.setZoom === 'function'
+      ) {
+        const currentZoom = mapInstance.getZoom() ?? DEFAULT_ZOOM;
+        if (currentZoom < 15) {
+          mapInstance.setZoom(15);
+        }
+      }
+      setInfoWindowOrg(org);
+    },
+    [mapInstance]
   );
 
   if (!apiKey) {
@@ -241,223 +443,449 @@ export function ConstituencyMap({
     if (!term) return;
 
     // Only auto-select if there is exactly one match OR an exact name match
-    const exactMatch = filteredOrgs.find(org => (org.name || '').toLowerCase() === term);
+    const exactMatch = filteredOrgs.find((org) => (org.name || '').toLowerCase() === term);
     const resultToSelect = exactMatch || (filteredOrgs.length === 1 ? filteredOrgs[0] : null);
 
-    if (resultToSelect && mapInstance) {
-      mapInstance.panTo({
-        lat: resultToSelect.latitude,
-        lng: resultToSelect.longitude,
-      });
-      if (typeof mapInstance.getZoom === 'function' && typeof mapInstance.setZoom === 'function') {
-        const currentZoom = mapInstance.getZoom() ?? DEFAULT_ZOOM;
-        if (currentZoom < 15) {
-          mapInstance.setZoom(15);
-        }
-      }
-      setInfoWindowOrg(resultToSelect);
+    if (resultToSelect) {
+      focusOrganization(resultToSelect);
+      setShowSearchDropdown(false);
     }
   };
 
+  /** Only show markers/roads if we have a department selected, are zoomed in enough, or have a search result */
+  const showContent = !!selectedDepartmentCode || zoom >= 13 || !!infoWindowOrg || (searchTerm.trim() !== '' && filteredOrgs.length > 0);
+
   return (
-    <div className="relative h-full w-full min-h-[200px] overflow-hidden">
+    <div className="relative h-full w-full min-h-[400px] overflow-hidden flex flex-col">
+      <style jsx global>{`
+        /* Hide Google logo and terms/policy links */
+        .gm-style img[src*="google_white"],
+        .gm-style img[src*="google_gray"],
+        .gm-style a[href*="maps.google.com"],
+        .gm-style a[href*="google.com/intl/en-US_in/help/terms_maps"],
+        .gm-style a[href*="google.com/help/legalnotices_maps"],
+        .gm-style-cc a,
+        button[title*="Report a map error"] {
+          display: none !important;
+        }
+        /* Hide the container for copyright text but keep buttons */
+        .gm-style-cc {
+          display: none !important;
+        }
+      `}</style>
       {selectedDepartmentCode && (
-        <div className="pointer-events-none absolute top-[10px] left-32 sm:left-40 z-20 flex items-center justify-start px-2  sm:px-4">
+        <div
+          ref={searchContainerRef}
+          className="pointer-events-none sm:absolute sm:top-[10px] sm:left-4 sm:right-auto z-20 flex items-center justify-start px-4 sm:px-0 w-full sm:w-auto py-2 sm:py-0"
+        >
           <form
             onSubmit={handleSearchSubmit}
-            className="pointer-events-auto flex w-full max-w-xl items-center gap-2 rounded-sm bg-white/95 px-3 py-1.5 shadow-sm ring-1 ring-slate-200"
+            className="pointer-events-auto relative flex w-full max-w-xl items-center gap-2 rounded-sm bg-white/95 px-3 py-1.5 shadow-sm ring-1 ring-slate-200"
           >
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={`Search ${selectedDepartmentCode === 'AWC_ICDS' ? 'ICDS' : selectedDepartmentCode.charAt(0).toUpperCase() + selectedDepartmentCode.slice(1).toLowerCase()}…`}
+              onFocus={() => setShowSearchDropdown(true)}
+              onClick={() => setShowSearchDropdown(true)}
+              placeholder={t('map.search.placeholder', language).replace('{dept}', selectedDepartmentCode === 'AWC_ICDS' ? 'ICDS' : selectedDepartmentCode.charAt(0).toUpperCase() + selectedDepartmentCode.slice(1).toLowerCase())}
               className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
             />
             <button
-              type="submit"
+              type="button"
+              onClick={() => setShowSearchDropdown((open) => !open)}
               className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground hover:opacity-90"
-              aria-label="Search on map"
+              aria-label="Open location search"
             >
               <Search size={14} />
             </button>
+            {showSearchDropdown && (
+              <div className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg z-30 text-sm">
+                {searchSuggestions.length === 0 && (
+                  <div className="px-3 py-3 text-xs text-slate-500">
+                    {t('map.search.noResults', language)}
+                  </div>
+                )}
+                {searchSuggestions.map((org) => (
+                  <button
+                    key={org.id}
+                    type="button"
+                    onClick={() => {
+                      focusOrganization(org as MapOrganization & { latitude: number; longitude: number });
+                      setShowSearchDropdown(false);
+                    }}
+                    className="w-full px-3 py-2 text-left hover:bg-slate-50"
+                  >
+                    <div className="font-medium text-slate-900 truncate">{org.name}</div>
+                    {(org.address || org.attributes?.ulb_block || org.attributes?.gp_name || org.attributes?.ward_village) && (
+                      <div className="mt-0.5 text-[11px] text-slate-500 truncate">
+                        {org.address ||
+                          [org.attributes?.ulb_block, org.attributes?.gp_name, org.attributes?.ward_village]
+                            .filter((v) => v != null && String(v).trim() !== '')
+                            .join(', ')}
+                      </div>
+                    )}
+                  </button>
+                ))}
+                {searchTerm.trim() && (
+                  <button
+                    type="submit"
+                    className="w-full px-3 py-2 text-left text-xs font-semibold text-primary border-t border-slate-100 hover:bg-slate-50"
+                  >
+                    {t('map.search.submit', language)} “{searchTerm.trim()}”
+                  </button>
+                )}
+              </div>
+            )}
           </form>
         </div>
       )}
-      <GoogleMap
-        mapContainerStyle={MAP_CONTAINER_STYLE}
-        center={GOPALPUR_CENTER}
-        zoom={DEFAULT_ZOOM}
-        options={mapOptions}
-        onLoad={(map) => setMapInstance(map)}
-      >
-        {isRoadsDept &&
-          roads.map((road, idx) => {
-            const path = roadPaths[idx] ?? [];
-            if (path.length < 2) return null;
-            const name = road.properties?.name ?? road.properties?.roadName ?? 'Road';
-            const code = road.properties?.code ?? '';
-            const roadType = getRoadType(name, code);
-            const color = ROAD_TYPE_COLORS[roadType];
-            return (
-              <Polyline
-                key={`road-${idx}-${name}`}
-                path={path}
-                options={{
-                  strokeColor: color,
-                  strokeWeight: 5,
-                  strokeOpacity: 0.9,
-                  clickable: true,
-                }}
-                onClick={() => setSelectedRoad(road)}
-              />
-            );
-          })}
-        {!isRoadsDept &&
-          filteredOrgs.map((org) => (
-            <Marker
-              key={org.id}
-              position={{ lat: org.latitude, lng: org.longitude }}
-              title={org.name}
-              icon={getIconUrl(org.type)}
-              onClick={() => {
-                setInfoWindowOrg(org);
-              }}
-              cursor="pointer"
-            />
-          ))}
-        {selectedRoad && (() => {
-          const coords = selectedRoad.geometry?.coordinates ?? [];
-          const first = coords[0];
-          if (!first) return null;
-          const [lng, lat] = first;
-          const name = selectedRoad.properties?.name ?? selectedRoad.properties?.roadName ?? 'Road';
-          const code = selectedRoad.properties?.code ?? '';
-          const block = selectedRoad.properties?.block ?? '';
-          const roadType = getRoadType(name, code);
-          return (
-            <InfoWindow
-              position={{ lat, lng }}
-              onCloseClick={() => setSelectedRoad(null)}
-            >
-              <div className="min-w-[200px] max-w-[280px] py-1">
-                <p className="font-semibold text-gray-900">{name}</p>
-                {code && <p className="text-xs text-gray-600">{ROAD_TYPE_LABELS[roadType]} · {code}</p>}
-                {block && <p className="mt-1 text-xs text-gray-500">Block: {block}</p>}
-              </div>
-            </InfoWindow>
-          );
-        })()}
-        {infoWindowOrg && (
-          <InfoWindow
-            position={{
-              lat: infoWindowOrg.latitude!,
-              lng: infoWindowOrg.longitude!,
+      <div className="flex-1 w-full relative">
+        <GoogleMap
+          mapContainerStyle={MAP_CONTAINER_STYLE}
+          center={GOPALPUR_CENTER}
+          zoom={DEFAULT_ZOOM}
+          options={mapOptions}
+          onLoad={(map) => setMapInstance(map)}
+          onZoomChanged={() => {
+            if (mapInstance) {
+              setZoom(mapInstance.getZoom());
+            }
+          }}
+          onClick={() => {
+            setInfoWindowOrg(null);
+            setSelectedRoad(null);
+          }}
+        >
+          <Polyline
+            path={GOPALPUR_BORDER}
+            options={{
+              strokeColor: '#ef4444', // red-500
+              strokeOpacity: 0,
+              icons: [
+                {
+                  icon: {
+                    path: 'M 0,-1 0,1',
+                    strokeOpacity: 1,
+                    scale: 3,
+                    strokeWeight: 2,
+                  },
+                  offset: '0',
+                  repeat: '20px',
+                },
+              ],
+              clickable: false,
             }}
-            onCloseClick={() => setInfoWindowOrg(null)}
-          >
-            <div className="min-w-[180px] max-w-[260px] py-1">
-              <p className="font-semibold text-gray-900">{infoWindowOrg.name}</p>
-              <p className="text-xs text-gray-600">
-                {getTypeLabel(infoWindowOrg.type, language)}
-              </p>
-              {infoWindowOrg.type === 'AWC' && infoWindowOrg.attributes && (
-                <p className="mt-1 text-xs text-gray-500">
-                  Sector: {String(infoWindowOrg.attributes.sector || '–')}
-                  {(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village) && (
-                    <> · GP: {String(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village)}</>
-                  )}
-                </p>
-              )}
-              {infoWindowOrg.address && (
-                <p className="mt-1 text-xs text-gray-500">{infoWindowOrg.address}</p>
-              )}
-              {onSelectOrganization && (
-                <button
-                  type="button"
-                  className="mt-2 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
-                  onClick={() => {
-                    onSelectOrganization(infoWindowOrg.id);
+          />
+          {showContent && isRoadsDept &&
+            roads.map((road, idx) => {
+              const path = roadPaths[idx] ?? [];
+              if (path.length < 2) return null;
+              const name = road.properties?.name ?? road.properties?.roadName ?? 'Road';
+              const code = road.properties?.code ?? '';
+              const roadType = getRoadType(name, code);
+              if (roadLegendFilterType != null && roadType !== roadLegendFilterType) return null;
+              const color = ROAD_TYPE_COLORS[roadType];
+              return (
+                <Polyline
+                  key={`road-${idx}-${name}`}
+                  path={path}
+                  options={{
+                    strokeColor: color,
+                    strokeWeight: 5,
+                    strokeOpacity: 0.9,
+                    clickable: true,
+                  }}
+                  onClick={(e) => {
+                    if (e?.domEvent && 'stopPropagation' in e.domEvent && typeof e.domEvent.stopPropagation === 'function') {
+                      e.domEvent.stopPropagation();
+                    }
+                    setSelectedRoad(road);
                     setInfoWindowOrg(null);
                   }}
-                >
-                  {t('map.viewProfile', language)}
-                </button>
-              )}
-            </div>
-          </InfoWindow>
-        )}
-      </GoogleMap>
-      {selectedDepartmentCode?.toUpperCase() === 'EDUCATION' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[200px]">
-          <p className="font-medium text-text">{t('map.legend', language)}</p>
-          <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-text-muted">
-            {Object.entries(EDUCATION_TYPE_LABELS).map(([type]) => (
-              <li key={type} className="flex items-center gap-1">
-                <span
-                  className="inline-block h-2 w-2 rounded-full"
-                  style={{
-                    backgroundColor:
-                      type === 'PRIMARY_SCHOOL'
-                        ? '#ea4335'
-                        : type === 'UPPER_PRIMARY_SCHOOL'
-                          ? '#4285f4'
-                          : type === 'HIGH_SCHOOL'
-                            ? '#34a853'
-                            : type === 'HIGHER_SECONDARY'
-                              ? '#fb8c00'
-                              : type === 'COLLEGE'
-                                ? '#9c27b0'
-                                : '#f9ab00',
-                  }}
                 />
-                {getTypeLabel(type, language)}
-              </li>
+              );
+            })}
+          {showContent && !isRoadsDept &&
+            orgsToShow.map((org) => (
+              <Marker
+                key={org.id}
+                position={{ lat: org.latitude, lng: org.longitude }}
+                title={org.name}
+                icon={getIconUrl(org.type, org.attributes, org.sub_department)}
+                onClick={(e) => {
+                  // Prevent map-level click from also firing (which would close the info window).
+                  if (e?.domEvent && 'stopPropagation' in e.domEvent && typeof e.domEvent.stopPropagation === 'function') {
+                    e.domEvent.stopPropagation();
+                  }
+                  setInfoWindowOrg(org);
+                  setSelectedRoad(null);
+                }}
+                cursor="pointer"
+              />
             ))}
+          {selectedRoad && (() => {
+            const coords = selectedRoad.geometry?.coordinates ?? [];
+            const first = coords[0];
+            if (!first) return null;
+            const [lng, lat] = first;
+            const name = selectedRoad.properties?.name ?? selectedRoad.properties?.roadName ?? 'Road';
+            const code = selectedRoad.properties?.code ?? '';
+            const block = selectedRoad.properties?.block ?? '';
+            const roadType = getRoadType(name, code);
+            return (
+              <InfoWindow
+                position={{ lat, lng }}
+                onCloseClick={() => setSelectedRoad(null)}
+              >
+                <div className="min-w-[190px] max-w-[260px]">
+                  <div className="rounded-2xl bg-white shadow-md border border-slate-200 px-3 py-0.5">
+                    <p className="text-[13px] font-semibold text-slate-900">{name}</p>
+                    {code && (
+                      <p className="mt-0.5 text-[11px] font-medium text-slate-600">
+                        {ROAD_TYPE_LABELS[roadType]} · <span className="font-mono text-[11px]">{code}</span>
+                      </p>
+                    )}
+                    {block && (
+                      <p className="mt-0.5 text-[11px] text-slate-500">
+                        {t('map.info.block', language)}: {block}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </InfoWindow>
+            );
+          })()}
+          {infoWindowOrg && (
+            <InfoWindow
+              position={{
+                lat: infoWindowOrg.latitude!,
+                lng: infoWindowOrg.longitude!,
+              }}
+              onCloseClick={() => setInfoWindowOrg(null)}
+            >
+              <div className="min-w-[190px] max-w-[260px]">
+                <div className="rounded-2xl bg-white shadow-md border border-slate-200 px-3 py-2.5">
+                  <p className="text-[13px] font-semibold text-slate-900">{infoWindowOrg.name}</p>
+                  <p className="mt-0.5 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-700">
+                    {getTypeLabel(
+                      infoWindowOrg.type,
+                      language,
+                      infoWindowOrg.attributes,
+                      infoWindowOrg.sub_department
+                    )}
+                  </p>
+                  {infoWindowOrg.type === 'AWC' && infoWindowOrg.attributes && (
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                      {t('map.info.sector', language)}: {String(infoWindowOrg.attributes.sector || '–')}
+                      {(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village) && (
+                        <>
+                          {' '}
+                          · {t('map.info.gp', language)}:{' '}
+                          {String(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village)}
+                        </>
+                      )}
+                    </p>
+                  )}
+                  {infoWindowOrg.address && (
+                    <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
+                      {infoWindowOrg.address}
+                    </p>
+                  )}
+                  {onSelectOrganization && (
+                    <button
+                      type="button"
+                      className="mt-2 inline-flex items-center justify-center rounded-full bg-orange-500 px-3 py-1.5 text-[10px] font-semibold text-white shadow-sm hover:bg-orange-600"
+                      onClick={() => {
+                        onSelectOrganization(infoWindowOrg.id);
+                        setInfoWindowOrg(null);
+                      }}
+                    >
+                      {t('map.viewProfile', language)}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </InfoWindow>
+          )}
+        </GoogleMap>
+      </div>
+      {selectedDepartmentCode?.toUpperCase() === 'EDUCATION' && orgsWithLocation.length > 0 && (
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[300px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            {Object.entries(EDUCATION_SUB_DEPT_LABELS).map(([sub, label]) => {
+              const type = sub; // sub is used as filter type here
+              const isSelected = legendFilterType === type;
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
+                    title={isSelected ? t('map.legend.showAll', language) : `${t('map.legend.showOnly', language)} ${t(EDUCATION_SUB_DEPT_KEYS[type] as any, language)}`}
+                  >
+                    <span
+                      className="inline-block h-2 w-2 rounded-full shrink-0"
+                      style={{
+                        backgroundColor:
+                          type === 'SCHOOL' ? '#ea4335' :
+                            type === 'ENGINEERING_COLLEGE' ? '#1967d2' :
+                              type === 'ITI' ? '#34a853' :
+                                type === 'UNIVERSITY' ? '#fbbc04' :
+                                  type === 'DIPLOMA_COLLEGE' ? '#9c27b0' : '#ea4335',
+                      }}
+                    />
+                    {t(EDUCATION_SUB_DEPT_KEYS[type] as any, language)}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
       {(selectedDepartmentCode?.toUpperCase() === 'AWC_ICDS' || selectedDepartmentCode?.toUpperCase() === 'ICDS') && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[200px]">
-          <p className="font-medium text-text">{t('map.legend', language)}</p>
-          <p className="mt-1 flex items-center gap-1 text-text-muted">
-            <span className="inline-block h-2 w-2 rounded-full bg-pink-500" />
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <p className="flex items-center gap-2 text-slate-700">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-pink-500" />
             {t('map.awc.label', language)}
           </p>
         </div>
       )}
+      {selectedDepartmentCode?.toUpperCase() === 'ELECTRICITY' && orgsWithLocation.length > 0 && (
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[220px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            <li>
+              <button
+                type="button"
+                onClick={() =>
+                  setLegendFilterType((prev) => (prev === ELECTRICITY_TYPE_LABEL ? null : ELECTRICITY_TYPE_LABEL))
+                }
+                className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${legendFilterType === ELECTRICITY_TYPE_LABEL
+                  ? 'ring-1 ring-slate-400 bg-slate-100 font-medium'
+                  : 'hover:bg-slate-50'
+                  }`}
+                title={
+                  legendFilterType === ELECTRICITY_TYPE_LABEL
+                    ? t('map.legend.showAll', language)
+                    : `${t('map.legend.showOnly', language)} ${t('map.electricity.office', language)}`
+                }
+              >
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-yellow-400" />
+                {t('map.electricity.office', language)}
+              </button>
+            </li>
+          </ul>
+        </div>
+      )}
+      {selectedDepartmentCode?.toUpperCase() === 'WATCO_RWSS' && orgsWithLocation.length > 0 && (
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            {WATCO_STATION_TYPES.map((type) => {
+              const value = type.toUpperCase();
+              const isSelected = legendFilterType === value;
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLegendFilterType((prev) => (prev === value ? null : value))
+                    }
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
+                      isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
+                    }`}
+                    title={
+                      isSelected
+                        ? t('map.legend.showAll', language)
+                        : `${t('map.legend.showOnly', language)} ${type}`
+                    }
+                  >
+                    <span
+                      className="inline-block h-2 w-2 rounded-full shrink-0"
+                      style={{
+                        backgroundColor:
+                          type === 'MEGA ESR'
+                            ? '#0ea5e9'
+                            : type === 'EXISTING ESR'
+                              ? '#22c55e'
+                              : type === 'IBPS PUMP HOUSE'
+                                ? '#f97316'
+                                : type === 'INTAKE WELL'
+                                  ? '#6366f1'
+                                  : '#e11d48',
+                      }}
+                    />
+                    {type}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
       {selectedDepartmentCode?.toUpperCase() === 'HEALTH' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[200px]">
-          <p className="font-medium text-text">{t('map.legend', language)}</p>
-          <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-text-muted">
-            {Object.entries(HEALTH_TYPE_LABELS).map(([type]) => (
-              <li key={type} className="flex items-center gap-1">
-                <span
-                  className="inline-block h-2 w-2 rounded-full"
-                  style={{
-                    backgroundColor:
-                      type === 'HOSPITAL' ? '#ea4335' : type === 'HEALTH_CENTRE' ? '#4285f4' : '#34a853',
-                  }}
-                />
-                {getTypeLabel(type, language)}
-              </li>
-            ))}
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            {Object.entries(HEALTH_TYPE_LABELS)
+              .filter(([type]) => !['HOSPITAL', 'HEALTH_CENTRE', 'OTHER'].includes(type))
+              .map(([type]) => {
+                const isSelected = legendFilterType === type;
+                return (
+                  <li key={type}>
+                    <button
+                      type="button"
+                      onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
+                      className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
+                      title={isSelected ? t('map.legend.showAll', language) : `${t('map.legend.showOnly', language)} ${getTypeLabel(type, language)}`}
+                    >
+                      <span
+                        className="inline-block h-2 w-2 rounded-full shrink-0"
+                        style={{
+                          backgroundColor:
+                            type === 'HOSPITAL' ? '#ea4335' :
+                              type === 'CHC' ? '#1967d2' :
+                                type === 'PHC' ? '#fbbc04' :
+                                  type === 'SC' ? '#34a853' :
+                                    type === 'UAAM' ? '#ff9800' :
+                                      type === 'UPHC' ? '#9c27b0' :
+                                        type === 'HEALTH_CENTRE' ? '#1967d2' : '#34a853',
+                        }}
+                      />
+                      {getTypeLabel(type, language)}
+                    </button>
+                  </li>
+                );
+              })}
           </ul>
         </div>
       )}
       {isRoadsDept && roads.length > 0 && (
-        <div className="absolute bottom-2 left-2 right-2 rounded bg-background/95 px-2 py-1.5 text-xs shadow md:left-2 md:right-auto md:max-w-[220px]">
-          <p className="font-medium text-text">{t('map.legend', language)}</p>
-          <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-text-muted">
-            {(Object.entries(ROAD_TYPE_LABELS) as [RoadTypeKey, string][]).map(([type]) => (
-              <li key={type} className="flex items-center gap-1">
-                <span
-                  className="inline-block h-2 w-3 rounded-sm"
-                  style={{ backgroundColor: ROAD_TYPE_COLORS[type] }}
-                />
-                {ROAD_TYPE_LABELS[type]}
-              </li>
-            ))}
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[220px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            {(Object.entries(ROAD_TYPE_LABELS) as [RoadTypeKey, string][]).map(([type]) => {
+              const isSelected = roadLegendFilterType === type;
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() => setRoadLegendFilterType((prev) => (prev === type ? null : type))}
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
+                    title={isSelected ? t('map.legend.showAll', language) : `${t('map.legend.showOnly', language)} ${ROAD_TYPE_LABELS[type]}`}
+                  >
+                    <span
+                      className="inline-block h-2 w-3 rounded-sm shrink-0"
+                      style={{ backgroundColor: ROAD_TYPE_COLORS[type] }}
+                    />
+                    {ROAD_TYPE_LABELS[type]}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

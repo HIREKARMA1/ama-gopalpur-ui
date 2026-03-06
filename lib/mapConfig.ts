@@ -4,18 +4,32 @@
  */
 
 /** Approximate center of Gopalpur constituency (covering Rangeilunda, Kukudakhandi, Berhampur Urban-I) */
-export const GOPALPUR_CENTER = { lat: 19.28, lng: 84.86 };
+export const GOPALPUR_CENTER = { lat: 19.29, lng: 84.78 };
 
 /** Bounds to restrict the map to the Gopalpur constituency (SW and NE corners) */
 export const GOPALPUR_BOUNDS = {
-  south: 19.18,
-  west: 84.75,
-  north: 19.40,
-  east: 84.98,
+  south: 19.10,
+  west: 84.55,
+  north: 19.48,
+  east: 85.05,
 };
 
+/** Comprehensive boundary for Gopalpur constituency (AC 132) 
+ * Expanded to include all organization clusters from data 
+ */
+export const GOPALPUR_BORDER = [
+  { lat: 19.45, lng: 84.75 }, // North edge (Hugulapatta area)
+  { lat: 19.38, lng: 84.95 }, // NE Coastal tip
+  { lat: 19.25, lng: 84.98 }, // SE Coastal edge
+  { lat: 19.13, lng: 84.85 }, // South coastal edge (Markandi area)
+  { lat: 19.13, lng: 84.74 }, // South inland (Biswanathpur area)
+  { lat: 19.20, lng: 84.59 }, // West edge (Golanthara/western GPs)
+  { lat: 19.40, lng: 84.65 }, // NW corner (Kukudakhandi area)
+  { lat: 19.45, lng: 84.75 }, // Close loop
+];
+
 /** Default zoom level so the block fills the map */
-export const DEFAULT_ZOOM = 12;
+export const DEFAULT_ZOOM = 11;
 
 /** Google Maps colored marker icons (base URL from env) */
 const PIN_BASE = process.env.NEXT_PUBLIC_MAP_ICONS_BASE_URL ?? '';
@@ -41,7 +55,6 @@ export const EDUCATION_MARKER_ICONS: Record<string, string> = {
   UNIVERSITY: MARKER_COLORS.yellow,
 };
 
-/** Human-readable labels for Education types (for tooltips/legend) */
 export const EDUCATION_TYPE_LABELS: Record<string, string> = {
   PRIMARY_SCHOOL: 'Primary School',
   UPPER_PRIMARY_SCHOOL: 'Upper Primary School',
@@ -51,15 +64,51 @@ export const EDUCATION_TYPE_LABELS: Record<string, string> = {
   UNIVERSITY: 'University',
 };
 
+/** Education sub-departments for top-level legend/filtering */
+export const EDUCATION_SUB_DEPT_LABELS: Record<string, string> = {
+  SCHOOL: 'School',
+  ENGINEERING_COLLEGE: 'Engineering College',
+  ITI: 'ITI',
+  UNIVERSITY: 'University',
+  DIPLOMA_COLLEGE: 'Diploma College',
+};
+
+/** Marker colors for Education sub-departments */
+export const EDUCATION_SUB_DEPT_MARKERS: Record<string, string> = {
+  SCHOOL: MARKER_COLORS.red,
+  ENGINEERING_COLLEGE: MARKER_COLORS.blue,
+  ITI: MARKER_COLORS.green,
+  UNIVERSITY: MARKER_COLORS.yellow,
+  DIPLOMA_COLLEGE: MARKER_COLORS.purple,
+};
+
 /** Single marker for AWC (ICDS) – Anganwadi Centres */
 export const AWC_MARKER_ICON = `${PIN_BASE}/pink-dot.png`;
 
 /** Label for AWC org type */
 export const AWC_TYPE_LABEL = 'Anganwadi Centre (AWC)';
 
+/**
+ * Default marker icon per top-level department.
+ * Used when a department does not have a more specific
+ * per-type icon mapping (unlike Education / Health / ICDS).
+ */
+export const DEPARTMENT_MARKER_ICONS: Record<string, string> = {
+  EDUCATION: MARKER_COLORS.blue,
+  HEALTH: MARKER_COLORS.green,
+  ICDS: AWC_MARKER_ICON,
+  AWC_ICDS: AWC_MARKER_ICON,
+  ROADS: MARKER_COLORS.orange,
+};
+
 /** Health organization types → marker icon (reuse pin colors) */
 export const HEALTH_MARKER_ICONS: Record<string, string> = {
   HOSPITAL: MARKER_COLORS.red,
+  CHC: MARKER_COLORS.blue,
+  PHC: MARKER_COLORS.yellow,
+  SC: MARKER_COLORS.green,
+  UAAM: MARKER_COLORS.orange,
+  UPHC: MARKER_COLORS.purple,
   HEALTH_CENTRE: MARKER_COLORS.blue,
   OTHER: MARKER_COLORS.green,
 };
@@ -67,9 +116,20 @@ export const HEALTH_MARKER_ICONS: Record<string, string> = {
 /** Human-readable labels for Health types */
 export const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
+  CHC: 'CHC',
+  PHC: 'PHC',
+  SC: 'SC',
+  UAAM: 'UAAM',
+  UPHC: 'UPHC',
   HEALTH_CENTRE: 'Health Centre',
   OTHER: 'Other',
 };
+
+/** Electricity marker icon */
+export const ELECTRICITY_MARKER_ICON = MARKER_COLORS.yellow;
+
+/** Backend type for Electricity orgs; label now comes from i18n */
+export const ELECTRICITY_TYPE_LABEL = 'Electricity Office';
 
 /** Road types derived from name/code (NH, PWD, RD, etc.) for coloring */
 export type RoadTypeKey = 'NH' | 'PWD' | 'RD' | 'OTHER';
