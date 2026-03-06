@@ -2166,7 +2166,7 @@ export default function DepartmentAdminPage() {
                                     ? 'Work Name'
                                     : 'AWC Name'}
                       </th>
-                      {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS' && deptCode !== 'ELECTRICITY' && deptCode !== 'WATCO_RWSS' && deptCode !== 'MINOR_IRRIGATION') && (
+                      {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS') && (
                         <>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
@@ -2355,7 +2355,7 @@ export default function DepartmentAdminPage() {
                         <tr key={o.id} className="border-b border-border/60">
                           <td className="px-2 py-1 text-text-muted">{page * PAGE_SIZE + idx + 1}</td>
                           <td className="px-2 py-1">{o.name}</td>
-                          {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS' && deptCode !== 'WATCO_RWSS' && deptCode !== 'ELECTRICITY' && deptCode !== 'MINOR_IRRIGATION') && (
+                          {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS') && (
                             <>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ulb_block ?? prof?.block_name)}</td>
                               <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_name ?? prof?.gram_panchayat)}</td>
