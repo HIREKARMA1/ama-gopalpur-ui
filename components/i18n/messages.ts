@@ -17,6 +17,9 @@ export type MessageKey =
   | 'dept.icds'
   | 'dept.roads'
   | 'dept.electricity'
+  | 'dept.drainage'
+  | 'dept.water'
+  | 'dept.minorIrrigation'
   | 'shell.departmentsTab'
   | 'map.legend'
   | 'map.viewProfile'
@@ -148,6 +151,7 @@ export type MessageKey =
   | 'super.admins.empty'
   | 'super.error.loadFailed'
   | 'health.monitoring.title'
+  | 'water.monitoring.title'
   | 'electricity.monitoring.title'
   | 'health.monitoring.subtitle'
   | 'health.monitoring.attendance.title'
@@ -399,6 +403,18 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'dept.electricity': {
     en: 'Electricity',
     or: 'ବିଦ୍ୟୁତ',
+  },
+  'dept.minorIrrigation': {
+    en: 'Minor Irrigation',
+    or: 'ସାନ ଜଳସେଚନ',
+  },
+  'dept.drainage': {
+    en: 'Drainage',
+    or: 'ନିସ୍କାଷଣ',
+  },
+  'dept.water': {
+    en: 'Water Supply (WATCO/RWSS)',
+    or: 'ଜଳ ଯୋଗାଣ (WATCO/RWSS)',
   },
   'map.legend': {
     en: 'Legend',
@@ -887,6 +903,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'health.monitoring.title': {
     en: 'Daily Health Monitoring',
     or: 'ଦୈନିକ ସ୍ୱାସ୍ଥ୍ୟ ଅନୁମାନ',
+  },
+  'water.monitoring.title': {
+    en: 'Daily Water Monitoring Data',
+    or: 'ଦୈନିକ ଜଳ ଯୋଗାଣ ତଥ୍ୟ',
   },
   'electricity.monitoring.title': {
     en: 'Electricity Operations Monitoring',

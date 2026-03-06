@@ -11,6 +11,7 @@ import {
   educationApi,
   healthApi,
   electricityApi,
+  watcoApi,
   Organization,
   Department,
   CenterProfile,
@@ -33,6 +34,7 @@ import { AwcPortfolioDashboard } from '../../../components/organization/AwcPortf
 import { EducationPortfolioDashboard } from '../../../components/organization/EducationPortfolioDashboard';
 import { HealthPortfolioDashboard } from '../../../components/organization/HealthPortfolioDashboard';
 import { ElectricityPortfolioDashboard } from '../../../components/organization/ElectricityPortfolioDashboard';
+import { WaterPortfolioDashboard } from '../../../components/organization/WaterPortfolioDashboard';
 
 const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
@@ -161,6 +163,10 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [electricityStaff, setElectricityStaff] = useState<Awaited<ReturnType<typeof electricityApi.listStaff>>>([]);
   const [electricityDaily, setElectricityDaily] = useState<Awaited<ReturnType<typeof electricityApi.listDaily>>>([]);
   const [electricityMonthly, setElectricityMonthly] = useState<Awaited<ReturnType<typeof electricityApi.listMonthly>>>([]);
+  const [waterProfile, setWaterProfile] = useState<Record<string, unknown>>({});
+  const [waterDailyOperations, setWaterDailyOperations] = useState<Awaited<ReturnType<typeof watcoApi.listDailyOperations>>>([]);
+  const [waterDailyPumpLogs, setWaterDailyPumpLogs] = useState<Awaited<ReturnType<typeof watcoApi.listDailyPumpLogs>>>([]);
+  const [waterDailyTankLevels, setWaterDailyTankLevels] = useState<Awaited<ReturnType<typeof watcoApi.listDailyTankLevels>>>([]);
   const [snpDailyStock, setSnpDailyStock] = useState<Awaited<ReturnType<typeof icdsApi.listSnpDailyStock>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -248,6 +254,19 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           setElectricityStaff(staff || []);
           setElectricityDaily(daily || []);
           setElectricityMonthly(monthly || []);
+        } else if (code === 'WATCO_RWSS') {
+          const [profile, ops, pumps, tanks] = await Promise.all([
+            watcoApi.getProfile(id),
+            watcoApi.listDailyOperations(id),
+            watcoApi.listDailyPumpLogs(id),
+            watcoApi.listDailyTankLevels(id),
+          ]);
+          setWaterProfile(
+            profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
+          );
+          setWaterDailyOperations(ops || []);
+          setWaterDailyPumpLogs(pumps || []);
+          setWaterDailyTankLevels(tanks || []);
         } else {
           // AWC / ICDS or other: try center profile and SNP daily stock
           try {
@@ -341,6 +360,27 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           dailyExtraData={healthDailyExtraData}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
+        />
+      </div>
+    );
+  }
+
+  if (deptCode === 'WATCO_RWSS') {
+    const galleryImages = Array.isArray((waterProfile as any)?.gallery_images)
+      ? ((waterProfile as any).gallery_images as string[])
+      : [];
+    const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
+    return (
+      <div className="page-container">
+        <Navbar />
+        <WaterPortfolioDashboard
+          org={org}
+          waterProfile={waterProfile}
+          images={images}
+          departmentName={departments.find((d) => d.id === org.department_id)?.name}
+          dailyOperations={waterDailyOperations}
+          dailyPumpLogs={waterDailyPumpLogs}
+          dailyTankLevels={waterDailyTankLevels}
         />
       </div>
     );
