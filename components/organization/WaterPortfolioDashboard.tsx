@@ -333,6 +333,12 @@ export function WaterPortfolioDashboard({
                     color: 'slate',
                   },
                   {
+                    label: 'Station Type',
+                    val: waterProfile['station_type'] || org.attributes?.station_type,
+                    icon: Droplets,
+                    color: 'indigo',
+                  },
+                  {
                     label: 'Block / ULB',
                     val: waterProfile['block_ulb'],
                     icon: MapPin,
@@ -349,18 +355,6 @@ export function WaterPortfolioDashboard({
                     val: waterProfile['village_locality'] || waterProfile['village'],
                     icon: MapPin,
                     color: 'violet',
-                  },
-                  {
-                    label: 'Division',
-                    val: waterProfile['division'],
-                    icon: Building,
-                    color: 'slate',
-                  },
-                  {
-                    label: 'Sub-division',
-                    val: waterProfile['sub_division'],
-                    icon: Building,
-                    color: 'slate',
                   },
                   {
                     label: language === 'or' ? 'ଯୋଜନା ନାମ' : 'Scheme Name',
