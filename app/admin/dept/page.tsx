@@ -1,5 +1,5 @@
 'use client';
-   2j hgfd
+
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -154,6 +154,8 @@ export default function DepartmentAdminPage() {
   const [minorFormValues, setMinorFormValues] = useState<Record<string, string>>({});
   const [editingMinorId, setEditingMinorId] = useState<number | null>(null);
   const [revenueFormValues, setRevenueFormValues] = useState<Record<string, string>>({});
+  const [revenueImageFile, setRevenueImageFile] = useState<File | null>(null);
+  const [editingRevenueId, setEditingRevenueId] = useState<number | null>(null);
 
   const _n = (s: string) => (s.trim() ? (Number(s) || undefined) : undefined);
   const _s = (s: string) => (s.trim() || undefined);
@@ -194,7 +196,7 @@ export default function DepartmentAdminPage() {
   }, [router]);
 
   useEffect(() => {
-    if (deptCode === 'EDUCATION' || deptCode === 'HEALTH' || orgs.length === 0) return;
+    if (deptCode !== 'ICDS' && deptCode !== 'AWC_ICDS' || orgs.length === 0) return;
     let cancelled = false;
     (async () => {
       const profiles: Record<number, CenterProfile | null> = {};
@@ -496,17 +498,17 @@ export default function DepartmentAdminPage() {
                 { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
                 { href: '/admin/dept/electricity-monitoring', labelKey: 'electricity.monitoring.title' },
               ]
-                : deptCode === 'WATCO_RWSS'
+              : deptCode === 'WATCO_RWSS'
                 ? [
                   { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
                   { href: '/admin/dept/water-monitoring', labelKey: 'water.monitoring.title' },
                 ]
                 : deptCode === 'REVENUE_LAND'
-                ? [
-                  { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
-                  { href: '/admin/dept/revenue-land-monitoring', labelKey: 'revenueLand.monitoring.title' },
-                ]
-                : [{ href: '/admin/dept', labelKey: 'super.sidebar.dashboard' }]
+                  ? [
+                    { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
+                    { href: '/admin/dept/revenue-land-monitoring', labelKey: 'revenueLand.monitoring.title' },
+                  ]
+                  : [{ href: '/admin/dept', labelKey: 'super.sidebar.dashboard' }]
       }
       onLogout={() => {
         clearToken();
@@ -888,7 +890,9 @@ export default function DepartmentAdminPage() {
 
             {deptCode === 'REVENUE_LAND' && (
               <section className="rounded-lg border border-border bg-background p-4">
-                <h2 className="text-sm font-semibold text-text">Manual land parcel entry</h2>
+                <h2 className="text-sm font-semibold text-text">
+                  {editingRevenueId ? 'Edit land parcel' : 'Manual land parcel entry'}
+                </h2>
                 <p className="mt-1 text-xs text-text-muted">
                   Add a single Revenue Govt Land parcel manually. Key fields mirror the CSV template (Govt
                   land ID, basic location and coordinates).
@@ -929,25 +933,43 @@ export default function DepartmentAdminPage() {
                         revenueFormValues[snakeFromHeader('HABITATION/LOCALITY')] || '';
                       const addressParts = [habitation, mouza, gp, block, tahasil].filter((p) => p && p.trim());
 
-                      // Create organization
-                      const org = await organizationsApi.create({
-                        department_id: me.department_id,
-                        name,
-                        type: 'OTHER',
-                        latitude: lat,
-                        longitude: lng,
-                        address: addressParts.length ? addressParts.join(', ') : undefined,
-                        attributes: {
-                          tahasil: tahasil || null,
-                          block_ulb: block || null,
-                          gp_ward: gp || null,
-                          mouza_village: mouza || null,
-                          habitation_locality: habitation || null,
-                        } as Record<string, string | number | null>,
-                      });
+                      let orgId = editingRevenueId;
+                      if (editingRevenueId) {
+                        const updatedOrg = await organizationsApi.update(editingRevenueId, {
+                          name,
+                          latitude: lat,
+                          longitude: lng,
+                          address: addressParts.length ? addressParts.join(', ') : undefined,
+                          attributes: {
+                            tahasil: tahasil || null,
+                            block_ulb: block || null,
+                            gp_ward: gp || null,
+                            mouza_village: mouza || null,
+                            habitation_locality: habitation || null,
+                          } as Record<string, string | number | null>,
+                        });
+                        setOrgs((prev) => prev.map((o) => (o.id === editingRevenueId ? updatedOrg : o)));
+                      } else {
+                        const org = await organizationsApi.create({
+                          department_id: me.department_id,
+                          name,
+                          type: 'OTHER',
+                          latitude: lat,
+                          longitude: lng,
+                          address: addressParts.length ? addressParts.join(', ') : undefined,
+                          attributes: {
+                            tahasil: tahasil || null,
+                            block_ulb: block || null,
+                            gp_ward: gp || null,
+                            mouza_village: mouza || null,
+                            habitation_locality: habitation || null,
+                          } as Record<string, string | number | null>,
+                        });
+                        orgId = org.id;
+                        setOrgs((prev) => [org, ...prev]);
+                      }
 
-                      const orgId = org.id;
-                      setOrgs((prev) => [org, ...prev]);
+                      if (!orgId) throw new Error('Failed to identify organization');
 
                       // Build profile data from the CSV header
                       const profileData: Record<string, unknown> = {};
@@ -971,7 +993,14 @@ export default function DepartmentAdminPage() {
                         >,
                       }));
 
+                      if (revenueImageFile) {
+                        const compressed = await compressImage(revenueImageFile, { maxSizeMB: 0.5 });
+                        await organizationsApi.uploadCoverImage(orgId, compressed);
+                        setRevenueImageFile(null);
+                      }
+
                       setRevenueFormValues({});
+                      setEditingRevenueId(null);
                     } catch (err: any) {
                       setError(err.message || 'Failed to save land parcel');
                     } finally {
@@ -1007,14 +1036,36 @@ export default function DepartmentAdminPage() {
                       </div>
                     );
                   })}
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-2 space-y-1">
+                    <label className="block text-text font-medium">Profile Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="w-full text-xs text-text file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                      onChange={(e) => setRevenueImageFile(e.target.files?.[0] || null)}
+                    />
+                  </div>
+                  <div className="md:col-span-2 flex items-center space-x-2">
                     <button
                       type="submit"
                       disabled={creating}
                       className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
                     >
-                      {creating ? 'Saving...' : 'Save land parcel'}
+                      {creating ? (editingRevenueId ? 'Updating...' : 'Saving...') : (editingRevenueId ? 'Update land parcel' : 'Save land parcel')}
                     </button>
+                    {editingRevenueId && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingRevenueId(null);
+                          setRevenueFormValues({});
+                          setRevenueImageFile(null);
+                        }}
+                        className="mt-1 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-text hover:bg-gray-50 disabled:opacity-60"
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </div>
                 </form>
               </section>
@@ -2002,9 +2053,9 @@ export default function DepartmentAdminPage() {
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">DW(Overhead)</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">DW(Aquaguard)</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Latitude</th>
-                      <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Longitude</th>
-                    </>
-                  )}
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Longitude</th>
+                        </>
+                      )}
                       {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
                         <>
                           {getEducationHeadersForSubDept(educationSubDept).map((header) => (
@@ -2314,46 +2365,47 @@ export default function DepartmentAdminPage() {
                             >
                               View profile
                             </Link>
-                            {/* ICDS / non-specialized departments (not Health, Education, Electricity, Water, Minor Irrigation) */}
+                            {/* ICDS / non-specialized departments (not Health, Education, Electricity, Water, Minor Irrigation, Revenue) */}
                             {deptCode !== 'EDUCATION' &&
                               deptCode !== 'HEALTH' &&
                               deptCode !== 'ELECTRICITY' &&
                               deptCode !== 'WATCO_RWSS' &&
-                              deptCode !== 'MINOR_IRRIGATION' && (
-                              <button
-                                type="button"
-                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
-                                onClick={async () => {
-                                  setEditingOrgId(o.id);
-                                  const p = await profileApi.getCenterProfile(o.id);
-                                  setNewOrg({
-                                    ulb_block: String(o.attributes?.ulb_block ?? p?.block_name ?? ''),
-                                    gp_name: String(o.attributes?.gp_name ?? p?.gram_panchayat ?? ''),
-                                    ward_village: String(o.attributes?.ward_village ?? p?.village_ward ?? ''),
-                                    sector: String(o.attributes?.sector ?? p?.sector ?? ''),
-                                    awc_name: o.name,
-                                    awc_id: String(p?.center_code ?? ''),
-                                    building_status: String(p?.building_type ?? ''),
-                                    latitude: o.latitude != null ? String(o.latitude) : '',
-                                    longitude: o.longitude != null ? String(o.longitude) : '',
-                                    lgd_code: String(o.attributes?.lgd_code ?? ''),
-                                    student_strength: p?.student_strength != null ? String(p.student_strength) : '',
-                                    cpdo_name: String(p?.cpdo_name ?? ''),
-                                    cpdo_contact_no: String(p?.cpdo_contact_no ?? ''),
-                                    supervisor_name: String(p?.supervisor_name ?? ''),
-                                    supervisor_contact_name: String(p?.supervisor_contact_name ?? ''),
-                                    aww_name: String(p?.worker_name ?? ''),
-                                    aww_contact_no: String(p?.aww_contact_no ?? ''),
-                                    awh_name: String(p?.helper_name ?? ''),
-                                    awh_contact_no: String(p?.awh_contact_no ?? ''),
-                                    description: String(p?.description ?? ''),
-                                  });
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                              >
-                                Edit
-                              </button>
-                            )}
+                              deptCode !== 'MINOR_IRRIGATION' &&
+                              deptCode !== 'REVENUE_LAND' && (
+                                <button
+                                  type="button"
+                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                  onClick={async () => {
+                                    setEditingOrgId(o.id);
+                                    const p = await profileApi.getCenterProfile(o.id);
+                                    setNewOrg({
+                                      ulb_block: String(o.attributes?.ulb_block ?? p?.block_name ?? ''),
+                                      gp_name: String(o.attributes?.gp_name ?? p?.gram_panchayat ?? ''),
+                                      ward_village: String(o.attributes?.ward_village ?? p?.village_ward ?? ''),
+                                      sector: String(o.attributes?.sector ?? p?.sector ?? ''),
+                                      awc_name: o.name,
+                                      awc_id: String(p?.center_code ?? ''),
+                                      building_status: String(p?.building_type ?? ''),
+                                      latitude: o.latitude != null ? String(o.latitude) : '',
+                                      longitude: o.longitude != null ? String(o.longitude) : '',
+                                      lgd_code: String(o.attributes?.lgd_code ?? ''),
+                                      student_strength: p?.student_strength != null ? String(p.student_strength) : '',
+                                      cpdo_name: String(p?.cpdo_name ?? ''),
+                                      cpdo_contact_no: String(p?.cpdo_contact_no ?? ''),
+                                      supervisor_name: String(p?.supervisor_name ?? ''),
+                                      supervisor_contact_name: String(p?.supervisor_contact_name ?? ''),
+                                      aww_name: String(p?.worker_name ?? ''),
+                                      aww_contact_no: String(p?.aww_contact_no ?? ''),
+                                      awh_name: String(p?.helper_name ?? ''),
+                                      awh_contact_no: String(p?.awh_contact_no ?? ''),
+                                      description: String(p?.description ?? ''),
+                                    });
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                              )}
                             {/* Minor Irrigation edit – populate Minor Irrigation manual form */}
                             {deptCode === 'MINOR_IRRIGATION' && (
                               <button
@@ -2534,6 +2586,35 @@ export default function DepartmentAdminPage() {
                                     availability_of_pathology_testing: v(p?.availability_of_pathology_testing),
                                     description: v(p?.description),
                                   });
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                              >
+                                Edit
+                              </button>
+                            )}
+                            {deptCode === 'REVENUE_LAND' && (
+                              <button
+                                type="button"
+                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                onClick={async () => {
+                                  setEditingRevenueId(o.id);
+                                  const existingProfile =
+                                    revenueProfiles[o.id] ||
+                                    ((await revenueLandApi.getProfile(o.id)) as Record<string, unknown> | undefined);
+                                  const v = (x: unknown) =>
+                                    x != null && String(x).trim() !== '' ? String(x) : '';
+                                  const vals: Record<string, string> = { name: o.name };
+                                  splitHeader(REVENUE_LAND_CSV_HEADER).forEach((header) => {
+                                    const key = snakeFromHeader(header);
+                                    if (key === snakeFromHeader('LATITUDE')) {
+                                      vals[key] = v(existingProfile?.[key] ?? (o.latitude != null ? String(o.latitude) : ''));
+                                    } else if (key === snakeFromHeader('LONGITUDE')) {
+                                      vals[key] = v(existingProfile?.[key] ?? (o.longitude != null ? String(o.longitude) : ''));
+                                    } else {
+                                      vals[key] = v(existingProfile?.[key]);
+                                    }
+                                  });
+                                  setRevenueFormValues(vals);
                                   window.scrollTo({ top: 0, behavior: 'smooth' });
                                 }}
                               >

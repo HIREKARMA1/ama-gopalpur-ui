@@ -99,6 +99,30 @@ export function RevenueLandPortfolioDashboard({
     { label: 'In land bank', value: landBankFlag, icon: Landmark, color: 'indigo' },
   ] as const;
 
+  const statColorClasses: Record<
+    (typeof topStats)[number]['color'],
+    { card: string; label: string; value: string; iconWrap: string }
+  > = {
+    amber: {
+      card: 'border-amber-200 bg-amber-100/40',
+      label: 'text-amber-900/70',
+      value: 'text-amber-950',
+      iconWrap: 'bg-amber-200/50 text-amber-700',
+    },
+    emerald: {
+      card: 'border-emerald-200 bg-emerald-100/40',
+      label: 'text-emerald-900/70',
+      value: 'text-emerald-950',
+      iconWrap: 'bg-emerald-200/50 text-emerald-700',
+    },
+    indigo: {
+      card: 'border-indigo-200 bg-indigo-100/40',
+      label: 'text-indigo-900/70',
+      value: 'text-indigo-950',
+      iconWrap: 'bg-indigo-200/50 text-indigo-700',
+    },
+  };
+
   const highlightedKeys = new Set<string>([
     'tahasil',
     'ri_circle',
@@ -253,10 +277,14 @@ export function RevenueLandPortfolioDashboard({
     .sort(([a], [b]) => a.localeCompare(b));
 
   return (
-    <div className="min-h-screen bg-slate-50/30 text-slate-800 font-sans pb-16">
+    <div className="min-h-screen bg-slate-50/30 text-slate-800 font-sans pb-16 overflow-x-hidden">
       {/* Hero */}
       <section className="w-full">
-        <ImageSlider images={finalImages} altPrefix={org.name} className="h-[410px] sm:h-[400px]" />
+        <ImageSlider
+          images={finalImages}
+          altPrefix={org.name}
+          className="h-[240px] min-[420px]:h-[280px] sm:h-[360px] lg:h-[410px]"
+        />
       </section>
 
       {/* Top Header */}
@@ -278,15 +306,14 @@ export function RevenueLandPortfolioDashboard({
               <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
                 Parcel details
               </h2>
-              <div className="flex flex-wrap items-center justify-center sm:justify-start rounded-full bg-slate-100 p-1 w-full sm:w-auto">
+              <div className="grid grid-cols-2 sm:flex items-center rounded-xl sm:rounded-full bg-slate-100 p-1 w-full sm:w-auto gap-1">
                 <button
                   type="button"
                   onClick={() => setDetailTab('overview')}
-                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    detailTab === 'overview'
-                      ? 'bg-white text-[#0f172a] shadow-sm'
-                      : 'text-[#64748b] hover:text-[#0f172a]'
-                  }`}
+                  className={`w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl sm:rounded-full px-3 py-2 sm:py-1.5 text-xs font-semibold transition ${detailTab === 'overview'
+                    ? 'bg-white text-[#0f172a] shadow-sm'
+                    : 'text-[#64748b] hover:text-[#0f172a]'
+                    }`}
                 >
                   <Building size={14} />
                   <span>Overview</span>
@@ -294,11 +321,10 @@ export function RevenueLandPortfolioDashboard({
                 <button
                   type="button"
                   onClick={() => setDetailTab('tenure')}
-                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    detailTab === 'tenure'
-                      ? 'bg-white text-[#0f172a] shadow-sm'
-                      : 'text-[#64748b] hover:text-[#0f172a]'
-                  }`}
+                  className={`w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl sm:rounded-full px-3 py-2 sm:py-1.5 text-xs font-semibold transition ${detailTab === 'tenure'
+                    ? 'bg-white text-[#0f172a] shadow-sm'
+                    : 'text-[#64748b] hover:text-[#0f172a]'
+                    }`}
                 >
                   <Monitor size={14} />
                   <span>Tenure</span>
@@ -306,11 +332,10 @@ export function RevenueLandPortfolioDashboard({
                 <button
                   type="button"
                   onClick={() => setDetailTab('use')}
-                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    detailTab === 'use'
-                      ? 'bg-white text-[#0f172a] shadow-sm'
-                      : 'text-[#64748b] hover:text-[#0f172a]'
-                  }`}
+                  className={`w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl sm:rounded-full px-3 py-2 sm:py-1.5 text-xs font-semibold transition ${detailTab === 'use'
+                    ? 'bg-white text-[#0f172a] shadow-sm'
+                    : 'text-[#64748b] hover:text-[#0f172a]'
+                    }`}
                 >
                   <Scale size={14} />
                   <span>Use & lease</span>
@@ -318,11 +343,10 @@ export function RevenueLandPortfolioDashboard({
                 <button
                   type="button"
                   onClick={() => setDetailTab('risk')}
-                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    detailTab === 'risk'
-                      ? 'bg-white text-[#0f172a] shadow-sm'
-                      : 'text-[#64748b] hover:text-[#0f172a]'
-                  }`}
+                  className={`w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl sm:rounded-full px-3 py-2 sm:py-1.5 text-xs font-semibold transition ${detailTab === 'risk'
+                    ? 'bg-white text-[#0f172a] shadow-sm'
+                    : 'text-[#64748b] hover:text-[#0f172a]'
+                    }`}
                 >
                   <AlertTriangle size={14} />
                   <span>Risk & records</span>
@@ -433,7 +457,7 @@ export function RevenueLandPortfolioDashboard({
                         </div>
                       </div>
                     );
-                    })}
+                  })}
                 </div>
               </div>
             )}
@@ -442,57 +466,57 @@ export function RevenueLandPortfolioDashboard({
               <div className="space-y-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {useFields.map(([key, value]) => {
-                      const config: Record<string, { icon: any; color: string }> = {
-                        present_use_office_school_health_centre_rli_road_pond_market_vacant_other: {
-                          icon: Layers,
-                          color: 'emerald',
-                        },
-                        proposed_use: { icon: FileText, color: 'indigo' },
-                        is_in_land_bank_yes_no: { icon: Landmark, color: 'violet' },
-                        land_bank_category_a_b_other: { icon: Tag, color: 'pink' },
-                        leased_out_yes_no: { icon: Scale, color: 'amber' },
-                        lessee_name: { icon: Building, color: 'sky' },
-                        lease_purpose: { icon: FileText, color: 'teal' },
-                        lease_deed_no: { icon: Hash, color: 'slate' },
-                        lease_period_from_dd_mm_yyyy: { icon: FileText, color: 'orange' },
-                        lease_period_to_dd_mm_yyyy: { icon: FileText, color: 'rose' },
-                        lease_premium_amount_rs: { icon: FileText, color: 'emerald' },
-                        lease_annual_rent_rs: { icon: FileText, color: 'blue' },
-                      };
+                    const config: Record<string, { icon: any; color: string }> = {
+                      present_use_office_school_health_centre_rli_road_pond_market_vacant_other: {
+                        icon: Layers,
+                        color: 'emerald',
+                      },
+                      proposed_use: { icon: FileText, color: 'indigo' },
+                      is_in_land_bank_yes_no: { icon: Landmark, color: 'violet' },
+                      land_bank_category_a_b_other: { icon: Tag, color: 'pink' },
+                      leased_out_yes_no: { icon: Scale, color: 'amber' },
+                      lessee_name: { icon: Building, color: 'sky' },
+                      lease_purpose: { icon: FileText, color: 'teal' },
+                      lease_deed_no: { icon: Hash, color: 'slate' },
+                      lease_period_from_dd_mm_yyyy: { icon: FileText, color: 'orange' },
+                      lease_period_to_dd_mm_yyyy: { icon: FileText, color: 'rose' },
+                      lease_premium_amount_rs: { icon: FileText, color: 'emerald' },
+                      lease_annual_rent_rs: { icon: FileText, color: 'blue' },
+                    };
 
-                      const item = config[key] || { icon: FileText, color: 'slate' };
-                      const colorMap: Record<string, string> = {
-                        blue: 'bg-blue-50 text-blue-600 border-blue-100',
-                        emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-                        amber: 'bg-amber-50 text-amber-600 border-amber-100',
-                        violet: 'bg-violet-50 text-violet-600 border-violet-100',
-                        slate: 'bg-slate-100 text-slate-600 border-slate-200',
-                        teal: 'bg-teal-50 text-teal-600 border-teal-100',
-                        rose: 'bg-rose-50 text-rose-600 border-rose-100',
-                        pink: 'bg-pink-50 text-pink-600 border-pink-100',
-                        indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
-                        orange: 'bg-orange-50 text-orange-600 border-orange-100',
-                        sky: 'bg-sky-50 text-sky-600 border-sky-100',
-                      };
+                    const item = config[key] || { icon: FileText, color: 'slate' };
+                    const colorMap: Record<string, string> = {
+                      blue: 'bg-blue-50 text-blue-600 border-blue-100',
+                      emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                      amber: 'bg-amber-50 text-amber-600 border-amber-100',
+                      violet: 'bg-violet-50 text-violet-600 border-violet-100',
+                      slate: 'bg-slate-100 text-slate-600 border-slate-200',
+                      teal: 'bg-teal-50 text-teal-600 border-teal-100',
+                      rose: 'bg-rose-50 text-rose-600 border-rose-100',
+                      pink: 'bg-pink-50 text-pink-600 border-pink-100',
+                      indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+                      orange: 'bg-orange-50 text-orange-600 border-orange-100',
+                      sky: 'bg-sky-50 text-sky-600 border-sky-100',
+                    };
 
-                      return (
-                        <div key={key} className="flex gap-4 items-center">
-                          <div
-                            className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${colorMap[item.color]}`}
-                          >
-                            <item.icon size={20} strokeWidth={2} />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">
-                              {keyToLabel(key)}
-                            </p>
-                            <p className="text-[15px] font-bold text-[#0f172a] truncate">
-                              {formatVal(value as any)}
-                            </p>
-                          </div>
+                    return (
+                      <div key={key} className="flex gap-4 items-center">
+                        <div
+                          className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${colorMap[item.color]}`}
+                        >
+                          <item.icon size={20} strokeWidth={2} />
                         </div>
-                      );
-                    })}
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">
+                            {keyToLabel(key)}
+                          </p>
+                          <p className="text-[15px] font-bold text-[#0f172a] truncate">
+                            {formatVal(value as any)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -508,54 +532,54 @@ export function RevenueLandPortfolioDashboard({
                     ['ror_year', profile['ror_year']],
                     ['last_mutation_case_no', profile['last_mutation_case_no']],
                   ].map(([key, value]) => {
-                      const config: Record<string, { icon: any; color: string }> = {
-                        encroachment_status: { icon: AlertTriangle, color: 'rose' },
-                        encroachment_case_no_ople: { icon: Activity, color: 'orange' },
-                        court_case_no: { icon: FileText, color: 'slate' },
-                        court_name: { icon: Home, color: 'indigo' },
-                        litigation_status: { icon: AlertTriangle, color: 'amber' },
-                        flood_prone_yes_no: { icon: AlertTriangle, color: 'emerald' },
-                        crz_zone_if_any: { icon: Layers, color: 'sky' },
-                        bhunaksha_sheet_no: { icon: FileText, color: 'teal' },
-                        bhunaksha_plot_id: { icon: FileText, color: 'violet' },
-                        ror_no: { icon: FileText, color: 'pink' },
-                        ror_year: { icon: FileText, color: 'blue' },
-                        last_mutation_case_no: { icon: FileText, color: 'slate' },
-                      };
+                    const config: Record<string, { icon: any; color: string }> = {
+                      encroachment_status: { icon: AlertTriangle, color: 'rose' },
+                      encroachment_case_no_ople: { icon: Activity, color: 'orange' },
+                      court_case_no: { icon: FileText, color: 'slate' },
+                      court_name: { icon: Home, color: 'indigo' },
+                      litigation_status: { icon: AlertTriangle, color: 'amber' },
+                      flood_prone_yes_no: { icon: AlertTriangle, color: 'emerald' },
+                      crz_zone_if_any: { icon: Layers, color: 'sky' },
+                      bhunaksha_sheet_no: { icon: FileText, color: 'teal' },
+                      bhunaksha_plot_id: { icon: FileText, color: 'violet' },
+                      ror_no: { icon: FileText, color: 'pink' },
+                      ror_year: { icon: FileText, color: 'blue' },
+                      last_mutation_case_no: { icon: FileText, color: 'slate' },
+                    };
 
-                      const item = config[key] || { icon: FileText, color: 'slate' };
-                      const colorMap: Record<string, string> = {
-                        blue: 'bg-blue-50 text-blue-600 border-blue-100',
-                        emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-                        amber: 'bg-amber-50 text-amber-600 border-amber-100',
-                        violet: 'bg-violet-50 text-violet-600 border-violet-100',
-                        slate: 'bg-slate-100 text-slate-600 border-slate-200',
-                        teal: 'bg-teal-50 text-teal-600 border-teal-100',
-                        rose: 'bg-rose-50 text-rose-600 border-rose-100',
-                        pink: 'bg-pink-50 text-pink-600 border-pink-100',
-                        indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
-                        orange: 'bg-orange-50 text-orange-600 border-orange-100',
-                        sky: 'bg-sky-50 text-sky-600 border-sky-100',
-                      };
+                    const item = config[key] || { icon: FileText, color: 'slate' };
+                    const colorMap: Record<string, string> = {
+                      blue: 'bg-blue-50 text-blue-600 border-blue-100',
+                      emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                      amber: 'bg-amber-50 text-amber-600 border-amber-100',
+                      violet: 'bg-violet-50 text-violet-600 border-violet-100',
+                      slate: 'bg-slate-100 text-slate-600 border-slate-200',
+                      teal: 'bg-teal-50 text-teal-600 border-teal-100',
+                      rose: 'bg-rose-50 text-rose-600 border-rose-100',
+                      pink: 'bg-pink-50 text-pink-600 border-pink-100',
+                      indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+                      orange: 'bg-orange-50 text-orange-600 border-orange-100',
+                      sky: 'bg-sky-50 text-sky-600 border-sky-100',
+                    };
 
-                      return (
-                        <div key={key} className="flex gap-4 items-center">
-                          <div
-                            className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${colorMap[item.color]}`}
-                          >
-                            <item.icon size={20} strokeWidth={2} />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">
-                              {keyToLabel(key)}
-                            </p>
-                            <p className="text-[15px] font-bold text-[#0f172a] truncate">
-                              {formatVal(value as any)}
-                            </p>
-                          </div>
+                    return (
+                      <div key={key} className="flex gap-4 items-center">
+                        <div
+                          className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${colorMap[item.color]}`}
+                        >
+                          <item.icon size={20} strokeWidth={2} />
                         </div>
-                      );
-                    })}
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">
+                            {keyToLabel(key)}
+                          </p>
+                          <p className="text-[15px] font-bold text-[#0f172a] truncate">
+                            {formatVal(value as any)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -569,22 +593,22 @@ export function RevenueLandPortfolioDashboard({
           {topStats.map((stat, i) => (
             <div
               key={i}
-              className={`rounded-2xl border border-${stat.color}-200 bg-${stat.color}-100/40 p-6 shadow-sm flex justify-between items-center backdrop-blur-sm`}
+              className={`rounded-2xl border p-5 sm:p-6 shadow-sm flex justify-between items-center backdrop-blur-sm ${statColorClasses[stat.color].card}`}
             >
               <div className="min-w-0">
                 <p
-                  className={`text-[13px] font-bold text-${stat.color}-900/70 mb-1 uppercase tracking-wider`}
+                  className={`text-[12px] sm:text-[13px] font-bold mb-1 uppercase tracking-wider ${statColorClasses[stat.color].label}`}
                 >
                   {stat.label}
                 </p>
                 <h3
-                  className={`text-[28px] sm:text-[32px] font-black text-${stat.color}-950 leading-none`}
+                  className={`text-[24px] sm:text-[32px] font-black leading-none ${statColorClasses[stat.color].value}`}
                 >
                   {formatVal(stat.value as any)}
                 </h3>
               </div>
               <div
-                className={`w-14 h-14 shrink-0 rounded-2xl bg-${stat.color}-200/50 flex items-center justify-center text-${stat.color}-700 ml-3 shadow-inner`}
+                className={`w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl flex items-center justify-center ml-3 shadow-inner ${statColorClasses[stat.color].iconWrap}`}
               >
                 <stat.icon size={28} strokeWidth={2.5} />
               </div>
@@ -594,7 +618,7 @@ export function RevenueLandPortfolioDashboard({
       </section>
 
       {/* Map Section – mirrors Health layout but for parcels */}
-      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+      {/* <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
         <div className="rounded-3xl border border-violet-200 bg-violet-100/30 p-6 sm:p-8 shadow-sm backdrop-blur-md">
           <div className="mb-4">
             <h2 className="text-xl font-bold text-[#0f172a]">Parcel Location</h2>
@@ -633,7 +657,7 @@ export function RevenueLandPortfolioDashboard({
             )}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Status over time – dynamic data (charts & table) */}
       <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-16">
@@ -663,7 +687,7 @@ export function RevenueLandPortfolioDashboard({
 
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="rounded-2xl border border-slate-100 bg-white/50 p-6 flex flex-col h-[320px]">
+              <div className="rounded-2xl border border-slate-100 bg-white/50 p-5 sm:p-6 flex flex-col h-[280px] sm:h-[320px] min-w-0">
                 <div className="mb-4">
                   <h3 className="text-sm font-bold text-[#0f172a]">Area vacant (acres) over time</h3>
                   <p className="text-[11px] text-[#64748b]">Last 15 records</p>
@@ -710,7 +734,7 @@ export function RevenueLandPortfolioDashboard({
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-100 bg-white/50 p-6 flex flex-col h-[320px]">
+              <div className="rounded-2xl border border-slate-100 bg-white/50 p-5 sm:p-6 flex flex-col h-[280px] sm:h-[320px] min-w-0">
                 <div className="mb-4">
                   <h3 className="text-sm font-bold text-[#0f172a]">Status records by date</h3>
                   <p className="text-[11px] text-[#64748b]">Count of records (last 15 dates)</p>
@@ -775,17 +799,17 @@ export function RevenueLandPortfolioDashboard({
                   <Activity size={20} />
                 </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm border-collapse">
+              <div className="overflow-x-auto pb-4">
+                <table className="w-full text-left text-sm border-collapse min-w-[680px] sm:min-w-[900px]">
                   <thead>
                     <tr className="bg-slate-50/50">
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Date</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Encroachment</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Litigation</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Present use</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">In land bank</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-right">Area vacant (acres)</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Remarks</th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Date</th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Encroachment</th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Litigation</th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Present use</th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">In land bank</th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-right">Area vacant (acres)</th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Remarks</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -806,13 +830,22 @@ export function RevenueLandPortfolioDashboard({
                       }
                       return filtered.map((r) => (
                         <tr key={r.id} className="hover:bg-white/40 transition">
-                          <td className="px-6 py-4 font-semibold text-[#334155]">{r.record_date?.slice(0, 10) ?? '—'}</td>
-                          <td className="px-6 py-4 text-slate-600">{formatVal(r.encroachment_status)}</td>
-                          <td className="px-6 py-4 text-slate-600">{formatVal(r.litigation_status)}</td>
-                          <td className="px-6 py-4 text-slate-600">{formatVal(r.present_use)}</td>
-                          <td className="px-6 py-4 text-slate-600">{formatVal(r.in_land_bank)}</td>
-                          <td className="px-6 py-4 text-right font-semibold text-slate-700">{formatVal(r.area_vacant_acres)}</td>
-                          <td className="px-6 py-4 text-slate-600 max-w-[200px] truncate" title={String(r.remarks ?? '')}>{formatVal(r.remarks)}</td>
+                          <td className="px-3 sm:px-6 py-4 font-semibold text-[#334155]">
+                            {r.record_date?.slice(0, 10) ?? '—'}
+                          </td>
+                          <td className="px-3 sm:px-6 py-4 text-slate-600">{formatVal(r.encroachment_status)}</td>
+                          <td className="px-3 sm:px-6 py-4 text-slate-600">{formatVal(r.litigation_status)}</td>
+                          <td className="px-3 sm:px-6 py-4 text-slate-600">{formatVal(r.present_use)}</td>
+                          <td className="px-3 sm:px-6 py-4 text-slate-600">{formatVal(r.in_land_bank)}</td>
+                          <td className="px-3 sm:px-6 py-4 text-right font-semibold text-slate-700">
+                            {formatVal(r.area_vacant_acres)}
+                          </td>
+                          <td
+                            className="px-3 sm:px-6 py-4 text-slate-600 max-w-[160px] sm:max-w-[200px] truncate"
+                            title={String(r.remarks ?? '')}
+                          >
+                            {formatVal(r.remarks)}
+                          </td>
                         </tr>
                       ));
                     })()}
