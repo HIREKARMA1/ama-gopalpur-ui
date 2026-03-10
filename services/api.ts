@@ -937,6 +937,63 @@ export const watcoApi = {
   },
 };
 
+// ----- Revenue Govt Land (parcels under Revenue Govt Land department) -----
+const revenueLandBase = (orgId: number) => `/api/v1/revenue-land/organizations/${orgId}`;
+
+export interface RevenueLandStatusRecord {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  encroachment_status?: string | null;
+  litigation_status?: string | null;
+  present_use?: string | null;
+  in_land_bank?: string | null;
+  area_vacant_acres?: number | null;
+  remarks?: string | null;
+  created_at?: string;
+}
+
+export const revenueLandApi = {
+  getProfile: (orgId: number) =>
+    apiFetch<Record<string, unknown>>(`${revenueLandBase(orgId)}/profile`).catch(() => ({})),
+  putProfile: (orgId: number, data: Record<string, unknown>) =>
+    apiFetch<Record<string, unknown>>(`${revenueLandBase(orgId)}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  bulkCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/revenue-land/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+  listStatusRecords: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<RevenueLandStatusRecord[]>(
+      `${revenueLandBase(orgId)}/status-records?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 100}`
+    ).catch(() => []),
+  listStatusRecordsForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.organization_id != null) p.set('organization_id', String(params.organization_id));
+    if (params?.skip != null) p.set('skip', String(params.skip));
+    if (params?.limit != null) p.set('limit', String(params.limit ?? 100));
+    return apiFetch<RevenueLandStatusRecord[]>(`/api/v1/revenue-land/status-records?${p}`).catch(() => []);
+  },
+  createStatusRecord: (data: Partial<RevenueLandStatusRecord> & { organization_id: number; record_date: string }) =>
+    apiFetch<RevenueLandStatusRecord>('/api/v1/revenue-land/status-records', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateStatusRecord: (id: number, data: Partial<RevenueLandStatusRecord>) =>
+    apiFetch<RevenueLandStatusRecord>(`/api/v1/revenue-land/status-records/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteStatusRecord: (id: number) =>
+    apiFetch<void>(`/api/v1/revenue-land/status-records/${id}`, { method: 'DELETE' }),
+};
+
 export interface WatcoDailyOperation {
   id: number;
   organization_id: number;

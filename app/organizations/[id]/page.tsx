@@ -12,6 +12,7 @@ import {
   healthApi,
   electricityApi,
   watcoApi,
+  revenueLandApi,
   Organization,
   Department,
   CenterProfile,
@@ -35,6 +36,7 @@ import { EducationPortfolioDashboard } from '../../../components/organization/Ed
 import { HealthPortfolioDashboard } from '../../../components/organization/HealthPortfolioDashboard';
 import { ElectricityPortfolioDashboard } from '../../../components/organization/ElectricityPortfolioDashboard';
 import { WaterPortfolioDashboard } from '../../../components/organization/WaterPortfolioDashboard';
+import { RevenueLandPortfolioDashboard } from '../../../components/organization/RevenueLandPortfolioDashboard';
 
 const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
@@ -167,6 +169,8 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [waterDailyOperations, setWaterDailyOperations] = useState<Awaited<ReturnType<typeof watcoApi.listDailyOperations>>>([]);
   const [waterDailyPumpLogs, setWaterDailyPumpLogs] = useState<Awaited<ReturnType<typeof watcoApi.listDailyPumpLogs>>>([]);
   const [waterDailyTankLevels, setWaterDailyTankLevels] = useState<Awaited<ReturnType<typeof watcoApi.listDailyTankLevels>>>([]);
+  const [revenueProfile, setRevenueProfile] = useState<Record<string, unknown>>({});
+  const [revenueStatusRecords, setRevenueStatusRecords] = useState<Awaited<ReturnType<typeof revenueLandApi.listStatusRecords>>>([]);
   const [snpDailyStock, setSnpDailyStock] = useState<Awaited<ReturnType<typeof icdsApi.listSnpDailyStock>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -267,6 +271,15 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           setWaterDailyOperations(ops || []);
           setWaterDailyPumpLogs(pumps || []);
           setWaterDailyTankLevels(tanks || []);
+        } else if (code === 'REVENUE_LAND') {
+          const [profile, statusRecs] = await Promise.all([
+            revenueLandApi.getProfile(id),
+            revenueLandApi.listStatusRecords(id),
+          ]);
+          setRevenueProfile(
+            profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
+          );
+          setRevenueStatusRecords(Array.isArray(statusRecs) ? statusRecs : []);
         } else {
           // AWC / ICDS or other: try center profile and SNP daily stock
           try {
@@ -358,6 +371,25 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           dailyAttendance={healthDailyAttendance}
           dailyMedicineStock={healthDailyMedicineStock}
           dailyExtraData={healthDailyExtraData}
+          departmentName={departments.find((d) => d.id === org.department_id)?.name}
+          images={images}
+        />
+      </div>
+    );
+  }
+
+  if (deptCode === 'REVENUE_LAND') {
+    const galleryImages = Array.isArray((revenueProfile as any)?.gallery_images)
+      ? ((revenueProfile as any).gallery_images as string[])
+      : [];
+    const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
+    return (
+      <div className="page-container">
+        <Navbar />
+        <RevenueLandPortfolioDashboard
+          org={org}
+          profile={revenueProfile}
+          statusRecords={revenueStatusRecords}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
         />
