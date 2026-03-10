@@ -17,6 +17,7 @@ const DEPT_MESSAGE_KEYS: Record<string, MessageKey> = {
   DRAINAGE: 'dept.drainage',
   WATCO_RWSS: 'dept.water',
   MINOR_IRRIGATION: 'dept.minorIrrigation',
+   REVENUE_LAND: 'dept.revenueLand',
 };
 
 function getDepartmentLabel(dept: Department, language: 'en' | 'or'): string {

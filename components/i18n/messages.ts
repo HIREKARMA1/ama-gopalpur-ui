@@ -20,6 +20,7 @@ export type MessageKey =
   | 'dept.drainage'
   | 'dept.water'
   | 'dept.minorIrrigation'
+  | 'dept.revenueLand'
   | 'shell.departmentsTab'
   | 'map.legend'
   | 'map.viewProfile'
@@ -153,6 +154,7 @@ export type MessageKey =
   | 'health.monitoring.title'
   | 'water.monitoring.title'
   | 'electricity.monitoring.title'
+  | 'revenueLand.monitoring.title'
   | 'health.monitoring.subtitle'
   | 'health.monitoring.attendance.title'
   | 'health.monitoring.medicine.title'
@@ -415,6 +417,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'dept.water': {
     en: 'WATCO/RWSS',
     or: 'ଜଳ ଯୋଗାଣ',
+  },
+  'dept.revenueLand': {
+    en: 'Revenue Govt Land',
+    or: 'ରେଭେନ୍ୟୁ ସରକାରୀ ଜମି',
   },
   'map.legend': {
     en: 'Legend',
@@ -911,6 +917,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'electricity.monitoring.title': {
     en: 'Electricity Operations Monitoring',
     or: 'ବିଦ୍ୟୁତ ସେବା ନିରୀକ୍ଷଣ',
+  },
+  'revenueLand.monitoring.title': {
+    en: 'Land Parcel Monitoring',
+    or: 'ଜମି ପାର୍ସେଲ ମନିଟରିଂ',
   },
   'electricity.dashboard.title': {
     en: 'Electricity Portfolio Dashboard',
