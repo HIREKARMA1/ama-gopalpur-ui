@@ -969,7 +969,8 @@ export default function DepartmentAdminPage() {
                         setOrgs((prev) => [org, ...prev]);
                       }
 
-                      if (!orgId) throw new Error('Failed to identify organization');
+                      if (orgId == null) throw new Error('Failed to identify organization');
+                      const orgIdNum: number = orgId;
 
                       // Build profile data from the CSV header
                       const profileData: Record<string, unknown> = {};
@@ -984,10 +985,10 @@ export default function DepartmentAdminPage() {
                       profileData[lngKey] = lng;
                       profileData[govtLandIdKey] = govtLandId || name;
 
-                      const saved = await revenueLandApi.putProfile(orgId, profileData);
+                      const saved = await revenueLandApi.putProfile(orgIdNum, profileData);
                       setRevenueProfiles((prev) => ({
                         ...prev,
-                        [orgId]: (saved && typeof saved === 'object' ? saved : profileData) as Record<
+                        [orgIdNum]: (saved && typeof saved === 'object' ? saved : profileData) as Record<
                           string,
                           unknown
                         >,
@@ -995,7 +996,7 @@ export default function DepartmentAdminPage() {
 
                       if (revenueImageFile) {
                         const compressed = await compressImage(revenueImageFile, { maxSizeMB: 0.5 });
-                        await organizationsApi.uploadCoverImage(orgId, compressed);
+                        await organizationsApi.uploadCoverImage(orgIdNum, compressed);
                         setRevenueImageFile(null);
                       }
 

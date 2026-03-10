@@ -532,6 +532,7 @@ export function RevenueLandPortfolioDashboard({
                     ['ror_year', profile['ror_year']],
                     ['last_mutation_case_no', profile['last_mutation_case_no']],
                   ].map(([key, value]) => {
+                    const keyStr = typeof key === 'string' ? key : String(key);
                     const config: Record<string, { icon: any; color: string }> = {
                       encroachment_status: { icon: AlertTriangle, color: 'rose' },
                       encroachment_case_no_ople: { icon: Activity, color: 'orange' },
@@ -547,7 +548,7 @@ export function RevenueLandPortfolioDashboard({
                       last_mutation_case_no: { icon: FileText, color: 'slate' },
                     };
 
-                    const item = config[key] || { icon: FileText, color: 'slate' };
+                    const item = config[keyStr] || { icon: FileText, color: 'slate' };
                     const colorMap: Record<string, string> = {
                       blue: 'bg-blue-50 text-blue-600 border-blue-100',
                       emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
@@ -563,7 +564,7 @@ export function RevenueLandPortfolioDashboard({
                     };
 
                     return (
-                      <div key={key} className="flex gap-4 items-center">
+                      <div key={keyStr} className="flex gap-4 items-center">
                         <div
                           className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${colorMap[item.color]}`}
                         >
@@ -571,7 +572,7 @@ export function RevenueLandPortfolioDashboard({
                         </div>
                         <div className="min-w-0">
                           <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">
-                            {keyToLabel(key)}
+                            {keyToLabel(keyStr)}
                           </p>
                           <p className="text-[15px] font-bold text-[#0f172a] truncate">
                             {formatVal(value as any)}
