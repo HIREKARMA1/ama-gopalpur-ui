@@ -937,6 +937,210 @@ export const watcoApi = {
   },
 };
 
+// ----- Agriculture (organizations under Agriculture department) -----
+const agricultureBase = (orgId: number) => `/api/v1/agriculture/organizations/${orgId}`;
+
+export interface AgricultureFacility {
+  id: number;
+  organization_id: number;
+  [key: string]: unknown;
+}
+
+export interface AgricultureDailyMetric {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  trainings_conducted?: number | null;
+  farmers_served?: number | null;
+  trials_conducted?: number | null;
+  villages_covered_count?: number | null;
+  soil_cards_issued?: number | null;
+  remarks?: string | null;
+  created_at?: string;
+}
+
+export interface AgricultureMonthlyReport {
+  id: number;
+  organization_id: number;
+  month: number;
+  year: number;
+  total_trainings?: number | null;
+  total_farmers_served?: number | null;
+  total_trials?: number | null;
+  total_soil_cards?: number | null;
+  remarks?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface AgricultureBulkResult {
+  imported: number;
+  errors: string[];
+}
+
+export interface AgricultureOrganizationCreatePayload {
+  block_ulb?: string;
+  gp_ward?: string;
+  village_locality?: string;
+  name: string;
+  institution_type?: string;
+  latitude?: number;
+  longitude?: number;
+
+  institution_id?: string;
+  host_institution?: string;
+  established_year?: number;
+  pin_code?: string;
+
+  in_charge_name?: string;
+  in_charge_contact?: string;
+  in_charge_email?: string;
+  office_phone?: string;
+  office_email?: string;
+  website?: string;
+
+  campus_area_acres?: number;
+  training_hall?: boolean;
+  training_hall_capacity?: number;
+
+  soil_testing?: boolean;
+  soil_samples_tested_per_year?: number;
+
+  seed_distribution?: boolean;
+  seed_processing_unit?: boolean;
+  seed_storage_capacity_mt?: number;
+
+  demo_units?: string;
+  demo_farm?: boolean;
+  demo_farm_area_acres?: number;
+
+  greenhouse_polyhouse?: boolean;
+  irrigation_facility?: boolean;
+  machinery_custom_hiring?: boolean;
+
+  computer_it_lab?: boolean;
+  library?: boolean;
+
+  key_schemes?: string;
+
+  total_staff?: number;
+  scientists_officers?: number;
+  technical_staff?: number;
+  extension_workers?: number;
+
+  farmer_training_capacity_per_batch?: number;
+  training_programmes_conducted_last_year?: number;
+  on_farm_trials_last_year?: number;
+  villages_covered?: number;
+  soil_health_cards_issued_last_year?: number;
+  farmers_served_last_year?: number;
+
+  remarks?: string;
+}
+
+export const agricultureApi = {
+  getProfile: (orgId: number) =>
+    apiFetch<Record<string, unknown>>(`${agricultureBase(orgId)}/profile`).catch(
+      () => ({}),
+    ),
+  putProfile: (orgId: number, data: Record<string, unknown>) =>
+    apiFetch<Record<string, unknown>>(`${agricultureBase(orgId)}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  getFacilityMaster: (orgId: number) =>
+    apiFetch<AgricultureFacility | null>(`${agricultureBase(orgId)}/facility-master`).catch(
+      () => null,
+    ),
+  createOrganization: (payload: AgricultureOrganizationCreatePayload) =>
+    apiFetch<AgricultureFacility>('/api/v1/agriculture/organizations', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  bulkCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<AgricultureBulkResult>('/api/v1/agriculture/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  listDailyMetrics: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<AgricultureDailyMetric[]>(
+      `${agricultureBase(orgId)}/daily-metrics?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 100}`,
+    ).catch(() => []),
+  listDailyMetricsForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.organization_id != null) p.set('organization_id', String(params.organization_id));
+    p.set('skip', String(params?.skip ?? 0));
+    p.set('limit', String(params?.limit ?? 100));
+    return apiFetch<AgricultureDailyMetric[]>(`/api/v1/agriculture/daily-metrics?${p}`).catch(() => []);
+  },
+  createDailyMetric: (payload: {
+    organization_id: number;
+    record_date: string;
+    trainings_conducted?: number;
+    farmers_served?: number;
+    trials_conducted?: number;
+    villages_covered_count?: number;
+    soil_cards_issued?: number;
+    remarks?: string;
+  }) =>
+    apiFetch<AgricultureDailyMetric>('/api/v1/agriculture/daily-metrics', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  updateDailyMetric: (pk: number, payload: Partial<AgricultureDailyMetric>) =>
+    apiFetch<AgricultureDailyMetric>(`/api/v1/agriculture/daily-metrics/${pk}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  deleteDailyMetric: (pk: number) =>
+    apiFetch(`/api/v1/agriculture/daily-metrics/${pk}`, { method: 'DELETE' }),
+  bulkDailyMetricsCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/agriculture/daily-metrics/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  listMonthlyReports: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<AgricultureMonthlyReport[]>(
+      `${agricultureBase(orgId)}/monthly-reports?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 100}`,
+    ).catch(() => []),
+  listMonthlyReportsForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.organization_id != null) p.set('organization_id', String(params.organization_id));
+    p.set('skip', String(params?.skip ?? 0));
+    p.set('limit', String(params?.limit ?? 100));
+    return apiFetch<AgricultureMonthlyReport[]>(`/api/v1/agriculture/monthly-reports?${p}`).catch(() => []);
+  },
+  createMonthlyReport: (payload: {
+    organization_id: number;
+    month: number;
+    year: number;
+    total_trainings?: number;
+    total_farmers_served?: number;
+    total_trials?: number;
+    total_soil_cards?: number;
+    remarks?: string;
+  }) =>
+    apiFetch<AgricultureMonthlyReport>('/api/v1/agriculture/monthly-reports', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  updateMonthlyReport: (pk: number, payload: Partial<AgricultureMonthlyReport>) =>
+    apiFetch<AgricultureMonthlyReport>(`/api/v1/agriculture/monthly-reports/${pk}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  deleteMonthlyReport: (pk: number) =>
+    apiFetch(`/api/v1/agriculture/monthly-reports/${pk}`, { method: 'DELETE' }),
+};
+
 // ----- Revenue Govt Land (parcels under Revenue Govt Land department) -----
 const revenueLandBase = (orgId: number) => `/api/v1/revenue-land/organizations/${orgId}`;
 

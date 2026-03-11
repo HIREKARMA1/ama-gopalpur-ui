@@ -37,6 +37,7 @@ import { HealthPortfolioDashboard } from '../../../components/organization/Healt
 import { ElectricityPortfolioDashboard } from '../../../components/organization/ElectricityPortfolioDashboard';
 import { WaterPortfolioDashboard } from '../../../components/organization/WaterPortfolioDashboard';
 import { RevenueLandPortfolioDashboard } from '../../../components/organization/RevenueLandPortfolioDashboard';
+import { AgriculturePortfolioDashboard } from '../../../components/organization/AgriculturePortfolioDashboard';
 
 const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
@@ -171,6 +172,9 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [waterDailyTankLevels, setWaterDailyTankLevels] = useState<Awaited<ReturnType<typeof watcoApi.listDailyTankLevels>>>([]);
   const [revenueProfile, setRevenueProfile] = useState<Record<string, unknown>>({});
   const [revenueStatusRecords, setRevenueStatusRecords] = useState<Awaited<ReturnType<typeof revenueLandApi.listStatusRecords>>>([]);
+  const [agricultureProfile, setAgricultureProfile] = useState<Record<string, unknown>>({});
+  const [agricultureDailyMetrics, setAgricultureDailyMetrics] = useState<import('../../../services/api').AgricultureDailyMetric[]>([]);
+  const [agricultureMonthlyReports, setAgricultureMonthlyReports] = useState<import('../../../services/api').AgricultureMonthlyReport[]>([]);
   const [snpDailyStock, setSnpDailyStock] = useState<Awaited<ReturnType<typeof icdsApi.listSnpDailyStock>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -280,6 +284,18 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
           setRevenueStatusRecords(Array.isArray(statusRecs) ? statusRecs : []);
+        } else if (code === 'AGRICULTURE') {
+          const { agricultureApi } = await import('../../../services/api');
+          const [profile, dailyMetrics, monthlyReports] = await Promise.all([
+            agricultureApi.getProfile(id),
+            agricultureApi.listDailyMetrics(id, { limit: 100 }),
+            agricultureApi.listMonthlyReports(id, { limit: 100 }),
+          ]);
+          setAgricultureProfile(
+            profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
+          );
+          setAgricultureDailyMetrics(Array.isArray(dailyMetrics) ? dailyMetrics : []);
+          setAgricultureMonthlyReports(Array.isArray(monthlyReports) ? monthlyReports : []);
         } else {
           // AWC / ICDS or other: try center profile and SNP daily stock
           try {
@@ -392,6 +408,31 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           statusRecords={revenueStatusRecords}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
+        />
+      </div>
+    );
+  }
+
+  if (deptCode === 'AGRICULTURE') {
+    const galleryImages = Array.isArray((agricultureProfile as any)?.gallery_images)
+      ? ((agricultureProfile as any).gallery_images as string[])
+      : [];
+    const images =
+      galleryImages.length > 0
+        ? galleryImages
+        : org.cover_image_key
+          ? [org.cover_image_key]
+          : [];
+    return (
+      <div className="page-container">
+        <Navbar />
+        <AgriculturePortfolioDashboard
+          org={org}
+          profile={agricultureProfile}
+          departmentName={departments.find((d) => d.id === org.department_id)?.name}
+          images={images}
+          dailyMetrics={agricultureDailyMetrics}
+          monthlyReports={agricultureMonthlyReports}
         />
       </div>
     );
