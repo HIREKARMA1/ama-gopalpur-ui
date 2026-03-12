@@ -21,6 +21,20 @@ export type MessageKey =
   | 'dept.water'
   | 'dept.minorIrrigation'
   | 'dept.revenueLand'
+  | 'minor.dashboard.title'
+  | 'minor.dashboard.subtitle'
+  | 'minor.details.title'
+  | 'minor.tab.overview'
+  | 'minor.tab.technical'
+  | 'minor.tab.operations'
+  | 'minor.tab.finance'
+  | 'minor.stat.catchment'
+  | 'minor.stat.ayacut'
+  | 'minor.stat.storage'
+  | 'minor.map.title'
+  | 'minor.map.subtitle'
+  | 'minor.map.loading'
+  | 'minor.field.department'
   | 'shell.departmentsTab'
   | 'map.legend'
   | 'map.viewProfile'
@@ -423,6 +437,29 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     en: 'Revenue Govt Land',
     or: 'ରେଭେନ୍ୟୁ ସରକାରୀ ଜମି',
   },
+  'minor.dashboard.title': {
+    en: 'Minor Irrigation Portfolio Dashboard',
+    or: 'ସାନ ଜଳସେଚନ ପୋର୍ଟଫୋଲିଓ ଡ୍ୟାସବୋର୍ଡ',
+  },
+  'minor.dashboard.subtitle': {
+    en: 'Project details from minister CSV data',
+    or: 'ମନ୍ତ୍ରୀଙ୍କ CSV ତଥ୍ୟରୁ ପ୍ରକଳ୍ପ ବିବରଣୀ',
+  },
+  'minor.details.title': {
+    en: 'Project details',
+    or: 'ପ୍ରକଳ୍ପ ବିବରଣୀ',
+  },
+  'minor.tab.overview': { en: 'Overview', or: 'ସାରାଂଶ' },
+  'minor.tab.technical': { en: 'Technical', or: 'ପ୍ରାଯୁକ୍ତିକ' },
+  'minor.tab.operations': { en: 'Operations', or: 'ପରିଚାଳନା' },
+  'minor.tab.finance': { en: 'Finance', or: 'ଆର୍ଥିକ' },
+  'minor.stat.catchment': { en: 'Catchment (sq km)', or: 'କ୍ୟାଚମେଣ୍ଟ (ଚ.କି.ମି.)' },
+  'minor.stat.ayacut': { en: 'Total ayacut (acres)', or: 'ମୋଟ ଆୟାକଟ୍ (ଏକର)' },
+  'minor.stat.storage': { en: 'Storage (MCUM)', or: 'ସଂରକ୍ଷଣ (MCUM)' },
+  'minor.map.title': { en: 'Project Location', or: 'ପ୍ରକଳ୍ପ ଅବସ୍ଥିତି' },
+  'minor.map.subtitle': { en: 'Minor irrigation project location on map.', or: 'ମାନଚିତ୍ରରେ ସାନ ଜଳସେଚନ ପ୍ରକଳ୍ପର ସ୍ଥାନ।' },
+  'minor.map.loading': { en: 'Loading map…', or: 'ମାନଚିତ୍ର ଲୋଡ୍ ହେଉଛି…' },
+  'minor.field.department': { en: 'Department', or: 'ବିଭାଗ' },
   'map.legend': {
     en: 'Legend',
     or: 'ସୂଚନା',
