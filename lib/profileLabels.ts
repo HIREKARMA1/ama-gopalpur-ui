@@ -277,8 +277,58 @@ export function getHealthProfileLabel(key: string): string {
   return HEALTH_LABELS[key] ?? titleCase(key);
 }
 
+const MINOR_IRRIGATION_LABELS: Record<string, { en: string; or: string }> = {
+  block_ulb: { en: 'Block / ULB', or: 'ବ୍ଲକ୍ / ULB' },
+  gp_ward: { en: 'GP / Ward', or: 'ଜି.ପି. / ୱାର୍ଡ' },
+  village_locality: { en: 'Village / Locality', or: 'ଗ୍ରାମ / ଅଞ୍ଚଳ' },
+  mip_id: { en: 'MIP ID', or: 'MIP ଆଇଡି' },
+  name_of_m_i_p: { en: 'Name of M.I.P', or: 'M.I.P ର ନାମ' },
+  category_type: { en: 'Category / Type', or: 'ଶ୍ରେଣୀ / ପ୍ରକାର' },
+  latitude: { en: 'Latitude', or: 'ଅକ୍ଷାଂଶ' },
+  longitude: { en: 'Longitude', or: 'ଦ୍ରାଘିମାଂଶ' },
+  latitude_raw: { en: 'Latitude (raw)', or: 'ଅକ୍ଷାଂଶ (ମୂଳ)' },
+  longitude_raw: { en: 'Longitude (raw)', or: 'ଦ୍ରାଘିମାଂଶ (ମୂଳ)' },
+  location_precision_meter: { en: 'Location precision (meter)', or: 'ଅବସ୍ଥାନ ସଠିକତା (ମିଟର)' },
+  catchment_area_sq_km: { en: 'Catchment area (sq km)', or: 'କ୍ୟାଚମେଣ୍ଟ କ୍ଷେତ୍ରଫଳ (ଚ.କି.ମି.)' },
+  command_area_kharif_acres: { en: 'Command area kharif (acres)', or: 'କମାଣ୍ଡ ଏରିଆ ଖରିଫ (ଏକର)' },
+  command_area_rabi_acres: { en: 'Command area rabi (acres)', or: 'କମାଣ୍ଡ ଏରିଆ ରବି (ଏକର)' },
+  total_ayacut_acres: { en: 'Total ayacut (acres)', or: 'ମୋଟ ଆୟାକଟ୍ (ଏକର)' },
+  storage_capacity_mcum: { en: 'Storage capacity (MCUM)', or: 'ସଂରକ୍ଷଣ କ୍ଷମତା (MCUM)' },
+  mwl_ft: { en: 'MWL (ft)', or: 'MWL (ଫୁଟ୍)' },
+  frl_ft: { en: 'FRL (ft)', or: 'FRL (ଫୁଟ୍)' },
+  tbl_ft: { en: 'TBL (ft)', or: 'TBL (ଫୁଟ୍)' },
+  spillway_type: { en: 'Spillway type', or: 'ସ୍ପିଲୱେ ପ୍ରକାର' },
+  spillway_width_ft: { en: 'Spillway width (ft)', or: 'ସ୍ପିଲୱେ ପ୍ରସ୍ଥ (ଫୁଟ୍)' },
+  no_of_sluices: { en: 'No. of sluices', or: 'ସ୍ଲୁଇସ୍ ସଂଖ୍ୟା' },
+  sluice_type: { en: 'Sluice type', or: 'ସ୍ଲୁଇସ୍ ପ୍ରକାର' },
+  condition: { en: 'Condition', or: 'ଅବସ୍ଥା' },
+  functionality: { en: 'Functionality', or: 'କାର୍ଯ୍ୟକ୍ଷମତା' },
+  managed_by: { en: 'Managed by', or: 'ପରିଚାଳନା କରୁଥିବା' },
+  last_maintenance: { en: 'Last maintenance', or: 'ଶେଷ ରକ୍ଷାଣାବେକ୍ଷଣ' },
+  sensors_installed: { en: 'Sensors installed', or: 'ସେନ୍ସର ଲଗାଇଛନ୍ତି' },
+  last_geotagged_date: { en: 'Last geotagged date', or: 'ଶେଷ ଜିଓ-ଟ୍ୟାଗ୍ ତାରିଖ' },
+  beneficiary_farmers_count: { en: 'Beneficiary farmers count', or: 'ଲାଭାନ୍ବିତ କୃଷକ ସଂଖ୍ୟା' },
+  beneficiary_sc_st_count: { en: 'Beneficiary SC/ST count', or: 'ଲାଭାନ୍ବିତ SC/ST ସଂଖ୍ୟା' },
+  sanctioned_amt_lakhs: { en: 'Sanctioned amount (lakhs)', or: 'ମଞ୍ଜୁର ରାଶି (ଲକ୍ଷ)' },
+  expenditure_lakhs: { en: 'Expenditure (lakhs)', or: 'ବ୍ୟୟ (ଲକ୍ଷ)' },
+  forest_clearance_y_n: { en: 'Forest clearance (Y/N)', or: 'ବନ ମଞ୍ଜୁରୀ (ହଁ/ନା)' },
+  remarks: { en: 'Remarks', or: 'ମନ୍ତବ୍ୟ' },
+};
+
+export function getMinorIrrigationProfileLabel(
+  key: string,
+  language: Language = 'en',
+): string {
+  const labelObj = MINOR_IRRIGATION_LABELS[key];
+  if (labelObj) return labelObj[language] || labelObj.en;
+  return titleCase(key);
+}
+
 /** All known education keys in display order (for template when data is empty). */
 export const EDUCATION_PROFILE_KEYS = Object.keys(EDUCATION_LABELS);
 
 /** All known health keys in display order. */
 export const HEALTH_PROFILE_KEYS = Object.keys(HEALTH_LABELS);
+
+/** All known minor irrigation keys in display order. */
+export const MINOR_IRRIGATION_PROFILE_KEYS = Object.keys(MINOR_IRRIGATION_LABELS);
