@@ -13,6 +13,7 @@ import {
   electricityApi,
   watcoApi,
   revenueLandApi,
+  minorIrrigationApi,
   Organization,
   Department,
   CenterProfile,
@@ -38,6 +39,7 @@ import { ElectricityPortfolioDashboard } from '../../../components/organization/
 import { WaterPortfolioDashboard } from '../../../components/organization/WaterPortfolioDashboard';
 import { RevenueLandPortfolioDashboard } from '../../../components/organization/RevenueLandPortfolioDashboard';
 import { AgriculturePortfolioDashboard } from '../../../components/organization/AgriculturePortfolioDashboard';
+import { MinorIrrigationPortfolioDashboard } from '../../../components/organization/MinorIrrigationPortfolioDashboard';
 
 const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
@@ -175,6 +177,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [agricultureProfile, setAgricultureProfile] = useState<Record<string, unknown>>({});
   const [agricultureDailyMetrics, setAgricultureDailyMetrics] = useState<import('../../../services/api').AgricultureDailyMetric[]>([]);
   const [agricultureMonthlyReports, setAgricultureMonthlyReports] = useState<import('../../../services/api').AgricultureMonthlyReport[]>([]);
+  const [minorIrrigationProfile, setMinorIrrigationProfile] = useState<Record<string, unknown>>({});
   const [snpDailyStock, setSnpDailyStock] = useState<Awaited<ReturnType<typeof icdsApi.listSnpDailyStock>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -296,6 +299,11 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           );
           setAgricultureDailyMetrics(Array.isArray(dailyMetrics) ? dailyMetrics : []);
           setAgricultureMonthlyReports(Array.isArray(monthlyReports) ? monthlyReports : []);
+        } else if (code === 'MINOR_IRRIGATION') {
+          const profile = await minorIrrigationApi.getProfile(id);
+          setMinorIrrigationProfile(
+            profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
+          );
         } else {
           // AWC / ICDS or other: try center profile and SNP daily stock
           try {
@@ -493,6 +501,24 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           staff={electricityStaff}
           dailyReports={electricityDaily}
           monthlyReports={electricityMonthly}
+          images={images}
+        />
+      </div>
+    );
+  }
+
+  if (deptCode === 'MINOR_IRRIGATION') {
+    const galleryImages = Array.isArray((minorIrrigationProfile as any)?.gallery_images)
+      ? ((minorIrrigationProfile as any).gallery_images as string[])
+      : [];
+    const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
+    return (
+      <div className="page-container">
+        <Navbar />
+        <MinorIrrigationPortfolioDashboard
+          org={org}
+          profile={minorIrrigationProfile}
+          departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
         />
       </div>

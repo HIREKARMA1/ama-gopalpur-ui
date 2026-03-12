@@ -176,6 +176,7 @@ export default function DepartmentAdminPage() {
   const [editingElectricityId, setEditingElectricityId] = useState<number | null>(null);
   const [minorFormValues, setMinorFormValues] = useState<Record<string, string>>({});
   const [editingMinorId, setEditingMinorId] = useState<number | null>(null);
+  const [minorIrrigationImageFile, setMinorIrrigationImageFile] = useState<File | null>(null);
   const [revenueFormValues, setRevenueFormValues] = useState<Record<string, string>>({});
   const [revenueImageFile, setRevenueImageFile] = useState<File | null>(null);
   const [editingRevenueId, setEditingRevenueId] = useState<number | null>(null);
@@ -1662,6 +1663,13 @@ export default function DepartmentAdminPage() {
                         [orgId]: (saved && typeof saved === 'object' ? saved : profileData) as Record<string, unknown>,
                       }));
 
+                      if (minorIrrigationImageFile) {
+                        const compressed = await compressImage(minorIrrigationImageFile, { maxSizeMB: 0.5 });
+                        const updatedOrg = await organizationsApi.uploadCoverImage(orgId, compressed);
+                        setOrgs((prev) => prev.map((o) => (o.id === updatedOrg.id ? updatedOrg : o)));
+                        setMinorIrrigationImageFile(null);
+                      }
+
                       setMinorFormValues({});
                       setEditingMinorId(null);
                     } catch (err: any) {
@@ -1689,6 +1697,17 @@ export default function DepartmentAdminPage() {
                       </div>
                     );
                   })}
+                  <div className="md:col-span-2 space-y-1">
+                    <label className="block text-text">Profile Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="w-full text-xs text-text file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                      onChange={(e) =>
+                        setMinorIrrigationImageFile(e.target.files?.[0] ?? null)
+                      }
+                    />
+                  </div>
                   <div className="md:col-span-2">
                     <button
                       type="submit"
