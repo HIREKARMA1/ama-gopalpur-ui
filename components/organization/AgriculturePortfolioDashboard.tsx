@@ -545,9 +545,69 @@ export function AgriculturePortfolioDashboard({
         </div>
       </section>
 
-      {/* Layout: profile cards (without contact/staffing) + map */}
-      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <aside className="hidden xl:block" />
+      {/* Map Section with legend */}
+      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="rounded-3xl border border-emerald-200 bg-emerald-100/40 p-6 sm:p-8 shadow-sm backdrop-blur-md">
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-[#0f172a]">
+                Agriculture Facility Location
+              </h2>
+              <p className="text-[13px] text-[#64748b] mt-1">
+                Agriculture facility location on map.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 rounded-full bg-white/70 px-4 py-2 border border-emerald-100 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                <span className="text-[11px] font-semibold text-slate-600">
+                  {t('map.legend', language)} · {t('map.viewProfile', language)}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="h-[400px] w-full rounded-xl bg-[#f8f9fa] overflow-hidden relative flex items-center justify-center">
+            {isLoaded ? (
+              <GoogleMap
+                mapContainerStyle={{ width: '100%', height: '100%' }}
+                center={mapCenter}
+                zoom={14}
+                options={{
+                  restriction: {
+                    latLngBounds: {
+                      south: GOPALPUR_BOUNDS.south,
+                      west: GOPALPUR_BOUNDS.west,
+                      north: GOPALPUR_BOUNDS.north,
+                      east: GOPALPUR_BOUNDS.east,
+                    },
+                    strictBounds: true,
+                  },
+                  styles: [
+                    { featureType: 'poi', elementType: 'all', stylers: [{ visibility: 'off' }] },
+                    { featureType: 'transit', elementType: 'all', stylers: [{ visibility: 'off' }] },
+                  ],
+                  disableDefaultUI: false,
+                  zoomControl: true,
+                  mapTypeControl: true,
+                  scaleControl: true,
+                  fullscreenControl: true,
+                  streetViewControl: false,
+                  minZoom: 11,
+                  maxZoom: 18,
+                }}
+              >
+                <Marker position={mapCenter} />
+              </GoogleMap>
+            ) : (
+              <div className="text-center">
+                <MapPin size={24} className="text-emerald-500 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-slate-700">
+                  {t('minor.map.loading', language)}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </section>
     </div>
   );

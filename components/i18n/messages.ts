@@ -12,6 +12,7 @@ export type MessageKey =
   | 'sidebar.subtitle'
   | 'sidebar.loading'
   | 'sidebar.total'
+  | 'dept.agriculture'
   | 'dept.education'
   | 'dept.health'
   | 'dept.icds'
@@ -19,6 +20,7 @@ export type MessageKey =
   | 'dept.electricity'
   | 'dept.drainage'
   | 'dept.water'
+  | 'dept.irrigation'
   | 'dept.minorIrrigation'
   | 'dept.revenueLand'
   | 'minor.dashboard.title'
@@ -35,6 +37,18 @@ export type MessageKey =
   | 'minor.map.subtitle'
   | 'minor.map.loading'
   | 'minor.field.department'
+  | 'irrigation.field.blockUlb'
+  | 'irrigation.field.gpWard'
+  | 'irrigation.field.villageLocality'
+  | 'irrigation.field.workName'
+  | 'irrigation.field.category'
+  | 'irrigation.field.typeOfIrrigation'
+  | 'irrigation.field.managedBy'
+  | 'irrigation.field.physicalCondition'
+  | 'irrigation.field.functionalityStatus'
+  | 'irrigation.field.yearOfCommissioning'
+  | 'irrigation.field.latitude'
+  | 'irrigation.field.longitude'
   | 'shell.departmentsTab'
   | 'map.legend'
   | 'map.viewProfile'
@@ -358,7 +372,14 @@ export type MessageKey =
   | 'map.info.sector'
   | 'map.info.gp'
   | 'map.info.block'
-  | 'map.electricity.office';
+  | 'map.electricity.office'
+  | 'electricity.type.govt'
+  | 'electricity.type.pvt'
+  | 'revenue.type.govt'
+  | 'revenue.type.private'
+  | 'revenue.type.other'
+  | 'agriculture.type.serviceCenter'
+  | 'agriculture.type.extensionCenter';
 
 const messages: Record<MessageKey, { en: string; or: string }> = {
   'govBar.title': {
@@ -401,6 +422,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     en: 'Total',
     or: 'ମୋଟ',
   },
+  'dept.agriculture': {
+    en: 'Agriculture',
+    or: 'କୃଷି',
+  },
   'dept.education': {
     en: 'Education',
     or: 'ଶିକ୍ଷା',
@@ -420,6 +445,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'dept.electricity': {
     en: 'Electricity',
     or: 'ବିଦ୍ୟୁତ',
+  },
+  'dept.irrigation': {
+    en: 'Irrigation',
+    or: 'ଜଳସେଚନ',
   },
   'dept.minorIrrigation': {
     en: 'Minor Irrigation',
@@ -460,6 +489,18 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'minor.map.subtitle': { en: 'Minor irrigation project location on map.', or: 'ମାନଚିତ୍ରରେ ସାନ ଜଳସେଚନ ପ୍ରକଳ୍ପର ସ୍ଥାନ।' },
   'minor.map.loading': { en: 'Loading map…', or: 'ମାନଚିତ୍ର ଲୋଡ୍ ହେଉଛି…' },
   'minor.field.department': { en: 'Department', or: 'ବିଭାଗ' },
+  'irrigation.field.blockUlb': { en: 'Block / ULB', or: 'ବ୍ଲକ୍ / ULB' },
+  'irrigation.field.gpWard': { en: 'GP / Ward', or: 'ଜି.ପି. / ୱାର୍ଡ' },
+  'irrigation.field.villageLocality': { en: 'Village / Locality', or: 'ଗ୍ରାମ / ଅଞ୍ଚଳ' },
+  'irrigation.field.workName': { en: 'Work name', or: 'କାର୍ଯ୍ୟର ନାମ' },
+  'irrigation.field.category': { en: 'Category', or: 'ଶ୍ରେଣୀ' },
+  'irrigation.field.typeOfIrrigation': { en: 'Type of irrigation', or: 'ସେଚନ ପ୍ରକାର' },
+  'irrigation.field.managedBy': { en: 'Managed by', or: 'ପରିଚାଳନା କରୁଥିବା' },
+  'irrigation.field.physicalCondition': { en: 'Physical condition', or: 'ଭୂତଳ ଅବସ୍ଥା' },
+  'irrigation.field.functionalityStatus': { en: 'Functionality status', or: 'କାର୍ଯ୍ୟକ୍ଷମତା ସ୍ଥିତି' },
+  'irrigation.field.yearOfCommissioning': { en: 'Year of commissioning', or: 'ଚାଲୁ ହେବାର ବର୍ଷ' },
+  'irrigation.field.latitude': { en: 'Latitude', or: 'ଅକ୍ଷାଂଶ' },
+  'irrigation.field.longitude': { en: 'Longitude', or: 'ଦ୍ରାଘିମାଂଶ' },
   'map.legend': {
     en: 'Legend',
     or: 'ସୂଚନା',
@@ -804,6 +845,34 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.info.gp': { en: 'GP', or: 'ଜି.ପି.' },
   'map.info.block': { en: 'Block', or: 'ବ୍ଲକ' },
   'map.electricity.office': { en: 'Electricity Office', or: 'ବିଦ୍ୟୁତ କାର୍ଯ୍ୟାଳୟ' },
+  'electricity.type.govt': {
+    en: 'Govt',
+    or: 'ସରକାରୀ',
+  },
+  'electricity.type.pvt': {
+    en: 'Pvt',
+    or: 'ବେସରକାରୀ',
+  },
+  'revenue.type.govt': {
+    en: 'Govt land',
+    or: 'ସରକାରୀ ଜମି',
+  },
+  'revenue.type.private': {
+    en: 'Private land',
+    or: 'ବେସରକାରୀ ଜମି',
+  },
+  'revenue.type.other': {
+    en: 'Other land',
+    or: 'ଅନ୍ୟାନ୍ୟ ଜମି',
+  },
+  'agriculture.type.serviceCenter': {
+    en: 'Agriculture Service Center',
+    or: 'କୃଷି ସେବା କେନ୍ଦ୍ର',
+  },
+  'agriculture.type.extensionCenter': {
+    en: 'Agriculture Extension Center',
+    or: 'କୃଷି ବିସ୍ତାର କେନ୍ଦ୍ର',
+  },
   'login.email': {
     en: 'Email',
     or: 'ଇମେଲ୍',

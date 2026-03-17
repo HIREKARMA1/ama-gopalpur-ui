@@ -680,6 +680,32 @@ export const minorIrrigationApi = {
   },
 };
 
+// ----- Irrigation (works under Irrigation department) -----
+const irrigationBase = (orgId: number) => `/api/v1/irrigation/organizations/${orgId}`;
+
+export const irrigationApi = {
+  getProfile: (orgId: number) =>
+    apiFetch<Record<string, unknown>>(`${irrigationBase(orgId)}/profile`).catch(
+      () => ({}),
+    ),
+  putProfile: (orgId: number, data: Record<string, unknown>) =>
+    apiFetch<Record<string, unknown>>(`${irrigationBase(orgId)}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  bulkCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>(
+      '/api/v1/irrigation/bulk-csv',
+      {
+        method: 'POST',
+        body: form,
+      },
+    );
+  },
+};
+
 // ----- Health (organizations under Health department) -----
 const healthBase = (orgId: number) => `/api/v1/health/organizations/${orgId}`;
 export const healthApi = {
