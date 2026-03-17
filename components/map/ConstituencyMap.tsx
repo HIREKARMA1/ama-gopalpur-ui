@@ -288,6 +288,28 @@ export function ConstituencyMap({
         return createDepartmentSvgIcon('HEALTH', color);
       }
 
+      // AGRICULTURE – two types with distinct colors (match legend)
+      if (code === 'AGRICULTURE') {
+        const sub = (subDept || attributes?.sub_department || '').toString().toUpperCase();
+        const color =
+          sub === 'AGRICULTURE SERVICE CENTER'
+            ? '#059669' // emerald-600
+            : sub === 'AGRICULTURE EXTENSION CENTER'
+              ? '#f59e0b' // amber-500
+              : '#059669';
+        return createDepartmentSvgIcon('AGRICULTURE', color);
+      }
+
+      // ELECTRICITY – single yellow color, matching legend
+      if (code === 'ELECTRICITY') {
+        return createDepartmentSvgIcon('ELECTRICITY', '#facc15'); // tailwind yellow-400
+      }
+
+      // REVENUE LAND – single red color, matching legend
+      if (code === 'REVENUE_LAND') {
+        return createDepartmentSvgIcon('REVENUE_LAND', '#f43f5e'); // tailwind rose-500
+      }
+
       // ICDS / AWC – single pink color, matching legend
       if (code === 'AWC_ICDS' || code === 'ICDS' || type === 'AWC') {
         return createDepartmentSvgIcon('AWC_ICDS', '#ec4899');
@@ -321,6 +343,15 @@ export function ConstituencyMap({
         return key ? t(key, lang) : category || type.replace(/_/g, ' ');
       }
       if (code === 'ELECTRICITY') {
+        const instType = ((attributes?.institution_type as string) || '').trim();
+        const upper = instType.toUpperCase();
+        if (upper === 'GOVT' || upper === 'GOVERNMENT') {
+          return t('electricity.type.govt', lang);
+        }
+        if (upper === 'PVT' || upper === 'PRIVATE') {
+          return t('electricity.type.pvt', lang);
+        }
+        if (instType.length > 0) return instType;
         return t('map.electricity.office', lang);
       }
       const eduKey = EDUCATION_TYPE_KEYS[type];
@@ -338,14 +369,50 @@ export function ConstituencyMap({
       if (legendFilterType) {
         const code = selectedDepartmentCode?.toUpperCase();
         if (code === 'HEALTH') {
-          result = result.filter((org) => (org.attributes?.category as string)?.toUpperCase() === legendFilterType);
+          result = result.filter(
+            (org) => (org.attributes?.category as string)?.toUpperCase() === legendFilterType,
+          );
         } else if (code === 'EDUCATION') {
-          result = result.filter((org) => (org.sub_department || '').toUpperCase() === legendFilterType);
+          result = result.filter(
+            (org) => (org.sub_department || '').toUpperCase() === legendFilterType,
+          );
+        } else if (code === 'AGRICULTURE') {
+          result = result.filter((org) => {
+            const subDept =
+              ((org.sub_department as string) ||
+                (org.attributes?.sub_department as string) ||
+                '')?.toUpperCase();
+            return subDept === legendFilterType;
+          });
+        } else if (code === 'IRRIGATION') {
+          result = result.filter((org) => {
+            const category = ((org.attributes?.category as string) || '').toUpperCase();
+            return category === legendFilterType;
+          });
+        } else if (code === 'MINOR_IRRIGATION') {
+          result = result.filter((org) => {
+            const catType =
+              ((org.attributes?.category_type as string) || '').toUpperCase();
+            return catType === legendFilterType;
+          });
+        } else if (code === 'REVENUE_LAND') {
+          result = result.filter((org) => {
+            const landType =
+              ((org.attributes?.land_type as string) || '').toUpperCase();
+            return landType === legendFilterType;
+          });
         } else if (code === 'ELECTRICITY') {
-          // Only one electricity type at present; legend click is visual only
-          // so we don't further filter markers here.
+          result = result.filter((org) => {
+            const instType =
+              ((org.attributes?.institution_type as string) || '').toUpperCase();
+            return instType === legendFilterType;
+          });
         } else if (code === 'WATCO_RWSS') {
-          result = result.filter((org) => ((org.attributes?.station_type as string) || '').toUpperCase() === legendFilterType);
+          result = result.filter(
+            (org) =>
+              ((org.attributes?.station_type as string) || '').toUpperCase() ===
+              legendFilterType,
+          );
         } else {
           result = result.filter((org) => org.type === legendFilterType);
         }
@@ -747,36 +814,302 @@ export function ConstituencyMap({
       {(selectedDepartmentCode?.toUpperCase() === 'AWC_ICDS' || selectedDepartmentCode?.toUpperCase() === 'ICDS') && orgsWithLocation.length > 0 && (
         <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
-          <p className="flex items-center gap-2 text-slate-700">
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-pink-500" />
-            {t('map.awc.label', language)}
-          </p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            <li>
+              {(() => {
+                const type = 'AWC';
+                const isSelected = legendFilterType === type;
+                return (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLegendFilterType((prev) => (prev === type ? null : type))
+                    }
+                    className={`flex items-center gap-2 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
+                      isSelected
+                        ? 'ring-1 ring-slate-400 bg-slate-100 font-medium'
+                        : 'hover:bg-slate-50'
+                    }`}
+                    title={
+                      isSelected
+                        ? t('map.legend.showAll', language)
+                        : `${t('map.legend.showOnly', language)} ${t('map.awc.label', language)}`
+                    }
+                  >
+                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-pink-500" />
+                    {t('map.awc.label', language)}
+                  </button>
+                );
+              })()}
+            </li>
+          </ul>
+        </div>
+      )}
+      {selectedDepartmentCode?.toUpperCase() === 'AGRICULTURE' && orgsWithLocation.length > 0 && (
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            {Array.from(
+              new Set(
+                orgsWithLocation
+                  .map((org) =>
+                    (
+                      (org.sub_department as string) ||
+                      (org.attributes?.sub_department as string) ||
+                      ''
+                    ).trim(),
+                  )
+                  .filter((v) => v.length > 0),
+              ),
+            ).map((type) => {
+              const value = type.toUpperCase();
+              const labelKey =
+                value === 'AGRICULTURE SERVICE CENTER'
+                  ? ('agriculture.type.serviceCenter' as MessageKey)
+                  : value === 'AGRICULTURE EXTENSION CENTER'
+                    ? ('agriculture.type.extensionCenter' as MessageKey)
+                    : null;
+              const label = labelKey ? t(labelKey, language) : type;
+              const isSelected = legendFilterType === value;
+              const dotColor =
+                value === 'AGRICULTURE SERVICE CENTER'
+                  ? 'bg-emerald-600'
+                  : value === 'AGRICULTURE EXTENSION CENTER'
+                    ? 'bg-amber-500'
+                    : 'bg-emerald-600';
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLegendFilterType((prev) => (prev === value ? null : value))
+                    }
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
+                      isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
+                    }`}
+                    title={
+                      isSelected
+                        ? t('map.legend.showAll', language)
+                        : `${t('map.legend.showOnly', language)} ${label}`
+                    }
+                  >
+                    <span className={`inline-block h-2.5 w-2.5 rounded-full ${dotColor}`} />
+                    {label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+      {selectedDepartmentCode?.toUpperCase() === 'IRRIGATION' && orgsWithLocation.length > 0 && (
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            {Array.from(
+              new Set(
+                orgsWithLocation
+                  .map((org) => ((org.attributes?.category as string) || '').trim())
+                  .filter((v) => v.length > 0),
+              ),
+            ).map((type) => {
+              const value = type.toUpperCase();
+              const isSelected = legendFilterType === value;
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLegendFilterType((prev) => (prev === value ? null : value))
+                    }
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
+                      isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
+                    }`}
+                    title={
+                      isSelected
+                        ? t('map.legend.showAll', language)
+                        : `${t('map.legend.showOnly', language)} ${type}`
+                    }
+                  >
+                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-sky-600" />
+                    {type}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+      {selectedDepartmentCode?.toUpperCase() === 'MINOR_IRRIGATION' && orgsWithLocation.length > 0 && (
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            {Array.from(
+              new Set(
+                orgsWithLocation
+                  .map(
+                    (org) =>
+                      ((org.attributes?.category_type as string) || '').trim(),
+                  )
+                  .filter((v) => v.length > 0),
+              ),
+            ).map((type) => {
+              const value = type.toUpperCase();
+              const isSelected = legendFilterType === value;
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLegendFilterType((prev) => (prev === value ? null : value))
+                    }
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
+                      isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
+                    }`}
+                    title={
+                      isSelected
+                        ? t('map.legend.showAll', language)
+                        : `${t('map.legend.showOnly', language)} ${type}`
+                    }
+                  >
+                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                    {type}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+      {selectedDepartmentCode?.toUpperCase() === 'REVENUE_LAND' && orgsWithLocation.length > 0 && (
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            {Array.from(
+              new Set(
+                orgsWithLocation
+                  .map(
+                    (org) =>
+                      ((org.attributes?.land_type as string) || '').trim(),
+                  )
+                  .filter((v) => v.length > 0),
+              ),
+            ).map((type) => {
+              const value = type.toUpperCase();
+              const isSelected = legendFilterType === value;
+              const labelKey =
+                value === 'GOVT'
+                  ? ('revenue.type.govt' as MessageKey)
+                  : value === 'PRIVATE'
+                    ? ('revenue.type.private' as MessageKey)
+                    : value === 'OTHER'
+                      ? ('revenue.type.other' as MessageKey)
+                      : null;
+              const label = labelKey ? t(labelKey, language) : type;
+              return (
+                <li key={type}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLegendFilterType((prev) => (prev === value ? null : value))
+                    }
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
+                      isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
+                    }`}
+                    title={
+                      isSelected
+                        ? t('map.legend.showAll', language)
+                        : `${t('map.legend.showOnly', language)} ${label}`
+                    }
+                  >
+                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-rose-500" />
+                    {label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'ELECTRICITY' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[220px] z-10">
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            <li>
-              <button
-                type="button"
-                onClick={() =>
-                  setLegendFilterType((prev) => (prev === ELECTRICITY_TYPE_LABEL ? null : ELECTRICITY_TYPE_LABEL))
-                }
-                className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${legendFilterType === ELECTRICITY_TYPE_LABEL
-                  ? 'ring-1 ring-slate-400 bg-slate-100 font-medium'
-                  : 'hover:bg-slate-50'
-                  }`}
-                title={
-                  legendFilterType === ELECTRICITY_TYPE_LABEL
-                    ? t('map.legend.showAll', language)
-                    : `${t('map.legend.showOnly', language)} ${t('map.electricity.office', language)}`
-                }
-              >
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-yellow-400" />
-                {t('map.electricity.office', language)}
-              </button>
-            </li>
+            {(() => {
+              const types = Array.from(
+                new Set(
+                  orgsWithLocation
+                    .map(
+                      (org) =>
+                        ((org.attributes?.institution_type as string) || '').trim(),
+                    )
+                    .filter((v) => v.length > 0),
+                  ),
+              );
+
+              // If no institution_type present yet, fall back to single generic entry
+              if (types.length === 0) {
+                const isSelected = legendFilterType === ELECTRICITY_TYPE_LABEL.toUpperCase();
+                return (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLegendFilterType((prev) =>
+                          prev === ELECTRICITY_TYPE_LABEL.toUpperCase()
+                            ? null
+                            : ELECTRICITY_TYPE_LABEL.toUpperCase(),
+                        )
+                      }
+                      className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
+                        isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
+                      }`}
+                      title={
+                        isSelected
+                          ? t('map.legend.showAll', language)
+                          : `${t('map.legend.showOnly', language)} ${t('map.electricity.office', language)}`
+                      }
+                    >
+                      <span className="inline-block h-2.5 w-2.5 rounded-full bg-yellow-400" />
+                      {t('map.electricity.office', language)}
+                    </button>
+                  </li>
+                );
+              }
+
+              return types.map((type) => {
+                const value = type.toUpperCase();
+                const isSelected = legendFilterType === value;
+                const labelKey =
+                  value === 'GOVT' || value === 'GOVERNMENT'
+                    ? ('electricity.type.govt' as MessageKey)
+                    : value === 'PVT' || value === 'PRIVATE'
+                      ? ('electricity.type.pvt' as MessageKey)
+                      : null;
+                const label = labelKey ? t(labelKey, language) : type;
+                return (
+                  <li key={type}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLegendFilterType((prev) => (prev === value ? null : value))
+                      }
+                      className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
+                        isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
+                      }`}
+                      title={
+                        isSelected
+                          ? t('map.legend.showAll', language)
+                          : `${t('map.legend.showOnly', language)} ${label}`
+                      }
+                    >
+                      <span className="inline-block h-2.5 w-2.5 rounded-full bg-yellow-400" />
+                      {label}
+                    </button>
+                  </li>
+                );
+              });
+            })()}
           </ul>
         </div>
       )}
@@ -794,9 +1127,8 @@ export function ConstituencyMap({
                     onClick={() =>
                       setLegendFilterType((prev) => (prev === value ? null : value))
                     }
-                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
-                      isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
-                    }`}
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
+                      }`}
                     title={
                       isSelected
                         ? t('map.legend.showAll', language)

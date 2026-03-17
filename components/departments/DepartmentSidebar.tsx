@@ -12,12 +12,14 @@ const DEPT_MESSAGE_KEYS: Record<string, MessageKey> = {
   HEALTH: 'dept.health',
   ICDS: 'dept.icds',
   AWC_ICDS: 'dept.icds',
+  AGRICULTURE: 'dept.agriculture',
   ROADS: 'dept.roads',
   ELECTRICITY: 'dept.electricity',
   DRAINAGE: 'dept.drainage',
   WATCO_RWSS: 'dept.water',
+  IRRIGATION: 'dept.irrigation',
   MINOR_IRRIGATION: 'dept.minorIrrigation',
-   REVENUE_LAND: 'dept.revenueLand',
+  REVENUE_LAND: 'dept.revenueLand',
 };
 
 function getDepartmentLabel(dept: Department, language: 'en' | 'or'): string {
@@ -89,8 +91,8 @@ export function DepartmentSidebar({
                     type="button"
                     onClick={() => onSelect(dept)}
                     className={`flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left shadow-sm transition-all duration-200 ${isSelected
-                        ? 'bg-orange-500 text-white shadow-md'
-                        : 'bg-slate-800/80 text-slate-100 hover:bg-slate-800'
+                      ? 'bg-orange-500 text-white shadow-md'
+                      : 'bg-slate-800/80 text-slate-100 hover:bg-slate-800'
                       }`}
                   >
                     <span

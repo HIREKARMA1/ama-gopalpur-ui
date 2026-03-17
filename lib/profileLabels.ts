@@ -284,6 +284,7 @@ const MINOR_IRRIGATION_LABELS: Record<string, { en: string; or: string }> = {
   mip_id: { en: 'MIP ID', or: 'MIP ଆଇଡି' },
   name_of_m_i_p: { en: 'Name of M.I.P', or: 'M.I.P ର ନାମ' },
   category_type: { en: 'Category / Type', or: 'ଶ୍ରେଣୀ / ପ୍ରକାର' },
+  category: { en: 'Category', or: 'ଶ୍ରେଣୀ' },
   latitude: { en: 'Latitude', or: 'ଅକ୍ଷାଂଶ' },
   longitude: { en: 'Longitude', or: 'ଦ୍ରାଘିମାଂଶ' },
   latitude_raw: { en: 'Latitude (raw)', or: 'ଅକ୍ଷାଂଶ (ମୂଳ)' },
@@ -308,11 +309,56 @@ const MINOR_IRRIGATION_LABELS: Record<string, { en: string; or: string }> = {
   sensors_installed: { en: 'Sensors installed', or: 'ସେନ୍ସର ଲଗାଇଛନ୍ତି' },
   last_geotagged_date: { en: 'Last geotagged date', or: 'ଶେଷ ଜିଓ-ଟ୍ୟାଗ୍ ତାରିଖ' },
   beneficiary_farmers_count: { en: 'Beneficiary farmers count', or: 'ଲାଭାନ୍ବିତ କୃଷକ ସଂଖ୍ୟା' },
+  beneficiary_households: { en: 'Beneficiary households', or: 'ଲାଭାନ୍ବିତ ଘରୋଇ ପରିବାର' },
   beneficiary_sc_st_count: { en: 'Beneficiary SC/ST count', or: 'ଲାଭାନ୍ବିତ SC/ST ସଂଖ୍ୟା' },
   sanctioned_amt_lakhs: { en: 'Sanctioned amount (lakhs)', or: 'ମଞ୍ଜୁର ରାଶି (ଲକ୍ଷ)' },
   expenditure_lakhs: { en: 'Expenditure (lakhs)', or: 'ବ୍ୟୟ (ଲକ୍ଷ)' },
   forest_clearance_y_n: { en: 'Forest clearance (Y/N)', or: 'ବନ ମଞ୍ଜୁରୀ (ହଁ/ନା)' },
   remarks: { en: 'Remarks', or: 'ମନ୍ତବ୍ୟ' },
+  // Irrigation department specific (from irrigation CSV)
+  type_of_irrigation_flowliftsolar: { en: 'Type of irrigation', or: 'ସେଚନ ପ୍ରକାର' },
+  'catchment_area_in_sq_km.': { en: 'Catchment area (sq km)', or: 'କ୍ୟାଚମେଣ୍ଟ କ୍ଷେତ୍ରଫଳ (ଚ.କି.ମି.)' },
+  'command_area__ayacut_ha.': { en: 'Command / Ayacut (ha.)', or: 'କମାଣ୍ଡ / ଆୟାକଟ୍ (ହେକ୍ଟର୍)' },
+  // CSV variant with single underscore between "area" and "ayacut"
+  'command_area_ayacut_ha.': { en: 'Command / Ayacut (ha.)', or: 'କମାଣ୍ଡ / ଆୟାକଟ୍ (ହେକ୍ଟର୍)' },
+  'storage_capacity_ham.': { en: 'Storage capacity (HAM.)', or: 'ସଂରକ୍ଷଣ କ୍ଷମତା (HAM.)' },
+  'water_spread_area_ha.': { en: 'Water spread area (ha.)', or: 'ଜଳ ବିସ୍ତାର କ୍ଷେତ୍ରଫଳ (ହେକ୍ଟର୍)' },
+  canal_distributory_length_km: { en: 'Canal / distributory length (km)', or: 'କ୍ୟାନାଲ୍ / ବଣ୍ଟନୀ ଲମ୍ବ (କି.ମି.)' },
+  design_discharge_cusecs: { en: 'Design discharge (cusecs)', or: 'ଡିଜାଇନ୍ ଡିସଚାର୍ଜ୍ (କ୍ୟୁସେକ୍ସ୍)' },
+  inflow_source_riverrainstream__canal: { en: 'Inflow source', or: 'ଜଳ ଆଗମନ ସ୍ରୋତ' },
+  // CSV variant with underscores between words
+  inflow_source_river_rain_stream_canal: { en: 'Inflow source', or: 'ଜଳ ଆଗମନ ସ୍ରୋତ' },
+  year_of_commissioning: { en: 'Year of commissioning', or: 'ଚାଲୁ ହେବାର ବର୍ଷ' },
+  current_physical_condition_good_repair_needed_critical: {
+    en: 'Physical condition',
+    or: 'ଭୂତଳ ଅବସ୍ଥା',
+  },
+  functionality_status_functional_partial_non_functional: {
+    en: 'Functionality status',
+    or: 'କାର୍ଯ୍ୟକ୍ଷମତା ସ୍ଥିତି',
+  },
+  managed_by_pani_panchayatdeptwua: { en: 'Managed by', or: 'ପରିଚାଳନା କରୁଥିବା' },
+  // CSV variant with underscores between words
+  managed_by_pani_panchayat_dept_wua: { en: 'Managed by', or: 'ପରିଚାଳନା କରୁଥିବା' },
+  last_maintenancedesilting_year: {
+    en: 'Last maintenance / desilting year',
+    or: 'ଶେଷ ରକ୍ଷାଣାବେକ୍ଷଣ / ଡି-ସିଲ୍ଟିଂ ବର୍ଷ',
+  },
+  // CSV variant with underscore before "desilting"
+  last_maintenance_desilting_year: {
+    en: 'Last maintenance / desilting year',
+    or: 'ଶେଷ ରକ୍ଷାଣାବେକ୍ଷଣ / ଡି-ସିଲ୍ଟିଂ ବର୍ଷ',
+  },
+  water_availability_monthsyear: { en: 'Water availability (months / year)', or: 'ଜଳ ଉପଲବ୍ଧତା (ମାସ / ବର୍ଷ)' },
+  // CSV variant with underscore between "months" and "year"
+  water_availability_months_year: {
+    en: 'Water availability (months / year)',
+    or: 'ଜଳ ଉପଲବ୍ଧତା (ମାସ / ବର୍ଷ)',
+  },
+  funding_scheme_mgnregsstatecentral: { en: 'Funding scheme', or: 'ଅର୍ଥାୟନ ଯୋଜନା' },
+  // CSV variant with underscores between "mgnregs", "state", "central"
+  funding_scheme_mgnregs_state_central: { en: 'Funding scheme', or: 'ଅର୍ଥାୟନ ଯୋଜନା' },
+  remarks_historical_background: { en: 'Remarks / historical background', or: 'ମନ୍ତବ୍ୟ / ଐତିହାସିକ ପୃଷ୍ଠଭୂମି' },
 };
 
 export function getMinorIrrigationProfileLabel(
