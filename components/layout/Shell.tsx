@@ -38,9 +38,8 @@ export function Shell({ sidebar, children, renderMobileBar }: ShellProps) {
       <div className="relative flex min-h-0 flex-1">
         {/* Sidebar: desktop = collapsible rail; mobile = fixed overlay drawer (below full navbar + top bar) */}
         <aside
-          className={`flex shrink-0 flex-col overflow-hidden bg-[var(--color-sidebar-solid)] transition-all duration-200 ease-out ${
-            sidebarAsOverlay ? 'fixed right-0 top-32 z-30 h-[calc(100vh-8rem)] shadow-xl' : 'md:relative'
-          }`}
+          className={`flex shrink-0 flex-col overflow-hidden bg-[var(--color-sidebar-solid)] transition-all duration-200 ease-out ${sidebarAsOverlay ? 'fixed right-0 top-32 z-30 h-[calc(100vh-8rem)] shadow-xl' : 'md:relative'
+            }`}
           style={{
             width: sidebarOpen ? SIDEBAR_WIDTH : 0,
           }}
