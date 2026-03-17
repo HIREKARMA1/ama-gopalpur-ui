@@ -14,6 +14,7 @@ import {
   watcoApi,
   revenueLandApi,
   minorIrrigationApi,
+  irrigationApi,
   Organization,
   Department,
   CenterProfile,
@@ -40,6 +41,7 @@ import { WaterPortfolioDashboard } from '../../../components/organization/WaterP
 import { RevenueLandPortfolioDashboard } from '../../../components/organization/RevenueLandPortfolioDashboard';
 import { AgriculturePortfolioDashboard } from '../../../components/organization/AgriculturePortfolioDashboard';
 import { MinorIrrigationPortfolioDashboard } from '../../../components/organization/MinorIrrigationPortfolioDashboard';
+import { IrrigationPortfolioDashboard } from '../../../components/organization/IrrigationPortfolioDashboard';
 
 const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
@@ -178,6 +180,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [agricultureDailyMetrics, setAgricultureDailyMetrics] = useState<import('../../../services/api').AgricultureDailyMetric[]>([]);
   const [agricultureMonthlyReports, setAgricultureMonthlyReports] = useState<import('../../../services/api').AgricultureMonthlyReport[]>([]);
   const [minorIrrigationProfile, setMinorIrrigationProfile] = useState<Record<string, unknown>>({});
+  const [irrigationProfile, setIrrigationProfile] = useState<Record<string, unknown>>({});
   const [snpDailyStock, setSnpDailyStock] = useState<Awaited<ReturnType<typeof icdsApi.listSnpDailyStock>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -302,6 +305,11 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
         } else if (code === 'MINOR_IRRIGATION') {
           const profile = await minorIrrigationApi.getProfile(id);
           setMinorIrrigationProfile(
+            profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
+          );
+        } else if (code === 'IRRIGATION') {
+          const profile = await irrigationApi.getProfile(id);
+          setIrrigationProfile(
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
         } else {
@@ -501,6 +509,24 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           staff={electricityStaff}
           dailyReports={electricityDaily}
           monthlyReports={electricityMonthly}
+          images={images}
+        />
+      </div>
+    );
+  }
+
+  if (deptCode === 'IRRIGATION') {
+    const galleryImages = Array.isArray((irrigationProfile as any)?.gallery_images)
+      ? ((irrigationProfile as any).gallery_images as string[])
+      : [];
+    const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
+    return (
+      <div className="page-container">
+        <Navbar />
+        <IrrigationPortfolioDashboard
+          org={org}
+          profile={irrigationProfile}
+          departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
         />
       </div>
