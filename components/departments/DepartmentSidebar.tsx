@@ -75,7 +75,7 @@ export function DepartmentSidebar({
         </p>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
+      <nav className="flex-1 overflow-y-auto px-3 py-4 nice-scrollbar">
         {departments.length === 0 ? (
           <p className="text-sm text-slate-300">{t('sidebar.loading', language)}</p>
         ) : (
