@@ -109,9 +109,9 @@ export default function HomePage() {
         if (sidebarOpen) return null;
         return (
           <div className="md:hidden">
-            <div className="mx-auto flex max-w-md items-center gap-2 rounded-t-2xl bg-slate-900/95 px-3 py-2 shadow-[0_-4px_12px_rgba(15,23,42,0.85)] backdrop-blur">
-              <div className="flex-1 overflow-x-auto">
-                <div className="flex items-center gap-3">
+            <div className="mx-auto flex max-w-md items-center gap-2 rounded-t-2xl bg-white/95 px-3 py-2.5 shadow-[0_-10px_30px_rgba(15,23,42,0.18)] ring-1 ring-slate-200 backdrop-blur">
+              <div className="flex-1 overflow-x-auto nice-scrollbar">
+                <div className="flex items-center gap-2.5 py-0.5">
                   {departments.map((dept) => {
                     const Icon = getDepartmentIcon(dept.code, dept.name);
                     const isSelected = selectedDept?.id === dept.id;
@@ -120,13 +120,13 @@ export default function HomePage() {
                         key={dept.id}
                         type="button"
                         onClick={() => handleSelectDepartment(dept)}
-                        className={`flex h-10 w-10 items-center justify-center rounded-full border text-xs font-medium transition ${isSelected
-                          ? 'border-orange-400 bg-orange-500 text-white shadow'
-                          : 'border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700'
+                        className={`flex h-11 w-11 min-w-11 shrink-0 aspect-square items-center justify-center rounded-xl transition ${isSelected
+                          ? 'bg-slate-100 text-orange-600 shadow-sm ring-1 ring-slate-200'
+                          : 'text-slate-500 hover:bg-slate-50'
                           }`}
                         aria-label={dept.name}
                       >
-                        <Icon className="h-5 w-5" />
+                        <Icon className="h-6 w-6" />
                       </button>
                     );
                   })}
@@ -135,10 +135,10 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-slate-200 shadow hover:bg-slate-700"
+                className="flex h-11 w-11 min-w-11 shrink-0 aspect-square items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-50"
                 aria-label={sidebarOpen ? 'Close departments' : 'Open departments'}
               >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>

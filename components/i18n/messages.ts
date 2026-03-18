@@ -369,6 +369,19 @@ export type MessageKey =
   | 'map.search.submit'
   | 'map.legend.showAll'
   | 'map.legend.showOnly'
+  | 'roads.type.nh'
+  | 'roads.type.pwd'
+  | 'roads.type.rd'
+  | 'roads.type.other'
+  | 'watco.type.megaEsr'
+  | 'watco.type.existingEsr'
+  | 'watco.type.ibpsPumpHouse'
+  | 'watco.type.intakeWell'
+  | 'watco.type.productionWell'
+  | 'irrigation.category.tank'
+  | 'irrigation.category.checkDam'
+  | 'irrigation.category.anicut'
+  | 'irrigation.category.canal'
   | 'map.info.sector'
   | 'map.info.gp'
   | 'map.info.block'
@@ -524,7 +537,7 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.health.chc': { en: 'CHC', or: 'ଗୋଷ୍ଠୀ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
   'map.health.phc': { en: 'PHC', or: 'ପ୍ରାଥମିକ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
   'map.health.sc': { en: 'SC', or: 'ସବ୍-ସେଣ୍ଟର' },
-  'map.health.uaam': { en: 'UAAM', or: 'UAAM' },
+  'map.health.uaam': { en: 'UAAM', or: 'ୟୁଏଏଏମ୍' },
   'map.health.uphc': { en: 'UPHC', or: 'ସହରାଞ୍ଚଳ ପ୍ରାଥମିକ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
   'map.health.healthCentre': { en: 'Health Centre', or: 'ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର' },
   'map.health.other': { en: 'Other', or: 'ଅନ୍ୟ' },
@@ -841,6 +854,19 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.search.submit': { en: 'Search', or: 'ସନ୍ଧାନ' },
   'map.legend.showAll': { en: 'Show all', or: 'ସବୁ ଦେଖାନ୍ତୁ' },
   'map.legend.showOnly': { en: 'Show only', or: 'କେବଳ ଦେଖାନ୍ତୁ' },
+  'roads.type.nh': { en: 'National Highway', or: 'ଜାତୀୟ ରାଜପଥ' },
+  'roads.type.pwd': { en: 'PWD / R&B', or: 'PWD / R&B' },
+  'roads.type.rd': { en: 'Rural / Village Road', or: 'ଗ୍ରାମୀଣ / ଗାଁ ରାସ୍ତା' },
+  'roads.type.other': { en: 'Other', or: 'ଅନ୍ୟ' },
+  'watco.type.megaEsr': { en: 'MEGA ESR', or: 'ମେଗା ESR' },
+  'watco.type.existingEsr': { en: 'EXISTING ESR', or: 'ବିଦ୍ୟମାନ ESR' },
+  'watco.type.ibpsPumpHouse': { en: 'IBPS PUMP HOUSE', or: 'IBPS ପମ୍ପ ହାଉସ୍' },
+  'watco.type.intakeWell': { en: 'INTAKE WELL', or: 'ଇଣ୍ଟେକ୍ ୱେଲ୍' },
+  'watco.type.productionWell': { en: 'PRODUCTION WELL', or: 'ପ୍ରଡକ୍ସନ୍ ୱେଲ୍' },
+  'irrigation.category.tank': { en: 'Tank', or: 'ଟ୍ୟାଙ୍କ' },
+  'irrigation.category.checkDam': { en: 'Check Dam', or: 'ଚେକ୍ ଡ୍ୟାମ୍' },
+  'irrigation.category.anicut': { en: 'Anicut', or: 'ଆନିକଟ୍' },
+  'irrigation.category.canal': { en: 'Canal', or: 'କ୍ୟାନାଲ୍' },
   'map.info.sector': { en: 'Sector', or: 'ସେକ୍ଟର' },
   'map.info.gp': { en: 'GP', or: 'ଜି.ପି.' },
   'map.info.block': { en: 'Block', or: 'ବ୍ଲକ' },
