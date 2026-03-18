@@ -100,37 +100,23 @@ interface ConstituencyMapProps {
 
 const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
 
-/** Build a circular SVG marker with a department initial in the center. */
-function createDepartmentSvgIcon(deptCode: string, fillColor: string): string {
-  const initial =
-    deptCode === 'EDUCATION'
-      ? 'E'
-      : deptCode === 'HEALTH'
-        ? 'H'
-        : deptCode === 'AWC_ICDS' || deptCode === 'ICDS'
-          ? 'A'
-          : deptCode === 'ELECTRICITY'
-            ? 'E'
-            : deptCode === 'ROADS'
-              ? 'R'
-              : 'D';
-
+/**
+ * Build a clean circular marker icon (no letters).
+ * This is intentionally minimal so dense maps are easier to scan.
+ */
+function createCircleMarkerSvgIcon(fillColor: string): string {
   const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36">
   <defs>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="rgba(15,23,42,0.5)"/>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(15,23,42,0.35)"/>
     </filter>
   </defs>
   <g filter="url(#shadow)">
-    <circle cx="20" cy="16" r="10" fill="${fillColor}" />
-    <circle cx="20" cy="16" r="10" fill="url(#grad)" opacity="0.9"/>
-    <circle cx="20" cy="16" r="10" fill="${fillColor}" />
-    <text x="20" y="20" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" font-weight="700" fill="#ffffff">
-      ${initial}
-    </text>
+    <circle cx="18" cy="18" r="10.5" fill="${fillColor}" />
+    <circle cx="18" cy="18" r="10.5" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2.5"/>
+    <circle cx="18" cy="18" r="3.2" fill="rgba(255,255,255,0.95)"/>
   </g>
-  <path d="M20 26 L18 30 L22 30 Z" fill="${fillColor}" />
 </svg>`;
 
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
@@ -270,7 +256,7 @@ export function ConstituencyMap({
                 sub === 'UNIVERSITY' ? '#fbbc04' :
                   sub === 'DIPLOMA_COLLEGE' ? '#9c27b0' :
                     '#ea4335';
-        return createDepartmentSvgIcon('EDUCATION', color);
+        return createCircleMarkerSvgIcon(color);
       }
 
       // HEALTH – match legend colors exactly
@@ -285,7 +271,7 @@ export function ConstituencyMap({
                     category === 'UPHC' ? '#9c27b0' :
                       category === 'HEALTH_CENTRE' ? '#1967d2' :
                         '#34a853';
-        return createDepartmentSvgIcon('HEALTH', color);
+        return createCircleMarkerSvgIcon(color);
       }
 
       // AGRICULTURE – two types with distinct colors (match legend)
@@ -297,22 +283,22 @@ export function ConstituencyMap({
             : sub === 'AGRICULTURE EXTENSION CENTER'
               ? '#f59e0b' // amber-500
               : '#059669';
-        return createDepartmentSvgIcon('AGRICULTURE', color);
+        return createCircleMarkerSvgIcon(color);
       }
 
       // ELECTRICITY – single yellow color, matching legend
       if (code === 'ELECTRICITY') {
-        return createDepartmentSvgIcon('ELECTRICITY', '#facc15'); // tailwind yellow-400
+        return createCircleMarkerSvgIcon('#facc15'); // tailwind yellow-400
       }
 
       // REVENUE LAND – single red color, matching legend
       if (code === 'REVENUE_LAND') {
-        return createDepartmentSvgIcon('REVENUE_LAND', '#f43f5e'); // tailwind rose-500
+        return createCircleMarkerSvgIcon('#f43f5e'); // tailwind rose-500
       }
 
       // ICDS / AWC – single pink color, matching legend
       if (code === 'AWC_ICDS' || code === 'ICDS' || type === 'AWC') {
-        return createDepartmentSvgIcon('AWC_ICDS', '#ec4899');
+        return createCircleMarkerSvgIcon('#ec4899');
       }
 
       // Other departments – fall back to per-dept PNG icon if configured,
@@ -321,7 +307,7 @@ export function ConstituencyMap({
         return DEPARTMENT_MARKER_ICONS[code];
       }
 
-      return createDepartmentSvgIcon(code, '#0f766e');
+      return createCircleMarkerSvgIcon('#0f766e');
     },
     [selectedDepartmentCode]
   );
@@ -439,6 +425,39 @@ export function ConstituencyMap({
     },
     [orgsWithLocation, searchTerm, getTypeLabel, language, legendFilterType, selectedDepartmentCode]
   );
+
+  // When user applies a legend filter, auto-zoom/pan to show matching markers.
+  useEffect(() => {
+    if (!legendFilterType) return;
+    if (!mapInstance) return;
+    if (!filteredOrgs || filteredOrgs.length === 0) return;
+    if (typeof window === 'undefined' || !(window as any).google?.maps) return;
+
+    const points = filteredOrgs.filter(
+      (o): o is MapOrganization & { latitude: number; longitude: number } =>
+        typeof o.latitude === 'number' && typeof o.longitude === 'number',
+    );
+    if (points.length === 0) return;
+
+    // Close any open info windows so the camera move feels intentional.
+    setInfoWindowOrg(null);
+    setSelectedRoad(null);
+
+    if (points.length === 1) {
+      const p = points[0];
+      mapInstance.panTo({ lat: p.latitude, lng: p.longitude });
+      if (typeof mapInstance.setZoom === 'function') {
+        mapInstance.setZoom(15);
+      }
+      return;
+    }
+
+    const bounds = new (window as any).google.maps.LatLngBounds();
+    points.forEach((p) => bounds.extend({ lat: p.latitude, lng: p.longitude }));
+    if (typeof mapInstance.fitBounds === 'function') {
+      mapInstance.fitBounds(bounds, { top: 70, right: 40, bottom: 110, left: 40 });
+    }
+  }, [legendFilterType, filteredOrgs, mapInstance]);
 
   const orgsToShow = filteredOrgs;
 
