@@ -32,8 +32,23 @@ export default function HomePage() {
       .catch((err) => console.error('Failed to load departments', err));
   }, []);
 
+  // Restore last selected department after refresh.
+  useEffect(() => {
+    if (departments.length === 0) return;
+    if (selectedDept) return;
+    if (typeof window === 'undefined') return;
+    const stored = window.localStorage.getItem('ama_gopalpur_selected_dept_code');
+    if (!stored) return;
+    const match = departments.find((d) => (d.code || '').toUpperCase() === stored.toUpperCase());
+    if (match) handleSelectDepartment(match);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [departments]);
+
   const handleSelectDepartment = (dept: Department) => {
     setSelectedDept(dept);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('ama_gopalpur_selected_dept_code', dept.code || '');
+    }
     const isRoads = dept.code?.toUpperCase() === 'ROADS';
     setLoading(true);
     if (isRoads) {
