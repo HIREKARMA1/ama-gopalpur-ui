@@ -1,7 +1,19 @@
 'use client';
 
 import type { IconType } from 'react-icons';
-import { FaGraduationCap, FaHospital, FaTint, FaRoad, FaBolt, FaChild, FaBuilding } from 'react-icons/fa';
+import {
+  FaGraduationCap,
+  FaHospital,
+  FaTint,
+  FaRoad,
+  FaBolt,
+  FaChild,
+  FaBuilding,
+  FaSeedling,
+  FaWater,
+  FaLandmark,
+  FaDumpster,
+} from 'react-icons/fa';
 import type { MessageKey } from '../i18n/messages';
 import { Department } from '../../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -29,14 +41,23 @@ function getDepartmentLabel(dept: Department, language: 'en' | 'or'): string {
 
 /** Map department code/name to a React Icon component */
 function getBaseDepartmentIcon(code: string, name: string): IconType {
-  const c = code.toLowerCase();
-  const n = name.toLowerCase();
-  if (c.includes('health') || n.includes('health')) return FaHospital;
-  if (c.includes('education') || n.includes('education')) return FaGraduationCap;
-  if (c.includes('water') || n.includes('rwss') || c.includes('watco') || n.includes('water')) return FaTint;
-  if (c.includes('road') || c.includes('pwd') || c.includes('transport')) return FaRoad;
-  if (c.includes('electric') || n.includes('electric')) return FaBolt;
-  if (c.includes('sanitation') || c.includes('drainage') || c.includes('icds') || c.includes('awc')) return FaChild;
+  const c = (code || '').toUpperCase();
+  const n = (name || '').toUpperCase();
+
+  // Prefer explicit department code mapping (distinct icons).
+  if (c === 'EDUCATION' || n.includes('EDUCATION')) return FaGraduationCap;
+  if (c === 'HEALTH' || n.includes('HEALTH')) return FaHospital;
+  if (c === 'ICDS' || c === 'AWC_ICDS' || n.includes('ICDS')) return FaChild;
+  if (c === 'AGRICULTURE' || n.includes('AGRICULTURE')) return FaSeedling;
+  if (c === 'IRRIGATION' || n.includes('IRRIGATION')) return FaWater;
+  if (c === 'MINOR_IRRIGATION') return FaTint;
+  if (c === 'WATCO_RWSS' || n.includes('WATCO') || n.includes('RWSS')) return FaTint;
+  if (c === 'ROADS' || c.includes('ROAD') || c.includes('PWD') || n.includes('ROAD')) return FaRoad;
+  if (c === 'ELECTRICITY' || n.includes('ELECTRIC')) return FaBolt;
+  if (c === 'DRAINAGE' || n.includes('DRAINAGE') || n.includes('SANITATION')) return FaDumpster;
+  if (c === 'REVENUE_LAND' || n.includes('REVENUE') || n.includes('LAND')) return FaLandmark;
+
+  // Fallback.
   return FaBuilding;
 }
 
