@@ -69,6 +69,37 @@ const WATCO_STATION_TYPES = [
   'PRODUCTION WELL',
 ] as const;
 
+const ROAD_TYPE_LABEL_KEYS: Record<RoadTypeKey, MessageKey> = {
+  NH: 'roads.type.nh',
+  PWD: 'roads.type.pwd',
+  RD: 'roads.type.rd',
+  OTHER: 'roads.type.other',
+};
+
+const WATCO_TYPE_LABEL_KEYS: Record<(typeof WATCO_STATION_TYPES)[number], MessageKey> = {
+  'MEGA ESR': 'watco.type.megaEsr',
+  'EXISTING ESR': 'watco.type.existingEsr',
+  'IBPS PUMP HOUSE': 'watco.type.ibpsPumpHouse',
+  'INTAKE WELL': 'watco.type.intakeWell',
+  'PRODUCTION WELL': 'watco.type.productionWell',
+};
+
+function translateIrrigationCategory(label: string, lang: 'en' | 'or'): string {
+  const v = (label || '').trim();
+  const upper = v.toUpperCase();
+  const key =
+    upper === 'TANK'
+      ? ('irrigation.category.tank' as MessageKey)
+      : upper === 'CHECK DAM'
+        ? ('irrigation.category.checkDam' as MessageKey)
+        : upper === 'ANICUT'
+          ? ('irrigation.category.anicut' as MessageKey)
+          : upper === 'CANAL'
+            ? ('irrigation.category.canal' as MessageKey)
+            : null;
+  return key ? t(key, lang) : v;
+}
+
 export interface MapOrganization {
   id: number;
   name: string;
@@ -934,6 +965,7 @@ export function ConstituencyMap({
             ).map((type) => {
               const value = type.toUpperCase();
               const isSelected = legendFilterType === value;
+              const label = translateIrrigationCategory(type, language);
               return (
                 <li key={type}>
                   <button
@@ -947,11 +979,11 @@ export function ConstituencyMap({
                     title={
                       isSelected
                         ? t('map.legend.showAll', language)
-                        : `${t('map.legend.showOnly', language)} ${type}`
+                        : `${t('map.legend.showOnly', language)} ${label}`
                     }
                   >
                     <span className="inline-block h-2.5 w-2.5 rounded-full bg-sky-600" />
-                    {type}
+                    {label}
                   </button>
                 </li>
               );
@@ -975,6 +1007,7 @@ export function ConstituencyMap({
             ).map((type) => {
               const value = type.toUpperCase();
               const isSelected = legendFilterType === value;
+              const label = translateIrrigationCategory(type, language);
               return (
                 <li key={type}>
                   <button
@@ -988,11 +1021,11 @@ export function ConstituencyMap({
                     title={
                       isSelected
                         ? t('map.legend.showAll', language)
-                        : `${t('map.legend.showOnly', language)} ${type}`
+                        : `${t('map.legend.showOnly', language)} ${label}`
                     }
                   >
                     <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-600" />
-                    {type}
+                    {label}
                   </button>
                 </li>
               );
@@ -1139,6 +1172,8 @@ export function ConstituencyMap({
             {WATCO_STATION_TYPES.map((type) => {
               const value = type.toUpperCase();
               const isSelected = legendFilterType === value;
+              const labelKey = WATCO_TYPE_LABEL_KEYS[type];
+              const label = labelKey ? t(labelKey, language) : type;
               return (
                 <li key={type}>
                   <button
@@ -1151,7 +1186,7 @@ export function ConstituencyMap({
                     title={
                       isSelected
                         ? t('map.legend.showAll', language)
-                        : `${t('map.legend.showOnly', language)} ${type}`
+                        : `${t('map.legend.showOnly', language)} ${label}`
                     }
                   >
                     <span
@@ -1169,7 +1204,7 @@ export function ConstituencyMap({
                                   : '#e11d48',
                       }}
                     />
-                    {type}
+                    {label}
                   </button>
                 </li>
               );
@@ -1220,19 +1255,21 @@ export function ConstituencyMap({
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
             {(Object.entries(ROAD_TYPE_LABELS) as [RoadTypeKey, string][]).map(([type]) => {
               const isSelected = roadLegendFilterType === type;
+              const labelKey = ROAD_TYPE_LABEL_KEYS[type];
+              const label = labelKey ? t(labelKey, language) : ROAD_TYPE_LABELS[type];
               return (
                 <li key={type}>
                   <button
                     type="button"
                     onClick={() => setRoadLegendFilterType((prev) => (prev === type ? null : type))}
                     className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
-                    title={isSelected ? t('map.legend.showAll', language) : `${t('map.legend.showOnly', language)} ${ROAD_TYPE_LABELS[type]}`}
+                    title={isSelected ? t('map.legend.showAll', language) : `${t('map.legend.showOnly', language)} ${label}`}
                   >
                     <span
                       className="inline-block h-2 w-3 rounded-sm shrink-0"
                       style={{ backgroundColor: ROAD_TYPE_COLORS[type] }}
                     />
-                    {ROAD_TYPE_LABELS[type]}
+                    {label}
                   </button>
                 </li>
               );
