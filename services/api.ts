@@ -120,8 +120,8 @@ export const organizationsApi = {
     department_id: number;
     name: string;
     type: string;
-    latitude: number;
-    longitude: number;
+    latitude?: number | null;
+    longitude?: number | null;
     description?: string;
     address?: string;
     sub_department?: string | null;
@@ -135,8 +135,8 @@ export const organizationsApi = {
     id: number,
     payload: {
       name?: string;
-      latitude?: number;
-      longitude?: number;
+      latitude?: number | null;
+      longitude?: number | null;
       description?: string;
       address?: string;
       sub_department?: string | null;

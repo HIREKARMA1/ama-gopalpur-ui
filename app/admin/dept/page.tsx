@@ -55,7 +55,7 @@ const ELECTRICITY_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID/CODE,OWNERSHIP,PARENT ORGANIZATION,HIERARCHY LEVEL,HOST INSTITUTION (IF TRAINING CENTER),ESTABLISHED YEAR,COMMISSIONED YEAR (SUBSTATIONS),FULL ADDRESS,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE DESIGNATION,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,OFFICE HOURS,TOLL-FREE/CUSTOMER CARE NUMBER,HELPLINE AVAILABLE (YES/NO),VOLTAGE LEVEL PRIMARY (kV),VOLTAGE LEVEL SECONDARY (kV),INSTALLED CAPACITY (MVA),NO OF TRANSFORMERS,TRANSFORMER RATINGS MVA (COMMA SEPARATED),NO OF INCOMING FEEDERS,NO OF OUTGOING FEEDERS,TOTAL FEEDERS,BAYS (COUNT),SWITCHGEAR TYPE (GIS/AIS/HYBRID),33kV FEEDER LENGTH (KM),11kV FEEDER LENGTH (KM),LT LINE LENGTH (KM),NO OF DISTRIBUTION TRANSFORMERS (DTs),DT TOTAL CAPACITY (kVA),FEEDER METERING (YES/NO),FEEDER METERS (COUNT),DT METERING (YES/NO),DT METERS (COUNT),SMART METERS INSTALLED (COUNT),PREPAID METERS (COUNT),CONSUMER METERS TOTAL (COUNT),CONSUMERS UNDER JURISDICTION (APPROX),CONSUMERS DOMESTIC (COUNT),CONSUMERS COMMERCIAL (COUNT),CONSUMERS INDUSTRIAL (COUNT),CONSUMERS AGRICULTURAL (COUNT),CONSUMERS OTHER (COUNT),HT CONSUMERS (COUNT),LT CONSUMERS (COUNT),CONNECTED LOAD (MW),AT&C LOSS PERCENT,BILLING EFFICIENCY PERCENT,COLLECTION EFFICIENCY PERCENT,HOURS OF SUPPLY RURAL,HOURS OF SUPPLY URBAN,COMPLAINTS REGISTERED LAST YEAR,COMPLAINTS REDRESSED LAST YEAR,CONSUMER CARE COUNTER (YES/NO),BILLING FACILITY (YES/NO),ONLINE PAYMENT (YES/NO),MOBILE APP (YES/NO),ONLINE COMPLAINT PORTAL (YES/NO),CUSTOMER CARE EMAIL,GRIEVANCE REDRESSAL FORUM (YES/NO),TOTAL STAFF (COUNT),ENGINEERS (COUNT),TECHNICAL STAFF (COUNT),LINEMEN (COUNT),CONTRACT STAFF (COUNT),ADMIN/OFFICE STAFF (COUNT),VILLAGES/LOCALITIES COVERED (COUNT),GPs COVERED (COUNT),AREA COVERED SQ KM,BUILDING TYPE (OWN/RENTED),TOTAL FLOORS,OFFICE AREA SQ FT,TRAINING CENTER (YES/NO),TRAINING CAPACITY SEATS,WORKSHOP/GARAGE (YES/NO),STORE (YES/NO),DG SET (YES/NO),SOLAR (YES/NO),VEHICLES (COUNT),TWO-WHEELERS (COUNT),ANNUAL REVENUE CR (APPROX),BILLING CR LAST YEAR,DATA AS ON (YYYY-MM-DD),REMARKS/DESCRIPTION\n';
 
 const REVENUE_LAND_CSV_HEADER =
-  'TAHASIL,RI CIRCLE,BLOCK/ULB,GP/WARD,MOUZA/VILLAGE,HABITATION/LOCALITY,GOVT LAND ID,KHATA NO,PLOT NO,SUB-PLOT NO,LAND TYPE (GOVT/PRIVATE/OTHER),GOVT LAND CATEGORY (Gochar/Gramya Jungle/Sarbasadharan/Khasmahal/Nazul/Other),KISAM,KISAM DESCRIPTION,TOTAL AREA (ACRES),TOTAL AREA (HECTARES),TOTAL AREA (SQFT),AVAILABLE VACANT AREA (ACRES),DEPARTMENT RECORDED AS OWNER,DEPARTMENT IN POSSESSION,PRESENT USE (Office/School/Health Centre/RLI/Road/Pond/Market/Vacant/Other),PROPOSED USE,IS IN LAND BANK (YES/NO),LAND BANK CATEGORY (A/B/Other),LATITUDE,LONGITUDE,BHUNAKSHA SHEET NO,BHUNAKSHA PLOT ID,ROR NO,ROR YEAR,LAST MUTATION CASE NO,ENCROACHMENT CASE NO (OPLE),ENCROACHMENT STATUS (None/Notice/Eviction Pending/Evicted/Regularised),COURT CASE NO,COURT NAME,LITIGATION STATUS (None/Pending/Decreed/Stayed),LEASED OUT (YES/NO),LESSEE NAME,LEASE PURPOSE,LEASE DEED NO,LEASE PERIOD FROM (DD-MM-YYYY),LEASE PERIOD TO (DD-MM-YYYY),LEASE PREMIUM AMOUNT (Rs),LEASE ANNUAL RENT (Rs),BUILDING EXISTING (YES/NO),BUILDING NAME,BUILDING FLOORS,BUILDING CONSTRUCTION YEAR,ROAD CONNECTIVITY (Abutting road name),DISTANCE FROM MAIN ROAD (METERS),NEAREST LANDMARK,URBAN/RURAL,CRZ ZONE (IF ANY),FLOOD PRONE (YES/NO),OTHER RESTRICTIONS/CONDITIONS,REMARKS/DESCRIPTION\n';
+  'TAHASIL,RI CIRCLE,BLOCK/ULB,GP/WARD,MOUZA/VILLAGE,HABITATION/LOCALITY,GOVT LAND ID,KHATA NO,PLOT NO,SUB-PLOT NO,LAND TYPE (GOVT/PRIVATE/OTHER),GOVT LAND CATEGORY (Gochar/Gramya Jungle/Sarbasadharan/Khasmahal/Nazul/Other),KISAM,KISAM DESCRIPTION,TOTAL AREA (ACRES),TOTAL AREA (HECTARES),TOTAL AREA (SQFT),ROR YEAR,DEPARTMENT RECORDED AS OWNER,DESCRIPTION\n';
 
 const MINOR_IRRIGATION_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,MIP ID,NAME OF M.I.P,CATEGORY/TYPE,LATITUDE,LONGITUDE,LOCATION PRECISION (METER),CATCHMENT AREA (SQ KM),COMMAND AREA KHARIF (ACRES),COMMAND AREA RABI (ACRES),TOTAL AYACUT (ACRES),STORAGE CAPACITY (MCUM),MWL (FT),FRL (FT),TBL (FT),SPILLWAY TYPE,SPILLWAY WIDTH (FT),NO OF SLUICES,SLUICE TYPE,CONDITION,FUNCTIONALITY,MANAGED BY,LAST MAINTENANCE,SENSORS INSTALLED,LAST GEOTAGGED DATE,BENEFICIARY FARMERS COUNT,BENEFICIARY SC/ST COUNT,SANCTIONED AMT (LAKHS),EXPENDITURE (LAKHS),FOREST CLEARANCE (Y/N),REMARKS\n';
@@ -1442,7 +1442,7 @@ export default function DepartmentAdminPage() {
                 </h2>
                 <p className="mt-1 text-xs text-text-muted">
                   Add a single Revenue Govt Land parcel manually. Key fields mirror the CSV template (Govt
-                  land ID, basic location and coordinates).
+                  land ID and required parcel attributes).
                 </p>
                 <form
                   className="mt-3 grid gap-3 text-xs md:grid-cols-2"
@@ -1453,25 +1453,16 @@ export default function DepartmentAdminPage() {
                       return;
                     }
                     const govtLandIdKey = snakeFromHeader('GOVT LAND ID');
-                    const latKey = snakeFromHeader('LATITUDE');
-                    const lngKey = snakeFromHeader('LONGITUDE');
                     const nameField = (revenueFormValues['name'] || '').trim();
                     const govtLandId = (revenueFormValues[govtLandIdKey] || '').trim();
                     const name = nameField || govtLandId;
-                    const latStr = revenueFormValues[latKey] || '';
-                    const lngStr = revenueFormValues[lngKey] || '';
-                    if (!name || !latStr.trim() || !lngStr.trim()) {
-                      setError('Name / Govt land ID, Latitude and Longitude are required.');
+                    if (!name) {
+                      setError('Govt land ID (or Land parcel name) is required.');
                       return;
                     }
                     setCreating(true);
                     setError(null);
                     try {
-                      const lat = Number(latStr);
-                      const lng = Number(lngStr);
-                      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-                        throw new Error('Latitude and Longitude must be valid numbers.');
-                      }
                       const tahasil = revenueFormValues[snakeFromHeader('TAHASIL')] || '';
                       const block = revenueFormValues[snakeFromHeader('BLOCK/ULB')] || '';
                       const gp = revenueFormValues[snakeFromHeader('GP/WARD')] || '';
@@ -1484,8 +1475,6 @@ export default function DepartmentAdminPage() {
                       if (editingRevenueId) {
                         const updatedOrg = await organizationsApi.update(editingRevenueId, {
                           name,
-                          latitude: lat,
-                          longitude: lng,
                           address: addressParts.length ? addressParts.join(', ') : undefined,
                           attributes: {
                             tahasil: tahasil || null,
@@ -1501,8 +1490,6 @@ export default function DepartmentAdminPage() {
                           department_id: me.department_id,
                           name,
                           type: 'OTHER',
-                          latitude: lat,
-                          longitude: lng,
                           address: addressParts.length ? addressParts.join(', ') : undefined,
                           attributes: {
                             tahasil: tahasil || null,
@@ -1528,8 +1515,6 @@ export default function DepartmentAdminPage() {
                           profileData[key] = val;
                         }
                       });
-                      profileData[latKey] = lat;
-                      profileData[lngKey] = lng;
                       profileData[govtLandIdKey] = govtLandId || name;
 
                       const saved = await revenueLandApi.putProfile(orgIdNum, profileData);
