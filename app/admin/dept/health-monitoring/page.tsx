@@ -303,6 +303,7 @@ export default function HealthMonitoringPage() {
             navItems={[
                 { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
                 { href: '/admin/dept/health-monitoring', labelKey: 'health.monitoring.title' },
+                { href: '/admin/dept/profile', labelKey: 'dept.profile.title' },
             ]}
             onLogout={() => { clearToken(); router.push('/'); }}
         >

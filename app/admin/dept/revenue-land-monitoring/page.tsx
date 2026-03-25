@@ -163,6 +163,7 @@ export default function RevenueLandMonitoringPage() {
       navItems={[
         { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
         { href: '/admin/dept/revenue-land-monitoring', labelKey: 'revenueLand.monitoring.title' },
+        { href: '/admin/dept/profile', labelKey: 'dept.profile.title' },
       ]}
       onLogout={() => {
         clearToken();

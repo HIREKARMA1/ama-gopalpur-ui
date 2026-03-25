@@ -82,6 +82,17 @@ export interface Token {
   token_type: string;
 }
 
+export interface PasswordOtpRequestResponse {
+  message: string;
+  expires_in_seconds: number;
+  resend_after_seconds: number;
+}
+
+export interface PasswordResetWithOtpRequest {
+  otp: string;
+  new_password: string;
+}
+
 export interface Organization {
   id: number;
   department_id: number;
@@ -171,6 +182,15 @@ export const authApi = {
       },
     }),
   me: () => apiFetch<User>('/api/v1/auth/me'),
+  requestPasswordOtp: () =>
+    apiFetch<PasswordOtpRequestResponse>('/api/v1/auth/password/otp/request', {
+      method: 'POST',
+    }),
+  resetPasswordWithOtp: (payload: PasswordResetWithOtpRequest) =>
+    apiFetch<{ message: string }>('/api/v1/auth/password/reset', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 };
 
 export const adminApi = {
@@ -179,6 +199,18 @@ export const adminApi = {
     apiFetch<User>('/api/v1/admins/', {
       method: 'POST',
       body: JSON.stringify(payload),
+    }),
+  updateAdmin: (
+    adminId: number,
+    payload: { full_name?: string; password?: string; is_active?: boolean; department_id?: number },
+  ) =>
+    apiFetch<User>(`/api/v1/admins/${adminId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  deleteAdmin: (adminId: number) =>
+    apiFetch<void>(`/api/v1/admins/${adminId}`, {
+      method: 'DELETE',
     }),
 };
 

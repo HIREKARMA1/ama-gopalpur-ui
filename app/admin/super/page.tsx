@@ -7,6 +7,8 @@ import { useLanguage } from '../../../components/i18n/LanguageContext';
 import { t } from '../../../components/i18n/messages';
 import { Loader } from '../../../components/common/Loader';
 import { adminApi, departmentsApi, authApi, clearToken, Department, User } from '../../../services/api';
+import { DeptAdminsTable } from '../../../components/admin/DeptAdminsTable';
+import { DeptAdminEditorModal } from '../../../components/admin/DeptAdminEditorModal';
 
 export default function SuperAdminPage() {
   const router = useRouter();
@@ -24,6 +26,8 @@ export default function SuperAdminPage() {
     department_id: 0,
   });
   const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<User | null>(null);
+  const [savingRowId, setSavingRowId] = useState<number | null>(null);
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -66,6 +70,33 @@ export default function SuperAdminPage() {
       setError(err instanceof Error ? err.message : t('super.create.errorFailed', language));
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleToggleActive = async (admin: User) => {
+    setSavingRowId(admin.id);
+    setError(null);
+    try {
+      const updated = await adminApi.updateAdmin(admin.id, { is_active: !admin.is_active });
+      setAdmins((prev) => prev.map((a) => (a.id === admin.id ? updated : a)));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t('super.create.errorFailed', language));
+    } finally {
+      setSavingRowId(null);
+    }
+  };
+
+  const handleDelete = async (admin: User) => {
+    if (!window.confirm(t('super.admins.confirmDelete', language))) return;
+    setSavingRowId(admin.id);
+    setError(null);
+    try {
+      await adminApi.deleteAdmin(admin.id);
+      setAdmins((prev) => prev.filter((a) => a.id !== admin.id));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t('super.create.errorFailed', language));
+    } finally {
+      setSavingRowId(null);
     }
   };
 
@@ -181,68 +212,34 @@ export default function SuperAdminPage() {
             <p className="mt-0.5 text-xs text-slate-600 sm:text-sm">
               {t('super.admins.subtitle', language)}
             </p>
+            {savingRowId != null && (
+              <p className="mt-1 text-[11px] text-slate-600">
+                {t('super.admins.saving', language)}
+              </p>
+            )}
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-slate-200/60 bg-indigo-500/10">
-                  <th className="px-4 py-3 text-left font-semibold text-slate-800">
-                    {t('super.admins.name', language)}
-                  </th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-800">
-                    {t('super.admins.email', language)}
-                  </th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-800">
-                    {t('super.admins.department', language)}
-                  </th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-800">
-                    {t('super.admins.status', language)}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {admins.map((a) => (
-                  <tr
-                    key={a.id}
-                    className="border-b border-slate-200/50 transition-colors hover:bg-white/40"
-                  >
-                    <td className="px-4 py-3 font-medium text-slate-900">{a.full_name}</td>
-                    <td className="px-4 py-3 text-slate-600">{a.email}</td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {departments.find((d) => d.id === a.department_id)?.name || '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          a.is_active
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {a.is_active
-                          ? t('super.admins.active', language)
-                          : t('super.admins.inactive', language)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                {!admins.length && (
-                  <tr>
-                    <td
-                      className="px-4 py-8 text-center text-sm text-slate-500"
-                      colSpan={4}
-                    >
-                      {t('super.admins.empty', language)}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <DeptAdminsTable
+            admins={admins}
+            departments={departments}
+            onEdit={(a) => setEditing(a)}
+            onToggleActive={handleToggleActive}
+            onDelete={(a) => handleDelete(a)}
+          />
         </section>
           </>
         )}
       </div>
+
+      <DeptAdminEditorModal
+        open={!!editing}
+        admin={editing}
+        departments={departments}
+        onClose={() => setEditing(null)}
+        onSaved={(updated) => {
+          setAdmins((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+        }}
+      />
     </SuperAdminDashboardLayout>
   );
 }
+

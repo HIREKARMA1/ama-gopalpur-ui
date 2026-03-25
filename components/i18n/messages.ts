@@ -157,6 +157,29 @@ export type MessageKey =
   | 'super.panel.subtitle'
   | 'super.sidebar.dashboard'
   | 'super.sidebar.snp'
+  | 'dept.profile.title'
+  | 'dept.profile.fullName'
+  | 'dept.profile.email'
+  | 'dept.profile.resetPassword.title'
+  | 'dept.profile.resetPassword.subtitle'
+  | 'dept.profile.requestOtp'
+  | 'dept.profile.resendOtp'
+  | 'dept.profile.requestingOtp'
+  | 'dept.profile.cooldown'
+  | 'dept.profile.otpLabel'
+  | 'dept.profile.otpPlaceholder'
+  | 'dept.profile.newPassword'
+  | 'dept.profile.confirmPassword'
+  | 'dept.profile.passwordPlaceholder'
+  | 'dept.profile.updatePassword'
+  | 'dept.profile.updating'
+  | 'dept.profile.otpSent'
+  | 'dept.profile.passwordUpdated'
+  | 'dept.profile.error.requestOtp'
+  | 'dept.profile.error.otpRequired'
+  | 'dept.profile.error.passwordMin'
+  | 'dept.profile.error.passwordMismatch'
+  | 'dept.profile.error.resetFailed'
   | 'super.sidebar.menu'
   | 'super.sidebar.close'
   | 'super.logout'
@@ -177,6 +200,15 @@ export type MessageKey =
   | 'super.admins.status'
   | 'super.admins.active'
   | 'super.admins.inactive'
+  | 'super.admins.actions'
+  | 'super.admins.edit'
+  | 'super.admins.activate'
+  | 'super.admins.deactivate'
+  | 'super.admins.delete'
+  | 'super.admins.confirmDelete'
+  | 'super.admins.save'
+  | 'super.admins.saving'
+  | 'super.admins.newPasswordOptional'
   | 'super.admins.empty'
   | 'super.error.loadFailed'
   | 'health.monitoring.title'
@@ -959,6 +991,98 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     en: 'SNP Daily Stock',
     or: 'ଦୈନିକ ଷ୍ଟକ୍',
   },
+  'dept.profile.title': {
+    en: 'Profile',
+    or: 'ପ୍ରୋଫାଇଲ୍',
+  },
+  'dept.profile.fullName': {
+    en: 'Full name',
+    or: 'ପୂର୍ଣ୍ଣ ନାମ',
+  },
+  'dept.profile.email': {
+    en: 'Email',
+    or: 'ଇମେଲ୍',
+  },
+  'dept.profile.resetPassword.title': {
+    en: 'Reset password',
+    or: 'ପାସୱାର୍ଡ ରିସେଟ୍',
+  },
+  'dept.profile.resetPassword.subtitle': {
+    en: 'Request an OTP on email and then update your password.',
+    or: 'ଇମେଲ୍‌ରେ OTP ମାଗନ୍ତୁ ଏବଂ ପାସୱାର୍ଡ ଅପଡେଟ୍ କରନ୍ତୁ।',
+  },
+  'dept.profile.requestOtp': {
+    en: 'Send OTP to email',
+    or: 'ଇମେଲ୍‌କୁ OTP ପଠାନ୍ତୁ',
+  },
+  'dept.profile.resendOtp': {
+    en: 'Resend OTP',
+    or: 'OTP ପୁନଃ ପଠାନ୍ତୁ',
+  },
+  'dept.profile.requestingOtp': {
+    en: 'Sending…',
+    or: 'ପଠାଯାଉଛି…',
+  },
+  'dept.profile.cooldown': {
+    en: 'Try again in',
+    or: 'ପୁନଃ ପ୍ରୟାସ କରନ୍ତୁ',
+  },
+  'dept.profile.otpLabel': {
+    en: 'OTP',
+    or: 'OTP',
+  },
+  'dept.profile.otpPlaceholder': {
+    en: 'Enter OTP',
+    or: 'OTP ଲେଖନ୍ତୁ',
+  },
+  'dept.profile.newPassword': {
+    en: 'New password',
+    or: 'ନୂଆ ପାସୱାର୍ଡ',
+  },
+  'dept.profile.confirmPassword': {
+    en: 'Confirm password',
+    or: 'ପାସୱାର୍ଡ ନିଶ୍ଚିତ କରନ୍ତୁ',
+  },
+  'dept.profile.passwordPlaceholder': {
+    en: 'Minimum 8 characters',
+    or: 'କମ୍‌ ସେ କମ୍‌ 8 ଅକ୍ଷର',
+  },
+  'dept.profile.updatePassword': {
+    en: 'Update password',
+    or: 'ପାସୱାର୍ଡ ଅପଡେଟ୍',
+  },
+  'dept.profile.updating': {
+    en: 'Updating…',
+    or: 'ଅପଡେଟ୍ ହେଉଛି…',
+  },
+  'dept.profile.otpSent': {
+    en: 'OTP sent to your email.',
+    or: 'ଇମେଲ୍‌କୁ OTP ପଠାଗଲା।',
+  },
+  'dept.profile.passwordUpdated': {
+    en: 'Password updated successfully.',
+    or: 'ପାସୱାର୍ଡ ସଫଳତାରେ ଅପଡେଟ୍ ହେଲା।',
+  },
+  'dept.profile.error.requestOtp': {
+    en: 'Failed to send OTP',
+    or: 'OTP ପଠାଯିବାରେ ବିଫଳ',
+  },
+  'dept.profile.error.otpRequired': {
+    en: 'OTP is required',
+    or: 'OTP ଆବଶ୍ୟକ',
+  },
+  'dept.profile.error.passwordMin': {
+    en: 'Password must be at least 8 characters',
+    or: 'ପାସୱାର୍ଡ କମ୍‌ ସେ କମ୍‌ 8 ଅକ୍ଷର ହେବା ଦରକାର',
+  },
+  'dept.profile.error.passwordMismatch': {
+    en: 'Passwords do not match',
+    or: 'ପାସୱାର୍ଡ ମେଳ ହେଉନାହିଁ',
+  },
+  'dept.profile.error.resetFailed': {
+    en: 'Failed to update password',
+    or: 'ପାସୱାର୍ଡ ଅପଡେଟ୍ ବିଫଳ',
+  },
   'super.logout': {
     en: 'Logout',
     or: 'ଲଗଆଉଟ୍',
@@ -1030,6 +1154,42 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'super.admins.inactive': {
     en: 'Inactive',
     or: 'ନିଷ୍କ୍ରିୟ',
+  },
+  'super.admins.actions': {
+    en: 'Actions',
+    or: 'କାର୍ଯ୍ୟ',
+  },
+  'super.admins.edit': {
+    en: 'Edit',
+    or: 'ସମ୍ପାଦନ',
+  },
+  'super.admins.activate': {
+    en: 'Activate',
+    or: 'ସକ୍ରିୟ କରନ୍ତୁ',
+  },
+  'super.admins.deactivate': {
+    en: 'Deactivate',
+    or: 'ନିଷ୍କ୍ରିୟ କରନ୍ତୁ',
+  },
+  'super.admins.delete': {
+    en: 'Delete',
+    or: 'ଡିଲିଟ୍',
+  },
+  'super.admins.confirmDelete': {
+    en: 'Delete this department admin? This cannot be undone.',
+    or: 'ଏହି ବିଭାଗ ପ୍ରଶାସକଙ୍କୁ ଡିଲିଟ୍ କରିବେ? ଏହା ପୁନଃ ଫେରାଇ ପାରିବେ ନାହିଁ।',
+  },
+  'super.admins.save': {
+    en: 'Save changes',
+    or: 'ସେଭ୍ କରନ୍ତୁ',
+  },
+  'super.admins.saving': {
+    en: 'Saving…',
+    or: 'ସେଭ୍ ହେଉଛି…',
+  },
+  'super.admins.newPasswordOptional': {
+    en: 'New password (optional)',
+    or: 'ନୂଆ ପାସୱାର୍ଡ (ଇଚ୍ଛାନୁସାରେ)',
   },
   'super.admins.empty': {
     en: 'No department admins yet.',

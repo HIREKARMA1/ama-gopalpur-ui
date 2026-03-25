@@ -629,33 +629,42 @@ export default function DepartmentAdminPage() {
           ? [
             { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
             { href: '/admin/dept/snp', labelKey: 'super.sidebar.snp' },
+            { href: '/admin/dept/profile', labelKey: 'dept.profile.title' },
           ]
           : deptCode === 'HEALTH'
             ? [
               { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
               { href: '/admin/dept/health-monitoring', labelKey: 'health.monitoring.title' },
+              { href: '/admin/dept/profile', labelKey: 'dept.profile.title' },
             ]
             : deptCode === 'ELECTRICITY'
               ? [
                 { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
                 { href: '/admin/dept/electricity-monitoring', labelKey: 'electricity.monitoring.title' },
+                { href: '/admin/dept/profile', labelKey: 'dept.profile.title' },
               ]
               : deptCode === 'WATCO_RWSS'
                 ? [
                   { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
                   { href: '/admin/dept/water-monitoring', labelKey: 'water.monitoring.title' },
+                  { href: '/admin/dept/profile', labelKey: 'dept.profile.title' },
                 ]
                 : deptCode === 'REVENUE_LAND'
                   ? [
                     { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
                     { href: '/admin/dept/revenue-land-monitoring', labelKey: 'revenueLand.monitoring.title' },
+                    { href: '/admin/dept/profile', labelKey: 'dept.profile.title' },
                   ]
                   : deptCode === 'AGRICULTURE'
                     ? [
                       { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
                       { href: '/admin/dept/agriculture-monitoring', labelKey: 'agriculture.monitoring.title' },
+                      { href: '/admin/dept/profile', labelKey: 'dept.profile.title' },
                     ]
-                    : [{ href: '/admin/dept', labelKey: 'super.sidebar.dashboard' }]
+                    : [
+                      { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
+                      { href: '/admin/dept/profile', labelKey: 'dept.profile.title' },
+                    ]
       }
       onLogout={() => {
         clearToken();

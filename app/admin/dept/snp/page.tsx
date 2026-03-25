@@ -237,6 +237,7 @@ export default function DeptSnpPage() {
       navItems={[
         { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
         { href: '/admin/dept/snp', labelKey: 'super.sidebar.snp' },
+        { href: '/admin/dept/profile', labelKey: 'dept.profile.title' },
       ]}
       onLogout={() => {
         clearToken();

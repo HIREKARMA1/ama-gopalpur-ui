@@ -271,6 +271,7 @@ export default function WaterMonitoringPage() {
             navItems={[
                 { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
                 { href: '/admin/dept/water-monitoring', labelKey: 'water.monitoring.title' },
+                { href: '/admin/dept/profile', labelKey: 'dept.profile.title' },
             ]}
             onLogout={() => { clearToken(); router.push('/'); }}
         >

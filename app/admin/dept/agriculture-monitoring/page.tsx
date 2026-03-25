@@ -265,6 +265,7 @@ export default function AgricultureMonitoringPage() {
       navItems={[
         { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
         { href: '/admin/dept/agriculture-monitoring', labelKey: 'agriculture.monitoring.title' },
+        { href: '/admin/dept/profile', labelKey: 'dept.profile.title' },
       ]}
       onLogout={() => {
         clearToken();
