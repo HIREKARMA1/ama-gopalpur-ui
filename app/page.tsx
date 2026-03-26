@@ -37,6 +37,25 @@ export default function HomePage() {
     if (departments.length === 0) return;
     if (selectedDept) return;
     if (typeof window === 'undefined') return;
+
+    // If user explicitly navigated to home (e.g. via logo click), skip the
+    // last-department auto-redirect to avoid "loop back to same page".
+    const skipRestore = window.sessionStorage.getItem('ama_gopalpur_skip_restore') === '1';
+    if (skipRestore) {
+      window.sessionStorage.removeItem('ama_gopalpur_skip_restore');
+      return;
+    }
+
+    // If user comes back using browser back/forward, don't re-trigger the
+    // last-selected department redirect (it can trap the user in the same route).
+    try {
+      const entries = (performance.getEntriesByType?.('navigation') ?? []) as any[];
+      const navType = entries[0]?.type;
+      if (navType === 'back_forward') return;
+    } catch {
+      // If performance API is unavailable, fall through to restore behavior.
+    }
+
     const stored = window.localStorage.getItem('ama_gopalpur_selected_dept_code');
     if (!stored) return;
     const match = departments.find((d) => (d.code || '').toUpperCase() === stored.toUpperCase());
@@ -45,10 +64,17 @@ export default function HomePage() {
   }, [departments]);
 
   const handleSelectDepartment = (dept: Department) => {
-    setSelectedDept(dept);
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('ama_gopalpur_selected_dept_code', dept.code || '');
     }
+
+    // Revenue Govt Land is table-only (no map pins / no legend).
+    if (dept.code?.toUpperCase() === 'REVENUE_LAND') {
+      router.push('/revenue-govt-land');
+      return;
+    }
+
+    setSelectedDept(dept);
     const isRoads = dept.code?.toUpperCase() === 'ROADS';
     setLoading(true);
     if (isRoads) {
