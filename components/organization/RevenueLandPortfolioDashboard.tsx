@@ -21,7 +21,6 @@ import {
   FileText,
   Scale,
   Building,
-  Monitor,
   Hash,
   Home,
   Tag,
@@ -60,6 +59,8 @@ export function RevenueLandPortfolioDashboard({
   images = [],
 }: RevenueLandPortfolioDashboardProps) {
   const { language } = useLanguage();
+  const isOdia = language === 'or';
+  const tr = (en: string, or: string) => (isOdia ? or : en);
   const [detailTab, setDetailTab] = useState<'overview' | 'tenure' | 'use' | 'risk'>('overview');
   const [monitorDate, setMonitorDate] = useState(new Date().toISOString().slice(0, 10));
   const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY });
@@ -72,11 +73,8 @@ export function RevenueLandPortfolioDashboard({
   }, [org.latitude, org.longitude]);
 
   const totalAreaAcres = profile['total_area_acres'] as string | number | null | undefined;
-  const availableAreaAcres = profile['available_vacant_area_acres'] as
-    | string
-    | number
-    | null
-    | undefined;
+  const totalAreaHectares = profile['total_area_hectares'] as string | number | null | undefined;
+  const totalAreaSqft = profile['total_area_sqft'] as string | number | null | undefined;
   const landBankFlag =
     (profile['is_in_land_bank_yes_no'] as string | null | undefined) ??
     (profile['is_in_land_bank'] as string | null | undefined);
@@ -94,9 +92,14 @@ export function RevenueLandPortfolioDashboard({
     (profile['litigation_status_none_pending_decreed_stayed'] as string | null | undefined);
 
   const topStats = [
-    { label: 'Total area (acres)', value: totalAreaAcres, icon: Layers, color: 'amber' },
-    { label: 'Available vacant area (acres)', value: availableAreaAcres, icon: Scale, color: 'emerald' },
-    { label: 'In land bank', value: landBankFlag, icon: Landmark, color: 'indigo' },
+    { label: tr('Total area (acres)', 'ମୋଟ କ୍ଷେତ୍ରଫଳ (ଏକର)'), value: totalAreaAcres, icon: Layers, color: 'amber' },
+    {
+      label: tr('Total area (hectares)', 'ମୋଟ କ୍ଷେତ୍ରଫଳ (ହେକ୍ଟର)'),
+      value: totalAreaHectares,
+      icon: Scale,
+      color: 'emerald',
+    },
+    { label: tr('Total area (sqft)', 'ମୋଟ କ୍ଷେତ୍ରଫଳ (ବର୍ଗ ଫୁଟ୍)'), value: totalAreaSqft, icon: Landmark, color: 'indigo' },
   ] as const;
 
   const statColorClasses: Record<
@@ -290,10 +293,13 @@ export function RevenueLandPortfolioDashboard({
       {/* Top Header */}
       <header className="mx-auto max-w-[1920px] px-4 pt-6 pb-6 sm:px-6 lg:px-8">
         <h1 className="text-xl font-bold tracking-tight text-[#1e293b] sm:text-3xl lg:text-[32px]">
-          Land Parcel Dashboard
+          {tr('Land Parcel Dashboard', 'ଜମି ପାର୍ସେଲ୍ ଡ୍ୟାସବୋର୍ଡ')}
         </h1>
         <p className="mt-1 text-[15px] font-medium text-[#64748b]">
-          Parcel details, legal status, and utilization from available data
+          {tr(
+            'Parcel details, legal status, and utilization from available data',
+            'ଉପଲବ୍ଧ ତଥ୍ୟରୁ ପାର୍ସେଲ୍ ବିବରଣୀ, ବୈଧିକ ସ୍ଥିତି ଓ ବ୍ୟବହାର',
+          )}
         </p>
       </header>
 
@@ -304,9 +310,9 @@ export function RevenueLandPortfolioDashboard({
           <div className="relative z-10">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
               <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
-                Parcel details
+                  {tr('Parcel details', 'ପାର୍ସେଲ୍ ବିବରଣୀ')}
               </h2>
-              <div className="grid grid-cols-2 sm:flex items-center rounded-xl sm:rounded-full bg-slate-100 p-1 w-full sm:w-auto gap-1">
+              <div className="grid grid-cols-1 sm:flex items-center rounded-xl sm:rounded-full bg-slate-100 p-1 w-full sm:w-auto gap-1">
                 <button
                   type="button"
                   onClick={() => setDetailTab('overview')}
@@ -316,40 +322,7 @@ export function RevenueLandPortfolioDashboard({
                     }`}
                 >
                   <Building size={14} />
-                  <span>Overview</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDetailTab('tenure')}
-                  className={`w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl sm:rounded-full px-3 py-2 sm:py-1.5 text-xs font-semibold transition ${detailTab === 'tenure'
-                    ? 'bg-white text-[#0f172a] shadow-sm'
-                    : 'text-[#64748b] hover:text-[#0f172a]'
-                    }`}
-                >
-                  <Monitor size={14} />
-                  <span>Tenure</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDetailTab('use')}
-                  className={`w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl sm:rounded-full px-3 py-2 sm:py-1.5 text-xs font-semibold transition ${detailTab === 'use'
-                    ? 'bg-white text-[#0f172a] shadow-sm'
-                    : 'text-[#64748b] hover:text-[#0f172a]'
-                    }`}
-                >
-                  <Scale size={14} />
-                  <span>Use & lease</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDetailTab('risk')}
-                  className={`w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl sm:rounded-full px-3 py-2 sm:py-1.5 text-xs font-semibold transition ${detailTab === 'risk'
-                    ? 'bg-white text-[#0f172a] shadow-sm'
-                    : 'text-[#64748b] hover:text-[#0f172a]'
-                    }`}
-                >
-                  <AlertTriangle size={14} />
-                  <span>Risk & records</span>
+                  <span>{tr('Overview', 'ସାରାଂଶ')}</span>
                 </button>
               </div>
             </div>
@@ -357,21 +330,41 @@ export function RevenueLandPortfolioDashboard({
             {detailTab === 'overview' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[
-                  { label: 'Parcel name', val: org.name, icon: Building, color: 'blue' },
-                  { label: 'Govt land ID', val: profile['govt_land_id'], icon: FileText, color: 'violet' },
-                  { label: 'Tahasil', val: profile['tahasil'], icon: MapPin, color: 'emerald' },
-                  { label: 'RI Circle', val: profile['ri_circle'], icon: MapPin, color: 'sky' },
-                  { label: 'Block / ULB', val: profile['block_ulb'], icon: MapPin, color: 'amber' },
-                  { label: 'GP / Ward', val: profile['gp_ward'], icon: MapPin, color: 'teal' },
-                  { label: 'Mouza / Village', val: profile['mouza_village'], icon: MapPin, color: 'rose' },
+                  { label: tr('Govt land ID', 'ସରକାରୀ ଜମି ID'), val: profile['govt_land_id'], icon: FileText, color: 'violet' },
+                  { label: tr('Tahasil', 'ତହସିଲ'), val: profile['tahasil'], icon: MapPin, color: 'emerald' },
+                  { label: tr('RI Circle', 'ଆର୍.ଆଇ. ସର୍କଲ'), val: profile['ri_circle'], icon: MapPin, color: 'sky' },
+                  { label: tr('Block / ULB', 'ବ୍ଲକ / ULB'), val: profile['block_ulb'], icon: MapPin, color: 'amber' },
+                  { label: tr('GP / Ward', 'GP / ୱାର୍ଡ'), val: profile['gp_ward'], icon: MapPin, color: 'teal' },
+                  { label: tr('Mouza / Village', 'ମୌଜା / ଗ୍ରାମ'), val: profile['mouza_village'], icon: MapPin, color: 'rose' },
                   {
-                    label: 'Habitation / Locality',
+                    label: tr('Habitation / Locality', 'ବସତି / ଲୋକାଲିଟି'),
                     val: profile['habitation_locality'],
                     icon: MapPin,
                     color: 'pink',
                   },
-                  { label: 'Latitude', val: org.latitude ?? profile['latitude'], icon: MapPin, color: 'slate' },
-                  { label: 'Longitude', val: org.longitude ?? profile['longitude'], icon: MapPin, color: 'slate' },
+                  { label: tr('Khata No', 'ଖାତା ନଂ'), val: profile['khata_no'], icon: FileText, color: 'emerald' },
+                  { label: tr('Plot No', 'ପ୍ଲଟ୍ ନଂ'), val: profile['plot_no'], icon: FileText, color: 'amber' },
+                  { label: tr('Sub-Plot No', 'ଉପ-ପ୍ଲଟ୍ ନଂ'), val: profile['sub_plot_no'], icon: FileText, color: 'sky' },
+                  {
+                    label: tr('Land Type (GOVT/PRIVATE/OTHER)', 'ଜମି ପ୍ରକାର (ସରକାରୀ/ବେସରକାରୀ/ଅନ୍ୟ)'),
+                    val:
+                      (profile['land_type_govt_private_other'] as string | number | null | undefined) ??
+                      (profile['land_type'] as string | number | null | undefined),
+                    icon: Tag,
+                    color: 'violet',
+                  },
+                  {
+                    label: tr('Govt Land Category', 'ସରକାରୀ ଜମି ବର୍ଗ'),
+                    val: profile['govt_land_category_gochar_gramya_jungle_sarbasadharan_khasmahal_nazul_other'],
+                    icon: Tag,
+                    color: 'rose',
+                  },
+                  { label: tr('Kisam', 'କିସମ'), val: profile['kisam'], icon: FileText, color: 'teal' },
+                  { label: tr('Kisam Description', 'କିସମ ବର୍ଣ୍ଣନା'), val: profile['kisam_description'], icon: FileText, color: 'slate' },
+                  { label: tr('Total Area (Acres)', 'ମୋଟ କ୍ଷେତ୍ରଫଳ (ଏକର)'), val: profile['total_area_acres'], icon: Layers, color: 'amber' },
+                  { label: tr('Total Area (Hectares)', 'ମୋଟ କ୍ଷେତ୍ରଫଳ (ହେକ୍ଟର)'), val: profile['total_area_hectares'], icon: Scale, color: 'emerald' },
+                  { label: tr('Total Area (Sqft)', 'ମୋଟ କ୍ଷେତ୍ରଫଳ (ବର୍ଗ ଫୁଟ୍)'), val: profile['total_area_sqft'], icon: Landmark, color: 'slate' },
+                  { label: tr('ROR Year', 'ROR ବର୍ଷ'), val: profile['ror_year'], icon: FileText, color: 'blue' },
                 ].map((item, idx) => {
                   const colorMap: Record<string, string> = {
                     blue: 'bg-blue-50 text-blue-600 border-blue-100',
@@ -664,16 +657,21 @@ export function RevenueLandPortfolioDashboard({
       <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-16">
         <div className="rounded-3xl border border-blue-200 bg-blue-50/60 p-6 sm:p-8 shadow-sm backdrop-blur-md">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-[#0f172a]">Status over time</h2>
+            <h2 className="text-xl font-bold text-[#0f172a]">{tr('Status over time', 'ସମୟ ଅନୁସାରେ ସ୍ଥିତି')}</h2>
             <p className="text-[13px] text-[#64748b] mt-1">
-              Dynamic status records (encroachment, litigation, use, area) managed by the department admin.
+              {tr(
+                'Dynamic status records (encroachment, litigation, use, area) managed by the department admin.',
+                'ବିଭାଗ ଅଧିକାରୀ ଦ୍ୱାରା ପରିଚାଳିତ (ଅତିକ୍ରମଣ, ମକଦମା, ବ୍ୟବହାର, କ୍ଷେତ୍ରଫଳ) ସ୍ଥିତି ରେକର୍ଡଗୁଡିକ',
+              )}
             </p>
           </div>
 
           <div className="space-y-10">
             <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between border-b border-slate-200 pb-6">
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-[#64748b]">Select date</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-[#64748b]">
+                  {tr('Select date', 'ତାରିଖ ଚୟନ କରନ୍ତୁ')}
+                </label>
                 <input
                   type="date"
                   value={monitorDate}
@@ -682,7 +680,12 @@ export function RevenueLandPortfolioDashboard({
                 />
               </div>
               {statusRecords.length === 0 && (
-                <p className="text-xs text-slate-500 italic">No status records yet. Add records from the admin panel.</p>
+                <p className="text-xs text-slate-500 italic">
+                  {tr(
+                    'No status records yet. Add records from the admin panel.',
+                    'ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ସ୍ଥିତି ରେକର୍ଡ ନାହିଁ। ଅଧିକାରୀ ପ୍ୟାନେଲ୍ ରୁ ରେକର୍ଡ ଯୋଡନ୍ତୁ।',
+                  )}
+                </p>
               )}
             </div>
 
@@ -690,8 +693,10 @@ export function RevenueLandPortfolioDashboard({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="rounded-2xl border border-slate-100 bg-white/50 p-5 sm:p-6 flex flex-col h-[280px] sm:h-[320px] min-w-0">
                 <div className="mb-4">
-                  <h3 className="text-sm font-bold text-[#0f172a]">Area vacant (acres) over time</h3>
-                  <p className="text-[11px] text-[#64748b]">Last 15 records</p>
+                  <h3 className="text-sm font-bold text-[#0f172a]">
+                    {tr('Area vacant (acres) over time', 'ସମୟ ଅନୁସାରେ ଖାଲି କ୍ଷେତ୍ରଫଳ (ଏକର)')}
+                  </h3>
+                  <p className="text-[11px] text-[#64748b]">{tr('Last 15 records', 'ଶେଷ 15ଟି ରେକର୍ଡ')}</p>
                 </div>
                 <div className="flex-1 min-h-0">
                   <ResponsiveContainer width="100%" height="100%">
@@ -737,8 +742,12 @@ export function RevenueLandPortfolioDashboard({
 
               <div className="rounded-2xl border border-slate-100 bg-white/50 p-5 sm:p-6 flex flex-col h-[280px] sm:h-[320px] min-w-0">
                 <div className="mb-4">
-                  <h3 className="text-sm font-bold text-[#0f172a]">Status records by date</h3>
-                  <p className="text-[11px] text-[#64748b]">Count of records (last 15 dates)</p>
+                  <h3 className="text-sm font-bold text-[#0f172a]">
+                    {tr('Status records by date', 'ତାରିଖ ଅନୁସାରେ ସ୍ଥିତି ରେକର୍ଡ')}
+                  </h3>
+                  <p className="text-[11px] text-[#64748b]">
+                    {tr('Count of records (last 15 dates)', 'ରେକର୍ଡ ସଂଖ୍ୟା (ଶେଷ 15 ତାରିଖ)')}
+                  </p>
                 </div>
                 <div className="flex-1 min-h-0">
                   <ResponsiveContainer width="100%" height="100%">
@@ -791,9 +800,11 @@ export function RevenueLandPortfolioDashboard({
             <div className="rounded-2xl border border-slate-100 bg-white/40 overflow-hidden">
               <div className="p-5 border-b border-slate-100 bg-white/50 flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-[#0f172a]">Status records</h3>
+                  <h3 className="text-sm font-bold text-[#0f172a]">{tr('Status records', 'ସ୍ଥିତି ରେକର୍ଡ')}</h3>
                   <p className="text-[11px] text-[#64748b]">
-                    {monitorDate ? `Records for ${monitorDate}` : 'All records (newest first)'}
+                    {monitorDate
+                      ? tr(`Records for ${monitorDate}`, `${monitorDate} ପାଇଁ ରେକର୍ଡଗୁଡିକ`)
+                      : tr('All records (newest first)', 'ସମସ୍ତ ରେକର୍ଡ (ନୂଆ ପ୍ରଥମେ)')}
                   </p>
                 </div>
                 <div className="h-10 w-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
@@ -804,13 +815,25 @@ export function RevenueLandPortfolioDashboard({
                 <table className="w-full text-left text-sm border-collapse min-w-[680px] sm:min-w-[900px]">
                   <thead>
                     <tr className="bg-slate-50/50">
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Date</th>
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Encroachment</th>
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Litigation</th>
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Present use</th>
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">In land bank</th>
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-right">Area vacant (acres)</th>
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Remarks</th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">{tr('Date', 'ତାରିଖ')}</th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                        {tr('Encroachment', 'ଅତିକ୍ରମଣ')}
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                        {tr('Litigation', 'ମକଦମା')}
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                        {tr('Present use', 'ବର୍ତ୍ତମାନ ବ୍ୟବହାର')}
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                        {tr('In land bank', 'ଲ୍ୟାଣ୍ଡ ବ୍ୟାଙ୍କରେ')}
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-right">
+                        {tr('Area vacant (acres)', 'ଖାଲି କ୍ଷେତ୍ରଫଳ (ଏକର)')}
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                        {tr('Remarks', 'ଟିପ୍ପଣୀ')}
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -823,8 +846,14 @@ export function RevenueLandPortfolioDashboard({
                           <tr>
                             <td colSpan={7} className="px-6 py-10 text-center text-slate-400 italic bg-white/20">
                               {monitorDate
-                                ? `No status records for ${monitorDate}.`
-                                : 'No status records yet. Add records from the admin panel.'}
+                                ? tr(
+                                    `No status records for ${monitorDate}.`,
+                                    `${monitorDate} ପାଇଁ ସ୍ଥିତି ରେକର୍ଡ ନାହିଁ।`,
+                                  )
+                                : tr(
+                                    'No status records yet. Add records from the admin panel.',
+                                    'ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ସ୍ଥିତି ରେକର୍ଡ ନାହିଁ। ଅଧିକାରୀ ପ୍ୟାନେଲ୍ ରୁ ରେକର୍ଡ ଯୋଡନ୍ତୁ।',
+                                  )}
                             </td>
                           </tr>
                         );

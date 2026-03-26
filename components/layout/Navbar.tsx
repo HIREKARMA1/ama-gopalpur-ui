@@ -49,6 +49,12 @@ export function Navbar() {
         <div className="mx-auto flex h-24 max-w-[1920px] items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6 lg:px-8">
           <Link
             href="/"
+            onClick={() => {
+              // Prevent home-page "restore last department" auto-redirect loops
+              // when user explicitly navigates back to home via the logo.
+              if (typeof window === 'undefined') return;
+              window.sessionStorage.setItem('ama_gopalpur_skip_restore', '1');
+            }}
             className="flex min-w-0 shrink items-center gap-2 text-white no-underline transition-opacity hover:opacity-90 sm:gap-4"
           >
             <div className="relative flex h-14 w-14 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-lg backdrop-blur-sm">

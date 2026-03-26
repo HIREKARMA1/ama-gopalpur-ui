@@ -570,7 +570,10 @@ export function ConstituencyMap({
   };
 
   /** Only show markers/roads if we have a department selected, are zoomed in enough, or have a search result */
-  const showContent = !!selectedDepartmentCode || zoom >= 13 || !!infoWindowOrg || (searchTerm.trim() !== '' && filteredOrgs.length > 0);
+  const isRevenueLandDept = selectedDepartmentCode?.toUpperCase() === 'REVENUE_LAND';
+  const showContent =
+    !isRevenueLandDept &&
+    (!!selectedDepartmentCode || zoom >= 13 || !!infoWindowOrg || (searchTerm.trim() !== '' && filteredOrgs.length > 0));
 
   return (
     <div className="relative h-full w-full min-h-[400px] overflow-hidden flex flex-col">
@@ -590,7 +593,7 @@ export function ConstituencyMap({
           display: none !important;
         }
       `}</style>
-      {selectedDepartmentCode && (
+      {selectedDepartmentCode && !isRevenueLandDept && (
         <div
           ref={searchContainerRef}
           className="pointer-events-none sm:absolute sm:top-[10px] sm:left-4 sm:right-auto z-20 flex items-center justify-start px-4 sm:px-0 w-full sm:w-auto py-2 sm:py-0"
@@ -1033,7 +1036,7 @@ export function ConstituencyMap({
           </ul>
         </div>
       )}
-      {selectedDepartmentCode?.toUpperCase() === 'REVENUE_LAND' && orgsWithLocation.length > 0 && (
+      {selectedDepartmentCode?.toUpperCase() === 'REVENUE_LAND' && orgsWithLocation.length > 0 && !isRevenueLandDept && (
         <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
