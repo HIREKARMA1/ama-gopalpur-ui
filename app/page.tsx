@@ -64,18 +64,13 @@ export default function HomePage() {
   }, [departments]);
 
   const handleSelectDepartment = (dept: Department) => {
+    setSelectedDept(dept);
+    const isRoads = dept.code?.toUpperCase() === 'ROADS';
+    const isRevenueLand = dept.code?.toUpperCase() === 'REVENUE_LAND';
+
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('ama_gopalpur_selected_dept_code', dept.code || '');
     }
-
-    // Revenue Govt Land is table-only (no map pins / no legend).
-    if (dept.code?.toUpperCase() === 'REVENUE_LAND') {
-      router.push('/revenue-govt-land');
-      return;
-    }
-
-    setSelectedDept(dept);
-    const isRoads = dept.code?.toUpperCase() === 'ROADS';
     setLoading(true);
     if (isRoads) {
       Promise.all(
@@ -95,7 +90,10 @@ export default function HomePage() {
         .finally(() => setLoading(false));
     } else {
       organizationsApi
-        .listByDepartment(dept.id, { limit: 1000 })
+        .listByDepartment(dept.id, {
+          limit: 1000,
+          ...(isRevenueLand ? { sub_department: 'TAHASIL_OFFICE' } : {}),
+        })
         .then(async (data) => {
           let updatedData = data;
 

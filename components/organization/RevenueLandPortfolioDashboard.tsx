@@ -1,16 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Organization, RevenueLandStatusRecord } from '../../services/api';
+import { useRouter } from 'next/navigation';
+import { Organization } from '../../services/api';
+import { PaginatedHorizontalTable } from '../common/PaginatedHorizontalTable';
 import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+  buildRevenueGovtLandColumns,
+  type RevenueGovtLandRow,
+} from '../../lib/revenueGovtLandTable';
 import { ImageSlider } from './ImageSlider';
 import { useLanguage } from '../i18n/LanguageContext';
 import {
@@ -26,18 +21,456 @@ import {
   Tag,
   Shield,
   Activity,
+  Users,
+  UserCheck,
+  PieChart,
+  Gavel,
+  HeartHandshake,
+  GraduationCap,
+  Wallet,
+  Briefcase,
+  Sparkles,
+  MoreHorizontal,
 } from 'lucide-react';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
-import { GOPALPUR_BOUNDS } from '../../lib/mapConfig';
+import { GOPALPUR_BOUNDS, MARKER_COLORS } from '../../lib/mapConfig';
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+
+/** Tahasil portfolio CSV fields (snake_case) grouped for Resources sub-tabs. */
+const TAHASIL_RESOURCE_TAB_DEFS: {
+  id: string;
+  label: string;
+  shortLabel: string;
+  keys: readonly string[];
+  icon: typeof Users;
+}[] = [
+  {
+    id: 'population',
+    label: 'Population & settlements',
+    shortLabel: 'Population',
+    icon: Users,
+    keys: [
+      'total_population',
+      'total_households',
+      'total_villages',
+      'total_gram_panchayats',
+      'total_wards',
+      'urban_areas_count',
+      'rural_areas_count',
+      'total_revenue_villages',
+      'total_inhabited_villages',
+      'total_uninhabited_villages',
+      'largest_village_name',
+      'smallest_village_name',
+    ],
+  },
+  {
+    id: 'land',
+    label: 'Land & records',
+    shortLabel: 'Land',
+    icon: Layers,
+    keys: [
+      'total_area_sq_km',
+      'total_panchayat_offices',
+      'total_village_roads_km',
+      'total_water_bodies',
+      'total_land_records',
+      'total_private_land_acres',
+      'total_government_land_acres',
+      'total_forest_land_acres',
+      'total_agricultural_land_acres',
+      'total_residential_land_acres',
+      'total_commercial_land_acres',
+      'total_waste_land_acres',
+      'total_plot_records',
+      'total_khata_records',
+      'total_ror_issued',
+    ],
+  },
+  {
+    id: 'mutations',
+    label: 'Mutations',
+    shortLabel: 'Mutations',
+    icon: FileText,
+    keys: [
+      'mutation_applications_received_yearly',
+      'mutation_approved',
+      'mutation_pending',
+      'mutation_rejected',
+      'avg_mutation_processing_days',
+    ],
+  },
+  {
+    id: 'revenue',
+    label: 'Revenue & tax',
+    shortLabel: 'Revenue',
+    icon: PieChart,
+    keys: [
+      'total_annual_revenue',
+      'land_revenue_collection',
+      'stamp_duty_collection',
+      'registration_fees',
+      'tax_collection',
+      'penalty_collection',
+      'monthly_revenue_target',
+      'revenue_target_achieved_percent',
+    ],
+  },
+  {
+    id: 'certificates',
+    label: 'Certificates',
+    shortLabel: 'Certificates',
+    icon: Shield,
+    keys: [
+      'caste_certificates_issued',
+      'income_certificates_issued',
+      'residence_certificates_issued',
+      'legal_heir_certificates',
+      'solvency_certificates',
+      'total_certificate_applications',
+      'certificates_approved',
+      'certificates_pending',
+      'certificates_rejected',
+      'avg_certificate_processing_days',
+    ],
+  },
+  {
+    id: 'cases',
+    label: 'Cases & grievances',
+    shortLabel: 'Cases',
+    icon: Gavel,
+    keys: [
+      'total_cases_registered',
+      'cases_resolved',
+      'cases_pending',
+      'overdue_cases',
+      'land_dispute_cases',
+      'civil_cases',
+      'criminal_cases',
+      'avg_case_resolution_days',
+      'total_grievances_received',
+      'grievances_resolved',
+      'grievances_pending',
+      'online_grievances',
+      'offline_grievances',
+      'avg_grievance_resolution_days',
+    ],
+  },
+  {
+    id: 'schemes',
+    label: 'Schemes & funds',
+    shortLabel: 'Schemes',
+    icon: HeartHandshake,
+    keys: [
+      'total_schemes_running',
+      'total_scheme_beneficiaries',
+      'pmay_beneficiaries',
+      'mgnrega_beneficiaries',
+      'old_age_pension_beneficiaries',
+      'disability_pension_beneficiaries',
+      'women_welfare_scheme_beneficiaries',
+      'student_scholarship_beneficiaries',
+      'funds_allocated',
+      'funds_utilized',
+      'funds_remaining',
+    ],
+  },
+  {
+    id: 'infrastructure',
+    label: 'Public infrastructure',
+    shortLabel: 'Infrastructure',
+    icon: Building,
+    keys: [
+      'total_schools',
+      'total_colleges',
+      'total_hospitals',
+      'total_primary_health_centers',
+      'total_anganwadi_centers',
+      'total_police_stations',
+      'total_fire_stations',
+      'total_banks',
+      'total_post_offices',
+      'total_market_places',
+      'total_roads_km',
+      'total_bridges',
+      'total_irrigation_projects',
+      'total_water_supply_projects',
+    ],
+  },
+  {
+    id: 'staff_digital',
+    label: 'Staff & digital',
+    shortLabel: 'Staff / IT',
+    icon: Briefcase,
+    keys: [
+      'total_staff',
+      'revenue_inspectors_count',
+      'amin_count',
+      'clerk_count',
+      'data_entry_operators',
+      'vacant_posts',
+      'filled_posts',
+      'staff_trained_in_digital_services',
+      'total_computers',
+      'internet_available',
+      'cctv_installed',
+      'online_services_available',
+      'total_online_applications',
+      'digital_records_percentage',
+      'website_available',
+    ],
+  },
+  {
+    id: 'budget',
+    label: 'Budget & expenditure',
+    shortLabel: 'Budget',
+    icon: Wallet,
+    keys: [
+      'annual_budget_allocated',
+      'budget_utilized',
+      'budget_remaining',
+      'development_expenditure',
+      'admin_expenditure',
+      'welfare_expenditure',
+    ],
+  },
+  {
+    id: 'literacy',
+    label: 'Literacy & coverage',
+    shortLabel: 'Literacy',
+    icon: GraduationCap,
+    keys: [
+      'literacy_rate_percent',
+      'male_literacy_percent',
+      'female_literacy_percent',
+      'employment_rate_percent',
+      'agriculture_dependent_percent',
+      'irrigated_land_percent',
+      'drinking_water_coverage_percent',
+      'electricity_coverage_percent',
+    ],
+  },
+  {
+    id: 'highlights',
+    label: 'Projects & highlights',
+    shortLabel: 'Highlights',
+    icon: Sparkles,
+    keys: [
+      'major_projects_running',
+      'upcoming_projects',
+      'key_challenges',
+      'achievements',
+      'awards_received',
+      'description',
+    ],
+  },
+];
+
+/** Maps each known portfolio key to its Resources sub-tab id. */
+const TAHASIL_RESOURCE_KEY_TO_TAB: Record<string, string> = (() => {
+  const m: Record<string, string> = {};
+  for (const def of TAHASIL_RESOURCE_TAB_DEFS) {
+    for (const k of def.keys) m[k] = def.id;
+  }
+  return m;
+})();
+
+const TAHASIL_RESOURCE_ICON_POOL = [
+  FileText,
+  Users,
+  Home,
+  Layers,
+  Landmark,
+  Shield,
+  Activity,
+  Tag,
+  Hash,
+  Building,
+  MapPin,
+  Scale,
+  UserCheck,
+  Briefcase,
+  Wallet,
+  GraduationCap,
+  Gavel,
+  HeartHandshake,
+  Sparkles,
+] as const;
+
+const TAHASIL_RESOURCE_COLOR_POOL = [
+  'blue',
+  'emerald',
+  'amber',
+  'violet',
+  'teal',
+  'rose',
+  'indigo',
+  'sky',
+  'orange',
+  'pink',
+  'cyan',
+  'slate',
+] as const;
+
+const TAHASIL_ATTR_LABEL_OR: Record<string, string> = {
+  // Population & settlements
+  total_population: 'ମୋଟ ଜନସଂଖ୍ୟା',
+  total_households: 'ମୋଟ ଘର/ପରିବାର',
+  total_villages: 'ମୋଟ ଗ୍ରାମ',
+  total_gram_panchayats: 'ମୋଟ ଗ୍ରାମ ପଞ୍ଚାୟତ',
+  total_wards: 'ମୋଟ ୱାର୍ଡ',
+  urban_areas_count: 'ସହରୀ ଅଞ୍ଚଳ ସଂଖ୍ୟା',
+  rural_areas_count: 'ଗ୍ରାମୀଣ ଅଞ୍ଚଳ ସଂଖ୍ୟା',
+  total_revenue_villages: 'ମୋଟ ରେଭେନ୍ୟୁ ଗ୍ରାମ',
+  total_inhabited_villages: 'ଆବାଦିତ ଗ୍ରାମ ସଂଖ୍ୟା',
+  total_uninhabited_villages: 'ଅନାବାଦିତ ଗ୍ରାମ ସଂଖ୍ୟା',
+  largest_village_name: 'ସବୁଠାରୁ ବଡ଼ ଗ୍ରାମ ନାମ',
+  smallest_village_name: 'ସବୁଠାରୁ ଛୋଟ ଗ୍ରାମ ନାମ',
+
+  // Land & records
+  total_area_sq_km: 'ମୋଟ କ୍ଷେତ୍ରଫଳ (ବର୍ଗ କି.ମି.)',
+  total_panchayat_offices: 'ମୋଟ ପଞ୍ଚାୟତ କାର୍ଯ୍ୟାଳୟ',
+  total_village_roads_km: 'ଗ୍ରାମୀଣ ରାସ୍ତା (କି.ମି.)',
+  total_water_bodies: 'ମୋଟ ଜଳାଶୟ',
+  total_land_records: 'ମୋଟ ଜମି ରେକର୍ଡ',
+  total_private_land_acres: 'ବେସରକାରୀ ଜମି (ଏକର)',
+  total_government_land_acres: 'ସରକାରୀ ଜମି (ଏକର)',
+  total_forest_land_acres: 'ବନ ଜମି (ଏକର)',
+  total_agricultural_land_acres: 'ଚାଷଜମି (ଏକର)',
+  total_residential_land_acres: 'ଆବାସିକ ଜମି (ଏକର)',
+  total_commercial_land_acres: 'ବାଣିଜ୍ୟିକ ଜମି (ଏକର)',
+  total_waste_land_acres: 'ବନ୍ଜର ଜମି (ଏକର)',
+  total_plot_records: 'ମୋଟ ପ୍ଲଟ୍ ରେକର୍ଡ',
+  total_khata_records: 'ମୋଟ ଖାତା ରେକର୍ଡ',
+  total_ror_issued: 'ROR ଜାରି (ମୋଟ)',
+
+  // Mutations
+  mutation_applications_received_yearly: 'ପ୍ରତିବର୍ଷ ମ୍ୟୁଟେସନ୍ ଆବେଦନ ଗ୍ରହଣ',
+  mutation_approved: 'ଅନୁମୋଦିତ ମ୍ୟୁଟେସନ୍',
+  mutation_pending: 'ଅପେକ୍ଷାରେ ଥିବା ମ୍ୟୁଟେସନ୍',
+  mutation_rejected: 'ପ୍ରତ୍ୟାଖ୍ୟାନ ହୋଇଥିବା ମ୍ୟୁଟେସନ୍',
+  avg_mutation_processing_days: 'ମ୍ୟୁଟେସନ୍ ପ୍ରକ୍ରିୟା ହାରାହାରି ଦିନ',
+
+  // Revenue & tax
+  total_annual_revenue: 'ବାର୍ଷିକ ମୋଟ ଆୟ',
+  land_revenue_collection: 'ଜମି ରେଭେନ୍ୟୁ ସଂଗ୍ରହ',
+  stamp_duty_collection: 'ଷ୍ଟାମ୍ପ ଡ୍ୟୁଟି ସଂଗ୍ରହ',
+  registration_fees: 'ରେଜିଷ୍ଟ୍ରେସନ୍ ଶୁଳ୍କ',
+  tax_collection: 'କର ସଂଗ୍ରହ',
+  penalty_collection: 'ଦଣ୍ଡ/ପେନାଲ୍ଟି ସଂଗ୍ରହ',
+  monthly_revenue_target: 'ମାସିକ ରେଭେନ୍ୟୁ ଲକ୍ଷ୍ୟ',
+  revenue_target_achieved_percent: 'ଲକ୍ଷ୍ୟ ପୂରଣ (%)',
+
+  // Certificates
+  caste_certificates_issued: 'ଜାତି ପ୍ରମାଣପତ୍ର ଜାରି',
+  income_certificates_issued: 'ଆୟ ପ୍ରମାଣପତ୍ର ଜାରି',
+  residence_certificates_issued: 'ବାସସ୍ଥାନ ପ୍ରମାଣପତ୍ର ଜାରି',
+  legal_heir_certificates: 'ବୈଧ ଉତ୍ତରାଧିକାରୀ ପ୍ରମାଣପତ୍ର',
+  solvency_certificates: 'ସଲଭେନ୍ସି ପ୍ରମାଣପତ୍ର',
+  total_certificate_applications: 'ମୋଟ ପ୍ରମାଣପତ୍ର ଆବେଦନ',
+  certificates_approved: 'ଅନୁମୋଦିତ ପ୍ରମାଣପତ୍ର',
+  certificates_pending: 'ଅପେକ୍ଷାରେ ପ୍ରମାଣପତ୍ର',
+  certificates_rejected: 'ପ୍ରତ୍ୟାଖ୍ୟାନ ହୋଇଥିବା ପ୍ରମାଣପତ୍ର',
+  avg_certificate_processing_days: 'ପ୍ରମାଣପତ୍ର ପ୍ରକ୍ରିୟା ହାରାହାରି ଦିନ',
+
+  // Cases & grievances
+  total_cases_registered: 'ମୋଟ ମାମଲା ରେଜିଷ୍ଟର୍',
+  cases_resolved: 'ସମାଧାନ ହୋଇଥିବା ମାମଲା',
+  cases_pending: 'ଅପେକ୍ଷାରେ ଥିବା ମାମଲା',
+  overdue_cases: 'ଅତିବକେୟ ମାମଲା',
+  land_dispute_cases: 'ଜମି ବିବାଦ ମାମଲା',
+  civil_cases: 'ସିଭିଲ୍ ମାମଲା',
+  criminal_cases: 'ଆପରାଧିକ ମାମଲା',
+  avg_case_resolution_days: 'ମାମଲା ସମାଧାନ ହାରାହାରି ଦିନ',
+  total_grievances_received: 'ମୋଟ ଅଭିଯୋଗ ଗ୍ରହଣ',
+  grievances_resolved: 'ସମାଧାନ ହୋଇଥିବା ଅଭିଯୋଗ',
+  grievances_pending: 'ଅପେକ୍ଷାରେ ଅଭିଯୋଗ',
+  online_grievances: 'ଅନଲାଇନ୍ ଅଭିଯୋଗ',
+  offline_grievances: 'ଅଫଲାଇନ୍ ଅଭିଯୋଗ',
+  avg_grievance_resolution_days: 'ଅଭିଯୋଗ ସମାଧାନ ହାରାହାରି ଦିନ',
+
+  // Schemes & funds
+  total_schemes_running: 'ଚାଲୁଥିବା ଯୋଜନା ମୋଟ',
+  total_scheme_beneficiaries: 'ମୋଟ ଲାଭାନ୍ବିତ',
+  pmay_beneficiaries: 'PMAY ଲାଭାନ୍ବିତ',
+  mgnrega_beneficiaries: 'MGNREGA ଲାଭାନ୍ବିତ',
+  old_age_pension_beneficiaries: 'ବୃଦ୍ଧାବସ୍ଥା ଭତ୍ତା ଲାଭାନ୍ବିତ',
+  disability_pension_beneficiaries: 'ଅସମର୍ଥତା ଭତ୍ତା ଲାଭାନ୍ବିତ',
+  women_welfare_scheme_beneficiaries: 'ମହିଳା କଲ୍ୟାଣ ଯୋଜନା ଲାଭାନ୍ବିତ',
+  student_scholarship_beneficiaries: 'ଛାତ୍ରବୃତ୍ତି ଲାଭାନ୍ବିତ',
+  funds_allocated: 'ମଞ୍ଜୁରିକୃତ ଅର୍ଥ',
+  funds_utilized: 'ବ୍ୟବହୃତ ଅର୍ଥ',
+  funds_remaining: 'ବାକି ଅର୍ଥ',
+
+  // Public infrastructure
+  total_schools: 'ମୋଟ ବିଦ୍ୟାଳୟ',
+  total_colleges: 'ମୋଟ କଲେଜ୍',
+  total_hospitals: 'ମୋଟ ହସ୍ପିଟାଲ୍',
+  total_primary_health_centers: 'ମୋଟ ପ୍ରାଥମିକ ସ୍ୱାସ୍ଥ୍ୟ କେନ୍ଦ୍ର',
+  total_anganwadi_centers: 'ମୋଟ ଆଙ୍ଗନୱାଡି କେନ୍ଦ୍ର',
+  total_police_stations: 'ମୋଟ ଥାନା',
+  total_fire_stations: 'ମୋଟ ଅଗ୍ନିଶମ କେନ୍ଦ୍ର',
+  total_banks: 'ମୋଟ ବ୍ୟାଙ୍କ',
+  total_post_offices: 'ମୋଟ ଡାକଘର',
+  total_market_places: 'ମୋଟ ବଜାର ଜାଗା',
+  total_roads_km: 'ରାସ୍ତା (କି.ମି.)',
+  total_bridges: 'ମୋଟ ପୋଲ୍/ସେତୁ',
+  total_irrigation_projects: 'ମୋଟ ସିଚାଇ ପ୍ରକଳ୍ପ',
+  total_water_supply_projects: 'ମୋଟ ଜଳ ଯୋଗାଣ ପ୍ରକଳ୍ପ',
+
+  // Staff & digital
+  total_staff: 'ମୋଟ କର୍ମଚାରୀ',
+  revenue_inspectors_count: 'ରେଭେନ୍ୟୁ ଇନ୍ସପେକ୍ଟର ସଂଖ୍ୟା',
+  amin_count: 'AMIN ସଂଖ୍ୟା',
+  clerk_count: 'କ୍ଲାର୍କ ସଂଖ୍ୟା',
+  data_entry_operators: 'ଡାଟା ଏଣ୍ଟ୍ରି ଅପରେଟର',
+  vacant_posts: 'ଖାଲି ପଦ',
+  filled_posts: 'ପୂରଣ ହୋଇଥିବା ପଦ',
+  staff_trained_in_digital_services: 'ଡିଜିଟାଲ୍ ସେବାରେ ପ୍ରଶିକ୍ଷିତ କର୍ମଚାରୀ',
+  total_computers: 'ମୋଟ କମ୍ପ୍ୟୁଟର',
+  internet_available: 'ଇଣ୍ଟରନେଟ୍ ଉପଲବ୍ଧ',
+  cctv_installed: 'CCTV ଲଗାଯାଇଛି',
+  online_services_available: 'ଅନଲାଇନ୍ ସେବା ଉପଲବ୍ଧ',
+  total_online_applications: 'ମୋଟ ଅନଲାଇନ୍ ଆବେଦନ',
+  digital_records_percentage: 'ଡିଜିଟାଲ୍ ରେକର୍ଡ ଶତପ୍ରତିଶତ',
+  website_available: 'ୱେବସାଇଟ୍ ଉପଲବ୍ଧ',
+
+  // Budget & expenditure
+  annual_budget_allocated: 'ବାର୍ଷିକ ବଜେଟ୍ ମଞ୍ଜୁରି',
+  budget_utilized: 'ବ୍ୟବହୃତ ବଜେଟ୍',
+  budget_remaining: 'ଅବଶିଷ୍ଟ ବଜେଟ୍',
+  development_expenditure: 'ଉନ୍ନୟନ ବ୍ୟୟ',
+  admin_expenditure: 'ପ୍ରଶାସନିକ ବ୍ୟୟ',
+  welfare_expenditure: 'କଲ୍ୟାଣ ବ୍ୟୟ',
+
+  // Literacy & coverage
+  literacy_rate_percent: 'ସାକ୍ଷରତା ହାର (%)',
+  male_literacy_percent: 'ପୁରୁଷ ସାକ୍ଷରତା (%)',
+  female_literacy_percent: 'ମହିଳା ସାକ୍ଷରତା (%)',
+  employment_rate_percent: 'ନିଯୁକ୍ତି ହାର (%)',
+  agriculture_dependent_percent: 'ଚାଷ ଉପରେ ନିର୍ଭର (%)',
+  irrigated_land_percent: 'ସିଚିତ ଜମି (%)',
+  drinking_water_coverage_percent: 'ପିଉନି ପାଣି ଆବରଣ (%)',
+  electricity_coverage_percent: 'ବିଦ୍ୟୁତ୍ ଆବରଣ (%)',
+
+  // Projects & highlights
+  major_projects_running: 'ମୁଖ୍ୟ ଚାଲୁ ପ୍ରକଳ୍ପ',
+  upcoming_projects: 'ଆସନ୍ତା ପ୍ରକଳ୍ପ',
+  key_challenges: 'ମୁଖ୍ୟ ଚ୍ୟାଲେଞ୍ଜ',
+  achievements: 'ସଫଳତା',
+  awards_received: 'ପୁରସ୍କାର ପ୍ରାପ୍ତ',
+  description: 'ବର୍ଣ୍ଣନା',
+};
 
 export interface RevenueLandPortfolioDashboardProps {
   org: Organization;
   profile: Record<string, unknown>;
-  statusRecords?: RevenueLandStatusRecord[];
   departmentName?: string | null;
   images?: string[];
+  /** When true, show Tahasil office portfolio with linked land parcels table. */
+  isTahasilOffice?: boolean;
+  parcelRows?: RevenueGovtLandRow[];
 }
 
 function formatVal(v: string | number | null | undefined): string {
@@ -54,15 +487,20 @@ const keyToLabel = (key: string) =>
 export function RevenueLandPortfolioDashboard({
   org,
   profile,
-  statusRecords = [],
   departmentName,
   images = [],
+  isTahasilOffice = false,
+  parcelRows = [],
 }: RevenueLandPortfolioDashboardProps) {
+  const router = useRouter();
   const { language } = useLanguage();
   const isOdia = language === 'or';
   const tr = (en: string, or: string) => (isOdia ? or : en);
+  const parcelColumns = useMemo(() => buildRevenueGovtLandColumns(isOdia), [isOdia]);
+  const parcelPageSize = 10;
   const [detailTab, setDetailTab] = useState<'overview' | 'tenure' | 'use' | 'risk'>('overview');
-  const [monitorDate, setMonitorDate] = useState(new Date().toISOString().slice(0, 10));
+  /** 'profile' or a Resources category id (population, land, …, other). */
+  const [tahasilOfficeTab, setTahasilOfficeTab] = useState<string>('profile');
   const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY });
 
   const mapCenter = useMemo(() => {
@@ -137,10 +575,8 @@ export function RevenueLandPortfolioDashboard({
     'nearest_landmark',
     'road_connectivity_abutting_road_name',
     'distance_from_main_road_meters',
-    'govt_land_id',
     'khata_no',
     'plot_no',
-    'sub_plot_no',
     'land_type_govt_private_other',
     'govt_land_category_gochar_gramya_jungle_sarbasadharan_khasmahal_nazul_other',
     'kisam',
@@ -195,10 +631,8 @@ export function RevenueLandPortfolioDashboard({
   ];
 
   const tenureFields: [string, unknown][] = [
-    ['govt_land_id', profile['govt_land_id']],
     ['khata_no', profile['khata_no']],
     ['plot_no', profile['plot_no']],
-    ['sub_plot_no', profile['sub_plot_no']],
     ['land_type_govt_private_other', profile['land_type_govt_private_other']],
     [
       'govt_land_category_gochar_gramya_jungle_sarbasadharan_khasmahal_nazul_other',
@@ -279,6 +713,498 @@ export function RevenueLandPortfolioDashboard({
     .filter(([key]) => !highlightedKeys.has(key) && key !== 'gallery_images')
     .sort(([a], [b]) => a.localeCompare(b));
 
+  /** Keys shown in Tahasil “Office profile” tab; rest appear under Resources (health-style). */
+  const tahasilProfileTabKeys = useMemo(
+    () =>
+      new Set([
+        'tahasil',
+        'ri_circle',
+        'block_ulb',
+        'gp_ward',
+        'mouza_village',
+        'habitation_locality',
+        'sub_division',
+        'block',
+        'village_ward',
+        'tahsil_name',
+        'tahsil_code',
+        'established_year',
+        'establishment_year',
+        'tahsildar_name',
+        'contact_number',
+        'email_id',
+        'pin_code',
+        'latitude',
+        'longitude',
+      ]),
+    [],
+  );
+
+  const tahasilResourcesGrouped = useMemo(() => {
+    if (!isTahasilOffice) return null;
+    const resourceEntries = Object.entries(profile || {}).filter(
+      ([key, v]) =>
+        key !== 'gallery_images' &&
+        !tahasilProfileTabKeys.has(key) &&
+        v != null &&
+        String(v).trim() !== '',
+    );
+    const byTab: Record<string, [string, unknown][]> = {};
+    for (const def of TAHASIL_RESOURCE_TAB_DEFS) byTab[def.id] = [];
+    byTab.other = [];
+    for (const entry of resourceEntries) {
+      const [k] = entry;
+      const tid = TAHASIL_RESOURCE_KEY_TO_TAB[k] ?? 'other';
+      byTab[tid].push(entry);
+    }
+    for (const tid of Object.keys(byTab)) {
+      byTab[tid].sort(([a], [b]) => a.localeCompare(b));
+    }
+    const visibleTabs = TAHASIL_RESOURCE_TAB_DEFS.filter((def) => byTab[def.id].length > 0).map(
+      (def) => ({ ...def, entries: byTab[def.id] }),
+    );
+    if (byTab.other.length > 0) {
+      visibleTabs.push({
+        id: 'other',
+        label: 'Other',
+        shortLabel: 'Other',
+        keys: [] as readonly string[],
+        icon: MoreHorizontal,
+        entries: byTab.other,
+      });
+    }
+    return { byTab, visibleTabs, totalCount: resourceEntries.length };
+  }, [isTahasilOffice, profile, tahasilProfileTabKeys]);
+
+  const resourceIconConfig = (key: string): { icon: typeof FileText; color: string } => {
+    const tabId = TAHASIL_RESOURCE_KEY_TO_TAB[key] ?? 'other';
+    const has = (parts: string[]) => parts.some((p) => key.includes(p));
+    const keyHash = key.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    const fallbackIcon = TAHASIL_RESOURCE_ICON_POOL[keyHash % TAHASIL_RESOURCE_ICON_POOL.length];
+    const fallbackColor = TAHASIL_RESOURCE_COLOR_POOL[keyHash % TAHASIL_RESOURCE_COLOR_POOL.length];
+
+    if (tabId === 'population') {
+      if (has(['population', 'households'])) return { icon: Users, color: 'indigo' };
+      if (has(['villages', 'village'])) return { icon: Home, color: 'blue' };
+      if (has(['gram_panchayats', 'wards'])) return { icon: Building, color: 'teal' };
+      return { icon: fallbackIcon, color: fallbackColor };
+    }
+    if (tabId === 'land') {
+      if (has(['area', 'land'])) return { icon: Layers, color: 'emerald' };
+      if (has(['roads', 'water_bodies'])) return { icon: MapPin, color: 'blue' };
+      if (has(['records', 'plot', 'khata', 'ror'])) return { icon: FileText, color: 'violet' };
+      return { icon: fallbackIcon, color: fallbackColor };
+    }
+    if (tabId === 'mutations') {
+      if (has(['pending'])) return { icon: AlertTriangle, color: 'amber' };
+      if (has(['approved'])) return { icon: Shield, color: 'emerald' };
+      return { icon: fallbackIcon, color: fallbackColor };
+    }
+    if (tabId === 'revenue') {
+      if (has(['target', 'percent'])) return { icon: Activity, color: 'indigo' };
+      if (has(['collection', 'fees', 'revenue'])) return { icon: Landmark, color: 'amber' };
+      return { icon: fallbackIcon, color: fallbackColor };
+    }
+    if (tabId === 'certificates') {
+      if (has(['pending', 'rejected'])) return { icon: AlertTriangle, color: 'rose' };
+      if (has(['approved', 'issued'])) return { icon: Shield, color: 'emerald' };
+      return { icon: fallbackIcon, color: fallbackColor };
+    }
+    if (tabId === 'cases') {
+      if (has(['grievance'])) return { icon: Activity, color: 'teal' };
+      if (has(['pending', 'overdue'])) return { icon: AlertTriangle, color: 'rose' };
+      if (has(['resolved'])) return { icon: Shield, color: 'emerald' };
+      return { icon: fallbackIcon, color: fallbackColor };
+    }
+    if (tabId === 'schemes') {
+      if (has(['beneficiaries', 'pension', 'scholarship'])) return { icon: Users, color: 'indigo' };
+      if (has(['funds', 'allocated', 'utilized', 'remaining'])) return { icon: Landmark, color: 'amber' };
+      return { icon: fallbackIcon, color: fallbackColor };
+    }
+    if (tabId === 'infrastructure') {
+      if (has(['schools', 'colleges'])) return { icon: Building, color: 'indigo' };
+      if (has(['hospitals', 'health'])) return { icon: Activity, color: 'rose' };
+      if (has(['roads', 'bridges', 'projects'])) return { icon: Layers, color: 'emerald' };
+      return { icon: fallbackIcon, color: fallbackColor };
+    }
+    if (tabId === 'staff_digital') {
+      if (has(['staff', 'inspectors', 'clerk', 'operators', 'posts'])) return { icon: UserCheck, color: 'indigo' };
+      if (has(['online', 'digital', 'website', 'internet', 'computers', 'cctv'])) return { icon: Activity, color: 'teal' };
+      return { icon: fallbackIcon, color: fallbackColor };
+    }
+    if (tabId === 'budget') {
+      if (has(['remaining'])) return { icon: AlertTriangle, color: 'rose' };
+      if (has(['utilized', 'expenditure'])) return { icon: Scale, color: 'indigo' };
+      return { icon: fallbackIcon, color: fallbackColor };
+    }
+    if (tabId === 'literacy') {
+      if (has(['male', 'female', 'literacy'])) return { icon: Users, color: 'blue' };
+      if (has(['coverage', 'electricity', 'water'])) return { icon: Shield, color: 'emerald' };
+      return { icon: fallbackIcon, color: fallbackColor };
+    }
+    if (tabId === 'highlights') {
+      if (has(['awards', 'achievements'])) return { icon: Shield, color: 'violet' };
+      if (has(['projects'])) return { icon: Layers, color: 'indigo' };
+      return { icon: fallbackIcon, color: fallbackColor };
+    }
+    return { icon: fallbackIcon, color: fallbackColor };
+  };
+
+  if (isTahasilOffice) {
+    const getTahasilResourceShortLabel = (id: string) => {
+      switch (id) {
+        case 'population':
+          return tr('Population', 'ଜନସଂଖ୍ୟା');
+        case 'land':
+          return tr('Land', 'ଜମି');
+        case 'mutations':
+          return tr('Mutations', 'ମ୍ୟୁଟେସନ୍');
+        case 'revenue':
+          return tr('Revenue', 'ରେଭେନ୍ୟୁ');
+        case 'certificates':
+          return tr('Certificates', 'ପ୍ରମାଣପତ୍ର');
+        case 'cases':
+          return tr('Cases', 'ମାମଲା');
+        case 'schemes':
+          return tr('Schemes', 'ଯୋଜନା');
+        case 'infrastructure':
+          return tr('Infrastructure', 'ମୂଳଭୂମି');
+        case 'staff_digital':
+          return tr('Staff / IT', 'କର୍ମଚାରୀ / ଆଇ.ଟି.');
+        case 'budget':
+          return tr('Budget', 'ବଜେଟ୍');
+        case 'literacy':
+          return tr('Literacy', 'ଶିକ୍ଷା / ସାକ୍ଷରତା');
+        case 'highlights':
+          return tr('Highlights', 'ପ୍ରମୁଖ ଦିଗ');
+        case 'other':
+          return tr('Other', 'ଅନ୍ୟ');
+        default:
+          return id;
+      }
+    };
+
+    const getTahasilResourceLabel = (id: string) => {
+      switch (id) {
+        case 'population':
+          return tr('Population & settlements', 'ଜନସଂଖ୍ୟା ଓ ବସତି');
+        case 'land':
+          return tr('Land & records', 'ଜମି ଓ ରେକର୍ଡ');
+        case 'mutations':
+          return tr('Mutations', 'ମ୍ୟୁଟେସନ୍');
+        case 'revenue':
+          return tr('Revenue & tax', 'ରେଭେନ୍ୟୁ ଓ କର');
+        case 'certificates':
+          return tr('Certificates', 'ପ୍ରମାଣପତ୍ର');
+        case 'cases':
+          return tr('Cases & grievances', 'ମାମଲା ଓ ଅଭିଯୋଗ');
+        case 'schemes':
+          return tr('Schemes & funds', 'ଯୋଜନା ଓ ଅର୍ଥ');
+        case 'infrastructure':
+          return tr('Public infrastructure', 'ଜନସାଧାରଣ ପାଇଁ ମୂଳଭୂମି');
+        case 'staff_digital':
+          return tr('Staff & digital', 'କର୍ମଚାରୀ ଓ ଡିଜିଟାଲ୍');
+        case 'budget':
+          return tr('Budget & expenditure', 'ବଜେଟ୍ ଓ ବ୍ୟୟ');
+        case 'literacy':
+          return tr('Literacy & coverage', 'ଶିକ୍ଷା ଓ ଆବରଣ');
+        case 'highlights':
+          return tr('Projects & highlights', 'ପ୍ରକଳ୍ପ ଓ ପ୍ରମୁଖ ଦିଗ');
+        case 'other':
+          return tr('Other', 'ଅନ୍ୟ');
+        default:
+          return id;
+      }
+    };
+
+    const getTahasilAttrLabel = (key: string) => {
+      return isOdia ? TAHASIL_ATTR_LABEL_OR[key] ?? keyToLabel(key) : keyToLabel(key);
+    };
+
+    const tahasilTopStats = [
+      {
+        label: tr('Linked parcels', 'ଯୋଡାଯାଇଥିବା ପାର୍ସେଲ୍'),
+        value: parcelRows.length,
+        icon: Layers,
+        color: 'amber' as const,
+      },
+      {
+        label: tr('Total population', 'ମୋଟ ଲୋକସଂଖ୍ୟା'),
+        value: profile['total_population'] as string | number | null | undefined,
+        icon: Users,
+        color: 'emerald' as const,
+      },
+      {
+        label: tr('Total villages', 'ମୋଟ ଗ୍ରାମ'),
+        value: profile['total_villages'] as string | number | null | undefined,
+        icon: Home,
+        color: 'indigo' as const,
+      },
+    ] as const;
+
+    const tahasilResources = tahasilResourcesGrouped ?? {
+      byTab: {} as Record<string, [string, unknown][]>,
+      visibleTabs: [] as Array<(typeof TAHASIL_RESOURCE_TAB_DEFS)[number] & { entries: [string, unknown][] }>,
+      totalCount: 0,
+    };
+    const visibleResourceIds = new Set(
+      tahasilResources.visibleTabs.map((t) => t.id),
+    );
+    const effectiveTahasilTab =
+      tahasilOfficeTab === 'profile' || visibleResourceIds.has(tahasilOfficeTab)
+        ? tahasilOfficeTab
+        : 'profile';
+    const activeResourceEntries =
+      effectiveTahasilTab !== 'profile'
+        ? tahasilResources.byTab[effectiveTahasilTab] ?? []
+        : [];
+
+    return (
+      <div className="min-h-screen bg-slate-50/30 text-slate-800 font-sans pb-16 overflow-x-hidden">
+        <section className="w-full">
+          <ImageSlider images={finalImages} altPrefix={org.name} className="h-[410px] sm:h-[400px]" />
+        </section>
+
+        <header className="mx-auto max-w-[1920px] px-4 pt-6 pb-6 sm:px-6 lg:px-8">
+          {departmentName && (
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+              {departmentName}
+            </p>
+          )}
+          <h1 className="text-xl font-bold tracking-tight text-[#1e293b] sm:text-3xl lg:text-[32px]">
+            {tr('Tahasil Office Dashboard', 'ତହସିଲ କାର୍ଯ୍ୟାଳୟ ଡ୍ୟାସବୋର୍ଡ')}
+          </h1>
+          <p className="mt-1 text-[15px] font-medium text-[#64748b]">
+            {tr(
+              'Office details and resources from available data',
+              'ଉପଲବ୍ଧ ତଥ୍ୟ ଆଧାରରେ କାର୍ଯ୍ୟାଳୟ ବିବରଣୀ ଓ ସମ୍ପଦ',
+            )}
+          </p>
+        </header>
+
+        {/* Facility details — same shell as HealthPortfolioDashboard */}
+        <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+          <div className="rounded-3xl border border-blue-200 bg-blue-50/60 p-5 sm:p-8 shadow-sm backdrop-blur-md overflow-hidden relative">
+            <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none border-l border-slate-50 hidden sm:block" />
+            <div className="relative z-10">
+              <div className="flex flex-col gap-3 mb-4">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b] shrink-0">
+                  {tr('Facility details', 'ସୁବିଧା ବିବରଣୀ')}
+                </h2>
+                <div className="w-full overflow-x-auto pb-0.5 -mx-1 px-1">
+                  <div className="flex min-w-min items-center gap-1 rounded-full bg-slate-100 p-1">
+                    <button
+                      type="button"
+                      onClick={() => setTahasilOfficeTab('profile')}
+                      className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
+                        effectiveTahasilTab === 'profile'
+                          ? 'bg-white text-[#0f172a] shadow-sm'
+                          : 'text-[#64748b] hover:text-[#0f172a]'
+                      }`}
+                    >
+                      <span>{tr('Office profile', 'କାର୍ଯ୍ୟାଳୟ ପ୍ରୋଫାଇଲ୍')}</span>
+                    </button>
+                    {tahasilResources.visibleTabs.map((tab) => {
+                      const active = tab.id === effectiveTahasilTab;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setTahasilOfficeTab(tab.id)}
+                          className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition whitespace-nowrap ${
+                            active
+                              ? 'bg-white text-[#0f172a] shadow-sm'
+                              : 'text-[#64748b] hover:text-[#0f172a]'
+                          }`}
+                        >
+                          <span>{getTahasilResourceShortLabel(tab.id)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                {tahasilResources.totalCount === 0 && (
+                  <p className="text-[12px] text-[#64748b]">
+                    {tr(
+                      'No additional portfolio fields in profile.',
+                      'ଅତିରିକ୍ତ ପୋର୍ଟଫୋଲିଓ କ୍ଷେତ୍ର ନାହିଁ।',
+                    )}
+                  </p>
+                )}
+              </div>
+
+              {effectiveTahasilTab === 'profile' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {[
+                    { label: tr('Office name', 'କାର୍ଯ୍ୟାଳୟ ନାମ'), val: org.name, icon: Building, color: 'blue' },
+                    {
+                      label: tr('Facility type', 'ସୁବିଧା ପ୍ରକାର'),
+                      val: tr('Tahasil office', 'ତହସିଲ କାର୍ଯ୍ୟାଳୟ'),
+                      icon: Landmark,
+                      color: 'violet',
+                    },
+                    { label: tr('ID', 'ଆଇ.ଡି.'), val: org.id, icon: Hash, color: 'slate' },
+                    {
+                      label: tr('Tahasil (key)', 'ତହସିଲ (କି)'),
+                      val: profile['tahasil'],
+                      icon: MapPin,
+                      color: 'emerald',
+                    },
+                    { label: tr('Tahsil name', 'ତହସିଲ ନାମ'), val: profile['tahsil_name'], icon: MapPin, color: 'teal' },
+                    { label: tr('Tahsil code', 'ତହସିଲ କୋଡ୍'), val: profile['tahsil_code'], icon: Tag, color: 'amber' },
+                    {
+                      label: tr('Established year', 'ସ୍ଥାପିତ ବର୍ଷ'),
+                      val: profile['established_year'] ?? profile['establishment_year'],
+                      icon: Hash,
+                      color: 'violet',
+                    },
+                    { label: tr('Block / ULB', 'ବ୍ଲକ / ULB'), val: profile['block_ulb'] ?? profile['block'], icon: MapPin, color: 'rose' },
+                    { label: tr('Sub-division', 'ଉପ-ଅଞ୍ଚଳ'), val: profile['sub_division'], icon: MapPin, color: 'cyan' },
+                    { label: tr('Village / Ward', 'ଗ୍ରାମ / ୱାର୍ଡ'), val: profile['village_ward'], icon: Home, color: 'blue' },
+                    { label: tr('Tahsildar', 'ତହସିଲଦାର'), val: profile['tahsildar_name'], icon: UserCheck, color: 'emerald' },
+                    { label: tr('Contact', 'ଯୋଗାଯୋଗ'), val: profile['contact_number'], icon: Activity, color: 'teal' },
+                    { label: tr('Email', 'ଇମେଲ୍'), val: profile['email_id'], icon: FileText, color: 'slate' },
+                    { label: tr('PIN code', 'ପିନ୍ କୋଡ୍'), val: profile['pin_code'], icon: Hash, color: 'violet' },
+                    { label: tr('Latitude', 'ଅକ୍ଷାଂଶ'), val: org.latitude ?? profile['latitude'], icon: MapPin, color: 'rose' },
+                    { label: tr('Longitude', 'ଦ୍ରାଘିମାଂଶ'), val: org.longitude ?? profile['longitude'], icon: MapPin, color: 'pink' },
+                  ].map((item, idx) => {
+                    const colorMap: Record<string, string> = {
+                      blue: 'bg-blue-50 text-blue-600 border-blue-100',
+                      emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                      amber: 'bg-amber-50 text-amber-600 border-amber-100',
+                      violet: 'bg-violet-50 text-violet-600 border-violet-100',
+                      slate: 'bg-slate-100 text-slate-600 border-slate-200',
+                      teal: 'bg-teal-50 text-teal-600 border-teal-100',
+                      rose: 'bg-rose-50 text-rose-600 border-rose-100',
+                      pink: 'bg-pink-50 text-pink-600 border-pink-100',
+                      sky: 'bg-sky-50 text-sky-600 border-sky-100',
+                      indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+                      orange: 'bg-orange-50 text-orange-600 border-orange-100',
+                      cyan: 'bg-cyan-50 text-cyan-600 border-cyan-100',
+                    };
+                    return (
+                      <div key={idx} className="flex gap-4 items-center">
+                        <div
+                          className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${colorMap[item.color]}`}
+                        >
+                          <item.icon size={20} strokeWidth={2} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">
+                            {item.label}
+                          </p>
+                          <p className="text-[15px] font-bold text-[#0f172a] truncate">
+                            {formatVal(item.val as string | number | null | undefined)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {effectiveTahasilTab !== 'profile' && tahasilResources.totalCount > 0 && (
+                <div className="space-y-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-[#64748b]">
+                    {getTahasilResourceLabel(effectiveTahasilTab)}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {activeResourceEntries.map(([key, value]) => {
+                      const item = resourceIconConfig(key);
+                      const colorMap: Record<string, string> = {
+                        blue: 'bg-blue-50 text-blue-600 border-blue-100',
+                        emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                        amber: 'bg-amber-50 text-amber-600 border-amber-100',
+                        violet: 'bg-violet-50 text-violet-600 border-violet-100',
+                        slate: 'bg-slate-100 text-slate-600 border-slate-200',
+                        teal: 'bg-teal-50 text-teal-600 border-teal-100',
+                        rose: 'bg-rose-50 text-rose-600 border-rose-100',
+                        indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+                      };
+                      return (
+                        <div key={key} className="flex gap-4 items-center">
+                          <div
+                            className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${colorMap[item.color]}`}
+                          >
+                            <item.icon size={20} strokeWidth={2} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">
+                              {getTahasilAttrLabel(key)}
+                            </p>
+                            <p className="text-[15px] font-bold text-[#0f172a] truncate">
+                              {formatVal(value as string | number | null | undefined)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Stats row — same structure as Health (explicit color classes) */}
+        <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tahasilTopStats.map((stat, i) => (
+              <div
+                key={i}
+                className={`rounded-2xl border p-5 sm:p-6 shadow-sm flex justify-between items-center backdrop-blur-sm ${statColorClasses[stat.color].card}`}
+              >
+                <div className="min-w-0">
+                  <p
+                    className={`text-[12px] sm:text-[13px] font-bold mb-1 uppercase tracking-wider ${statColorClasses[stat.color].label}`}
+                  >
+                    {stat.label}
+                  </p>
+                  <h3
+                    className={`text-[24px] sm:text-[32px] font-black leading-none ${statColorClasses[stat.color].value}`}
+                  >
+                    {formatVal(stat.value as string | number | null | undefined)}
+                  </h3>
+                </div>
+                <div
+                  className={`w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl flex items-center justify-center ml-3 shadow-inner ${statColorClasses[stat.color].iconWrap}`}
+                >
+                  <stat.icon size={28} strokeWidth={2.5} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Government land parcels */}
+        <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-16">
+          <div className="rounded-3xl border border-blue-200 bg-blue-50/60 p-6 sm:p-8 shadow-sm backdrop-blur-md">
+            <div className="rounded-2xl border border-slate-100 bg-white/40 overflow-hidden p-5 sm:p-6">
+              <div className="mb-4">
+                <h3 className="text-sm font-bold text-[#0f172a]">
+                  {tr('Government land parcels', 'ସରକାରୀ ଜମି ପାର୍ସେଲ୍')}
+                </h3>
+                <p className="text-[11px] text-[#64748b]">
+                  {tr(
+                    'Parcels linked to this Tahasil. Open a row for the parcel portfolio.',
+                    'ଏହି ତହସିଲ ସହ ଯୋଡାଯାଇଥିବା ପାର୍ସେଲ୍। ପାର୍ସେଲ୍ ପୋର୍ଟଫୋଲିଓ ପାଇଁ ଏକ ରୋ ଖୋଲନ୍ତୁ।',
+                  )}
+                </p>
+              </div>
+              <PaginatedHorizontalTable<RevenueGovtLandRow>
+                columns={parcelColumns}
+                rows={parcelRows}
+                pageSize={parcelPageSize}
+                getRowId={(r) => r.org.id}
+                onRowClick={(r) => router.push(`/organizations/${r.org.id}`)}
+              />
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50/30 text-slate-800 font-sans pb-16 overflow-x-hidden">
       {/* Hero */}
@@ -330,7 +1256,6 @@ export function RevenueLandPortfolioDashboard({
             {detailTab === 'overview' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[
-                  { label: tr('Govt land ID', 'ସରକାରୀ ଜମି ID'), val: profile['govt_land_id'], icon: FileText, color: 'violet' },
                   { label: tr('Tahasil', 'ତହସିଲ'), val: profile['tahasil'], icon: MapPin, color: 'emerald' },
                   { label: tr('RI Circle', 'ଆର୍.ଆଇ. ସର୍କଲ'), val: profile['ri_circle'], icon: MapPin, color: 'sky' },
                   { label: tr('Block / ULB', 'ବ୍ଲକ / ULB'), val: profile['block_ulb'], icon: MapPin, color: 'amber' },
@@ -344,7 +1269,6 @@ export function RevenueLandPortfolioDashboard({
                   },
                   { label: tr('Khata No', 'ଖାତା ନଂ'), val: profile['khata_no'], icon: FileText, color: 'emerald' },
                   { label: tr('Plot No', 'ପ୍ଲଟ୍ ନଂ'), val: profile['plot_no'], icon: FileText, color: 'amber' },
-                  { label: tr('Sub-Plot No', 'ଉପ-ପ୍ଲଟ୍ ନଂ'), val: profile['sub_plot_no'], icon: FileText, color: 'sky' },
                   {
                     label: tr('Land Type (GOVT/PRIVATE/OTHER)', 'ଜମି ପ୍ରକାର (ସରକାରୀ/ବେସରକାରୀ/ଅନ୍ୟ)'),
                     val:
@@ -611,281 +1535,7 @@ export function RevenueLandPortfolioDashboard({
         </div>
       </section>
 
-      {/* Map Section – mirrors Health layout but for parcels */}
-      {/* <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
-        <div className="rounded-3xl border border-violet-200 bg-violet-100/30 p-6 sm:p-8 shadow-sm backdrop-blur-md">
-          <div className="mb-4">
-            <h2 className="text-xl font-bold text-[#0f172a]">Parcel Location</h2>
-            <p className="text-[13px] text-[#64748b] mt-1">
-              Land parcel location on map within Gopalpur constituency.
-            </p>
-          </div>
-          <div className="h-[400px] w-full rounded-xl bg-[#f8f9fa] overflow-hidden relative flex items-center justify-center">
-            {isLoaded ? (
-              <GoogleMap
-                mapContainerStyle={{ width: '100%', height: '100%' }}
-                center={mapCenter}
-                zoom={14}
-                options={{
-                  restriction: {
-                    latLngBounds: {
-                      south: GOPALPUR_BOUNDS.south,
-                      west: GOPALPUR_BOUNDS.west,
-                      north: GOPALPUR_BOUNDS.north,
-                      east: GOPALPUR_BOUNDS.east,
-                    },
-                    strictBounds: true,
-                  },
-                  disableDefaultUI: false,
-                  zoomControl: true,
-                  streetViewControl: false,
-                  mapTypeControl: true,
-                }}
-              >
-                {org.latitude != null && org.longitude != null && (
-                  <Marker position={{ lat: org.latitude, lng: org.longitude }} title={org.name} />
-                )}
-              </GoogleMap>
-            ) : (
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            )}
-          </div>
-        </div>
-      </section> */}
 
-      {/* Status over time – dynamic data (charts & table) */}
-      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-16">
-        <div className="rounded-3xl border border-blue-200 bg-blue-50/60 p-6 sm:p-8 shadow-sm backdrop-blur-md">
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-[#0f172a]">{tr('Status over time', 'ସମୟ ଅନୁସାରେ ସ୍ଥିତି')}</h2>
-            <p className="text-[13px] text-[#64748b] mt-1">
-              {tr(
-                'Dynamic status records (encroachment, litigation, use, area) managed by the department admin.',
-                'ବିଭାଗ ଅଧିକାରୀ ଦ୍ୱାରା ପରିଚାଳିତ (ଅତିକ୍ରମଣ, ମକଦମା, ବ୍ୟବହାର, କ୍ଷେତ୍ରଫଳ) ସ୍ଥିତି ରେକର୍ଡଗୁଡିକ',
-              )}
-            </p>
-          </div>
-
-          <div className="space-y-10">
-            <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between border-b border-slate-200 pb-6">
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-[#64748b]">
-                  {tr('Select date', 'ତାରିଖ ଚୟନ କରନ୍ତୁ')}
-                </label>
-                <input
-                  type="date"
-                  value={monitorDate}
-                  onChange={(e) => setMonitorDate(e.target.value)}
-                  className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                />
-              </div>
-              {statusRecords.length === 0 && (
-                <p className="text-xs text-slate-500 italic">
-                  {tr(
-                    'No status records yet. Add records from the admin panel.',
-                    'ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ସ୍ଥିତି ରେକର୍ଡ ନାହିଁ। ଅଧିକାରୀ ପ୍ୟାନେଲ୍ ରୁ ରେକର୍ଡ ଯୋଡନ୍ତୁ।',
-                  )}
-                </p>
-              )}
-            </div>
-
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="rounded-2xl border border-slate-100 bg-white/50 p-5 sm:p-6 flex flex-col h-[280px] sm:h-[320px] min-w-0">
-                <div className="mb-4">
-                  <h3 className="text-sm font-bold text-[#0f172a]">
-                    {tr('Area vacant (acres) over time', 'ସମୟ ଅନୁସାରେ ଖାଲି କ୍ଷେତ୍ରଫଳ (ଏକର)')}
-                  </h3>
-                  <p className="text-[11px] text-[#64748b]">{tr('Last 15 records', 'ଶେଷ 15ଟି ରେକର୍ଡ')}</p>
-                </div>
-                <div className="flex-1 min-h-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={statusRecords.slice(0, 15).map((r) => ({
-                        date: r.record_date?.slice(5, 10)?.split('-').reverse().join('/') ?? '',
-                        acres: r.area_vacant_acres ?? 0,
-                      })).reverse()}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis
-                        dataKey="date"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fontWeight: 600, fill: '#94a3b8' }}
-                        dy={10}
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fontWeight: 600, fill: '#94a3b8' }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          borderRadius: '12px',
-                          border: 'none',
-                          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                          fontSize: '12px',
-                        }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="acres"
-                        stroke="#10b981"
-                        strokeWidth={3}
-                        dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
-                        activeDot={{ r: 6 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-100 bg-white/50 p-5 sm:p-6 flex flex-col h-[280px] sm:h-[320px] min-w-0">
-                <div className="mb-4">
-                  <h3 className="text-sm font-bold text-[#0f172a]">
-                    {tr('Status records by date', 'ତାରିଖ ଅନୁସାରେ ସ୍ଥିତି ରେକର୍ଡ')}
-                  </h3>
-                  <p className="text-[11px] text-[#64748b]">
-                    {tr('Count of records (last 15 dates)', 'ରେକର୍ଡ ସଂଖ୍ୟା (ଶେଷ 15 ତାରିଖ)')}
-                  </p>
-                </div>
-                <div className="flex-1 min-h-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={(() => {
-                        const byDate: Record<string, number> = {};
-                        statusRecords.slice(0, 50).forEach((r) => {
-                          const d = r.record_date?.slice(0, 10) ?? '';
-                          byDate[d] = (byDate[d] ?? 0) + 1;
-                        });
-                        return Object.entries(byDate)
-                          .sort((a, b) => b[0].localeCompare(a[0]))
-                          .slice(0, 15)
-                          .map(([date, count]) => ({
-                            date: date.slice(5, 10).split('-').reverse().join('/'),
-                            count,
-                          }))
-                          .reverse();
-                      })()}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis
-                        dataKey="date"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fontWeight: 600, fill: '#94a3b8' }}
-                        dy={10}
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fontWeight: 600, fill: '#94a3b8' }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          borderRadius: '12px',
-                          border: 'none',
-                          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                          fontSize: '12px',
-                        }}
-                      />
-                      <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={24} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className="rounded-2xl border border-slate-100 bg-white/40 overflow-hidden">
-              <div className="p-5 border-b border-slate-100 bg-white/50 flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-[#0f172a]">{tr('Status records', 'ସ୍ଥିତି ରେକର୍ଡ')}</h3>
-                  <p className="text-[11px] text-[#64748b]">
-                    {monitorDate
-                      ? tr(`Records for ${monitorDate}`, `${monitorDate} ପାଇଁ ରେକର୍ଡଗୁଡିକ`)
-                      : tr('All records (newest first)', 'ସମସ୍ତ ରେକର୍ଡ (ନୂଆ ପ୍ରଥମେ)')}
-                  </p>
-                </div>
-                <div className="h-10 w-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
-                  <Activity size={20} />
-                </div>
-              </div>
-              <div className="overflow-x-auto pb-4">
-                <table className="w-full text-left text-sm border-collapse min-w-[680px] sm:min-w-[900px]">
-                  <thead>
-                    <tr className="bg-slate-50/50">
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">{tr('Date', 'ତାରିଖ')}</th>
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                        {tr('Encroachment', 'ଅତିକ୍ରମଣ')}
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                        {tr('Litigation', 'ମକଦମା')}
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                        {tr('Present use', 'ବର୍ତ୍ତମାନ ବ୍ୟବହାର')}
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                        {tr('In land bank', 'ଲ୍ୟାଣ୍ଡ ବ୍ୟାଙ୍କରେ')}
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-right">
-                        {tr('Area vacant (acres)', 'ଖାଲି କ୍ଷେତ୍ରଫଳ (ଏକର)')}
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                        {tr('Remarks', 'ଟିପ୍ପଣୀ')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {(() => {
-                      const filtered = monitorDate
-                        ? statusRecords.filter((r) => r.record_date?.slice(0, 10) === monitorDate)
-                        : statusRecords.slice(0, 20);
-                      if (filtered.length === 0) {
-                        return (
-                          <tr>
-                            <td colSpan={7} className="px-6 py-10 text-center text-slate-400 italic bg-white/20">
-                              {monitorDate
-                                ? tr(
-                                    `No status records for ${monitorDate}.`,
-                                    `${monitorDate} ପାଇଁ ସ୍ଥିତି ରେକର୍ଡ ନାହିଁ।`,
-                                  )
-                                : tr(
-                                    'No status records yet. Add records from the admin panel.',
-                                    'ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ସ୍ଥିତି ରେକର୍ଡ ନାହିଁ। ଅଧିକାରୀ ପ୍ୟାନେଲ୍ ରୁ ରେକର୍ଡ ଯୋଡନ୍ତୁ।',
-                                  )}
-                            </td>
-                          </tr>
-                        );
-                      }
-                      return filtered.map((r) => (
-                        <tr key={r.id} className="hover:bg-white/40 transition">
-                          <td className="px-3 sm:px-6 py-4 font-semibold text-[#334155]">
-                            {r.record_date?.slice(0, 10) ?? '—'}
-                          </td>
-                          <td className="px-3 sm:px-6 py-4 text-slate-600">{formatVal(r.encroachment_status)}</td>
-                          <td className="px-3 sm:px-6 py-4 text-slate-600">{formatVal(r.litigation_status)}</td>
-                          <td className="px-3 sm:px-6 py-4 text-slate-600">{formatVal(r.present_use)}</td>
-                          <td className="px-3 sm:px-6 py-4 text-slate-600">{formatVal(r.in_land_bank)}</td>
-                          <td className="px-3 sm:px-6 py-4 text-right font-semibold text-slate-700">
-                            {formatVal(r.area_vacant_acres)}
-                          </td>
-                          <td
-                            className="px-3 sm:px-6 py-4 text-slate-600 max-w-[160px] sm:max-w-[200px] truncate"
-                            title={String(r.remarks ?? '')}
-                          >
-                            {formatVal(r.remarks)}
-                          </td>
-                        </tr>
-                      ));
-                    })()}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
