@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shell } from '../components/layout/Shell';
 import { ConstituencyMap } from '../components/map/ConstituencyMap';
-import type { RoadFeature } from '../components/map/ConstituencyMap';
+import type { RoadFeature, DrainFeature } from '../components/map/ConstituencyMap';
 import { DepartmentSidebar, getDepartmentIcon } from '../components/departments/DepartmentSidebar';
 import { useLanguage } from '../components/i18n/LanguageContext';
 import { departmentsApi, organizationsApi, healthApi, Department, Organization } from '../services/api';
@@ -15,12 +15,15 @@ const ROADS_DATA_PATHS = [
   '/data/roads/rangailunda.json',
 ] as const;
 
+const DRAINAGE_DATA_PATHS = ['/data/drainage/bahana.json'] as const;
+
 export default function HomePage() {
   const router = useRouter();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDept, setSelectedDept] = useState<Department | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [roads, setRoads] = useState<RoadFeature[]>([]);
+  const [drains, setDrains] = useState<DrainFeature[]>([]);
   const [loading, setLoading] = useState(false);
   const [countByDepartmentId, setCountByDepartmentId] = useState<Record<number, number>>({});
   const { language } = useLanguage();
@@ -67,6 +70,7 @@ export default function HomePage() {
     setSelectedDept(dept);
     const isRoads = dept.code?.toUpperCase() === 'ROADS';
     const isRevenueLand = dept.code?.toUpperCase() === 'REVENUE_LAND';
+    const isDrainage = dept.code?.toUpperCase() === 'DRAINAGE';
 
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('ama_gopalpur_selected_dept_code', dept.code || '');
@@ -84,6 +88,24 @@ export default function HomePage() {
             if (fc?.features?.length) all.push(...fc.features);
           });
           setRoads(all);
+          setDrains([]);
+          setOrganizations([]);
+          setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: all.length }));
+        })
+        .finally(() => setLoading(false));
+    } else if (isDrainage) {
+      Promise.all(
+        DRAINAGE_DATA_PATHS.map((path) =>
+          fetch(path).then((r) => (r.ok ? r.json() : { type: 'FeatureCollection', features: [] }))
+        )
+      )
+        .then((collections) => {
+          const all: DrainFeature[] = [];
+          collections.forEach((fc) => {
+            if (fc?.features?.length) all.push(...fc.features);
+          });
+          setDrains(all);
+          setRoads([]);
           setOrganizations([]);
           setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: all.length }));
         })
@@ -127,6 +149,7 @@ export default function HomePage() {
 
           setOrganizations(updatedData);
           setRoads([]);
+          setDrains([]);
           setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: updatedData.length }));
         })
         .finally(() => setLoading(false));
@@ -199,6 +222,7 @@ export default function HomePage() {
               selectedDepartmentCode={selectedDept?.code}
               organizations={organizations}
               roads={roads}
+              drains={drains}
               onSelectOrganization={(id) => router.push(`/organizations/${id}`)}
             />
           </div>
