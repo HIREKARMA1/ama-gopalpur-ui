@@ -217,6 +217,17 @@ export function ConstituencyMap({
     [organizations]
   );
 
+  const revenueLandLegendTypes = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'REVENUE_LAND') return [];
+    return Array.from(
+      new Set(
+        orgsWithLocation
+          .map((org) => ((org.attributes?.land_type as string) || '').trim())
+          .filter((v) => v.length > 0),
+      ),
+    );
+  }, [orgsWithLocation, selectedDepartmentCode]);
+
   const isRoadsDept = selectedDepartmentCode?.toUpperCase() === 'ROADS';
 
   useEffect(() => {
@@ -322,9 +333,13 @@ export function ConstituencyMap({
         return createCircleMarkerSvgIcon('#facc15'); // tailwind yellow-400
       }
 
-      // REVENUE LAND – single red color, matching legend
+      // REVENUE LAND – Tahasil offices (sky) vs land parcels (rose)
       if (code === 'REVENUE_LAND') {
-        return createCircleMarkerSvgIcon('#f43f5e'); // tailwind rose-500
+        const sub = (subDept || '').toUpperCase();
+        if (sub === 'TAHASIL_OFFICE') {
+          return createCircleMarkerSvgIcon('#0ea5e9');
+        }
+        return createCircleMarkerSvgIcon('#f43f5e');
       }
 
       // ICDS / AWC – single pink color, matching legend
@@ -371,6 +386,12 @@ export function ConstituencyMap({
         if (instType.length > 0) return instType;
         return t('map.electricity.office', lang);
       }
+      if (code === 'REVENUE_LAND') {
+        if ((subDept || '').toUpperCase() === 'TAHASIL_OFFICE') {
+          return lang === 'or' ? 'ତହସିଲ କାର୍ଯ୍ୟାଳୟ' : 'Tahasil office';
+        }
+        return lang === 'or' ? 'ଜମି ପାର୍ସେଲ୍' : 'Land parcel';
+      }
       const eduKey = EDUCATION_TYPE_KEYS[type];
       return eduKey ? t(eduKey, lang) : EDUCATION_TYPE_LABELS[type] || type.replace(/_/g, ' ');
     },
@@ -414,8 +435,10 @@ export function ConstituencyMap({
           });
         } else if (code === 'REVENUE_LAND') {
           result = result.filter((org) => {
-            const landType =
-              ((org.attributes?.land_type as string) || '').toUpperCase();
+            if ((org.sub_department || '').toUpperCase() === 'TAHASIL_OFFICE') {
+              return true;
+            }
+            const landType = ((org.attributes?.land_type as string) || '').toUpperCase();
             return landType === legendFilterType;
           });
         } else if (code === 'ELECTRICITY') {
@@ -570,10 +593,11 @@ export function ConstituencyMap({
   };
 
   /** Only show markers/roads if we have a department selected, are zoomed in enough, or have a search result */
-  const isRevenueLandDept = selectedDepartmentCode?.toUpperCase() === 'REVENUE_LAND';
   const showContent =
-    !isRevenueLandDept &&
-    (!!selectedDepartmentCode || zoom >= 13 || !!infoWindowOrg || (searchTerm.trim() !== '' && filteredOrgs.length > 0));
+    !!selectedDepartmentCode ||
+    zoom >= 13 ||
+    !!infoWindowOrg ||
+    (searchTerm.trim() !== '' && filteredOrgs.length > 0);
 
   return (
     <div className="relative h-full w-full min-h-[400px] overflow-hidden flex flex-col">
@@ -593,7 +617,7 @@ export function ConstituencyMap({
           display: none !important;
         }
       `}</style>
-      {selectedDepartmentCode && !isRevenueLandDept && (
+      {selectedDepartmentCode && (
         <div
           ref={searchContainerRef}
           className="pointer-events-none sm:absolute sm:top-[10px] sm:left-4 sm:right-auto z-20 flex items-center justify-start px-4 sm:px-0 w-full sm:w-auto py-2 sm:py-0"
@@ -1036,20 +1060,13 @@ export function ConstituencyMap({
           </ul>
         </div>
       )}
-      {selectedDepartmentCode?.toUpperCase() === 'REVENUE_LAND' && orgsWithLocation.length > 0 && !isRevenueLandDept && (
+      {selectedDepartmentCode?.toUpperCase() === 'REVENUE_LAND' &&
+        orgsWithLocation.length > 0 &&
+        revenueLandLegendTypes.length > 0 && (
         <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {Array.from(
-              new Set(
-                orgsWithLocation
-                  .map(
-                    (org) =>
-                      ((org.attributes?.land_type as string) || '').trim(),
-                  )
-                  .filter((v) => v.length > 0),
-              ),
-            ).map((type) => {
+            {revenueLandLegendTypes.map((type) => {
               const value = type.toUpperCase();
               const isSelected = legendFilterType === value;
               const labelKey =

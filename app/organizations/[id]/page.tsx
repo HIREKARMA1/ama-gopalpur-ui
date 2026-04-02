@@ -42,6 +42,7 @@ import { RevenueLandPortfolioDashboard } from '../../../components/organization/
 import { AgriculturePortfolioDashboard } from '../../../components/organization/AgriculturePortfolioDashboard';
 import { MinorIrrigationPortfolioDashboard } from '../../../components/organization/MinorIrrigationPortfolioDashboard';
 import { IrrigationPortfolioDashboard } from '../../../components/organization/IrrigationPortfolioDashboard';
+import type { RevenueGovtLandRow } from '../../../lib/revenueGovtLandTable';
 
 const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
@@ -175,7 +176,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [waterDailyPumpLogs, setWaterDailyPumpLogs] = useState<Awaited<ReturnType<typeof watcoApi.listDailyPumpLogs>>>([]);
   const [waterDailyTankLevels, setWaterDailyTankLevels] = useState<Awaited<ReturnType<typeof watcoApi.listDailyTankLevels>>>([]);
   const [revenueProfile, setRevenueProfile] = useState<Record<string, unknown>>({});
-  const [revenueStatusRecords, setRevenueStatusRecords] = useState<Awaited<ReturnType<typeof revenueLandApi.listStatusRecords>>>([]);
+  const [revenueTahasilParcels, setRevenueTahasilParcels] = useState<RevenueGovtLandRow[]>([]);
   const [agricultureProfile, setAgricultureProfile] = useState<Record<string, unknown>>({});
   const [agricultureDailyMetrics, setAgricultureDailyMetrics] = useState<import('../../../services/api').AgricultureDailyMetric[]>([]);
   const [agricultureMonthlyReports, setAgricultureMonthlyReports] = useState<import('../../../services/api').AgricultureMonthlyReport[]>([]);
@@ -204,6 +205,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
         const dept = deptsRes.find((d) => d.id === orgRes.department_id);
         const code = dept?.code ?? null;
         setDeptCode(code ?? null);
+        setRevenueTahasilParcels([]);
 
         if (code === 'EDUCATION') {
           const profile = await educationApi.getProfile(id);
@@ -282,14 +284,24 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           setWaterDailyPumpLogs(pumps || []);
           setWaterDailyTankLevels(tanks || []);
         } else if (code === 'REVENUE_LAND') {
-          const [profile, statusRecs] = await Promise.all([
-            revenueLandApi.getProfile(id),
-            revenueLandApi.listStatusRecords(id),
-          ]);
+          const profile = await revenueLandApi.getProfile(id);
           setRevenueProfile(
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
-          setRevenueStatusRecords(Array.isArray(statusRecs) ? statusRecs : []);
+          if ((orgRes.sub_department || '') === 'TAHASIL_OFFICE') {
+            const parcelOrgs = await revenueLandApi.listParcelsForTahasilOffice(id);
+            const parcelProfiles = await Promise.all(
+              parcelOrgs.map((o) => revenueLandApi.getProfile(o.id).catch(() => ({}))),
+            );
+            setRevenueTahasilParcels(
+              parcelOrgs.map((po, idx) => ({
+                org: po,
+                profile: (parcelProfiles[idx] && typeof parcelProfiles[idx] === 'object'
+                  ? parcelProfiles[idx]
+                  : {}) as Record<string, unknown>,
+              })),
+            );
+          }
         } else if (code === 'AGRICULTURE') {
           const { agricultureApi } = await import('../../../services/api');
           const [profile, dailyMetrics, monthlyReports] = await Promise.all([
@@ -421,9 +433,10 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
         <RevenueLandPortfolioDashboard
           org={org}
           profile={revenueProfile}
-          statusRecords={revenueStatusRecords}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
+          isTahasilOffice={org.sub_department === 'TAHASIL_OFFICE'}
+          parcelRows={revenueTahasilParcels}
         />
       </div>
     );

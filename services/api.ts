@@ -1199,6 +1199,14 @@ export const revenueLandApi = {
       body: form,
     });
   },
+  bulkTahasilOfficesCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>(
+      '/api/v1/revenue-land/tahasil-offices/bulk-csv',
+      { method: 'POST', body: form },
+    );
+  },
   listStatusRecords: (orgId: number, params?: { skip?: number; limit?: number }) =>
     apiFetch<RevenueLandStatusRecord[]>(
       `${revenueLandBase(orgId)}/status-records?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 100}`
@@ -1222,6 +1230,9 @@ export const revenueLandApi = {
     }),
   deleteStatusRecord: (id: number) =>
     apiFetch<void>(`/api/v1/revenue-land/status-records/${id}`, { method: 'DELETE' }),
+  /** Land parcel orgs under a Tahasil office (public). */
+  listParcelsForTahasilOffice: (tahasilOrgId: number) =>
+    apiFetch<Organization[]>(`/api/v1/revenue-land/tahasil-offices/${tahasilOrgId}/parcels`),
 };
 
 export interface WatcoDailyOperation {
