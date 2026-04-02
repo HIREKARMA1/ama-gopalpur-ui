@@ -11,6 +11,7 @@ import {
   educationApi,
   healthApi,
   electricityApi,
+  arcsApi,
   watcoApi,
   revenueLandApi,
   minorIrrigationApi,
@@ -37,6 +38,7 @@ import { AwcPortfolioDashboard } from '../../../components/organization/AwcPortf
 import { EducationPortfolioDashboard } from '../../../components/organization/EducationPortfolioDashboard';
 import { HealthPortfolioDashboard } from '../../../components/organization/HealthPortfolioDashboard';
 import { ElectricityPortfolioDashboard } from '../../../components/organization/ElectricityPortfolioDashboard';
+import { ArcsPortfolioDashboard } from '../../../components/organization/ArcsPortfolioDashboard';
 import { WaterPortfolioDashboard } from '../../../components/organization/WaterPortfolioDashboard';
 import { RevenueLandPortfolioDashboard } from '../../../components/organization/RevenueLandPortfolioDashboard';
 import { AgriculturePortfolioDashboard } from '../../../components/organization/AgriculturePortfolioDashboard';
@@ -167,6 +169,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [educationProfile, setEducationProfile] = useState<Record<string, unknown>>({});
   const [healthProfile, setHealthProfile] = useState<Record<string, unknown>>({});
   const [electricityProfile, setElectricityProfile] = useState<Record<string, unknown>>({});
+  const [arcsProfile, setArcsProfile] = useState<Record<string, unknown>>({});
   const [electricityMaster, setElectricityMaster] = useState<ElectricityMaster | null>(null);
   const [electricityStaff, setElectricityStaff] = useState<Awaited<ReturnType<typeof electricityApi.listStaff>>>([]);
   const [electricityDaily, setElectricityDaily] = useState<Awaited<ReturnType<typeof electricityApi.listDaily>>>([]);
@@ -257,6 +260,9 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           setHealthDailyAttendance(dailyAtt ?? []);
           setHealthDailyMedicineStock(dailyMed ?? []);
           setHealthDailyExtraData(dailyExtra ?? []);
+        } else if (code === 'ARCS') {
+          const prof = await arcsApi.getProfile(id);
+          setArcsProfile(prof && typeof prof === 'object' ? (prof as Record<string, unknown>) : {});
         } else if (code === 'ELECTRICITY') {
           const [master, prof, staff, daily, monthly] = await Promise.all([
             electricityApi.getMaster(id),
@@ -502,6 +508,26 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
           snpDailyStock={snpDailyStock}
+        />
+      </div>
+    );
+  }
+
+  if (deptCode === 'ARCS') {
+    const galleryImages = Array.isArray((arcsProfile as Record<string, unknown>)?.gallery_images)
+      ? ((arcsProfile as Record<string, unknown>).gallery_images as string[]).filter(
+          (u): u is string => typeof u === 'string',
+        )
+      : [];
+    const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
+    return (
+      <div className="page-container">
+        <Navbar />
+        <ArcsPortfolioDashboard
+          org={org}
+          profile={arcsProfile}
+          departmentName={departments.find((d) => d.id === org.department_id)?.name}
+          images={images}
         />
       </div>
     );

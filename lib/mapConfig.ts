@@ -131,6 +131,12 @@ export const ELECTRICITY_MARKER_ICON = MARKER_COLORS.yellow;
 /** Backend type for Electricity orgs; label now comes from i18n */
 export const ELECTRICITY_TYPE_LABEL = 'Electricity Office';
 
+/** ARCS cooperative societies – teal pin (SVG markers use ConstituencyMap helper) */
+export const ARCS_MARKER_ICON = MARKER_COLORS.purple;
+
+/** Legend fallback type when jurisdiction is missing */
+export const ARCS_TYPE_LABEL = 'Cooperative Society';
+
 /** Road types derived from name/code (NH, PWD, RD, etc.) for coloring */
 export type RoadTypeKey = 'NH' | 'PWD' | 'RD' | 'OTHER';
 
