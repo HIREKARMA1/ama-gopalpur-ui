@@ -55,7 +55,11 @@ const ELECTRICITY_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID/CODE,OWNERSHIP,PARENT ORGANIZATION,HIERARCHY LEVEL,HOST INSTITUTION (IF TRAINING CENTER),ESTABLISHED YEAR,COMMISSIONED YEAR (SUBSTATIONS),FULL ADDRESS,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE DESIGNATION,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,OFFICE HOURS,TOLL-FREE/CUSTOMER CARE NUMBER,HELPLINE AVAILABLE (YES/NO),VOLTAGE LEVEL PRIMARY (kV),VOLTAGE LEVEL SECONDARY (kV),INSTALLED CAPACITY (MVA),NO OF TRANSFORMERS,TRANSFORMER RATINGS MVA (COMMA SEPARATED),NO OF INCOMING FEEDERS,NO OF OUTGOING FEEDERS,TOTAL FEEDERS,BAYS (COUNT),SWITCHGEAR TYPE (GIS/AIS/HYBRID),33kV FEEDER LENGTH (KM),11kV FEEDER LENGTH (KM),LT LINE LENGTH (KM),NO OF DISTRIBUTION TRANSFORMERS (DTs),DT TOTAL CAPACITY (kVA),FEEDER METERING (YES/NO),FEEDER METERS (COUNT),DT METERING (YES/NO),DT METERS (COUNT),SMART METERS INSTALLED (COUNT),PREPAID METERS (COUNT),CONSUMER METERS TOTAL (COUNT),CONSUMERS UNDER JURISDICTION (APPROX),CONSUMERS DOMESTIC (COUNT),CONSUMERS COMMERCIAL (COUNT),CONSUMERS INDUSTRIAL (COUNT),CONSUMERS AGRICULTURAL (COUNT),CONSUMERS OTHER (COUNT),HT CONSUMERS (COUNT),LT CONSUMERS (COUNT),CONNECTED LOAD (MW),AT&C LOSS PERCENT,BILLING EFFICIENCY PERCENT,COLLECTION EFFICIENCY PERCENT,HOURS OF SUPPLY RURAL,HOURS OF SUPPLY URBAN,COMPLAINTS REGISTERED LAST YEAR,COMPLAINTS REDRESSED LAST YEAR,CONSUMER CARE COUNTER (YES/NO),BILLING FACILITY (YES/NO),ONLINE PAYMENT (YES/NO),MOBILE APP (YES/NO),ONLINE COMPLAINT PORTAL (YES/NO),CUSTOMER CARE EMAIL,GRIEVANCE REDRESSAL FORUM (YES/NO),TOTAL STAFF (COUNT),ENGINEERS (COUNT),TECHNICAL STAFF (COUNT),LINEMEN (COUNT),CONTRACT STAFF (COUNT),ADMIN/OFFICE STAFF (COUNT),VILLAGES/LOCALITIES COVERED (COUNT),GPs COVERED (COUNT),AREA COVERED SQ KM,BUILDING TYPE (OWN/RENTED),TOTAL FLOORS,OFFICE AREA SQ FT,TRAINING CENTER (YES/NO),TRAINING CAPACITY SEATS,WORKSHOP/GARAGE (YES/NO),STORE (YES/NO),DG SET (YES/NO),SOLAR (YES/NO),VEHICLES (COUNT),TWO-WHEELERS (COUNT),ANNUAL REVENUE CR (APPROX),BILLING CR LAST YEAR,DATA AS ON (YYYY-MM-DD),REMARKS/DESCRIPTION\n';
 
 const REVENUE_LAND_CSV_HEADER =
-  'TAHASIL,RI CIRCLE,BLOCK/ULB,GP/WARD,MOUZA/VILLAGE,HABITATION/LOCALITY,GOVT LAND ID,KHATA NO,PLOT NO,SUB-PLOT NO,LAND TYPE (GOVT/PRIVATE/OTHER),GOVT LAND CATEGORY (Gochar/Gramya Jungle/Sarbasadharan/Khasmahal/Nazul/Other),KISAM,KISAM DESCRIPTION,TOTAL AREA (ACRES),TOTAL AREA (HECTARES),TOTAL AREA (SQFT),ROR YEAR,DEPARTMENT RECORDED AS OWNER,DESCRIPTION\n';
+  'TAHASIL,RI CIRCLE,BLOCK/ULB,GP/WARD,MOUZA/VILLAGE,HABITATION/LOCALITY,KHATA NO,PLOT NO,LAND TYPE (GOVT/PRIVATE/OTHER),GOVT LAND CATEGORY (Gochar/Gramya Jungle/Sarbasadharan/Khasmahal/Nazul/Other),KISAM,KISAM DESCRIPTION,TOTAL AREA (ACRES),TOTAL AREA (HECTARES),TOTAL AREA (SQFT),ROR YEAR,DEPARTMENT RECORDED AS OWNER,DESCRIPTION,TAHASIL OFFICE ORG ID\n';
+
+// Tahasil offices under Revenue Govt Land.
+const REVENUE_TAHASIL_OFFICE_CSV_HEADER =
+  'SUB_DIVISION,BLOCK,VILLAGE/WARD,TAHSIL_NAME,TAHSIL_CODE,ESTABLISHED_YEAR,TAHSILDAR_NAME,CONTACT_NUMBER,EMAIL_ID,PIN_CODE,LATITUDE,LONGITUDE,TOTAL_AREA_SQ_KM,TOTAL_POPULATION,TOTAL_HOUSEHOLDS,TOTAL_VILLAGES,TOTAL_GRAM_PANCHAYATS,TOTAL_WARDS,URBAN_AREAS_COUNT,RURAL_AREAS_COUNT,TOTAL_REVENUE_VILLAGES,TOTAL_INHABITED_VILLAGES,TOTAL_UNINHABITED_VILLAGES,LARGEST_VILLAGE_NAME,SMALLEST_VILLAGE_NAME,TOTAL_PANCHAYAT_OFFICES,TOTAL_VILLAGE_ROADS_KM,TOTAL_WATER_BODIES,TOTAL_LAND_RECORDS,TOTAL_PRIVATE_LAND_ACRES,TOTAL_GOVERNMENT_LAND_ACRES,TOTAL_FOREST_LAND_ACRES,TOTAL_AGRICULTURAL_LAND_ACRES,TOTAL_RESIDENTIAL_LAND_ACRES,TOTAL_COMMERCIAL_LAND_ACRES,TOTAL_WASTE_LAND_ACRES,TOTAL_PLOT_RECORDS,TOTAL_KHATA_RECORDS,TOTAL_ROR_ISSUED,MUTATION_APPLICATIONS_RECEIVED_YEARLY,MUTATION_APPROVED,MUTATION_PENDING,MUTATION_REJECTED,AVG_MUTATION_PROCESSING_DAYS,TOTAL_ANNUAL_REVENUE,LAND_REVENUE_COLLECTION,STAMP_DUTY_COLLECTION,REGISTRATION_FEES,TAX_COLLECTION,PENALTY_COLLECTION,MONTHLY_REVENUE_TARGET,REVENUE_TARGET_ACHIEVED_PERCENT,CASTE_CERTIFICATES_ISSUED,INCOME_CERTIFICATES_ISSUED,RESIDENCE_CERTIFICATES_ISSUED,LEGAL_HEIR_CERTIFICATES,SOLVENCY_CERTIFICATES,TOTAL_CERTIFICATE_APPLICATIONS,CERTIFICATES_APPROVED,CERTIFICATES_PENDING,CERTIFICATES_REJECTED,AVG_CERTIFICATE_PROCESSING_DAYS,TOTAL_CASES_REGISTERED,CASES_RESOLVED,CASES_PENDING,OVERDUE_CASES,LAND_DISPUTE_CASES,CIVIL_CASES,CRIMINAL_CASES,AVG_CASE_RESOLUTION_DAYS,TOTAL_GRIEVANCES_RECEIVED,GRIEVANCES_RESOLVED,GRIEVANCES_PENDING,ONLINE_GRIEVANCES,OFFLINE_GRIEVANCES,AVG_GRIEVANCE_RESOLUTION_DAYS,TOTAL_SCHEMES_RUNNING,TOTAL_SCHEME_BENEFICIARIES,PMAY_BENEFICIARIES,MGNREGA_BENEFICIARIES,OLD_AGE_PENSION_BENEFICIARIES,DISABILITY_PENSION_BENEFICIARIES,WOMEN_WELFARE_SCHEME_BENEFICIARIES,STUDENT_SCHOLARSHIP_BENEFICIARIES,FUNDS_ALLOCATED,FUNDS_UTILIZED,FUNDS_REMAINING,TOTAL_SCHOOLS,TOTAL_COLLEGES,TOTAL_HOSPITALS,TOTAL_PRIMARY_HEALTH_CENTERS,TOTAL_ANGANWADI_CENTERS,TOTAL_POLICE_STATIONS,TOTAL_FIRE_STATIONS,TOTAL_BANKS,TOTAL_POST_OFFICES,TOTAL_MARKET_PLACES,TOTAL_ROADS_KM,TOTAL_BRIDGES,TOTAL_IRRIGATION_PROJECTS,TOTAL_WATER_SUPPLY_PROJECTS,TOTAL_STAFF,REVENUE_INSPECTORS_COUNT,AMIN_COUNT,CLERK_COUNT,DATA_ENTRY_OPERATORS,VACANT_POSTS,FILLED_POSTS,STAFF_TRAINED_IN_DIGITAL_SERVICES,TOTAL_COMPUTERS,INTERNET_AVAILABLE,CCTV_INSTALLED,ONLINE_SERVICES_AVAILABLE,TOTAL_ONLINE_APPLICATIONS,DIGITAL_RECORDS_PERCENTAGE,WEBSITE_AVAILABLE,ANNUAL_BUDGET_ALLOCATED,BUDGET_UTILIZED,BUDGET_REMAINING,DEVELOPMENT_EXPENDITURE,ADMIN_EXPENDITURE,WELFARE_EXPENDITURE,LITERACY_RATE_PERCENT,MALE_LITERACY_PERCENT,FEMALE_LITERACY_PERCENT,EMPLOYMENT_RATE_PERCENT,AGRICULTURE_DEPENDENT_PERCENT,IRRIGATED_LAND_PERCENT,DRINKING_WATER_COVERAGE_PERCENT,ELECTRICITY_COVERAGE_PERCENT,MAJOR_PROJECTS_RUNNING,UPCOMING_PROJECTS,KEY_CHALLENGES,ACHIEVEMENTS,AWARDS_RECEIVED,DESCRIPTION\n';
 
 const MINOR_IRRIGATION_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,MIP ID,NAME OF M.I.P,CATEGORY/TYPE,LATITUDE,LONGITUDE,LOCATION PRECISION (METER),CATCHMENT AREA (SQ KM),COMMAND AREA KHARIF (ACRES),COMMAND AREA RABI (ACRES),TOTAL AYACUT (ACRES),STORAGE CAPACITY (MCUM),MWL (FT),FRL (FT),TBL (FT),SPILLWAY TYPE,SPILLWAY WIDTH (FT),NO OF SLUICES,SLUICE TYPE,CONDITION,FUNCTIONALITY,MANAGED BY,LAST MAINTENANCE,SENSORS INSTALLED,LAST GEOTAGGED DATE,BENEFICIARY FARMERS COUNT,BENEFICIARY SC/ST COUNT,SANCTIONED AMT (LAKHS),EXPENDITURE (LAKHS),FOREST CLEARANCE (Y/N),REMARKS\n';
@@ -184,9 +188,9 @@ export default function DepartmentAdminPage() {
   const [irrigationFormValues, setIrrigationFormValues] = useState<Record<string, string>>({});
   const [editingIrrigationId, setEditingIrrigationId] = useState<number | null>(null);
   const [irrigationImageFile, setIrrigationImageFile] = useState<File | null>(null);
-  const [revenueFormValues, setRevenueFormValues] = useState<Record<string, string>>({});
-  const [revenueImageFile, setRevenueImageFile] = useState<File | null>(null);
-  const [editingRevenueId, setEditingRevenueId] = useState<number | null>(null);
+  const [revenueTahasilFormValues, setRevenueTahasilFormValues] = useState<Record<string, string>>({});
+  const [revenueTahasilImageFile, setRevenueTahasilImageFile] = useState<File | null>(null);
+  const [editingRevenueTahasilId, setEditingRevenueTahasilId] = useState<number | null>(null);
 
   const emptyAgricultureOrg = () => ({
     block_ulb: '',
@@ -505,7 +509,7 @@ export default function DepartmentAdminPage() {
           setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
         }
       } else if (deptCode === 'REVENUE_LAND') {
-        const result = await revenueLandApi.bulkCsv(file);
+        const result = await revenueLandApi.bulkTahasilOfficesCsv(file);
         if (result.errors?.length) {
           setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
         }
@@ -593,8 +597,8 @@ export default function DepartmentAdminPage() {
       csvContent = IRRIGATION_CSV_HEADER;
       filename = 'irrigation_template.csv';
     } else if (deptCode === 'REVENUE_LAND') {
-      csvContent = REVENUE_LAND_CSV_HEADER;
-      filename = 'revenue_govt_land_template.csv';
+      csvContent = REVENUE_TAHASIL_OFFICE_CSV_HEADER;
+      filename = 'revenue_tahasil_office_template.csv';
     } else if (deptCode === 'WATCO_RWSS') {
       csvContent = WATCO_CSV_HEADER;
       filename = 'watco_rwss_template.csv';
@@ -1438,11 +1442,12 @@ export default function DepartmentAdminPage() {
             {deptCode === 'REVENUE_LAND' && (
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">
-                  {editingRevenueId ? 'Edit land parcel' : 'Manual land parcel entry'}
+                  {editingRevenueTahasilId ? 'Edit Tahasil office' : 'Create Tahasil office'}
                 </h2>
                 <p className="mt-1 text-xs text-text-muted">
-                  Add a single Revenue Govt Land parcel manually. Key fields mirror the CSV template (Govt
-                  land ID and required parcel attributes).
+                  Tahasil offices appear on the public map first. Use the same <strong>TAHASIL</strong> profile
+                  value as in parcel rows (or link parcels with <strong>Tahasils office org ID</strong>) so
+                  parcels list under this office.
                 </p>
                 <form
                   className="mt-3 grid gap-3 text-xs md:grid-cols-2"
@@ -1452,122 +1457,105 @@ export default function DepartmentAdminPage() {
                       setError('Department is not set for this admin user.');
                       return;
                     }
-                    const govtLandIdKey = snakeFromHeader('GOVT LAND ID');
-                    const nameField = (revenueFormValues['name'] || '').trim();
-                    const govtLandId = (revenueFormValues[govtLandIdKey] || '').trim();
-                    const name = nameField || govtLandId;
-                    if (!name) {
-                      setError('Govt land ID (or Land parcel name) is required.');
+                    const tahasilHeaders = splitHeader(REVENUE_TAHASIL_OFFICE_CSV_HEADER);
+                    const tahsilNameKey = snakeFromHeader('TAHSIL_NAME');
+                    const officeNameKey = snakeFromHeader('OFFICE NAME');
+                    const latKey = snakeFromHeader('LATITUDE');
+                    const lngKey = snakeFromHeader('LONGITUDE');
+                    const addressKey = snakeFromHeader('ADDRESS');
+                    const tahasilKeyField = snakeFromHeader('TAHASIL');
+                    const name = (
+                      revenueTahasilFormValues[tahsilNameKey] ||
+                      revenueTahasilFormValues[officeNameKey] ||
+                      revenueTahasilFormValues[tahasilKeyField] ||
+                      ''
+                    ).trim();
+                    const latStr = (revenueTahasilFormValues[latKey] || '').trim();
+                    const lngStr = (revenueTahasilFormValues[lngKey] || '').trim();
+                    const tahasilKey = (
+                      revenueTahasilFormValues[tahasilKeyField] ||
+                      revenueTahasilFormValues[tahsilNameKey] ||
+                      ''
+                    ).trim();
+                    if (!name || !latStr || !lngStr) {
+                      setError('TAHSIL_NAME (or OFFICE NAME), latitude, and longitude are required.');
+                      return;
+                    }
+                    const lat = Number(latStr);
+                    const lng = Number(lngStr);
+                    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                      setError('Latitude and longitude must be valid numbers.');
                       return;
                     }
                     setCreating(true);
                     setError(null);
                     try {
-                      const tahasil = revenueFormValues[snakeFromHeader('TAHASIL')] || '';
-                      const block = revenueFormValues[snakeFromHeader('BLOCK/ULB')] || '';
-                      const gp = revenueFormValues[snakeFromHeader('GP/WARD')] || '';
-                      const mouza = revenueFormValues[snakeFromHeader('MOUZA/VILLAGE')] || '';
-                      const habitation =
-                        revenueFormValues[snakeFromHeader('HABITATION/LOCALITY')] || '';
-                      const addressParts = [habitation, mouza, gp, block, tahasil].filter((p) => p && p.trim());
-
-                      let orgId = editingRevenueId;
-                      if (editingRevenueId) {
-                        const updatedOrg = await organizationsApi.update(editingRevenueId, {
-                          name,
-                          address: addressParts.length ? addressParts.join(', ') : undefined,
-                          attributes: {
-                            tahasil: tahasil || null,
-                            block_ulb: block || null,
-                            gp_ward: gp || null,
-                            mouza_village: mouza || null,
-                            habitation_locality: habitation || null,
-                          } as Record<string, string | number | null>,
-                        });
-                        setOrgs((prev) => prev.map((o) => (o.id === editingRevenueId ? updatedOrg : o)));
-                      } else {
-                        const org = await organizationsApi.create({
-                          department_id: me.department_id,
-                          name,
-                          type: 'OTHER',
-                          address: addressParts.length ? addressParts.join(', ') : undefined,
-                          attributes: {
-                            tahasil: tahasil || null,
-                            block_ulb: block || null,
-                            gp_ward: gp || null,
-                            mouza_village: mouza || null,
-                            habitation_locality: habitation || null,
-                          } as Record<string, string | number | null>,
-                        });
-                        orgId = org.id;
-                        setOrgs((prev) => [org, ...prev]);
-                      }
-
+                      const orgPayload = {
+                        name,
+                        latitude: lat,
+                        longitude: lng,
+                        address: (revenueTahasilFormValues[addressKey] || '').trim() || undefined,
+                        sub_department: 'TAHASIL_OFFICE',
+                      };
+                      const savedOrg = editingRevenueTahasilId
+                        ? await organizationsApi.update(editingRevenueTahasilId, orgPayload)
+                        : await organizationsApi.create({
+                            department_id: me.department_id,
+                            type: 'OTHER',
+                            ...orgPayload,
+                          });
+                      const orgId = savedOrg.id;
+                      setOrgs((prev) =>
+                        editingRevenueTahasilId
+                          ? prev.map((o) => (o.id === savedOrg.id ? savedOrg : o))
+                          : [savedOrg, ...prev],
+                      );
                       if (orgId == null) throw new Error('Failed to identify organization');
                       const orgIdNum: number = orgId;
-
-                      // Build profile data from the CSV header
-                      const profileData: Record<string, unknown> = {};
-                      splitHeader(REVENUE_LAND_CSV_HEADER).forEach((header) => {
+                      const profilePayload: Record<string, unknown> = {};
+                      tahasilHeaders.forEach((header) => {
                         const key = snakeFromHeader(header);
-                        const val = revenueFormValues[key];
-                        if (val != null && String(val).trim() !== '') {
-                          profileData[key] = val;
-                        }
+                        const val = (revenueTahasilFormValues[key] || '').trim();
+                        if (val) profilePayload[key] = val;
                       });
-                      profileData[govtLandIdKey] = govtLandId || name;
+                      // Keep a canonical key used by parcel-link logic and existing dashboards.
+                      if (tahasilKey) profilePayload.tahasil = tahasilKey;
 
-                      const saved = await revenueLandApi.putProfile(orgIdNum, profileData);
+                      await revenueLandApi.putProfile(orgIdNum, profilePayload);
+                      if (revenueTahasilImageFile) {
+                        const compressed = await compressImage(revenueTahasilImageFile, { maxSizeMB: 0.5 });
+                        const updatedOrg = await organizationsApi.uploadCoverImage(orgIdNum, compressed);
+                        setOrgs((prev) => prev.map((o) => (o.id === updatedOrg.id ? updatedOrg : o)));
+                        setRevenueTahasilImageFile(null);
+                      }
+                      const prof = await revenueLandApi.getProfile(orgIdNum);
                       setRevenueProfiles((prev) => ({
                         ...prev,
-                        [orgIdNum]: (saved && typeof saved === 'object' ? saved : profileData) as Record<
-                          string,
-                          unknown
-                        >,
+                        [orgIdNum]: (prof && typeof prof === 'object' ? prof : {}) as Record<string, unknown>,
                       }));
-
-                      if (revenueImageFile) {
-                        const compressed = await compressImage(revenueImageFile, { maxSizeMB: 0.5 });
-                        await organizationsApi.uploadCoverImage(orgIdNum, compressed);
-                        setRevenueImageFile(null);
-                      }
-
-                      setRevenueFormValues({});
-                      setEditingRevenueId(null);
+                      setRevenueTahasilFormValues({});
+                      setEditingRevenueTahasilId(null);
                     } catch (err: any) {
-                      setError(err.message || 'Failed to save land parcel');
+                      setError(err.message || 'Failed to save Tahasil office');
                     } finally {
                       setCreating(false);
                     }
                   }}
                 >
-                  <div className="md:col-span-2 space-y-1">
-                    <label className="block text-text">Land parcel name</label>
-                    <input
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
-                      value={revenueFormValues['name'] || ''}
-                      onChange={(e) =>
-                        setRevenueFormValues((s) => ({ ...s, name: e.target.value }))
-                      }
-                    />
-                  </div>
-                  {splitHeader(REVENUE_LAND_CSV_HEADER).map((header) => {
+                  {splitHeader(REVENUE_TAHASIL_OFFICE_CSV_HEADER).map((header) => {
                     const key = snakeFromHeader(header);
                     return (
-                      <div key={key} className="space-y-1">
-                        <label className="block text-text">{header}</label>
-                        <input
-                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
-                          value={revenueFormValues[key] ?? ''}
-                          onChange={(e) =>
-                            setRevenueFormValues((prev) => ({
-                              ...prev,
-                              [key]: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                    );
+                    <div key={key} className="space-y-1">
+                      <label className="block text-text">{header}</label>
+                      <input
+                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                        value={revenueTahasilFormValues[key] ?? ''}
+                        onChange={(e) =>
+                          setRevenueTahasilFormValues((prev) => ({ ...prev, [key]: e.target.value }))
+                        }
+                      />
+                    </div>
+                  );
                   })}
                   <div className="md:col-span-2 space-y-1">
                     <label className="block text-text font-medium">Profile Image</label>
@@ -1575,34 +1563,35 @@ export default function DepartmentAdminPage() {
                       type="file"
                       accept="image/*"
                       className="w-full text-xs text-text file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                      onChange={(e) => setRevenueImageFile(e.target.files?.[0] || null)}
+                      onChange={(e) => setRevenueTahasilImageFile(e.target.files?.[0] || null)}
                     />
                   </div>
-                  <div className="md:col-span-2 flex items-center space-x-2">
+                  <div className="md:col-span-2 flex items-center gap-2">
                     <button
                       type="submit"
                       disabled={creating}
                       className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
                     >
-                      {creating ? (editingRevenueId ? 'Updating...' : 'Saving...') : (editingRevenueId ? 'Update land parcel' : 'Save land parcel')}
+                      {creating ? 'Saving…' : editingRevenueTahasilId ? 'Update Tahasil office' : 'Save Tahasil office'}
                     </button>
-                    {editingRevenueId && (
+                    {editingRevenueTahasilId && (
                       <button
                         type="button"
+                        className="mt-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text hover:bg-gray-50"
                         onClick={() => {
-                          setEditingRevenueId(null);
-                          setRevenueFormValues({});
-                          setRevenueImageFile(null);
+                          setEditingRevenueTahasilId(null);
+                          setRevenueTahasilFormValues({});
+                          setRevenueTahasilImageFile(null);
                         }}
-                        className="mt-1 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-text hover:bg-gray-50 disabled:opacity-60"
                       >
-                        Cancel
+                        Cancel edit
                       </button>
                     )}
                   </div>
                 </form>
               </section>
             )}
+
 
             {deptCode === 'MINOR_IRRIGATION' && (
               <section className="rounded-lg border border-border bg-background p-4">
@@ -2591,7 +2580,9 @@ export default function DepartmentAdminPage() {
                         ? 'Upload WATCO/RWSS water supply CSV. Schemes will be created or updated by STATION NAME, LATITUDE, LONGITUDE.'
                         : deptCode === 'MINOR_IRRIGATION'
                           ? 'Upload Minor Irrigation CSV. Projects will be created or updated by NAME OF M.I.P, LATITUDE, LONGITUDE.'
-                          : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
+                          : deptCode === 'REVENUE_LAND'
+                            ? 'Upload Tahasil portfolio CSV. Organizations will be created/updated by TAHSIL_NAME (or OFFICE NAME), LATITUDE, LONGITUDE, and all additional attributes are saved to profile.'
+                            : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
               </p>
               <div className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center md:justify-between">
                 <button
@@ -2620,10 +2611,13 @@ export default function DepartmentAdminPage() {
             </section>
 
             <section className="rounded-lg border border-border bg-background p-4">
-              <h2 className="text-sm font-semibold text-text">Organizations in your department</h2>
+              <h2 className="text-sm font-semibold text-text">
+                {deptCode === 'REVENUE_LAND' ? 'Tahasil offices' : 'Organizations in your department'}
+              </h2>
               <p className="mt-1 text-xs text-text-muted">
-                You can see and delete organizations for your department. (Full edit UI will be added on
-                top of this.)
+                {deptCode === 'REVENUE_LAND'
+                  ? 'Click a Tahasil row to open its profile and add land parcels under it.'
+                  : 'You can see and delete organizations for your department. (Full edit UI will be added on top of this.)'}
               </p>
               <div className="mt-3 overflow-x-auto">
                 <table className="min-w-full border-collapse text-xs">
@@ -2646,7 +2640,7 @@ export default function DepartmentAdminPage() {
                                   : deptCode === 'IRRIGATION'
                                     ? 'Work Name'
                                     : deptCode === 'REVENUE_LAND'
-                                      ? 'Land Parcel'
+                                      ? 'Tahasil / parcel name'
                                       : deptCode === 'AGRICULTURE'
                                         ? 'Name of Office/Centre'
                                         : 'AWC Name'}
@@ -2684,11 +2678,12 @@ export default function DepartmentAdminPage() {
                       )}
                       {deptCode === 'REVENUE_LAND' && (
                         <>
-                          {splitHeader(REVENUE_LAND_CSV_HEADER).map((header) => (
-                            <th key={header} className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">
-                              {header}
-                            </th>
-                          ))}
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Tahasil Code</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Established Year</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Block / ULB</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Contact</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Latitude</th>
+                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Longitude</th>
                         </>
                       )}
                       {deptCode === 'AGRICULTURE' && (
@@ -2851,341 +2846,663 @@ export default function DepartmentAdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {orgs.map((o, idx) => {
-                      const prof = orgProfiles[o.id];
-                      const hp = healthProfiles[o.id];
-                      const ep = educationProfiles[o.id];
-                      const wp = waterProfiles[o.id];
-                      const mp = minorIrrigationProfiles[o.id];
-                      const ip = irrigationProfiles[o.id];
-                      const rp = revenueProfiles[o.id];
-                      const ap = agricultureProfiles[o.id];
-                      const _ = (v: string | number | null | undefined | unknown) => (v != null && String(v).trim() !== '' ? String(v) : '—');
-                      return (
-                        <tr key={o.id} className="border-b border-border/60">
-                          <td className="px-2 py-1 text-text-muted">{page * PAGE_SIZE + idx + 1}</td>
-                          <td className="px-2 py-1">{o.name}</td>
-                          {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'WATCO_RWSS' && deptCode !== 'ELECTRICITY' && deptCode !== 'MINOR_IRRIGATION' && deptCode !== 'IRRIGATION' && deptCode !== 'REVENUE_LAND' && deptCode !== 'AGRICULTURE') && (
-                            <>
-                              <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ulb_block ?? prof?.block_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_name ?? prof?.gram_panchayat)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ward_village ?? prof?.village_ward)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(prof?.center_code)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(prof?.building_type)}</td>
-                              <td className="px-2 py-1 text-text-muted">{o.latitude != null ? o.latitude.toFixed(6) : '—'}</td>
-                              <td className="px-2 py-1 text-text-muted">{o.longitude != null ? o.longitude.toFixed(6) : '—'}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(prof?.student_strength)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(prof?.cpdo_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(prof?.cpdo_contact_no)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(prof?.supervisor_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(prof?.supervisor_contact_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(prof?.worker_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(prof?.aww_contact_no)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(prof?.helper_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(prof?.awh_contact_no)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(o.attributes?.sector ?? prof?.sector)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(o.attributes?.lgd_code)}</td>
-                            </>
-                          )}
-                          {deptCode === 'WATCO_RWSS' && (
-                            <>
-                              {splitHeader(WATCO_CSV_HEADER).filter(h => h !== 'STATION NAME').map((header) => {
-                                const key = snakeFromHeader(header);
-                                const val = wp ? (wp as Record<string, unknown>)[key] : undefined;
-                                return (
-                                  <td key={key} className="px-2 py-1 text-text-muted">
-                                    {val != null && String(val).trim() !== '' ? String(val) : '—'}
-                                  </td>
-                                );
-                              })}
-                            </>
-                          )}
-                          {deptCode === 'REVENUE_LAND' && (
-                            <>
-                              {splitHeader(REVENUE_LAND_CSV_HEADER).map((header) => {
-                                const key = snakeFromHeader(header);
-                                const val = rp ? (rp as Record<string, unknown>)[key] : undefined;
-                                return (
-                                  <td key={key} className="px-2 py-1 text-text-muted">
-                                    {_(val)}
-                                  </td>
-                                );
-                              })}
-                            </>
-                          )}
-                          {deptCode === 'AGRICULTURE' && (
-                            <>
-                              {splitHeader(AGRICULTURE_CSV_HEADER).map((header) => {
-                                const key = snakeFromHeader(header);
-                                const data = ap as Record<string, unknown> | undefined;
-                                let val: unknown = data ? data[key] : undefined;
-                                if (header === 'BLOCK/ULB') {
-                                  val = (data && (data.block_ulb as unknown)) ?? o.attributes?.ulb_block;
-                                }
-                                if (header === 'GP/WARD') {
-                                  val = (data && (data.gp_ward as unknown)) ?? o.attributes?.gp_name;
-                                }
-                                if (header === 'VILLAGE/LOCALITY') {
-                                  val = (data && (data.village_locality as unknown)) ?? o.attributes?.ward_village;
-                                }
-                                if (header === 'NAME OF OFFICE/CENTER') {
-                                  val = o.name;
-                                }
-                                if (header === 'LATITUDE') {
-                                  val = o.latitude != null ? o.latitude.toFixed(6) : val;
-                                }
-                                if (header === 'LONGITUDE') {
-                                  val = o.longitude != null ? o.longitude.toFixed(6) : val;
-                                }
-                                return (
-                                  <td key={key} className="px-2 py-1 text-text-muted">
-                                    {_(val)}
-                                  </td>
-                                );
-                              })}
-                            </>
-                          )}
-                          {deptCode === 'MINOR_IRRIGATION' && (
-                            <>
-                              {splitHeader(MINOR_IRRIGATION_CSV_HEADER).map((header) => {
-                                if (header === 'NAME OF M.I.P') return null;
-                                const key = snakeFromHeader(header);
-                                const data = mp as Record<string, unknown> | undefined;
-                                let val: unknown = data ? data[key] : undefined;
-                                if (header === 'MIP ID') {
-                                  val = data ? data[key] : undefined;
-                                }
-                                if (header === 'LATITUDE') {
-                                  val = o.latitude != null ? o.latitude : val;
-                                }
-                                if (header === 'LONGITUDE') {
-                                  val = o.longitude != null ? o.longitude : val;
-                                }
-                                return (
-                                  <td key={key} className="px-2 py-1 text-text-muted">
-                                    {_(val)}
-                                  </td>
-                                );
-                              })}
-                            </>
-                          )}
-                          {deptCode === 'IRRIGATION' && (
-                            <>
-                              {splitHeader(IRRIGATION_CSV_HEADER).map((header) => {
-                                if (header === 'WORK NAME') return null;
-                                const key = snakeFromHeader(header);
-                                const data = ip as Record<string, unknown> | undefined;
-                                let val: unknown = data ? data[key] : undefined;
-                                if (header === 'BLOCK/ULB') {
-                                  val = (data && (data.block_ulb as unknown)) ?? o.attributes?.ulb_block;
-                                }
-                                if (header === 'GP/WARD') {
-                                  val = (data && (data.gp_ward as unknown)) ?? o.attributes?.gp_name;
-                                }
-                                if (header === 'VILLAGE/ LOCALITY') {
-                                  val = (data && (data.village_locality as unknown)) ?? o.attributes?.ward_village;
-                                }
-                                if (header === 'LATITUDE') {
-                                  val = o.latitude != null ? o.latitude : val;
-                                }
-                                if (header === 'LONGITUDE') {
-                                  val = o.longitude != null ? o.longitude : val;
-                                }
-                                return (
-                                  <td key={key} className="px-2 py-1 text-text-muted">
-                                    {_(val)}
-                                  </td>
-                                );
-                              })}
-                            </>
-                          )}
-                          {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
-                            <>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.block_ulb ?? o.attributes?.ulb_block)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.gp_ward ?? o.attributes?.gp_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.village ?? o.attributes?.ward_village)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.school_id)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.esst_year)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.category)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.class_i)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.class_ii)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.class_iii)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.class_iv)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.class_v)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.class_vi)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.class_vii)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.class_viii)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.class_ix)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.class_x)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.deo_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.deo_contact)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.beo_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.beo_contact)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.brcc_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.brcc_contact)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.crcc_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.crcc_contact)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.name_of_hm)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.contact_of_hm)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_ts)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_nts)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_tgp_pcm)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_tgp_cbz)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_tgt_arts)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.building_status)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_rooms)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_smart_class_rooms)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.science_lab)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.toilet_m)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.toilet_f)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.ramp)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.meeting_hall)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.staff_common_room)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.ncc)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.nss)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.jrc)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.eco_club)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.library)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.icc_head_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.icc_head_contact)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.play_ground)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.cycle_stand)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.drinking_water_tw)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.drinking_water_tap)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.drinking_water_overhead_tap)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(ep?.drinking_water_aquaguard)}</td>
-                              <td className="px-2 py-1 text-text-muted">{o.latitude != null ? o.latitude.toFixed(6) : '—'}</td>
-                              <td className="px-2 py-1 text-text-muted">{o.longitude != null ? o.longitude.toFixed(6) : '—'}</td>
-                            </>
-                          )}
-                          {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
-                            <>
-                              {getEducationHeadersForSubDept(educationSubDept).map((header) => {
-                                const key = snakeFromHeader(header);
-                                const val = ep ? ep[key] : undefined;
-                                const show = (v: unknown) =>
-                                  v != null && String(v).trim() !== '' ? String(v) : '—';
-                                if (key === 'latitude') {
+                    {(deptCode === 'REVENUE_LAND' ? orgs.filter((o) => o.sub_department === 'TAHASIL_OFFICE') : orgs).map(
+                      (o, idx) => {
+                        const prof = orgProfiles[o.id];
+                        const hp = healthProfiles[o.id];
+                        const ep = educationProfiles[o.id];
+                        const wp = waterProfiles[o.id];
+                        const mp = minorIrrigationProfiles[o.id];
+                        const ip = irrigationProfiles[o.id];
+                        const rp = revenueProfiles[o.id];
+                        const ap = agricultureProfiles[o.id];
+                        const _ = (v: string | number | null | undefined | unknown) => (v != null && String(v).trim() !== '' ? String(v) : '—');
+                        return (
+                          <tr
+                            key={o.id}
+                            className="border-b border-border/60 cursor-pointer"
+                            onClick={() => {
+                              if (deptCode !== 'REVENUE_LAND') return;
+                              router.push(`/admin/dept/revenue-land/tahasil/${o.id}`);
+                            }}
+                          >
+                            <td className="px-2 py-1 text-text-muted">{page * PAGE_SIZE + idx + 1}</td>
+                            <td className="px-2 py-1">
+                              {deptCode === 'REVENUE_LAND' ? (
+                                <>
+                                  <span className="mr-2 inline-block rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-600">
+                                    Tahasil
+                                  </span>
+                                  {o.name}
+                                  {rp?.tahasil && (
+                                    <div className="mt-0.5 text-[10px] text-text-muted">
+                                      Tahasil key: {_(rp.tahasil)}
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                o.name
+                              )}
+                            </td>
+                            {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'WATCO_RWSS' && deptCode !== 'ELECTRICITY' && deptCode !== 'MINOR_IRRIGATION' && deptCode !== 'IRRIGATION' && deptCode !== 'REVENUE_LAND' && deptCode !== 'AGRICULTURE') && (
+                              <>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ulb_block ?? prof?.block_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_name ?? prof?.gram_panchayat)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ward_village ?? prof?.village_ward)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(prof?.center_code)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(prof?.building_type)}</td>
+                                <td className="px-2 py-1 text-text-muted">{o.latitude != null ? o.latitude.toFixed(6) : '—'}</td>
+                                <td className="px-2 py-1 text-text-muted">{o.longitude != null ? o.longitude.toFixed(6) : '—'}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(prof?.student_strength)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(prof?.cpdo_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(prof?.cpdo_contact_no)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(prof?.supervisor_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(prof?.supervisor_contact_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(prof?.worker_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(prof?.aww_contact_no)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(prof?.helper_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(prof?.awh_contact_no)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.sector ?? prof?.sector)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.lgd_code)}</td>
+                              </>
+                            )}
+                            {deptCode === 'WATCO_RWSS' && (
+                              <>
+                                {splitHeader(WATCO_CSV_HEADER).filter(h => h !== 'STATION NAME').map((header) => {
+                                  const key = snakeFromHeader(header);
+                                  const val = wp ? (wp as Record<string, unknown>)[key] : undefined;
                                   return (
                                     <td key={key} className="px-2 py-1 text-text-muted">
-                                      {o.latitude != null ? o.latitude.toFixed(6) : '—'}
+                                      {val != null && String(val).trim() !== '' ? String(val) : '—'}
                                     </td>
                                   );
-                                }
-                                if (key === 'longitude') {
+                                })}
+                              </>
+                            )}
+                            {deptCode === 'REVENUE_LAND' && (
+                              <>
+                                <td className="px-2 py-1 text-text-muted">{_(rp?.tahsil_code)}</td>
+                                <td className="px-2 py-1 text-text-muted">
+                                  {_(rp?.established_year ?? rp?.establishment_year)}
+                                </td>
+                                <td className="px-2 py-1 text-text-muted">{_(rp?.block_ulb ?? rp?.block)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(rp?.contact_number)}</td>
+                                <td className="px-2 py-1 text-text-muted">
+                                  {o.latitude != null ? o.latitude.toFixed(6) : '—'}
+                                </td>
+                                <td className="px-2 py-1 text-text-muted">
+                                  {o.longitude != null ? o.longitude.toFixed(6) : '—'}
+                                </td>
+                              </>
+                            )}
+                            {deptCode === 'AGRICULTURE' && (
+                              <>
+                                {splitHeader(AGRICULTURE_CSV_HEADER).map((header) => {
+                                  const key = snakeFromHeader(header);
+                                  const data = ap as Record<string, unknown> | undefined;
+                                  let val: unknown = data ? data[key] : undefined;
+                                  if (header === 'BLOCK/ULB') {
+                                    val = (data && (data.block_ulb as unknown)) ?? o.attributes?.ulb_block;
+                                  }
+                                  if (header === 'GP/WARD') {
+                                    val = (data && (data.gp_ward as unknown)) ?? o.attributes?.gp_name;
+                                  }
+                                  if (header === 'VILLAGE/LOCALITY') {
+                                    val = (data && (data.village_locality as unknown)) ?? o.attributes?.ward_village;
+                                  }
+                                  if (header === 'NAME OF OFFICE/CENTER') {
+                                    val = o.name;
+                                  }
+                                  if (header === 'LATITUDE') {
+                                    val = o.latitude != null ? o.latitude.toFixed(6) : val;
+                                  }
+                                  if (header === 'LONGITUDE') {
+                                    val = o.longitude != null ? o.longitude.toFixed(6) : val;
+                                  }
                                   return (
                                     <td key={key} className="px-2 py-1 text-text-muted">
-                                      {o.longitude != null ? o.longitude.toFixed(6) : '—'}
+                                      {_(val)}
                                     </td>
                                   );
-                                }
-                                return (
-                                  <td key={key} className="px-2 py-1 text-text-muted">
-                                    {show(val)}
-                                  </td>
-                                );
-                              })}
-                            </>
-                          )}
-                          {deptCode === 'ELECTRICITY' && (
-                            <>
-                              {splitHeader(ELECTRICITY_CSV_HEADER).map((header) => {
-                                if (header === 'NAME OF OFFICE/CENTER') return null;
-                                const key = snakeFromHeader(header);
-                                const val = electricityProfiles[o.id] ? electricityProfiles[o.id][key] : undefined;
-                                if (key === 'latitude') {
+                                })}
+                              </>
+                            )}
+                            {deptCode === 'MINOR_IRRIGATION' && (
+                              <>
+                                {splitHeader(MINOR_IRRIGATION_CSV_HEADER).map((header) => {
+                                  if (header === 'NAME OF M.I.P') return null;
+                                  const key = snakeFromHeader(header);
+                                  const data = mp as Record<string, unknown> | undefined;
+                                  let val: unknown = data ? data[key] : undefined;
+                                  if (header === 'MIP ID') {
+                                    val = data ? data[key] : undefined;
+                                  }
+                                  if (header === 'LATITUDE') {
+                                    val = o.latitude != null ? o.latitude : val;
+                                  }
+                                  if (header === 'LONGITUDE') {
+                                    val = o.longitude != null ? o.longitude : val;
+                                  }
                                   return (
                                     <td key={key} className="px-2 py-1 text-text-muted">
-                                      {o.latitude != null ? o.latitude.toFixed(6) : '—'}
+                                      {_(val)}
                                     </td>
                                   );
-                                }
-                                if (key === 'longitude') {
+                                })}
+                              </>
+                            )}
+                            {deptCode === 'IRRIGATION' && (
+                              <>
+                                {splitHeader(IRRIGATION_CSV_HEADER).map((header) => {
+                                  if (header === 'WORK NAME') return null;
+                                  const key = snakeFromHeader(header);
+                                  const data = ip as Record<string, unknown> | undefined;
+                                  let val: unknown = data ? data[key] : undefined;
+                                  if (header === 'BLOCK/ULB') {
+                                    val = (data && (data.block_ulb as unknown)) ?? o.attributes?.ulb_block;
+                                  }
+                                  if (header === 'GP/WARD') {
+                                    val = (data && (data.gp_ward as unknown)) ?? o.attributes?.gp_name;
+                                  }
+                                  if (header === 'VILLAGE/ LOCALITY') {
+                                    val = (data && (data.village_locality as unknown)) ?? o.attributes?.ward_village;
+                                  }
+                                  if (header === 'LATITUDE') {
+                                    val = o.latitude != null ? o.latitude : val;
+                                  }
+                                  if (header === 'LONGITUDE') {
+                                    val = o.longitude != null ? o.longitude : val;
+                                  }
                                   return (
                                     <td key={key} className="px-2 py-1 text-text-muted">
-                                      {o.longitude != null ? o.longitude.toFixed(6) : '—'}
+                                      {_(val)}
                                     </td>
                                   );
-                                }
-                                return (
-                                  <td key={key} className="px-2 py-1 text-text-muted">
-                                    {_(val)}
-                                  </td>
-                                );
-                              })}
-                            </>
-                          )}
-                          {deptCode === 'HEALTH' && (
-                            <>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.block_ulb ?? o.attributes?.ulb_block)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.gp_ward ?? o.attributes?.gp_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.village ?? o.attributes?.ward_village)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.institution_id)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.category)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.inst_head_name)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.inst_head_contact)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_ts)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_nts)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_mo)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_pharmacist)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_anm)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_health_worker)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_pathology)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_clerk)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_sweeper)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_nw)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_bed)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_icu)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.x_ray_availabilaty)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.ct_scan_availability)}</td>
-                              <td className="px-2 py-1 text-text-muted">{_(hp?.availability_of_pathology_testing)}</td>
-                              <td className="px-2 py-1 text-text-muted">{o.latitude != null ? o.latitude.toFixed(6) : '—'}</td>
-                              <td className="px-2 py-1 text-text-muted">{o.longitude != null ? o.longitude.toFixed(6) : '—'}</td>
-                            </>
-                          )}
-                          <td className="px-2 py-1 space-x-1">
-                            <Link
-                              href={`/organizations/${o.id}`}
-                              className="rounded border border-primary/50 px-2 py-0.5 text-[11px] text-primary hover:bg-primary/10"
-                            >
-                              View profile
-                            </Link>
-                            {/* ICDS / non-specialized departments (not Health, Education, Electricity, Water, Minor Irrigation, Irrigation, Revenue, Agriculture) */}
-                            {deptCode !== 'EDUCATION' &&
-                              deptCode !== 'HEALTH' &&
-                              deptCode !== 'ELECTRICITY' &&
-                              deptCode !== 'WATCO_RWSS' &&
-                              deptCode !== 'MINOR_IRRIGATION' &&
-                              deptCode !== 'IRRIGATION' &&
-                              deptCode !== 'REVENUE_LAND' &&
-                              deptCode !== 'AGRICULTURE' && (
+                                })}
+                              </>
+                            )}
+                            {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
+                              <>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.block_ulb ?? o.attributes?.ulb_block)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.gp_ward ?? o.attributes?.gp_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.village ?? o.attributes?.ward_village)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.school_id)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.esst_year)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.category)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_i)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_ii)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_iii)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_iv)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_v)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_vi)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_vii)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_viii)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_ix)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_x)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.deo_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.deo_contact)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.beo_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.beo_contact)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.brcc_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.brcc_contact)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.crcc_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.crcc_contact)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.name_of_hm)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.contact_of_hm)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_ts)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_nts)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_tgp_pcm)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_tgp_cbz)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_tgt_arts)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.building_status)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_rooms)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.no_of_smart_class_rooms)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.science_lab)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.toilet_m)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.toilet_f)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.ramp)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.meeting_hall)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.staff_common_room)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.ncc)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.nss)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.jrc)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.eco_club)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.library)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.icc_head_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.icc_head_contact)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.play_ground)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.cycle_stand)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.drinking_water_tw)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.drinking_water_tap)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.drinking_water_overhead_tap)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(ep?.drinking_water_aquaguard)}</td>
+                                <td className="px-2 py-1 text-text-muted">{o.latitude != null ? o.latitude.toFixed(6) : '—'}</td>
+                                <td className="px-2 py-1 text-text-muted">{o.longitude != null ? o.longitude.toFixed(6) : '—'}</td>
+                              </>
+                            )}
+                            {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
+                              <>
+                                {getEducationHeadersForSubDept(educationSubDept).map((header) => {
+                                  const key = snakeFromHeader(header);
+                                  const val = ep ? ep[key] : undefined;
+                                  const show = (v: unknown) =>
+                                    v != null && String(v).trim() !== '' ? String(v) : '—';
+                                  if (key === 'latitude') {
+                                    return (
+                                      <td key={key} className="px-2 py-1 text-text-muted">
+                                        {o.latitude != null ? o.latitude.toFixed(6) : '—'}
+                                      </td>
+                                    );
+                                  }
+                                  if (key === 'longitude') {
+                                    return (
+                                      <td key={key} className="px-2 py-1 text-text-muted">
+                                        {o.longitude != null ? o.longitude.toFixed(6) : '—'}
+                                      </td>
+                                    );
+                                  }
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {show(val)}
+                                    </td>
+                                  );
+                                })}
+                              </>
+                            )}
+                            {deptCode === 'ELECTRICITY' && (
+                              <>
+                                {splitHeader(ELECTRICITY_CSV_HEADER).map((header) => {
+                                  if (header === 'NAME OF OFFICE/CENTER') return null;
+                                  const key = snakeFromHeader(header);
+                                  const val = electricityProfiles[o.id] ? electricityProfiles[o.id][key] : undefined;
+                                  if (key === 'latitude') {
+                                    return (
+                                      <td key={key} className="px-2 py-1 text-text-muted">
+                                        {o.latitude != null ? o.latitude.toFixed(6) : '—'}
+                                      </td>
+                                    );
+                                  }
+                                  if (key === 'longitude') {
+                                    return (
+                                      <td key={key} className="px-2 py-1 text-text-muted">
+                                        {o.longitude != null ? o.longitude.toFixed(6) : '—'}
+                                      </td>
+                                    );
+                                  }
+                                  return (
+                                    <td key={key} className="px-2 py-1 text-text-muted">
+                                      {_(val)}
+                                    </td>
+                                  );
+                                })}
+                              </>
+                            )}
+                            {deptCode === 'HEALTH' && (
+                              <>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.block_ulb ?? o.attributes?.ulb_block)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.gp_ward ?? o.attributes?.gp_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.village ?? o.attributes?.ward_village)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.institution_id)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.category)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.inst_head_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.inst_head_contact)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_ts)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_nts)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_mo)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_pharmacist)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_anm)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_health_worker)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_pathology)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_clerk)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_sweeper)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_nw)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_bed)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.no_of_icu)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.x_ray_availabilaty)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.ct_scan_availability)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(hp?.availability_of_pathology_testing)}</td>
+                                <td className="px-2 py-1 text-text-muted">{o.latitude != null ? o.latitude.toFixed(6) : '—'}</td>
+                                <td className="px-2 py-1 text-text-muted">{o.longitude != null ? o.longitude.toFixed(6) : '—'}</td>
+                              </>
+                            )}
+                            <td className="px-2 py-1 space-x-1">
+                              {deptCode !== 'REVENUE_LAND' && (
+                                <Link
+                                  href={`/organizations/${o.id}`}
+                                  className="rounded border border-primary/50 px-2 py-0.5 text-[11px] text-primary hover:bg-primary/10"
+                                >
+                                  View profile
+                                </Link>
+                              )}
+                              {/* ICDS / non-specialized departments (not Health, Education, Electricity, Water, Minor Irrigation, Irrigation, Revenue, Agriculture) */}
+                              {deptCode !== 'EDUCATION' &&
+                                deptCode !== 'HEALTH' &&
+                                deptCode !== 'ELECTRICITY' &&
+                                deptCode !== 'WATCO_RWSS' &&
+                                deptCode !== 'MINOR_IRRIGATION' &&
+                                deptCode !== 'IRRIGATION' &&
+                                deptCode !== 'REVENUE_LAND' &&
+                                deptCode !== 'AGRICULTURE' && (
+                                  <button
+                                    type="button"
+                                    className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                    onClick={async () => {
+                                      setEditingOrgId(o.id);
+                                      const p = await profileApi.getCenterProfile(o.id);
+                                      setNewOrg({
+                                        ulb_block: String(o.attributes?.ulb_block ?? p?.block_name ?? ''),
+                                        gp_name: String(o.attributes?.gp_name ?? p?.gram_panchayat ?? ''),
+                                        ward_village: String(o.attributes?.ward_village ?? p?.village_ward ?? ''),
+                                        sector: String(o.attributes?.sector ?? p?.sector ?? ''),
+                                        awc_name: o.name,
+                                        awc_id: String(p?.center_code ?? ''),
+                                        building_status: String(p?.building_type ?? ''),
+                                        latitude: o.latitude != null ? String(o.latitude) : '',
+                                        longitude: o.longitude != null ? String(o.longitude) : '',
+                                        lgd_code: String(o.attributes?.lgd_code ?? ''),
+                                        student_strength: p?.student_strength != null ? String(p.student_strength) : '',
+                                        cpdo_name: String(p?.cpdo_name ?? ''),
+                                        cpdo_contact_no: String(p?.cpdo_contact_no ?? ''),
+                                        supervisor_name: String(p?.supervisor_name ?? ''),
+                                        supervisor_contact_name: String(p?.supervisor_contact_name ?? ''),
+                                        aww_name: String(p?.worker_name ?? ''),
+                                        aww_contact_no: String(p?.aww_contact_no ?? ''),
+                                        awh_name: String(p?.helper_name ?? ''),
+                                        awh_contact_no: String(p?.awh_contact_no ?? ''),
+                                        description: String(p?.description ?? ''),
+                                      });
+                                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                )}
+                              {/* Minor Irrigation edit – populate Minor Irrigation manual form */}
+                              {deptCode === 'MINOR_IRRIGATION' && (
                                 <button
                                   type="button"
                                   className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
                                   onClick={async () => {
-                                    setEditingOrgId(o.id);
-                                    const p = await profileApi.getCenterProfile(o.id);
-                                    setNewOrg({
-                                      ulb_block: String(o.attributes?.ulb_block ?? p?.block_name ?? ''),
-                                      gp_name: String(o.attributes?.gp_name ?? p?.gram_panchayat ?? ''),
-                                      ward_village: String(o.attributes?.ward_village ?? p?.village_ward ?? ''),
-                                      sector: String(o.attributes?.sector ?? p?.sector ?? ''),
-                                      awc_name: o.name,
-                                      awc_id: String(p?.center_code ?? ''),
-                                      building_status: String(p?.building_type ?? ''),
+                                    setEditingMinorId(o.id);
+                                    const existingProfile =
+                                      mp ||
+                                      ((await minorIrrigationApi.getProfile(
+                                        o.id,
+                                      )) as Record<string, unknown> | null);
+                                    const v = (x: unknown) =>
+                                      x != null && String(x).trim() !== '' ? String(x) : '';
+                                    const vals: Record<string, string> = {};
+                                    splitHeader(MINOR_IRRIGATION_CSV_HEADER).forEach((header) => {
+                                      const k = snakeFromHeader(header);
+                                      vals[k] = v(existingProfile?.[k]);
+                                    });
+                                    const nameKey = snakeFromHeader('NAME OF M.I.P');
+                                    const latKey = snakeFromHeader('LATITUDE');
+                                    const lngKey = snakeFromHeader('LONGITUDE');
+                                    if (!vals[nameKey]) vals[nameKey] = o.name;
+                                    if (!vals[latKey] && o.latitude != null)
+                                      vals[latKey] = String(o.latitude);
+                                    if (!vals[lngKey] && o.longitude != null)
+                                      vals[lngKey] = String(o.longitude);
+
+                                    setMinorFormValues(vals);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                              )}
+                              {/* Irrigation edit – populate Irrigation manual form */}
+                              {deptCode === 'IRRIGATION' && (
+                                <button
+                                  type="button"
+                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                  onClick={async () => {
+                                    setEditingIrrigationId(o.id);
+                                    const { irrigationApi } = await import('../../../services/api');
+                                    const existingProfile =
+                                      ip ||
+                                      ((await irrigationApi.getProfile(
+                                        o.id,
+                                      )) as Record<string, unknown> | null);
+                                    const v = (x: unknown) =>
+                                      x != null && String(x).trim() !== '' ? String(x) : '';
+                                    const vals: Record<string, string> = {};
+                                    splitHeader(IRRIGATION_CSV_HEADER).forEach((header) => {
+                                      const k = snakeFromHeader(header);
+                                      vals[k] = v(existingProfile?.[k]);
+                                    });
+                                    const nameKey = snakeFromHeader('WORK NAME');
+                                    const latKey = snakeFromHeader('LATITUDE');
+                                    const lngKey = snakeFromHeader('LONGITUDE');
+                                    if (!vals[nameKey]) vals[nameKey] = o.name;
+                                    if (!vals[latKey] && o.latitude != null)
+                                      vals[latKey] = String(o.latitude);
+                                    if (!vals[lngKey] && o.longitude != null)
+                                      vals[lngKey] = String(o.longitude);
+
+                                    setIrrigationFormValues(vals);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                              )}
+                              {deptCode === 'AGRICULTURE' && (
+                                <button
+                                  type="button"
+                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                  onClick={async () => {
+                                    setEditingAgricultureId(o.id);
+                                    const existingProfile =
+                                      ap ||
+                                      ((await agricultureApi.getProfile(
+                                        o.id,
+                                      )) as Record<string, unknown> | null);
+                                    const v = (x: unknown) =>
+                                      x != null && String(x).trim() !== '' ? String(x) : '';
+                                    setNewAgricultureOrg((prev) => ({
+                                      ...prev,
+                                      block_ulb: v(existingProfile?.block_ulb ?? o.attributes?.ulb_block),
+                                      gp_ward: v(existingProfile?.gp_ward ?? o.attributes?.gp_name),
+                                      village_locality: v(
+                                        existingProfile?.village_locality ?? o.attributes?.ward_village,
+                                      ),
+                                      name: o.name,
+                                      institution_type: v(existingProfile?.institution_type),
+                                      institution_id: v(existingProfile?.institution_id),
+                                      host_institution: v(
+                                        existingProfile?.host_institution_affiliating_body ??
+                                        existingProfile?.host_institution,
+                                      ),
+                                      established_year: v(existingProfile?.established_year),
+                                      pin_code: v(existingProfile?.pin_code),
+                                      latitude:
+                                        o.latitude != null
+                                          ? String(o.latitude)
+                                          : v(existingProfile?.latitude),
+                                      longitude:
+                                        o.longitude != null
+                                          ? String(o.longitude)
+                                          : v(existingProfile?.longitude),
+                                      in_charge_name: v(existingProfile?.in_charge_name),
+                                      in_charge_contact: v(existingProfile?.in_charge_contact),
+                                      in_charge_email: v(existingProfile?.in_charge_email),
+                                      office_phone: v(existingProfile?.office_phone),
+                                      office_email: v(existingProfile?.office_email),
+                                      website: v(existingProfile?.website),
+                                      campus_area_acres: v(existingProfile?.campus_area_acres),
+                                      training_hall: v(
+                                        existingProfile?.training_hall_yes_no ??
+                                        existingProfile?.training_hall,
+                                      ),
+                                      training_hall_capacity: v(
+                                        existingProfile?.training_hall_capacity_seats ??
+                                        existingProfile?.training_hall_capacity,
+                                      ),
+                                      soil_testing: v(
+                                        existingProfile?.soil_testing_yes_no ??
+                                        existingProfile?.soil_testing,
+                                      ),
+                                      soil_samples_tested_per_year: v(
+                                        existingProfile?.soil_samples_tested_per_year,
+                                      ),
+                                      seed_distribution: v(
+                                        existingProfile?.seed_distribution_yes_no ??
+                                        existingProfile?.seed_distribution,
+                                      ),
+                                      seed_processing_unit: v(
+                                        existingProfile?.seed_processing_unit_yes_no ??
+                                        existingProfile?.seed_processing_unit,
+                                      ),
+                                      seed_storage_capacity_mt: v(
+                                        existingProfile?.seed_storage_capacity_mt,
+                                      ),
+                                      demo_units: v(
+                                        existingProfile?.demo_units_comma_separated ??
+                                        existingProfile?.demo_units,
+                                      ),
+                                      demo_farm: v(
+                                        existingProfile?.demo_farm_yes_no ??
+                                        existingProfile?.demo_farm,
+                                      ),
+                                      demo_farm_area_acres: v(existingProfile?.demo_farm_area_acres),
+                                      greenhouse_polyhouse: v(
+                                        existingProfile?.greenhouse_polyhouse_yes_no ??
+                                        existingProfile?.greenhouse_polyhouse,
+                                      ),
+                                      irrigation_facility: v(
+                                        existingProfile?.irrigation_facility_yes_no ??
+                                        existingProfile?.irrigation_facility,
+                                      ),
+                                      machinery_custom_hiring: v(
+                                        existingProfile?.machinery_custom_hiring_yes_no ??
+                                        existingProfile?.machinery_custom_hiring,
+                                      ),
+                                      computer_it_lab: v(
+                                        existingProfile?.computer_it_lab_yes_no ??
+                                        existingProfile?.computer_it_lab,
+                                      ),
+                                      library: v(
+                                        existingProfile?.library_yes_no ?? existingProfile?.library,
+                                      ),
+                                      key_schemes: v(
+                                        existingProfile?.key_schemes_comma_separated ??
+                                        existingProfile?.key_schemes,
+                                      ),
+                                      total_staff: v(
+                                        existingProfile?.total_staff_count ??
+                                        existingProfile?.total_staff,
+                                      ),
+                                      scientists_officers: v(
+                                        existingProfile?.scientists_officers_count ??
+                                        existingProfile?.scientists_officers,
+                                      ),
+                                      technical_staff: v(
+                                        existingProfile?.technical_staff_count ??
+                                        existingProfile?.technical_staff,
+                                      ),
+                                      extension_workers: v(
+                                        existingProfile?.extension_workers_count ??
+                                        existingProfile?.extension_workers,
+                                      ),
+                                      farmer_training_capacity_per_batch: v(
+                                        existingProfile?.farmer_training_capacity_per_batch,
+                                      ),
+                                      training_programmes_conducted_last_year: v(
+                                        existingProfile?.training_programmes_conducted_last_year,
+                                      ),
+                                      on_farm_trials_last_year: v(
+                                        existingProfile?.on_farm_trials_fld_last_year ??
+                                        existingProfile?.on_farm_trials_last_year,
+                                      ),
+                                      villages_covered: v(
+                                        existingProfile?.villages_gps_covered_count ??
+                                        existingProfile?.villages_covered,
+                                      ),
+                                      soil_health_cards_issued_last_year: v(
+                                        existingProfile?.soil_health_cards_issued_last_year,
+                                      ),
+                                      farmers_served_last_year: v(
+                                        existingProfile?.farmers_served_last_year_approx ??
+                                        existingProfile?.farmers_served_last_year,
+                                      ),
+                                      remarks: v(
+                                        existingProfile?.remarks_description ??
+                                        existingProfile?.remarks,
+                                      ),
+                                    }));
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                              )}
+                              {deptCode === 'ELECTRICITY' && (
+                                <button
+                                  type="button"
+                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                  onClick={async () => {
+                                    setEditingElectricityId(o.id);
+                                    const p = (electricityProfiles[o.id] || await electricityApi.getProfile(o.id)) as Record<string, unknown>;
+                                    const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
+                                    const vals: Record<string, string> = {};
+                                    splitHeader(ELECTRICITY_CSV_HEADER).forEach(h => {
+                                      const k = snakeFromHeader(h);
+                                      vals[k] = v(p[k]);
+                                    });
+                                    // Ensure name and coordinates are set from organization if missing in profile
+                                    const nameKey = snakeFromHeader('NAME OF OFFICE/CENTER');
+                                    const latKey = snakeFromHeader('LATITUDE');
+                                    const lngKey = snakeFromHeader('LONGITUDE');
+                                    if (!vals[nameKey]) vals[nameKey] = o.name;
+                                    if (!vals[latKey]) vals[latKey] = o.latitude != null ? String(o.latitude) : '';
+                                    if (!vals[lngKey]) vals[lngKey] = o.longitude != null ? String(o.longitude) : '';
+
+                                    setElecFormValues(vals);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                              )}
+                              {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
+                                <button
+                                  type="button"
+                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                  onClick={async () => {
+                                    setEditingEducationId(o.id);
+                                    const p = await educationApi.getProfile(o.id) as Record<string, unknown> | undefined;
+                                    const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
+                                    setNewEducationOrg({
+                                      block_ulb: v(p?.block_ulb ?? o.attributes?.ulb_block),
+                                      gp_ward: v(p?.gp_ward ?? o.attributes?.gp_name),
+                                      village: v(p?.village ?? o.attributes?.ward_village),
+                                      name_of_school: v(p?.name_of_school ?? o.name),
+                                      school_id: v(p?.school_id),
+                                      esst_year: v(p?.esst_year),
+                                      category: v(p?.category ?? o.attributes?.sector),
+                                      class_i: v(p?.class_i), class_ii: v(p?.class_ii), class_iii: v(p?.class_iii),
+                                      class_iv: v(p?.class_iv), class_v: v(p?.class_v), class_vi: v(p?.class_vi),
+                                      class_vii: v(p?.class_vii), class_viii: v(p?.class_viii), class_ix: v(p?.class_ix), class_x: v(p?.class_x),
+                                      deo_name: v(p?.deo_name), deo_contact: v(p?.deo_contact),
+                                      beo_name: v(p?.beo_name), beo_contact: v(p?.beo_contact),
+                                      brcc_name: v(p?.brcc_name), brcc_contact: v(p?.brcc_contact),
+                                      crcc_name: v(p?.crcc_name), crcc_contact: v(p?.crcc_contact),
+                                      name_of_hm: v(p?.name_of_hm), contact_of_hm: v(p?.contact_of_hm),
+                                      no_of_ts: v(p?.no_of_ts), no_of_nts: v(p?.no_of_nts),
+                                      no_of_tgp_pcm: v(p?.no_of_tgp_pcm), no_of_tgp_cbz: v(p?.no_of_tgp_cbz), no_of_tgt_arts: v(p?.no_of_tgt_arts),
+                                      building_status: v(p?.building_status), no_of_rooms: v(p?.no_of_rooms), no_of_smart_class_rooms: v(p?.no_of_smart_class_rooms),
+                                      science_lab: v(p?.science_lab), toilet_m: v(p?.toilet_m), toilet_f: v(p?.toilet_f),
+                                      ramp: v(p?.ramp), meeting_hall: v(p?.meeting_hall), staff_common_room: v(p?.staff_common_room),
+                                      ncc: v(p?.ncc), nss: v(p?.nss), jrc: v(p?.jrc), eco_club: v(p?.eco_club), library: v(p?.library),
+                                      icc_head_name: v(p?.icc_head_name), icc_head_contact: v(p?.icc_head_contact),
+                                      play_ground: v(p?.play_ground), cycle_stand: v(p?.cycle_stand),
+                                      drinking_water_tw: v(p?.drinking_water_tw), drinking_water_tap: v(p?.drinking_water_tap),
+                                      drinking_water_overhead_tap: v(p?.drinking_water_overhead_tap), drinking_water_aquaguard: v(p?.drinking_water_aquaguard),
                                       latitude: o.latitude != null ? String(o.latitude) : '',
                                       longitude: o.longitude != null ? String(o.longitude) : '',
-                                      lgd_code: String(o.attributes?.lgd_code ?? ''),
-                                      student_strength: p?.student_strength != null ? String(p.student_strength) : '',
-                                      cpdo_name: String(p?.cpdo_name ?? ''),
-                                      cpdo_contact_no: String(p?.cpdo_contact_no ?? ''),
-                                      supervisor_name: String(p?.supervisor_name ?? ''),
-                                      supervisor_contact_name: String(p?.supervisor_contact_name ?? ''),
-                                      aww_name: String(p?.worker_name ?? ''),
-                                      aww_contact_no: String(p?.aww_contact_no ?? ''),
-                                      awh_name: String(p?.helper_name ?? ''),
-                                      awh_contact_no: String(p?.awh_contact_no ?? ''),
-                                      description: String(p?.description ?? ''),
+                                      description: v(p?.description),
                                     });
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}
@@ -3193,452 +3510,178 @@ export default function DepartmentAdminPage() {
                                   Edit
                                 </button>
                               )}
-                            {/* Minor Irrigation edit – populate Minor Irrigation manual form */}
-                            {deptCode === 'MINOR_IRRIGATION' && (
-                              <button
-                                type="button"
-                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
-                                onClick={async () => {
-                                  setEditingMinorId(o.id);
-                                  const existingProfile =
-                                    mp ||
-                                    ((await minorIrrigationApi.getProfile(
-                                      o.id,
-                                    )) as Record<string, unknown> | null);
-                                  const v = (x: unknown) =>
-                                    x != null && String(x).trim() !== '' ? String(x) : '';
-                                  const vals: Record<string, string> = {};
-                                  splitHeader(MINOR_IRRIGATION_CSV_HEADER).forEach((header) => {
-                                    const k = snakeFromHeader(header);
-                                    vals[k] = v(existingProfile?.[k]);
-                                  });
-                                  const nameKey = snakeFromHeader('NAME OF M.I.P');
-                                  const latKey = snakeFromHeader('LATITUDE');
-                                  const lngKey = snakeFromHeader('LONGITUDE');
-                                  if (!vals[nameKey]) vals[nameKey] = o.name;
-                                  if (!vals[latKey] && o.latitude != null)
-                                    vals[latKey] = String(o.latitude);
-                                  if (!vals[lngKey] && o.longitude != null)
-                                    vals[lngKey] = String(o.longitude);
+                              {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
+                                <button
+                                  type="button"
+                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                  onClick={async () => {
+                                    setEditingEducationId(o.id);
+                                    const p = await educationApi.getProfile(o.id) as Record<string, unknown> | undefined;
+                                    const headers = getEducationHeadersForSubDept(educationSubDept);
+                                    const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
+                                    const values: Record<string, string> = {};
+                                    headers.forEach(h => {
+                                      const key = snakeFromHeader(h);
+                                      values[key] = v(p?.[key] ?? o.attributes?.[key]);
+                                    });
 
-                                  setMinorFormValues(vals);
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                              >
-                                Edit
-                              </button>
-                            )}
-                            {/* Irrigation edit – populate Irrigation manual form */}
-                            {deptCode === 'IRRIGATION' && (
-                              <button
-                                type="button"
-                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
-                                onClick={async () => {
-                                  setEditingIrrigationId(o.id);
-                                  const { irrigationApi } = await import('../../../services/api');
-                                  const existingProfile =
-                                    ip ||
-                                    ((await irrigationApi.getProfile(
-                                      o.id,
-                                    )) as Record<string, unknown> | null);
-                                  const v = (x: unknown) =>
-                                    x != null && String(x).trim() !== '' ? String(x) : '';
-                                  const vals: Record<string, string> = {};
-                                  splitHeader(IRRIGATION_CSV_HEADER).forEach((header) => {
-                                    const k = snakeFromHeader(header);
-                                    vals[k] = v(existingProfile?.[k]);
-                                  });
-                                  const nameKey = snakeFromHeader('WORK NAME');
-                                  const latKey = snakeFromHeader('LATITUDE');
-                                  const lngKey = snakeFromHeader('LONGITUDE');
-                                  if (!vals[nameKey]) vals[nameKey] = o.name;
-                                  if (!vals[latKey] && o.latitude != null)
-                                    vals[latKey] = String(o.latitude);
-                                  if (!vals[lngKey] && o.longitude != null)
-                                    vals[lngKey] = String(o.longitude);
+                                    const latKey = snakeFromHeader('LATITUDE');
+                                    const lngKey = snakeFromHeader('LONGITUDE');
+                                    if (!values[latKey] && o.latitude) values[latKey] = String(o.latitude);
+                                    if (!values[lngKey] && o.longitude) values[lngKey] = String(o.longitude);
 
-                                  setIrrigationFormValues(vals);
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                              >
-                                Edit
-                              </button>
-                            )}
-                            {deptCode === 'AGRICULTURE' && (
-                              <button
-                                type="button"
-                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
-                                onClick={async () => {
-                                  setEditingAgricultureId(o.id);
-                                  const existingProfile =
-                                    ap ||
-                                    ((await agricultureApi.getProfile(
-                                      o.id,
-                                    )) as Record<string, unknown> | null);
-                                  const v = (x: unknown) =>
-                                    x != null && String(x).trim() !== '' ? String(x) : '';
-                                  setNewAgricultureOrg((prev) => ({
-                                    ...prev,
-                                    block_ulb: v(existingProfile?.block_ulb ?? o.attributes?.ulb_block),
-                                    gp_ward: v(existingProfile?.gp_ward ?? o.attributes?.gp_name),
-                                    village_locality: v(
-                                      existingProfile?.village_locality ?? o.attributes?.ward_village,
-                                    ),
-                                    name: o.name,
-                                    institution_type: v(existingProfile?.institution_type),
-                                    institution_id: v(existingProfile?.institution_id),
-                                    host_institution: v(
-                                      existingProfile?.host_institution_affiliating_body ??
-                                        existingProfile?.host_institution,
-                                    ),
-                                    established_year: v(existingProfile?.established_year),
-                                    pin_code: v(existingProfile?.pin_code),
-                                    latitude:
-                                      o.latitude != null
-                                        ? String(o.latitude)
-                                        : v(existingProfile?.latitude),
-                                    longitude:
-                                      o.longitude != null
-                                        ? String(o.longitude)
-                                        : v(existingProfile?.longitude),
-                                    in_charge_name: v(existingProfile?.in_charge_name),
-                                    in_charge_contact: v(existingProfile?.in_charge_contact),
-                                    in_charge_email: v(existingProfile?.in_charge_email),
-                                    office_phone: v(existingProfile?.office_phone),
-                                    office_email: v(existingProfile?.office_email),
-                                    website: v(existingProfile?.website),
-                                    campus_area_acres: v(existingProfile?.campus_area_acres),
-                                    training_hall: v(
-                                      existingProfile?.training_hall_yes_no ??
-                                        existingProfile?.training_hall,
-                                    ),
-                                    training_hall_capacity: v(
-                                      existingProfile?.training_hall_capacity_seats ??
-                                        existingProfile?.training_hall_capacity,
-                                    ),
-                                    soil_testing: v(
-                                      existingProfile?.soil_testing_yes_no ??
-                                        existingProfile?.soil_testing,
-                                    ),
-                                    soil_samples_tested_per_year: v(
-                                      existingProfile?.soil_samples_tested_per_year,
-                                    ),
-                                    seed_distribution: v(
-                                      existingProfile?.seed_distribution_yes_no ??
-                                        existingProfile?.seed_distribution,
-                                    ),
-                                    seed_processing_unit: v(
-                                      existingProfile?.seed_processing_unit_yes_no ??
-                                        existingProfile?.seed_processing_unit,
-                                    ),
-                                    seed_storage_capacity_mt: v(
-                                      existingProfile?.seed_storage_capacity_mt,
-                                    ),
-                                    demo_units: v(
-                                      existingProfile?.demo_units_comma_separated ??
-                                        existingProfile?.demo_units,
-                                    ),
-                                    demo_farm: v(
-                                      existingProfile?.demo_farm_yes_no ??
-                                        existingProfile?.demo_farm,
-                                    ),
-                                    demo_farm_area_acres: v(existingProfile?.demo_farm_area_acres),
-                                    greenhouse_polyhouse: v(
-                                      existingProfile?.greenhouse_polyhouse_yes_no ??
-                                        existingProfile?.greenhouse_polyhouse,
-                                    ),
-                                    irrigation_facility: v(
-                                      existingProfile?.irrigation_facility_yes_no ??
-                                        existingProfile?.irrigation_facility,
-                                    ),
-                                    machinery_custom_hiring: v(
-                                      existingProfile?.machinery_custom_hiring_yes_no ??
-                                        existingProfile?.machinery_custom_hiring,
-                                    ),
-                                    computer_it_lab: v(
-                                      existingProfile?.computer_it_lab_yes_no ??
-                                        existingProfile?.computer_it_lab,
-                                    ),
-                                    library: v(
-                                      existingProfile?.library_yes_no ?? existingProfile?.library,
-                                    ),
-                                    key_schemes: v(
-                                      existingProfile?.key_schemes_comma_separated ??
-                                        existingProfile?.key_schemes,
-                                    ),
-                                    total_staff: v(
-                                      existingProfile?.total_staff_count ??
-                                        existingProfile?.total_staff,
-                                    ),
-                                    scientists_officers: v(
-                                      existingProfile?.scientists_officers_count ??
-                                        existingProfile?.scientists_officers,
-                                    ),
-                                    technical_staff: v(
-                                      existingProfile?.technical_staff_count ??
-                                        existingProfile?.technical_staff,
-                                    ),
-                                    extension_workers: v(
-                                      existingProfile?.extension_workers_count ??
-                                        existingProfile?.extension_workers,
-                                    ),
-                                    farmer_training_capacity_per_batch: v(
-                                      existingProfile?.farmer_training_capacity_per_batch,
-                                    ),
-                                    training_programmes_conducted_last_year: v(
-                                      existingProfile?.training_programmes_conducted_last_year,
-                                    ),
-                                    on_farm_trials_last_year: v(
-                                      existingProfile?.on_farm_trials_fld_last_year ??
-                                        existingProfile?.on_farm_trials_last_year,
-                                    ),
-                                    villages_covered: v(
-                                      existingProfile?.villages_gps_covered_count ??
-                                        existingProfile?.villages_covered,
-                                    ),
-                                    soil_health_cards_issued_last_year: v(
-                                      existingProfile?.soil_health_cards_issued_last_year,
-                                    ),
-                                    farmers_served_last_year: v(
-                                      existingProfile?.farmers_served_last_year_approx ??
-                                        existingProfile?.farmers_served_last_year,
-                                    ),
-                                    remarks: v(
-                                      existingProfile?.remarks_description ??
-                                        existingProfile?.remarks,
-                                    ),
-                                  }));
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                              >
-                                Edit
-                              </button>
-                            )}
-                            {deptCode === 'ELECTRICITY' && (
-                              <button
-                                type="button"
-                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
-                                onClick={async () => {
-                                  setEditingElectricityId(o.id);
-                                  const p = (electricityProfiles[o.id] || await electricityApi.getProfile(o.id)) as Record<string, unknown>;
-                                  const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
-                                  const vals: Record<string, string> = {};
-                                  splitHeader(ELECTRICITY_CSV_HEADER).forEach(h => {
-                                    const k = snakeFromHeader(h);
-                                    vals[k] = v(p[k]);
-                                  });
-                                  // Ensure name and coordinates are set from organization if missing in profile
-                                  const nameKey = snakeFromHeader('NAME OF OFFICE/CENTER');
-                                  const latKey = snakeFromHeader('LATITUDE');
-                                  const lngKey = snakeFromHeader('LONGITUDE');
-                                  if (!vals[nameKey]) vals[nameKey] = o.name;
-                                  if (!vals[latKey]) vals[latKey] = o.latitude != null ? String(o.latitude) : '';
-                                  if (!vals[lngKey]) vals[lngKey] = o.longitude != null ? String(o.longitude) : '';
-
-                                  setElecFormValues(vals);
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                              >
-                                Edit
-                              </button>
-                            )}
-                            {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
-                              <button
-                                type="button"
-                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
-                                onClick={async () => {
-                                  setEditingEducationId(o.id);
-                                  const p = await educationApi.getProfile(o.id) as Record<string, unknown> | undefined;
-                                  const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
-                                  setNewEducationOrg({
-                                    block_ulb: v(p?.block_ulb ?? o.attributes?.ulb_block),
-                                    gp_ward: v(p?.gp_ward ?? o.attributes?.gp_name),
-                                    village: v(p?.village ?? o.attributes?.ward_village),
-                                    name_of_school: v(p?.name_of_school ?? o.name),
-                                    school_id: v(p?.school_id),
-                                    esst_year: v(p?.esst_year),
-                                    category: v(p?.category ?? o.attributes?.sector),
-                                    class_i: v(p?.class_i), class_ii: v(p?.class_ii), class_iii: v(p?.class_iii),
-                                    class_iv: v(p?.class_iv), class_v: v(p?.class_v), class_vi: v(p?.class_vi),
-                                    class_vii: v(p?.class_vii), class_viii: v(p?.class_viii), class_ix: v(p?.class_ix), class_x: v(p?.class_x),
-                                    deo_name: v(p?.deo_name), deo_contact: v(p?.deo_contact),
-                                    beo_name: v(p?.beo_name), beo_contact: v(p?.beo_contact),
-                                    brcc_name: v(p?.brcc_name), brcc_contact: v(p?.brcc_contact),
-                                    crcc_name: v(p?.crcc_name), crcc_contact: v(p?.crcc_contact),
-                                    name_of_hm: v(p?.name_of_hm), contact_of_hm: v(p?.contact_of_hm),
-                                    no_of_ts: v(p?.no_of_ts), no_of_nts: v(p?.no_of_nts),
-                                    no_of_tgp_pcm: v(p?.no_of_tgp_pcm), no_of_tgp_cbz: v(p?.no_of_tgp_cbz), no_of_tgt_arts: v(p?.no_of_tgt_arts),
-                                    building_status: v(p?.building_status), no_of_rooms: v(p?.no_of_rooms), no_of_smart_class_rooms: v(p?.no_of_smart_class_rooms),
-                                    science_lab: v(p?.science_lab), toilet_m: v(p?.toilet_m), toilet_f: v(p?.toilet_f),
-                                    ramp: v(p?.ramp), meeting_hall: v(p?.meeting_hall), staff_common_room: v(p?.staff_common_room),
-                                    ncc: v(p?.ncc), nss: v(p?.nss), jrc: v(p?.jrc), eco_club: v(p?.eco_club), library: v(p?.library),
-                                    icc_head_name: v(p?.icc_head_name), icc_head_contact: v(p?.icc_head_contact),
-                                    play_ground: v(p?.play_ground), cycle_stand: v(p?.cycle_stand),
-                                    drinking_water_tw: v(p?.drinking_water_tw), drinking_water_tap: v(p?.drinking_water_tap),
-                                    drinking_water_overhead_tap: v(p?.drinking_water_overhead_tap), drinking_water_aquaguard: v(p?.drinking_water_aquaguard),
-                                    latitude: o.latitude != null ? String(o.latitude) : '',
-                                    longitude: o.longitude != null ? String(o.longitude) : '',
-                                    description: v(p?.description),
-                                  });
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                              >
-                                Edit
-                              </button>
-                            )}
-                            {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
-                              <button
-                                type="button"
-                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
-                                onClick={async () => {
-                                  setEditingEducationId(o.id);
-                                  const p = await educationApi.getProfile(o.id) as Record<string, unknown> | undefined;
-                                  const headers = getEducationHeadersForSubDept(educationSubDept);
-                                  const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
-                                  const values: Record<string, string> = {};
-                                  headers.forEach(h => {
-                                    const key = snakeFromHeader(h);
-                                    values[key] = v(p?.[key] ?? o.attributes?.[key]);
-                                  });
-
-                                  const latKey = snakeFromHeader('LATITUDE');
-                                  const lngKey = snakeFromHeader('LONGITUDE');
-                                  if (!values[latKey] && o.latitude) values[latKey] = String(o.latitude);
-                                  if (!values[lngKey] && o.longitude) values[lngKey] = String(o.longitude);
-
-                                  const nameHeader =
-                                    educationSubDept === 'ENGINEERING_COLLEGE' ? 'NAME OF COLLEGE' :
-                                      educationSubDept === 'ITI' ? 'ITI NAME' :
-                                        educationSubDept === 'DIPLOMA_COLLEGE' ? 'COLLEGE NAME' :
-                                          educationSubDept === 'UNIVERSITY' ? 'UNIVERSITY NAME' : '';
-                                  if (nameHeader) {
-                                    const nameKey = snakeFromHeader(nameHeader);
-                                    if (!values[nameKey]) values[nameKey] = o.name;
-                                  }
-
-                                  setEduFormValues(values);
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                              >
-                                Edit
-                              </button>
-                            )}
-                            {deptCode === 'HEALTH' && (
-                              <button
-                                type="button"
-                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
-                                onClick={async () => {
-                                  setEditingHealthId(o.id);
-                                  const p = await healthApi.getProfile(o.id) as Record<string, unknown> | undefined;
-                                  const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
-                                  setNewHealthOrg({
-                                    block_ulb: v(p?.block_ulb ?? o.attributes?.ulb_block),
-                                    gp_ward: v(p?.gp_ward ?? o.attributes?.gp_name),
-                                    village: v(p?.village ?? o.attributes?.ward_village),
-                                    latitude: o.latitude != null ? String(o.latitude) : '',
-                                    longitude: o.longitude != null ? String(o.longitude) : '',
-                                    name: v(p?.name ?? o.name),
-                                    institution_id: v(p?.institution_id),
-                                    category: v(p?.category),
-                                    inst_head_name: v(p?.inst_head_name),
-                                    inst_head_contact: v(p?.inst_head_contact),
-                                    no_of_ts: v(p?.no_of_ts),
-                                    no_of_nts: v(p?.no_of_nts),
-                                    no_of_mo: v(p?.no_of_mo),
-                                    no_of_pharmacist: v(p?.no_of_pharmacist),
-                                    no_of_anm: v(p?.no_of_anm),
-                                    no_of_health_worker: v(p?.no_of_health_worker),
-                                    no_of_pathology: v(p?.no_of_pathology),
-                                    no_of_clerk: v(p?.no_of_clerk),
-                                    no_of_sweeper: v(p?.no_of_sweeper),
-                                    no_of_nw: v(p?.no_of_nw),
-                                    no_of_bed: v(p?.no_of_bed),
-                                    no_of_icu: v(p?.no_of_icu),
-                                    x_ray_availabilaty: v(p?.x_ray_availabilaty),
-                                    ct_scan_availability: v(p?.ct_scan_availability),
-                                    availability_of_pathology_testing: v(p?.availability_of_pathology_testing),
-                                    description: v(p?.description),
-                                  });
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                              >
-                                Edit
-                              </button>
-                            )}
-                            {deptCode === 'REVENUE_LAND' && (
-                              <button
-                                type="button"
-                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
-                                onClick={async () => {
-                                  setEditingRevenueId(o.id);
-                                  const existingProfile =
-                                    revenueProfiles[o.id] ||
-                                    ((await revenueLandApi.getProfile(o.id)) as Record<string, unknown> | undefined);
-                                  const v = (x: unknown) =>
-                                    x != null && String(x).trim() !== '' ? String(x) : '';
-                                  const vals: Record<string, string> = { name: o.name };
-                                  splitHeader(REVENUE_LAND_CSV_HEADER).forEach((header) => {
-                                    const key = snakeFromHeader(header);
-                                    if (key === snakeFromHeader('LATITUDE')) {
-                                      vals[key] = v(existingProfile?.[key] ?? (o.latitude != null ? String(o.latitude) : ''));
-                                    } else if (key === snakeFromHeader('LONGITUDE')) {
-                                      vals[key] = v(existingProfile?.[key] ?? (o.longitude != null ? String(o.longitude) : ''));
-                                    } else {
-                                      vals[key] = v(existingProfile?.[key]);
+                                    const nameHeader =
+                                      educationSubDept === 'ENGINEERING_COLLEGE' ? 'NAME OF COLLEGE' :
+                                        educationSubDept === 'ITI' ? 'ITI NAME' :
+                                          educationSubDept === 'DIPLOMA_COLLEGE' ? 'COLLEGE NAME' :
+                                            educationSubDept === 'UNIVERSITY' ? 'UNIVERSITY NAME' : '';
+                                    if (nameHeader) {
+                                      const nameKey = snakeFromHeader(nameHeader);
+                                      if (!values[nameKey]) values[nameKey] = o.name;
                                     }
-                                  });
-                                  setRevenueFormValues(vals);
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                              >
-                                Edit
-                              </button>
-                            )}
-                            {deptCode === 'WATCO_RWSS' && (
-                              <button
-                                type="button"
-                                className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
-                                onClick={async () => {
-                                  setEditingWaterId(o.id);
-                                  const existingProfile =
-                                    waterProfiles[o.id] ||
-                                    ((await watcoApi.getProfile(o.id)) as Record<string, unknown> | undefined);
-                                  const v = (x: unknown) =>
-                                    x != null && String(x).trim() !== '' ? String(x) : '';
-                                  const vals: Record<string, string> = {};
-                                  splitHeader(WATCO_CSV_HEADER).forEach((header) => {
-                                    const key = snakeFromHeader(header);
-                                    if (key === snakeFromHeader('STATION NAME')) {
-                                      vals[key] = v(existingProfile?.[key] ?? o.name);
-                                    } else if (key === snakeFromHeader('LATITUDE')) {
-                                      vals[key] = v(existingProfile?.[key] ?? (o.latitude != null ? String(o.latitude) : ''));
-                                    } else if (key === snakeFromHeader('LONGITUDE')) {
-                                      vals[key] = v(existingProfile?.[key] ?? (o.longitude != null ? String(o.longitude) : ''));
-                                    } else {
-                                      vals[key] = v(existingProfile?.[key]);
-                                    }
-                                  });
-                                  setWaterFormValues(vals);
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                              >
-                                Edit
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              className="rounded border border-red-500 px-2 py-0.5 text-[11px] text-red-600 hover:bg-red-50"
-                              onClick={() => handleDelete(o.id)}
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
+
+                                    setEduFormValues(values);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                              )}
+                              {deptCode === 'HEALTH' && (
+                                <button
+                                  type="button"
+                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                  onClick={async () => {
+                                    setEditingHealthId(o.id);
+                                    const p = await healthApi.getProfile(o.id) as Record<string, unknown> | undefined;
+                                    const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
+                                    setNewHealthOrg({
+                                      block_ulb: v(p?.block_ulb ?? o.attributes?.ulb_block),
+                                      gp_ward: v(p?.gp_ward ?? o.attributes?.gp_name),
+                                      village: v(p?.village ?? o.attributes?.ward_village),
+                                      latitude: o.latitude != null ? String(o.latitude) : '',
+                                      longitude: o.longitude != null ? String(o.longitude) : '',
+                                      name: v(p?.name ?? o.name),
+                                      institution_id: v(p?.institution_id),
+                                      category: v(p?.category),
+                                      inst_head_name: v(p?.inst_head_name),
+                                      inst_head_contact: v(p?.inst_head_contact),
+                                      no_of_ts: v(p?.no_of_ts),
+                                      no_of_nts: v(p?.no_of_nts),
+                                      no_of_mo: v(p?.no_of_mo),
+                                      no_of_pharmacist: v(p?.no_of_pharmacist),
+                                      no_of_anm: v(p?.no_of_anm),
+                                      no_of_health_worker: v(p?.no_of_health_worker),
+                                      no_of_pathology: v(p?.no_of_pathology),
+                                      no_of_clerk: v(p?.no_of_clerk),
+                                      no_of_sweeper: v(p?.no_of_sweeper),
+                                      no_of_nw: v(p?.no_of_nw),
+                                      no_of_bed: v(p?.no_of_bed),
+                                      no_of_icu: v(p?.no_of_icu),
+                                      x_ray_availabilaty: v(p?.x_ray_availabilaty),
+                                      ct_scan_availability: v(p?.ct_scan_availability),
+                                      availability_of_pathology_testing: v(p?.availability_of_pathology_testing),
+                                      description: v(p?.description),
+                                    });
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                              )}
+                              {deptCode === 'REVENUE_LAND' && (
+                                <>
+                                <button
+                                  type="button"
+                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    setEditingRevenueTahasilId(o.id);
+                                    const existingProfile =
+                                      revenueProfiles[o.id] ||
+                                      ((await revenueLandApi.getProfile(o.id)) as
+                                        | Record<string, unknown>
+                                        | null);
+                                    const v = (x: unknown) =>
+                                      x != null && String(x).trim() !== '' ? String(x) : '';
+                                    const vals: Record<string, string> = {};
+                                    splitHeader(REVENUE_TAHASIL_OFFICE_CSV_HEADER).forEach((header) => {
+                                      const k = snakeFromHeader(header);
+                                      vals[k] = v(existingProfile?.[k]);
+                                    });
+                                    const tahsilNameKey = snakeFromHeader('TAHSIL_NAME');
+                                    const latKey = snakeFromHeader('LATITUDE');
+                                    const lngKey = snakeFromHeader('LONGITUDE');
+                                    if (!vals[tahsilNameKey]) vals[tahsilNameKey] = o.name;
+                                    if (!vals[latKey]) vals[latKey] = o.latitude != null ? String(o.latitude) : '';
+                                    if (!vals[lngKey]) vals[lngKey] = o.longitude != null ? String(o.longitude) : '';
+
+                                    setRevenueTahasilFormValues(vals);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    router.push(`/admin/dept/revenue-land/tahasil/${o.id}`);
+                                  }}
+                                >
+                                  View profile
+                                </button>
+                                </>
+                              )}
+                              {deptCode === 'WATCO_RWSS' && (
+                                <button
+                                  type="button"
+                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                  onClick={async () => {
+                                    setEditingWaterId(o.id);
+                                    const existingProfile =
+                                      waterProfiles[o.id] ||
+                                      ((await watcoApi.getProfile(o.id)) as Record<string, unknown> | undefined);
+                                    const v = (x: unknown) =>
+                                      x != null && String(x).trim() !== '' ? String(x) : '';
+                                    const vals: Record<string, string> = {};
+                                    splitHeader(WATCO_CSV_HEADER).forEach((header) => {
+                                      const key = snakeFromHeader(header);
+                                      if (key === snakeFromHeader('STATION NAME')) {
+                                        vals[key] = v(existingProfile?.[key] ?? o.name);
+                                      } else if (key === snakeFromHeader('LATITUDE')) {
+                                        vals[key] = v(existingProfile?.[key] ?? (o.latitude != null ? String(o.latitude) : ''));
+                                      } else if (key === snakeFromHeader('LONGITUDE')) {
+                                        vals[key] = v(existingProfile?.[key] ?? (o.longitude != null ? String(o.longitude) : ''));
+                                      } else {
+                                        vals[key] = v(existingProfile?.[key]);
+                                      }
+                                    });
+                                    setWaterFormValues(vals);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                              )}
+                              {deptCode !== 'REVENUE_LAND' && (
+                                <button
+                                  type="button"
+                                  className="rounded border border-red-500 px-2 py-0.5 text-[11px] text-red-600 hover:bg-red-50"
+                                  onClick={() => handleDelete(o.id)}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      },
+                    )}
                     {!orgs.length && (
                       <tr>
-                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 21 : deptCode === 'HEALTH' ? 27 : deptCode === 'EDUCATION' ? 61 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 2 : 10}>
+                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 21 : deptCode === 'HEALTH' ? 27 : deptCode === 'EDUCATION' ? 61 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 2 : deptCode === 'REVENUE_LAND' ? 12 : 10}>
                           No organizations yet for your department.
                         </td>
                       </tr>

@@ -25,6 +25,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    // Keep HTML language in sync for proper accessibility and screen readers.
+    document.documentElement.lang = language === 'or' ? 'or' : 'en';
+  }, [language]);
+
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     if (typeof window !== 'undefined') {
