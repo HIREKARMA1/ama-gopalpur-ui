@@ -7,7 +7,14 @@ import { ConstituencyMap } from '../components/map/ConstituencyMap';
 import type { RoadFeature, DrainFeature } from '../components/map/ConstituencyMap';
 import { DepartmentSidebar, getDepartmentIcon } from '../components/departments/DepartmentSidebar';
 import { useLanguage } from '../components/i18n/LanguageContext';
-import { departmentsApi, organizationsApi, healthApi, Department, Organization } from '../services/api';
+import {
+  departmentsApi,
+  organizationsApi,
+  healthApi,
+  arcsApi,
+  Department,
+  Organization,
+} from '../services/api';
 
 const ROADS_DATA_PATHS = [
   '/data/roads/kukudakhandi.json',
@@ -154,6 +161,41 @@ export default function HomePage() {
               updatedData = enriched;
             } catch (err) {
               console.error('Failed to enrich health organizations with profile data', err);
+            }
+          }
+
+          if (dept.code?.toUpperCase() === 'ARCS') {
+            try {
+              const enriched = await Promise.all(
+                data.map(async (org) => {
+                  if ((org.attributes?.jurisdiction_type as string | undefined)?.trim()) {
+                    return org;
+                  }
+                  try {
+                    const profile = await arcsApi.getProfile(org.id);
+                    if (!profile || typeof profile !== 'object') return org;
+                    const raw = String(
+                      (profile as Record<string, unknown>).jurisdiction_type_rural_urban_mixed ?? '',
+                    ).toUpperCase();
+                    let jt = '';
+                    if (raw.includes('RURAL') && raw.includes('URBAN')) jt = 'MIXED';
+                    else if (raw.includes('MIX')) jt = 'MIXED';
+                    else if (raw.startsWith('URBAN')) jt = 'URBAN';
+                    else if (raw.startsWith('RURAL')) jt = 'RURAL';
+                    if (!jt) return org;
+                    return {
+                      ...org,
+                      attributes: { ...(org.attributes || {}), jurisdiction_type: jt },
+                    };
+                  } catch (e) {
+                    console.error(`Failed to fetch ARCS profile for org ${org.id}`, e);
+                  }
+                  return org;
+                }),
+              );
+              updatedData = enriched;
+            } catch (err) {
+              console.error('Failed to enrich ARCS organizations', err);
             }
           }
 
