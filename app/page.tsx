@@ -15,7 +15,7 @@ const ROADS_DATA_PATHS = [
   '/data/roads/rangailunda.json',
 ] as const;
 
-const DRAINAGE_DATA_PATHS = ['/data/drainage/bahana.json'] as const;
+const DRAINAGE_DATA_PATHS = ['/data/drainage/bahana.json', 'data/drainage/bahana.json'] as const;
 
 export default function HomePage() {
   const router = useRouter();
@@ -94,22 +94,32 @@ export default function HomePage() {
         })
         .finally(() => setLoading(false));
     } else if (isDrainage) {
-      Promise.all(
-        DRAINAGE_DATA_PATHS.map((path) =>
-          fetch(path).then((r) => (r.ok ? r.json() : { type: 'FeatureCollection', features: [] }))
-        )
-      )
-        .then((collections) => {
-          const all: DrainFeature[] = [];
-          collections.forEach((fc) => {
-            if (fc?.features?.length) all.push(...fc.features);
-          });
-          setDrains(all);
-          setRoads([]);
-          setOrganizations([]);
-          setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: all.length }));
-        })
-        .finally(() => setLoading(false));
+      (async () => {
+        let all: DrainFeature[] = [];
+        for (const path of DRAINAGE_DATA_PATHS) {
+          try {
+            const res = await fetch(path);
+            if (!res.ok) {
+              // eslint-disable-next-line no-console
+              console.warn(`Drainage map data not found at ${path}: ${res.status}`);
+              continue;
+            }
+            const fc = await res.json();
+            if (fc?.features?.length) {
+              all = fc.features;
+              break;
+            }
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn(`Failed to load drainage map data from ${path}`, e);
+          }
+        }
+
+        setDrains(all);
+        setRoads([]);
+        setOrganizations([]);
+        setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: all.length }));
+      })().finally(() => setLoading(false));
     } else {
       organizationsApi
         .listByDepartment(dept.id, {
