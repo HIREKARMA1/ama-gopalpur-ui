@@ -25,6 +25,54 @@ const REVENUE_LAND_CSV_HEADER =
 const splitHeader = (header: string): string[] =>
   header.trim().replace(/\n$/, '').split(',').map((h) => h.trim());
 
+/** Parses one CSV row respecting quoted fields (commas / newlines inside quotes). */
+function parseCsvLine(line: string): string[] {
+  const out: string[] = [];
+  let i = 0;
+  let field = '';
+  let inQuotes = false;
+  while (i < line.length) {
+    const c = line[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (line[i + 1] === '"') {
+          field += '"';
+          i += 2;
+          continue;
+        }
+        inQuotes = false;
+        i++;
+        continue;
+      }
+      field += c;
+      i++;
+      continue;
+    }
+    if (c === '"') {
+      inQuotes = true;
+      i++;
+      continue;
+    }
+    if (c === ',') {
+      out.push(field.trim());
+      field = '';
+      i++;
+      continue;
+    }
+    field += c;
+    i++;
+  }
+  out.push(field.trim());
+  return out;
+}
+
+function escapeCsvField(value: string): string {
+  if (/[",\n\r]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
 const snakeFromHeader = (label: string): string =>
   label
     .trim()
@@ -189,7 +237,7 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
       const rawText = await file.text();
       const lines = rawText.split(/\r?\n/).filter((l) => l.trim() !== '');
       const headerLine = lines[0] ?? '';
-      const uploadedCols = headerLine.split(',').map((h) => h.trim());
+      const uploadedCols = parseCsvLine(headerLine);
 
       const hasTahasilCols =
         uploadedCols.includes('TAHASIL') && uploadedCols.includes('TAHASIL OFFICE ORG ID');
@@ -199,7 +247,7 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
 
         const dataLines = lines.slice(1);
         const injectedRows = dataLines.map((line) => {
-          const parts = line.split(',');
+          const parts = parseCsvLine(line);
           const valuesByHeader = new Map<string, string>();
           uploadedCols.forEach((c, idx) => {
             valuesByHeader.set(c, parts[idx] ?? '');
@@ -210,7 +258,7 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
             if (c === 'TAHASIL OFFICE ORG ID') return String(tahasilOrgId);
             return valuesByHeader.get(c) ?? '';
           });
-          return injected.join(',');
+          return injected.map(escapeCsvField).join(',');
         });
 
         const injectedCsv = `${backendCols.join(',')}\n${injectedRows.join('\n')}\n`;
