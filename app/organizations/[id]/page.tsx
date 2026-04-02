@@ -176,7 +176,6 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [waterDailyPumpLogs, setWaterDailyPumpLogs] = useState<Awaited<ReturnType<typeof watcoApi.listDailyPumpLogs>>>([]);
   const [waterDailyTankLevels, setWaterDailyTankLevels] = useState<Awaited<ReturnType<typeof watcoApi.listDailyTankLevels>>>([]);
   const [revenueProfile, setRevenueProfile] = useState<Record<string, unknown>>({});
-  const [revenueStatusRecords, setRevenueStatusRecords] = useState<Awaited<ReturnType<typeof revenueLandApi.listStatusRecords>>>([]);
   const [revenueTahasilParcels, setRevenueTahasilParcels] = useState<RevenueGovtLandRow[]>([]);
   const [agricultureProfile, setAgricultureProfile] = useState<Record<string, unknown>>({});
   const [agricultureDailyMetrics, setAgricultureDailyMetrics] = useState<import('../../../services/api').AgricultureDailyMetric[]>([]);
@@ -285,14 +284,10 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           setWaterDailyPumpLogs(pumps || []);
           setWaterDailyTankLevels(tanks || []);
         } else if (code === 'REVENUE_LAND') {
-          const [profile, statusRecs] = await Promise.all([
-            revenueLandApi.getProfile(id),
-            revenueLandApi.listStatusRecords(id),
-          ]);
+          const profile = await revenueLandApi.getProfile(id);
           setRevenueProfile(
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
-          setRevenueStatusRecords(Array.isArray(statusRecs) ? statusRecs : []);
           if ((orgRes.sub_department || '') === 'TAHASIL_OFFICE') {
             const parcelOrgs = await revenueLandApi.listParcelsForTahasilOffice(id);
             const parcelProfiles = await Promise.all(
@@ -438,7 +433,6 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
         <RevenueLandPortfolioDashboard
           org={org}
           profile={revenueProfile}
-          statusRecords={revenueStatusRecords}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
           isTahasilOffice={org.sub_department === 'TAHASIL_OFFICE'}
