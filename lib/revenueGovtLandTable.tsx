@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Organization } from '../services/api';
 import type { TableColumn } from '../components/common/PaginatedHorizontalTable';
 
@@ -90,5 +91,19 @@ export function buildRevenueGovtLandColumns(isOdia: boolean): TableColumn<Revenu
       render: (r) => formatRevenueGovtLandCell(r.profile['total_area_sqft']),
     },
     { key: 'ror_year', header: isOdia ? 'ROR ବର୍ଷ' : 'ROR YEAR', render: (r) => formatRevenueGovtLandCell(r.profile['ror_year']) },
+    {
+      key: 'view_profile',
+      header: isOdia ? 'ପ୍ରୋଫାଇଲ୍' : 'PROFILE',
+      tdClassName: '!max-w-[200px] overflow-visible whitespace-nowrap',
+      render: (r) => (
+        <Link
+          href={`/organizations/${r.org.id}`}
+          className="font-semibold text-primary underline underline-offset-2 hover:opacity-90"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {isOdia ? 'ପ୍ରୋଫାଇଲ୍ ଦେଖନ୍ତୁ' : 'View profile'}
+        </Link>
+      ),
+    },
   ];
 }
