@@ -118,6 +118,13 @@ export interface RoadFeature {
   geometry: { type: 'LineString'; coordinates: [number, number][] };
 }
 
+/** Drain segment from GeoJSON (point A to B path) for Drainage department map */
+export interface DrainFeature {
+  type: 'Feature';
+  properties: { name?: string; drainName?: string; code?: string; block?: string };
+  geometry: { type: 'LineString'; coordinates: [number, number][] };
+}
+
 interface ConstituencyMapProps {
   /** Department code (e.g. 'EDUCATION', 'ROADS') */
   selectedDepartmentCode?: string;
@@ -125,6 +132,8 @@ interface ConstituencyMapProps {
   organizations?: MapOrganization[];
   /** Road segments to show as polylines when department is ROADS */
   roads?: RoadFeature[];
+  /** Drain segments to show as polylines when department is DRAINAGE */
+  drains?: DrainFeature[];
   /** Called when user clicks a marker (e.g. to show profile) */
   onSelectOrganization?: (id: number) => void;
 }
@@ -157,11 +166,13 @@ export function ConstituencyMap({
   selectedDepartmentCode,
   organizations = [],
   roads = [],
+  drains = [],
   onSelectOrganization,
 }: ConstituencyMapProps) {
   const { language } = useLanguage();
   const [infoWindowOrg, setInfoWindowOrg] = useState<MapOrganization | null>(null);
   const [selectedRoad, setSelectedRoad] = useState<RoadFeature | null>(null);
+  const [selectedDrain, setSelectedDrain] = useState<DrainFeature | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [mapInstance, setMapInstance] = useState<any>(null);
@@ -229,10 +240,13 @@ export function ConstituencyMap({
   }, [orgsWithLocation, selectedDepartmentCode]);
 
   const isRoadsDept = selectedDepartmentCode?.toUpperCase() === 'ROADS';
+  const isDrainageDept = selectedDepartmentCode?.toUpperCase() === 'DRAINAGE';
 
   useEffect(() => {
     setLegendFilterType(null);
     setRoadLegendFilterType(null);
+    setSelectedRoad(null);
+    setSelectedDrain(null);
   }, [selectedDepartmentCode]);
 
   /** Road path as Google Maps LatLng[] (GeoJSON is [lng, lat]) */
@@ -243,6 +257,16 @@ export function ConstituencyMap({
         return coords.map(([lng, lat]) => ({ lat, lng }));
       }),
     [roads]
+  );
+
+  /** Drain path as Google Maps LatLng[] (GeoJSON is [lng, lat]) */
+  const drainPaths = useMemo(
+    () =>
+      drains.map((f) => {
+        const coords = f.geometry?.coordinates ?? [];
+        return coords.map(([lng, lat]) => ({ lat, lng }));
+      }),
+    [drains]
   );
 
   /** Restrict map to Gopalpur constituency (Rangeilunda, Kukudakhandi, Berhampur Urban-I) only; hide Google's default POIs so only our org pins show */
@@ -699,6 +723,7 @@ export function ConstituencyMap({
           onClick={() => {
             setInfoWindowOrg(null);
             setSelectedRoad(null);
+          setSelectedDrain(null);
           }}
         >
           <Polyline
@@ -745,12 +770,40 @@ export function ConstituencyMap({
                       e.domEvent.stopPropagation();
                     }
                     setSelectedRoad(road);
+                    setSelectedDrain(null);
                     setInfoWindowOrg(null);
                   }}
                 />
               );
             })}
-          {showContent && !isRoadsDept &&
+          {showContent && isDrainageDept &&
+            drains.map((drain, idx) => {
+              const path = drainPaths[idx] ?? [];
+              if (path.length < 2) return null;
+              const name =
+                drain.properties?.name ?? drain.properties?.drainName ?? 'Drain';
+              return (
+                <Polyline
+                  key={`drain-${idx}-${name}`}
+                  path={path}
+                  options={{
+                    strokeColor: '#f97316', // orange-500
+                    strokeWeight: 5,
+                    strokeOpacity: 0.95,
+                    clickable: true,
+                  }}
+                  onClick={(e) => {
+                    if (e?.domEvent && 'stopPropagation' in e.domEvent && typeof e.domEvent.stopPropagation === 'function') {
+                      e.domEvent.stopPropagation();
+                    }
+                    setSelectedDrain(drain);
+                    setSelectedRoad(null);
+                    setInfoWindowOrg(null);
+                  }}
+                />
+              );
+            })}
+          {showContent && !isRoadsDept && !isDrainageDept &&
             orgsToShow.map((org) => (
               <Marker
                 key={org.id}
@@ -764,6 +817,7 @@ export function ConstituencyMap({
                   }
                   setInfoWindowOrg(org);
                   setSelectedRoad(null);
+                  setSelectedDrain(null);
                 }}
                 cursor="pointer"
               />
@@ -795,6 +849,31 @@ export function ConstituencyMap({
                         {t('map.info.block', language)}: {block}
                       </p>
                     )}
+                  </div>
+                </div>
+              </InfoWindow>
+            );
+          })()}
+          {selectedDrain && (() => {
+            const coords = selectedDrain.geometry?.coordinates ?? [];
+            const first = coords[0];
+            if (!first) return null;
+            const [lng, lat] = first;
+            const name =
+              selectedDrain.properties?.name ??
+              selectedDrain.properties?.drainName ??
+              'Drain';
+            return (
+              <InfoWindow
+                position={{ lat, lng }}
+                onCloseClick={() => setSelectedDrain(null)}
+              >
+                <div className="min-w-[190px] max-w-[260px]">
+                  <div className="rounded-2xl bg-white shadow-md border border-slate-200 px-3 py-0.5">
+                    <p className="text-[13px] font-semibold text-slate-900">{name}</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                      {t('dept.drainage', language)}
+                    </p>
                   </div>
                 </div>
               </InfoWindow>
