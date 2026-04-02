@@ -13,6 +13,7 @@ import {
   FaWater,
   FaLandmark,
   FaDumpster,
+  FaHandshake,
 } from 'react-icons/fa';
 import type { MessageKey } from '../i18n/messages';
 import { Department } from '../../services/api';
@@ -32,6 +33,7 @@ const DEPT_MESSAGE_KEYS: Record<string, MessageKey> = {
   IRRIGATION: 'dept.irrigation',
   MINOR_IRRIGATION: 'dept.minorIrrigation',
   REVENUE_LAND: 'dept.revenueLand',
+  ARCS: 'dept.arcs',
 };
 
 function getDepartmentLabel(dept: Department, language: 'en' | 'or'): string {
@@ -56,6 +58,7 @@ function getBaseDepartmentIcon(code: string, name: string): IconType {
   if (c === 'ELECTRICITY' || n.includes('ELECTRIC')) return FaBolt;
   if (c === 'DRAINAGE' || n.includes('DRAINAGE') || n.includes('SANITATION')) return FaDumpster;
   if (c === 'REVENUE_LAND' || n.includes('REVENUE') || n.includes('LAND')) return FaLandmark;
+  if (c === 'ARCS' || n.includes('COOPERATIVE') || n.includes('ARCS')) return FaHandshake;
 
   // Fallback.
   return FaBuilding;

@@ -23,6 +23,7 @@ export type MessageKey =
   | 'dept.irrigation'
   | 'dept.minorIrrigation'
   | 'dept.revenueLand'
+  | 'dept.arcs'
   | 'minor.dashboard.title'
   | 'minor.dashboard.subtitle'
   | 'minor.details.title'
@@ -388,6 +389,56 @@ export type MessageKey =
   | 'map.electricity.office'
   | 'electricity.type.govt'
   | 'electricity.type.pvt'
+  | 'map.arcs.society'
+  | 'arcs.type.rural'
+  | 'arcs.type.urban'
+  | 'arcs.type.mixed'
+  | 'arcs.dashboard.title'
+  | 'arcs.dashboard.subtitle'
+  | 'arcs.details.title'
+  | 'arcs.tab.overview'
+  | 'arcs.stat.registration'
+  | 'arcs.stat.jurisdiction'
+  | 'arcs.stat.members'
+  | 'arcs.stat.status'
+  | 'arcs.field.societyName'
+  | 'arcs.field.blockUlb'
+  | 'arcs.field.registration'
+  | 'arcs.field.establishedYear'
+  | 'arcs.field.secretary'
+  | 'arcs.field.phone'
+  | 'arcs.field.email'
+  | 'arcs.field.areaOperation'
+  | 'arcs.map.title'
+  | 'arcs.map.subtitle'
+  | 'arcs.map.loading'
+  | 'arcs.group.societyIdentity'
+  | 'arcs.group.locationContact'
+  | 'arcs.group.governanceCompliance'
+  | 'arcs.group.membership'
+  | 'arcs.group.digitization'
+  | 'arcs.fieldLabel.jurisdictionType'
+  | 'arcs.field.state'
+  | 'arcs.field.district'
+  | 'arcs.fieldLabel.fullAddress'
+  | 'arcs.fieldLabel.pinCode'
+  | 'arcs.fieldLabel.latitude'
+  | 'arcs.fieldLabel.longitude'
+  | 'arcs.fieldLabel.secretaryName'
+  | 'arcs.fieldLabel.functioningOrNot'
+  | 'arcs.fieldLabel.auditCompletedLastFy'
+  | 'arcs.fieldLabel.electionsConductedLastFy'
+  | 'arcs.fieldLabel.inspectorsExtensionOfficers'
+  | 'arcs.fieldLabel.totalMembership'
+  | 'arcs.fieldLabel.membershipSc'
+  | 'arcs.fieldLabel.membershipSt'
+  | 'arcs.fieldLabel.membershipObc'
+  | 'arcs.fieldLabel.membershipGen'
+  | 'arcs.fieldLabel.membershipWomen'
+  | 'arcs.fieldLabel.computerizationStatus'
+  | 'arcs.fieldLabel.onlineRegistrationFacility'
+  | 'arcs.fieldLabel.digitizedRecords'
+  | 'arcs.fieldLabel.fileTrackingSystem'
   | 'revenue.type.govt'
   | 'revenue.type.private'
   | 'revenue.type.other'
@@ -478,6 +529,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'dept.revenueLand': {
     en: 'Revenue Govt Land',
     or: 'ରେଭେନ୍ୟୁ ସରକାରୀ ଜମି',
+  },
+  'dept.arcs': {
+    en: 'ARCS',
+    or: 'ସମବାୟ ସମିତି',
   },
   'minor.dashboard.title': {
     en: 'Minor Irrigation Portfolio Dashboard',
@@ -878,6 +933,89 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'electricity.type.pvt': {
     en: 'Pvt',
     or: 'ବେସରକାରୀ',
+  },
+  'map.arcs.society': {
+    en: 'Cooperative society',
+    or: 'ସମବାୟ ସମିତି',
+  },
+  'arcs.type.rural': { en: 'Rural', or: 'ଗ୍ରାମୀଣ' },
+  'arcs.type.urban': { en: 'Urban', or: 'ସହରୀ' },
+  'arcs.type.mixed': { en: 'Mixed', or: 'ମିଶ୍ରିତ' },
+  'arcs.dashboard.title': {
+    en: 'Cooperative Society Portfolio',
+    or: 'ସମବାୟ ସମିତି ପୋର୍ଟଫୋଲିଓ',
+  },
+  'arcs.dashboard.subtitle': {
+    en: 'Registration, membership and digitization metrics from ARCS records.',
+    or: 'ARCS ରେକର୍ଡରୁ ପଞ୍ଜୀକରଣ, ସଦସ୍ୟତା ଓ ଡିଜିଟାଇଜେସନ ତଥ୍ୟ।',
+  },
+  'arcs.details.title': { en: 'Society details', or: 'ସମିତି ବିବରଣୀ' },
+  'arcs.tab.overview': { en: 'Overview', or: 'ସାରାଂଶ' },
+  'arcs.stat.registration': { en: 'Registration no.', or: 'ପଞ୍ଜୀକରଣ ନଂ.' },
+  'arcs.stat.jurisdiction': { en: 'Jurisdiction', or: 'କ୍ଷେତ୍ର' },
+  'arcs.stat.members': { en: 'Total members', or: 'ମୋଟ ସଦସ୍ୟ' },
+  'arcs.stat.status': { en: 'Functioning', or: 'କାର୍ଯ୍ୟକ୍ଷମ' },
+  'arcs.field.societyName': { en: 'Society name', or: 'ସମିତି ନାମ' },
+  'arcs.field.blockUlb': { en: 'Block / ULB', or: 'ବ୍ଲକ୍ / ULB' },
+  'arcs.field.registration': { en: 'Registration number', or: 'ପଞ୍ଜୀକରଣ ନମ୍ବର' },
+  'arcs.field.establishedYear': { en: 'Established year', or: 'ପ୍ରତିଷ୍ଠା ବର୍ଷ' },
+  'arcs.field.secretary': { en: 'Secretary', or: 'ସଚିବ' },
+  'arcs.field.phone': { en: 'Office phone', or: 'କାର୍ଯ୍ୟାଳୟ ଫୋନ' },
+  'arcs.field.email': { en: 'Office email', or: 'ଇମେଲ' },
+  'arcs.field.areaOperation': { en: 'Area of operation', or: 'କାର୍ଯ୍ୟ କେନ୍ଦ୍ର' },
+  'arcs.map.title': { en: 'Registered location', or: 'ପଞ୍ଜୀକୃତ ସ୍ଥାନ' },
+  'arcs.map.subtitle': { en: 'Geotagged coordinates for this society.', or: 'ଏହି ସମିତିର ଅବସ୍ଥାନ।' },
+  'arcs.map.loading': { en: 'Loading map…', or: 'ମାନଚିତ୍ର ଲୋଡ୍…' },
+  'arcs.group.societyIdentity': { en: 'Society identity', or: 'ସମିତି ପରିଚୟ' },
+  'arcs.group.locationContact': { en: 'Location & contact', or: 'ଅବସ୍ଥାନ ଓ ଯୋଗାଯୋଗ' },
+  'arcs.group.governanceCompliance': { en: 'Governance & compliance', or: 'ଶାସନ ଓ ଅନୁପାଲନ' },
+  'arcs.group.membership': { en: 'Membership', or: 'ସଦସ୍ୟତା' },
+  'arcs.group.digitization': { en: 'Digitization', or: 'ଡିଜିଟାଇଜେସନ' },
+  'arcs.fieldLabel.jurisdictionType': {
+    en: 'Jurisdiction type (rural/urban/mixed)',
+    or: 'କ୍ଷେତ୍ର ପ୍ରକାର (ଗ୍ରାମୀଣ/ସହରୀ/ମିଶ୍ରିତ)',
+  },
+  'arcs.field.state': { en: 'State', or: 'ରାଜ୍ୟ' },
+  'arcs.field.district': { en: 'District', or: 'ଜିଲ୍ଲା' },
+  'arcs.fieldLabel.fullAddress': { en: 'Full address', or: 'ପୂର୍ଣ୍ଣ ଠିକଣା' },
+  'arcs.fieldLabel.pinCode': { en: 'PIN code', or: 'ପିନ୍ କୋଡ୍' },
+  'arcs.fieldLabel.latitude': { en: 'Latitude', or: 'ଅକ୍ଷାଂଶ' },
+  'arcs.fieldLabel.longitude': { en: 'Longitude', or: 'ଦ୍ରାଘିମା' },
+  'arcs.fieldLabel.secretaryName': { en: 'Secretary name', or: 'ସଚିବଙ୍କ ନାମ' },
+  'arcs.fieldLabel.functioningOrNot': { en: 'Functioning or not', or: 'ଚାଲୁ ଅଛି କି ନାହିଁ' },
+  'arcs.fieldLabel.auditCompletedLastFy': {
+    en: 'Audit completed (last FY)',
+    or: 'ଅଡିଟ ସମାପ୍ତ (ଗତ ଆର୍ଥିକ ବର୍ଷ)',
+  },
+  'arcs.fieldLabel.electionsConductedLastFy': {
+    en: 'Elections conducted (last FY)',
+    or: 'ନିର୍ବାଚନ ଅନୁଷ୍ଠିତ (ଗତ ଆର୍ଥିକ ବର୍ଷ)',
+  },
+  'arcs.fieldLabel.inspectorsExtensionOfficers': {
+    en: 'Inspectors / extension officers (count)',
+    or: 'ଇନସ୍ପେକ୍ଟର / ବିସ୍ତାର ଅଧିକାରୀ (ସଂଖ୍ୟା)',
+  },
+  'arcs.fieldLabel.totalMembership': { en: 'Total membership', or: 'ମୋଟ ସଦସ୍ୟତା' },
+  'arcs.fieldLabel.membershipSc': { en: 'Membership (SC)', or: 'ସଦସ୍ୟ (SC)' },
+  'arcs.fieldLabel.membershipSt': { en: 'Membership (ST)', or: 'ସଦସ୍ୟ (ST)' },
+  'arcs.fieldLabel.membershipObc': { en: 'Membership (OBC)', or: 'ସଦସ୍ୟ (OBC)' },
+  'arcs.fieldLabel.membershipGen': { en: 'Membership (General)', or: 'ସଦସ୍ୟ (ସାଧାରଣ)' },
+  'arcs.fieldLabel.membershipWomen': { en: 'Membership (women)', or: 'ସଦସ୍ୟ (ମହିଳା)' },
+  'arcs.fieldLabel.computerizationStatus': {
+    en: 'Computerization status (yes/no)',
+    or: 'କମ୍ପ୍ୟୁଟରାଇଜେସନ ସ୍ଥିତି (ହଁ/ନା)',
+  },
+  'arcs.fieldLabel.onlineRegistrationFacility': {
+    en: 'Online registration facility (yes/no)',
+    or: 'ଅନଲାଇନ ପଞ୍ଜୀକରଣ (ହଁ/ନା)',
+  },
+  'arcs.fieldLabel.digitizedRecords': {
+    en: 'Digitized records (yes/no)',
+    or: 'ଡିଜିଟାଲ ରେକର୍ଡ (ହଁ/ନା)',
+  },
+  'arcs.fieldLabel.fileTrackingSystem': {
+    en: 'File tracking system (yes/no)',
+    or: 'ଫାଇଲ ଟ୍ରାକିଂ ବ୍ୟବସ୍ଥା (ହଁ/ନା)',
   },
   'revenue.type.govt': {
     en: 'Govt land',

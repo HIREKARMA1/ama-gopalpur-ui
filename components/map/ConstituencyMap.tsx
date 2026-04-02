@@ -357,6 +357,11 @@ export function ConstituencyMap({
         return createCircleMarkerSvgIcon('#facc15'); // tailwind yellow-400
       }
 
+      // ARCS (cooperative societies) – teal pins
+      if (code === 'ARCS') {
+        return createCircleMarkerSvgIcon('#14b8a6'); // teal-500
+      }
+
       // REVENUE LAND – Tahasil offices (sky) vs land parcels (rose)
       if (code === 'REVENUE_LAND') {
         const sub = (subDept || '').toUpperCase();
@@ -409,6 +414,13 @@ export function ConstituencyMap({
         }
         if (instType.length > 0) return instType;
         return t('map.electricity.office', lang);
+      }
+      if (code === 'ARCS') {
+        const j = ((attributes?.jurisdiction_type as string) || '').toUpperCase();
+        if (j === 'RURAL') return t('arcs.type.rural', lang);
+        if (j === 'URBAN') return t('arcs.type.urban', lang);
+        if (j === 'MIXED') return t('arcs.type.mixed', lang);
+        return t('map.arcs.society', lang);
       }
       if (code === 'REVENUE_LAND') {
         if ((subDept || '').toUpperCase() === 'TAHASIL_OFFICE') {
@@ -470,6 +482,12 @@ export function ConstituencyMap({
             const instType =
               ((org.attributes?.institution_type as string) || '').toUpperCase();
             return instType === legendFilterType;
+          });
+        } else if (code === 'ARCS') {
+          result = result.filter((org) => {
+            const jt =
+              ((org.attributes?.jurisdiction_type as string) || '').toUpperCase();
+            return jt === legendFilterType;
           });
         } else if (code === 'WATCO_RWSS') {
           result = result.filter(
@@ -1175,6 +1193,43 @@ export function ConstituencyMap({
                   >
                     <span className="inline-block h-2.5 w-2.5 rounded-full bg-rose-500" />
                     {label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+      {selectedDepartmentCode?.toUpperCase() === 'ARCS' && orgsWithLocation.length > 0 && (
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[280px] z-10">
+          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
+            {['RURAL', 'URBAN', 'MIXED'].map((jur) => {
+              const isSelected = legendFilterType === jur;
+              const labelKey =
+                jur === 'RURAL'
+                  ? ('arcs.type.rural' as MessageKey)
+                  : jur === 'URBAN'
+                    ? ('arcs.type.urban' as MessageKey)
+                    : ('arcs.type.mixed' as MessageKey);
+              return (
+                <li key={jur}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLegendFilterType((prev) => (prev === jur ? null : jur))
+                    }
+                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
+                      isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
+                    }`}
+                    title={
+                      isSelected
+                        ? t('map.legend.showAll', language)
+                        : `${t('map.legend.showOnly', language)} ${t(labelKey, language)}`
+                    }
+                  >
+                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-teal-500" />
+                    {t(labelKey, language)}
                   </button>
                 </li>
               );
