@@ -237,32 +237,35 @@ const EDUCATION_LABELS: Record<string, { en: string; or: string }> = {
   principal_superintendent_name: { en: 'Principal/Superintendent Name', or: 'ପ୍ରିନ୍ସିପାଲ୍/ସୁପରିଣ୍ଟେଣ୍ଡେଣ୍ଟ ନାମ' },
 };
 
-const HEALTH_LABELS: Record<string, string> = {
-  block_ulb: 'Block / ULB',
-  gp_ward: 'GP / Ward',
-  village: 'Village',
-  latitude: 'Latitude',
-  longitude: 'Longitude',
-  name: 'Name',
-  category: 'Category',
-  inst_head_name: 'Inst Head Name',
-  inst_head_contact: 'Inst Head Contact',
-  no_of_ts: 'No of TS',
-  no_of_nts: 'No of NTS',
-  no_of_mo: 'No of MO',
-  no_of_pharmacist: 'No of Pharmacist',
-  no_of_anm: 'No of ANM',
-  no_of_health_worker: 'No of Health Worker',
-  no_of_pathology: 'No of Pathology',
-  no_of_clerk: 'No of Clerk',
-  no_of_sweeper: 'No of Sweeper',
-  no_of_nw: 'No of NW',
-  no_of_bed: 'No of Bed',
-  no_of_icu: 'No of ICU',
-  x_ray_availabilty: 'X-Ray Availability',
-  ct_scan_availability: 'CT-Scan Availability',
-  availability_of_pathology_testing: 'Availability of Pathology Testing',
-  description: 'Description',
+const HEALTH_LABELS: Record<string, { en: string; or: string }> = {
+  block_ulb: { en: 'Block / ULB', or: 'ବ୍ଲକ୍ / ULB' },
+  gp_ward: { en: 'GP / Ward', or: 'ଜି.ପି. / ୱାର୍ଡ' },
+  village: { en: 'Village', or: 'ଗ୍ରାମ' },
+  latitude: { en: 'Latitude', or: 'ଅକ୍ଷାଂଶ' },
+  longitude: { en: 'Longitude', or: 'ଦ୍ରାଘିମା' },
+  name: { en: 'Name', or: 'ନାମ' },
+  category: { en: 'Category', or: 'ଶ୍ରେଣୀ' },
+  inst_head_name: { en: 'Inst Head Name', or: 'ପ୍ରତିଷ୍ଠାନ ମୁଖ୍ୟଙ୍କ ନାମ' },
+  inst_head_contact: { en: 'Inst Head Contact', or: 'ପ୍ରତିଷ୍ଠାନ ମୁଖ୍ୟଙ୍କ ଯୋଗାଯୋଗ' },
+  no_of_ts: { en: 'No of TS', or: 'ଶିକ୍ଷକ ସଂଖ୍ୟା' },
+  no_of_nts: { en: 'No of NTS', or: 'ଅଣ-ଶିକ୍ଷକ କର୍ମଚାରୀ' },
+  no_of_mo: { en: 'No of MO', or: 'MO ସଂଖ୍ୟା' },
+  no_of_pharmacist: { en: 'No of Pharmacist', or: 'ଫାର୍ମାସିଷ୍ଟ ସଂଖ୍ୟା' },
+  no_of_anm: { en: 'No of ANM', or: 'ANM ସଂଖ୍ୟା' },
+  no_of_health_worker: { en: 'No of Health Worker', or: 'ସ୍ୱାସ୍ଥ୍ୟ କର୍ମୀ ସଂଖ୍ୟା' },
+  no_of_pathology: { en: 'No of Pathology', or: 'ପାଥୋଲୋଜି ସଂଖ୍ୟା' },
+  no_of_clerk: { en: 'No of Clerk', or: 'କ୍ଲାର୍କ ସଂଖ୍ୟା' },
+  no_of_sweeper: { en: 'No of Sweeper', or: 'ସ୍ୱେପର ସଂଖ୍ୟା' },
+  no_of_nw: { en: 'No of NW', or: 'NW ସଂଖ୍ୟା' },
+  no_of_bed: { en: 'No of Bed', or: 'ବେଡ୍ ସଂଖ୍ୟା' },
+  no_of_icu: { en: 'No of ICU', or: 'ICU ସଂଖ୍ୟା' },
+  x_ray_availabilty: { en: 'X-Ray Availability', or: 'X-Ray ଉପଲବ୍ଧତା' },
+  ct_scan_availability: { en: 'CT-Scan Availability', or: 'CT-Scan ଉପଲବ୍ଧତା' },
+  availability_of_pathology_testing: {
+    en: 'Availability of Pathology Testing',
+    or: 'ପାଥୋଲୋଜି ପରୀକ୍ଷା ଉପଲବ୍ଧତା',
+  },
+  description: { en: 'Description', or: 'ବିବରଣୀ' },
 };
 
 export function getEducationProfileLabel(key: string, language: Language = 'en'): string {
@@ -273,8 +276,12 @@ export function getEducationProfileLabel(key: string, language: Language = 'en')
   return titleCase(key);
 }
 
-export function getHealthProfileLabel(key: string): string {
-  return HEALTH_LABELS[key] ?? titleCase(key);
+export function getHealthProfileLabel(key: string, language: Language = 'en'): string {
+  const labelObj = HEALTH_LABELS[key];
+  if (labelObj) {
+    return labelObj[language] || labelObj.en;
+  }
+  return titleCase(key);
 }
 
 const MINOR_IRRIGATION_LABELS: Record<string, { en: string; or: string }> = {

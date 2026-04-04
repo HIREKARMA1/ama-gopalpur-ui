@@ -20,6 +20,7 @@ import {
 import { ImageSlider } from './ImageSlider';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
+import { getHealthProfileLabel, getMinorIrrigationProfileLabel } from '../../lib/profileLabels';
 import {
   Droplets,
   MapPin,
@@ -165,19 +166,19 @@ export function WaterPortfolioDashboard({
 
   const topStats = [
     {
-      label: 'Intake Capacity (MLD)',
+      label: t('water.top.intakeCapacity', language),
       value: intake,
       icon: Droplets,
       color: 'blue',
     },
     {
-      label: 'Design Capacity (MLD)',
+      label: t('water.top.designCapacity', language),
       value: designCapacity,
       icon: Gauge,
       color: 'emerald',
     },
     {
-      label: 'Per Capita Supply (LPCD)',
+      label: t('water.top.perCapita', language),
       value: perCapita,
       icon: Users,
       color: 'amber',
@@ -257,14 +258,14 @@ export function WaterPortfolioDashboard({
   }, [extraAttributes]);
 
   const assetTabs: { id: string; label: string; icon: any }[] = [
-    { id: 'overview', label: 'Water Assets', icon: Gauge },
-    { id: 'basic', label: 'General Data', icon: FileText },
-    { id: 'quality', label: 'Water Quality', icon: Activity },
-    { id: 'treatment', label: 'Treatment Plant (WTP)', icon: Droplets },
-    { id: 'pumping', label: 'Pumping & Power', icon: Timer },
-    { id: 'dist', label: 'Distribution & More', icon: MapPin },
-    { id: 'other', label: 'Other Specs', icon: AlertTriangle },
-  ].filter(t => t.id === 'overview' || categorizedAttributes[t.id]?.length > 0);
+    { id: 'overview', label: t('water.assets.waterAssets', language), icon: Gauge },
+    { id: 'basic', label: t('water.assets.generalData', language), icon: FileText },
+    { id: 'quality', label: t('water.assets.waterQuality', language), icon: Activity },
+    { id: 'treatment', label: t('water.assets.treatmentPlant', language), icon: Droplets },
+    { id: 'pumping', label: t('water.assets.pumpingPower', language), icon: Timer },
+    { id: 'dist', label: t('water.assets.distribution', language), icon: MapPin },
+    { id: 'other', label: t('water.assets.otherSpecs', language), icon: AlertTriangle },
+  ].filter((tab) => tab.id === 'overview' || categorizedAttributes[tab.id]?.length > 0);
 
   const [detailTab, setDetailTab] = useState<string>('profile');
 
@@ -276,12 +277,10 @@ export function WaterPortfolioDashboard({
 
       <header className="mx-auto max-w-[1920px] px-4 pt-6 pb-6 sm:px-6 lg:px-8">
         <h1 className="text-xl font-bold tracking-tight text-[#1e293b] sm:text-3xl lg:text-[32px]">
-          {language === 'or' ? 'ଜଳ ଯୋଗାଣ ସଂପତ୍ତି ଡ୍ୟାସବୋର୍ଡ' : 'Water Supply Asset Dashboard'}
+          {t('water.portfolio.title', language)}
         </h1>
         <p className="mt-1 text-[15px] font-medium text-[#64748b]">
-          {language === 'or'
-            ? 'ଏହି ଜଳ ଯୋଗାଣ ସଂସ୍ଥା ସମ୍ପର୍କିତ ତଥ୍ୟ ଓ ଅବସ୍ଥାନ।'
-            : 'Scheme details and location from available WATCO/RWSS data.'}
+          {t('water.portfolio.subtitle', language)}
         </p>
       </header>
 
@@ -291,11 +290,11 @@ export function WaterPortfolioDashboard({
           <div className="relative z-10">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
               <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
-                {language === 'or' ? 'ସଂସ୍ଥା ବିବରଣୀ' : 'Scheme details'}
+                {t('water.portfolio.schemeDetails', language)}
               </h2>
               <div className="flex flex-wrap items-center justify-center sm:justify-start rounded-full bg-slate-100 p-1 w-full sm:w-auto">
                 {[
-                  { id: 'profile', label: language === 'or' ? 'ପ୍ରୋଫାଇଲ୍' : 'Profile', icon: Building },
+                  { id: 'profile', label: t('water.tab.profile', language), icon: Building },
                   ...assetTabs,
                 ].map((tab) => (
                   <button
@@ -321,73 +320,73 @@ export function WaterPortfolioDashboard({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[
                   {
-                    label: language === 'or' ? 'ଷ୍ଟେସନ୍ ନାମ' : 'Station Name',
+                    label: t('water.field.stationName', language),
                     val: waterProfile['station_name'] || org.name,
                     icon: Building,
                     color: 'blue',
                   },
                   {
-                    label: language === 'or' ? 'ଷ୍ଟେସନ୍ ID' : 'Station ID',
+                    label: t('water.field.stationId', language),
                     val: waterProfile['station_id'],
                     icon: FileText,
                     color: 'slate',
                   },
                   {
-                    label: 'Station Type',
+                    label: t('water.field.stationType', language),
                     val: waterProfile['station_type'] || org.attributes?.station_type,
                     icon: Droplets,
                     color: 'indigo',
                   },
                   {
-                    label: 'Block / ULB',
+                    label: getHealthProfileLabel('block_ulb', language),
                     val: waterProfile['block_ulb'],
                     icon: MapPin,
                     color: 'emerald',
                   },
                   {
-                    label: 'GP / Ward',
+                    label: getHealthProfileLabel('gp_ward', language),
                     val: waterProfile['gp_ward'],
                     icon: MapPin,
                     color: 'sky',
                   },
                   {
-                    label: 'Village / Locality',
+                    label: getMinorIrrigationProfileLabel('village_locality', language),
                     val: waterProfile['village_locality'] || waterProfile['village'],
                     icon: MapPin,
                     color: 'violet',
                   },
                   {
-                    label: language === 'or' ? 'ଯୋଜନା ନାମ' : 'Scheme Name',
+                    label: t('water.field.schemeName', language),
                     val: waterProfile['scheme_name'],
                     icon: FileText,
                     color: 'teal',
                   },
                   {
-                    label: language === 'or' ? 'ସେବା ପ୍ରାପ୍ତ ଜନସଂଖ୍ୟା' : 'Population served',
+                    label: t('water.field.populationServed', language),
                     val: waterProfile['population_served'],
                     icon: Users,
                     color: 'amber',
                   },
                   {
-                    label: 'Source Type',
+                    label: t('water.field.sourceType', language),
                     val: waterProfile['source_type'],
                     icon: Droplets,
                     color: 'sky',
                   },
                   {
-                    label: 'Source Name',
+                    label: t('water.field.sourceName', language),
                     val: waterProfile['source_name'],
                     icon: Droplets,
                     color: 'blue',
                   },
                   {
-                    label: 'Latitude',
+                    label: getHealthProfileLabel('latitude', language),
                     val: org.latitude,
                     icon: MapPin,
                     color: 'rose',
                   },
                   {
-                    label: 'Longitude',
+                    label: getHealthProfileLabel('longitude', language),
                     val: org.longitude,
                     icon: MapPin,
                     color: 'pink',
@@ -413,12 +412,12 @@ export function WaterPortfolioDashboard({
             {detailTab === 'overview' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[
-                  { label: 'Intake Capacity (MLD)', val: intake, icon: Droplets, color: 'blue' },
-                  { label: 'Design Capacity (MLD)', val: designCapacity, icon: Gauge, color: 'emerald' },
-                  { label: 'Operational Capacity (MLD)', val: waterProfile['operational_capacity_mld'], icon: Activity, color: 'violet' },
-                  { label: 'Supply Hours / Day', val: hours, icon: Timer, color: 'amber' },
-                  { label: 'Per Capita Supply (LPCD)', val: perCapita, icon: Users, color: 'sky' },
-                  { label: 'NRW (%)', val: waterProfile['nrw'], icon: AlertTriangle, color: 'rose' },
+                  { label: t('water.overview.intakeCapacity', language), val: intake, icon: Droplets, color: 'blue' },
+                  { label: t('water.overview.designCapacity', language), val: designCapacity, icon: Gauge, color: 'emerald' },
+                  { label: t('water.overview.operationalCapacity', language), val: waterProfile['operational_capacity_mld'], icon: Activity, color: 'violet' },
+                  { label: t('water.overview.supplyHours', language), val: hours, icon: Timer, color: 'amber' },
+                  { label: t('water.overview.perCapita', language), val: perCapita, icon: Users, color: 'sky' },
+                  { label: t('water.overview.nrw', language), val: waterProfile['nrw'], icon: AlertTriangle, color: 'rose' },
                 ].map((item, idx) => (
                   <div key={idx} className="flex gap-4 items-center">
                     <div className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${colorMap[item.color]}`}>
@@ -535,7 +534,7 @@ export function WaterPortfolioDashboard({
             ) : (
               <div className="text-center">
                 <MapPin size={24} className="text-rose-500 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-slate-700">Loading map…</p>
+                <p className="text-sm font-semibold text-slate-700">{t('portfolio.loadingMap', language)}</p>
               </div>
             )}
           </div>
@@ -546,15 +545,15 @@ export function WaterPortfolioDashboard({
       <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-16">
         <div className="rounded-3xl border border-cyan-200 bg-cyan-50/60 p-6 sm:p-8 shadow-sm backdrop-blur-md">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-[#0f172a]">Daily Monitoring</h2>
-            <p className="text-[13px] text-[#64748b] mt-1">Daily tracking of water operations, pump logs, and tank levels.</p>
+            <h2 className="text-xl font-bold text-[#0f172a]">{t('water.daily.title', language)}</h2>
+            <p className="text-[13px] text-[#64748b] mt-1">{t('water.daily.subtitle', language)}</p>
           </div>
 
           <div className="space-y-10">
             {/* Date Picker & Quick Status */}
             <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between border-b border-slate-200 pb-6">
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-[#64748b]">Select Monitoring Date</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-[#64748b]">{t('portfolio.selectMonitoringDate', language)}</label>
                 <input
                   type="date"
                   value={monitorDate}
@@ -573,8 +572,12 @@ export function WaterPortfolioDashboard({
                       <div className={`flex items-center gap-3 px-4 py-2 rounded-2xl border ${activeLeakages > 0 ? 'bg-rose-50 border-rose-100 text-rose-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700'}`}>
                         <AlertTriangle size={18} className={activeLeakages > 0 ? 'text-rose-500' : 'text-emerald-500'} />
                         <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 leading-tight">Active Leakages</p>
-                          <p className="text-xs font-bold leading-tight">{activeLeakages > 0 ? `${activeLeakages} Reported` : 'None'}</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 leading-tight">{t('water.daily.activeLeakages', language)}</p>
+                          <p className="text-xs font-bold leading-tight">
+                            {activeLeakages > 0
+                              ? t('water.daily.leakagesCountLine', language).replace('{count}', String(activeLeakages))
+                              : t('water.daily.leakagesNone', language)}
+                          </p>
                         </div>
                       </div>
                     </>
@@ -589,17 +592,17 @@ export function WaterPortfolioDashboard({
               <div className="rounded-2xl border border-slate-100 bg-white/50 p-6 flex flex-col h-[350px]">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-[#0f172a]">Water Production vs Supply</h3>
-                    <p className="text-[11px] text-[#64748b]">Volume in MLD (Last 15 records)</p>
+                    <h3 className="text-sm font-bold text-[#0f172a]">{t('water.daily.productionVsSupply', language)}</h3>
+                    <p className="text-[11px] text-[#64748b]">{t('water.daily.volumeMld15', language)}</p>
                   </div>
                   <div className="flex gap-4">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-blue-500" />
-                      <span className="text-[10px] font-bold text-slate-500 uppercase">Produced</span>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">{t('water.daily.legend.produced', language)}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <span className="text-[10px] font-bold text-slate-500 uppercase">Supplied</span>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">{t('water.daily.legend.supplied', language)}</span>
                     </div>
                   </div>
                 </div>
@@ -637,8 +640,8 @@ export function WaterPortfolioDashboard({
               {/* Pump Logs Trends */}
               <div className="rounded-2xl border border-slate-100 bg-white/50 p-6 flex flex-col h-[350px]">
                 <div className="mb-4">
-                  <h3 className="text-sm font-bold text-[#0f172a]">Pump Running Hours</h3>
-                  <p className="text-[11px] text-[#64748b]">Total run time (Last 15 records)</p>
+                  <h3 className="text-sm font-bold text-[#0f172a]">{t('water.daily.pumpHours', language)}</h3>
+                  <p className="text-[11px] text-[#64748b]">{t('water.daily.pumpHoursSubtitle', language)}</p>
                 </div>
                 <div className="flex-1 min-h-0">
                   <ResponsiveContainer width="100%" height="100%">
@@ -680,8 +683,8 @@ export function WaterPortfolioDashboard({
             <div className="rounded-2xl border border-slate-100 bg-white/40 overflow-hidden">
               <div className="p-5 border-b border-slate-100 bg-white/50 flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-[#0f172a]">Daily Reservoir / Tank Levels</h3>
-                  <p className="text-[11px] text-[#64748b]">Volume levels for {monitorDate}</p>
+                  <h3 className="text-sm font-bold text-[#0f172a]">{t('water.daily.tankLevelsTitle', language)}</h3>
+                  <p className="text-[11px] text-[#64748b]">{t('water.daily.tankLevelsForDate', language).replace('{date}', monitorDate)}</p>
                 </div>
                 <div className="h-10 w-10 bg-cyan-50 rounded-xl flex items-center justify-center text-cyan-600">
                   <Droplets size={20} />
@@ -691,11 +694,11 @@ export function WaterPortfolioDashboard({
                 <table className="w-full text-left text-sm border-collapse">
                   <thead>
                     <tr className="bg-slate-50/50">
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Tank Name</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">Opening (ML)</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">Intake (ML)</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">Distributed (ML)</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-right">Closing (ML)</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">{t('water.daily.tankName', language)}</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">{t('water.daily.openingMl', language)}</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">{t('water.daily.intakeMl', language)}</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">{t('water.daily.distributedMl', language)}</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-right">{t('water.daily.closingMl', language)}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -705,7 +708,7 @@ export function WaterPortfolioDashboard({
                         return (
                           <tr>
                             <td colSpan={5} className="px-6 py-10 text-center text-slate-400 italic bg-white/20">
-                              No tank level data available for this date.
+                              {t('water.daily.noTankData', language)}
                             </td>
                           </tr>
                         );
