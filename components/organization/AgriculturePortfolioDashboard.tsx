@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   Organization,
   AgricultureDailyMetric,
@@ -20,6 +20,7 @@ import {
 import { ImageSlider } from './ImageSlider';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
+import { getAgriculturePortfolioLabel } from '../../lib/agriculturePortfolioLabels';
 import {
   Users,
   MapPin,
@@ -36,11 +37,6 @@ import {
   ClipboardList,
   Activity,
 } from 'lucide-react';
-import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
-import { GOPALPUR_BOUNDS } from '../../lib/mapConfig';
-
-const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
-
 type AgProfile = Record<string, unknown>;
 
 function formatVal(v: string | number | null | undefined): string {
@@ -66,20 +62,14 @@ export function AgriculturePortfolioDashboard({
   monthlyReports = [],
 }: AgriculturePortfolioDashboardProps) {
   const { language } = useLanguage();
+  const L = (key: Parameters<typeof getAgriculturePortfolioLabel>[0]) =>
+    getAgriculturePortfolioLabel(key, language);
   const [detailTab, setDetailTab] = useState<
     'profile' | 'infrastructure' | 'outreach' | 'notes'
   >('profile');
   const [monitorDate, setMonitorDate] = useState(
     () => new Date().toISOString().slice(0, 10),
   );
-  const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY });
-
-  const mapCenter = useMemo(() => {
-    if (org.latitude != null && org.longitude != null) {
-      return { lat: org.latitude, lng: org.longitude };
-    }
-    return { lat: 20.296, lng: 85.824 };
-  }, [org.latitude, org.longitude]);
 
   const p: any = profile;
 
@@ -192,10 +182,10 @@ export function AgriculturePortfolioDashboard({
       {/* Top Header */}
       <header className="mx-auto max-w-[1920px] px-4 pt-6 pb-6 sm:px-6 lg:px-8">
         <h1 className="text-xl font-bold tracking-tight text-[#1e293b] sm:text-3xl lg:text-[32px]">
-          Agriculture Facility Dashboard
+          {L('dashboardTitle')}
         </h1>
         <p className="mt-1 text-[15px] font-medium text-[#64748b]">
-          Facility profile, infrastructure and outreach from available data
+          {L('dashboardSubtitle')}
         </p>
         {departmentName && (
           <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -211,7 +201,7 @@ export function AgriculturePortfolioDashboard({
           <div className="relative z-10">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
               <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
-                Facility details
+                {t('portfolio.facilityDetails', language)}
               </h2>
               <div className="flex flex-wrap items-center justify-center sm:justify-start rounded-full bg-slate-100 p-1 w-full sm:w-auto">
                 <button
@@ -220,7 +210,7 @@ export function AgriculturePortfolioDashboard({
                   className={tabBtnClass(detailTab === 'profile')}
                 >
                   <Building size={14} />
-                  <span>Facility profile</span>
+                  <span>{L('tabProfile')}</span>
                 </button>
                 <button
                   type="button"
@@ -228,7 +218,7 @@ export function AgriculturePortfolioDashboard({
                   className={tabBtnClass(detailTab === 'infrastructure')}
                 >
                   <Tractor size={14} />
-                  <span>Infrastructure</span>
+                  <span>{L('tabInfrastructure')}</span>
                 </button>
                 <button
                   type="button"
@@ -236,7 +226,7 @@ export function AgriculturePortfolioDashboard({
                   className={tabBtnClass(detailTab === 'outreach')}
                 >
                   <Leaf size={14} />
-                  <span>Outreach</span>
+                  <span>{L('tabOutreach')}</span>
                 </button>
                 <button
                   type="button"
@@ -244,62 +234,62 @@ export function AgriculturePortfolioDashboard({
                   className={tabBtnClass(detailTab === 'notes')}
                 >
                   <BookOpen size={14} />
-                  <span>Schemes & notes</span>
+                  <span>{L('tabSchemesNotes')}</span>
                 </button>
               </div>
             </div>
 
             {detailTab === 'profile' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <Tile icon={Building} label="Facility name" value={org.name} tone="emerald" />
-                <Tile icon={MapPin} label="Block / ULB" value={block} tone="sky" />
-                <Tile icon={Home} label="GP / Ward" value={gpWard} tone="amber" />
-                <Tile icon={MapPin} label="Village / Locality" value={village} tone="violet" />
-                <Tile icon={ClipboardList} label="Institution type" value={institutionType} tone="slate" />
-                <Tile icon={ClipboardList} label="Institution ID" value={institutionId} tone="slate" />
-                <Tile icon={Building} label="Host institution / affiliating body" value={hostInstitution} tone="emerald" />
-                <Tile icon={ClipboardList} label="Established year" value={establishedYear} tone="sky" />
-                <Tile icon={ClipboardList} label="PIN code" value={pinCode} tone="slate" />
+                <Tile icon={Building} label={L('facilityName')} value={org.name} tone="emerald" />
+                <Tile icon={MapPin} label={L('blockUlb')} value={block} tone="sky" />
+                <Tile icon={Home} label={L('gpWard')} value={gpWard} tone="amber" />
+                <Tile icon={MapPin} label={L('villageLocality')} value={village} tone="violet" />
+                <Tile icon={ClipboardList} label={L('institutionType')} value={institutionType} tone="slate" />
+                <Tile icon={ClipboardList} label={L('institutionId')} value={institutionId} tone="slate" />
+                <Tile icon={Building} label={L('hostInstitution')} value={hostInstitution} tone="emerald" />
+                <Tile icon={ClipboardList} label={L('establishedYear')} value={establishedYear} tone="sky" />
+                <Tile icon={ClipboardList} label={L('pinCode')} value={pinCode} tone="slate" />
               </div>
             )}
 
             {detailTab === 'infrastructure' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <Tile icon={Leaf} label="Campus area (acres)" value={campusArea} tone="emerald" />
-                <Tile icon={Building} label="Training hall" value={trainingHall} tone="amber" />
-                <Tile icon={Users} label="Training hall capacity (seats)" value={trainingHallCapacity} tone="slate" />
-                <Tile icon={Beaker} label="Soil testing" value={soilTesting} tone="teal" />
-                <Tile icon={FlaskConical} label="Soil samples tested / year" value={soilSamplesPerYear} tone="teal" />
+                <Tile icon={Leaf} label={L('campusAreaAcres')} value={campusArea} tone="emerald" />
+                <Tile icon={Building} label={L('trainingHall')} value={trainingHall} tone="amber" />
+                <Tile icon={Users} label={L('trainingHallCapacity')} value={trainingHallCapacity} tone="slate" />
+                <Tile icon={Beaker} label={L('soilTesting')} value={soilTesting} tone="teal" />
+                <Tile icon={FlaskConical} label={L('soilSamplesPerYear')} value={soilSamplesPerYear} tone="teal" />
                 <Tile
                   icon={Sprout}
-                  label="Seed distribution / processing"
+                  label={L('seedDistProcessing')}
                   value={`${formatVal(seedDistribution)} / ${formatVal(seedProcessingUnit)}`}
                   tone="emerald"
                 />
-                <Tile icon={Sprout} label="Seed storage capacity (MT)" value={seedStorageCapacity} tone="emerald" />
-                <Tile icon={Tractor} label="Machinery custom hiring" value={machineryHiring} tone="sky" />
-                <Tile icon={Globe} label="Computer / IT lab" value={computerLab} tone="violet" />
-                <Tile icon={BookOpen} label="Library" value={library} tone="rose" />
-                <Tile icon={Leaf} label="Demo farm" value={demoFarm} tone="emerald" />
-                <Tile icon={Leaf} label="Demo farm area (acres)" value={demoFarmArea} tone="emerald" />
-                <Tile icon={Sprout} label="Greenhouse / polyhouse" value={greenhousePolyhouse} tone="teal" />
-                <Tile icon={Beaker} label="Irrigation facility" value={irrigationFacility} tone="sky" />
+                <Tile icon={Sprout} label={L('seedStorageMt')} value={seedStorageCapacity} tone="emerald" />
+                <Tile icon={Tractor} label={L('machineryHiring')} value={machineryHiring} tone="sky" />
+                <Tile icon={Globe} label={L('computerItLab')} value={computerLab} tone="violet" />
+                <Tile icon={BookOpen} label={L('library')} value={library} tone="rose" />
+                <Tile icon={Leaf} label={L('demoFarm')} value={demoFarm} tone="emerald" />
+                <Tile icon={Leaf} label={L('demoFarmArea')} value={demoFarmArea} tone="emerald" />
+                <Tile icon={Sprout} label={L('greenhousePolyhouse')} value={greenhousePolyhouse} tone="teal" />
+                <Tile icon={Beaker} label={L('irrigationFacility')} value={irrigationFacility} tone="sky" />
               </div>
             )}
 
             {detailTab === 'outreach' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <Tile icon={Users} label="Total staff" value={totalStaff} tone="slate" />
-                <Tile icon={ClipboardList} label="Scientists / officers" value={scientists} tone="emerald" />
-                <Tile icon={ClipboardList} label="Technical staff" value={technicalStaff} tone="sky" />
-                <Tile icon={Leaf} label="Extension workers" value={extensionWorkers} tone="teal" />
+                <Tile icon={Users} label={L('totalStaff')} value={totalStaff} tone="slate" />
+                <Tile icon={ClipboardList} label={L('scientistsOfficers')} value={scientists} tone="emerald" />
+                <Tile icon={ClipboardList} label={L('technicalStaff')} value={technicalStaff} tone="sky" />
+                <Tile icon={Leaf} label={L('extensionWorkers')} value={extensionWorkers} tone="teal" />
 
-                <Tile icon={Users} label="Farmer training capacity (per batch)" value={farmerCapacity} tone="amber" />
-                <Tile icon={ClipboardList} label="Trainings conducted last year" value={trainingsLastYear} tone="violet" />
-                <Tile icon={Beaker} label="On-farm trials / FLD last year" value={trialsLastYear} tone="teal" />
-                <Tile icon={MapPin} label="Villages / GPs covered (count)" value={villagesCovered} tone="sky" />
-                <Tile icon={FlaskConical} label="Soil health cards issued last year" value={soilCards} tone="teal" />
-                <Tile icon={Leaf} label="Farmers served last year (approx)" value={farmersServed} tone="emerald" />
+                <Tile icon={Users} label={L('farmerTrainingCapacity')} value={farmerCapacity} tone="amber" />
+                <Tile icon={ClipboardList} label={L('trainingsLastYear')} value={trainingsLastYear} tone="violet" />
+                <Tile icon={Beaker} label={L('trialsLastYear')} value={trialsLastYear} tone="teal" />
+                <Tile icon={MapPin} label={L('villagesGpsCovered')} value={villagesCovered} tone="sky" />
+                <Tile icon={FlaskConical} label={L('soilCardsLastYear')} value={soilCards} tone="teal" />
+                <Tile icon={Leaf} label={L('farmersServedLastYear')} value={farmersServed} tone="emerald" />
               </div>
             )}
 
@@ -307,27 +297,27 @@ export function AgriculturePortfolioDashboard({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 <Tile
                   icon={ClipboardList}
-                  label="Key schemes"
+                  label={L('keySchemes')}
                   value={keySchemes}
                   tone="violet"
                   multiline
                 />
                 <Tile
                   icon={Leaf}
-                  label="Demo units"
+                  label={L('demoUnits')}
                   value={demoUnits}
                   tone="emerald"
                   multiline
                 />
                 <Tile
                   icon={BookOpen}
-                  label="Remarks / description"
+                  label={L('remarksDescription')}
                   value={remarks}
                   tone="slate"
                   multiline
                 />
                 {!keySchemes && !demoUnits && !remarks && (
-                  <div className="text-sm text-slate-600">No notes available.</div>
+                  <div className="text-sm text-slate-600">{L('noNotes')}</div>
                 )}
               </div>
             )}
@@ -339,9 +329,9 @@ export function AgriculturePortfolioDashboard({
       <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-16">
         <div className="rounded-3xl border border-emerald-200 bg-emerald-50/60 p-6 sm:p-8 shadow-sm backdrop-blur-md">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-[#0f172a]">Daily Monitoring</h2>
+            <h2 className="text-xl font-bold text-[#0f172a]">{t('agriculture.monitoring.title', language)}</h2>
             <p className="text-[13px] text-[#64748b] mt-1">
-              Trainings, farmers served and outreach metrics over time.
+              {L('dailyMonitoringSubtitle')}
             </p>
           </div>
 
@@ -349,7 +339,7 @@ export function AgriculturePortfolioDashboard({
             <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between border-b border-slate-200 pb-6">
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-[#64748b]">
-                  Select date
+                  {t('portfolio.selectDate', language)}
                 </label>
                 <input
                   type="date"
@@ -365,17 +355,17 @@ export function AgriculturePortfolioDashboard({
               <div className="rounded-2xl border border-slate-100 bg-white/50 p-6 flex flex-col h-[350px]">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-[#0f172a]">Daily outreach</h3>
-                    <p className="text-[11px] text-[#64748b]">Trainings and farmers served (last 15 records)</p>
+                    <h3 className="text-sm font-bold text-[#0f172a]">{L('dailyOutreach')}</h3>
+                    <p className="text-[11px] text-[#64748b]">{L('dailyOutreachHint')}</p>
                   </div>
                   <div className="flex gap-4">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <span className="text-[10px] font-bold text-slate-500 uppercase">Trainings</span>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">{L('trainings')}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-amber-500" />
-                      <span className="text-[10px] font-bold text-slate-500 uppercase">Farmers</span>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">{L('farmers')}</span>
                     </div>
                   </div>
                 </div>
@@ -420,8 +410,8 @@ export function AgriculturePortfolioDashboard({
               {/* Monthly report totals */}
               <div className="rounded-2xl border border-slate-100 bg-white/50 p-6 flex flex-col h-[350px]">
                 <div className="mb-4">
-                  <h3 className="text-sm font-bold text-[#0f172a]">Monthly summary</h3>
-                  <p className="text-[11px] text-[#64748b]">Totals by month (last 12 records)</p>
+                  <h3 className="text-sm font-bold text-[#0f172a]">{L('monthlySummary')}</h3>
+                  <p className="text-[11px] text-[#64748b]">{L('monthlyHint')}</p>
                 </div>
                 <div className="flex-1 min-h-0">
                   <ResponsiveContainer width="100%" height="100%">
@@ -479,8 +469,10 @@ export function AgriculturePortfolioDashboard({
             <div className="rounded-2xl border border-slate-100 bg-white/40 overflow-hidden">
               <div className="p-5 border-b border-slate-100 bg-white/50 flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-[#0f172a]">Daily metrics</h3>
-                  <p className="text-[11px] text-[#64748b]">Records for {monitorDate}</p>
+                  <h3 className="text-sm font-bold text-[#0f172a]">{L('dailyMetrics')}</h3>
+                  <p className="text-[11px] text-[#64748b]">
+                    {L('recordsFor')} {monitorDate}
+                  </p>
                 </div>
                 <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
                   <Activity size={20} />
@@ -490,12 +482,12 @@ export function AgriculturePortfolioDashboard({
                 <table className="w-full text-left text-sm border-collapse">
                   <thead>
                     <tr className="bg-slate-50/50">
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Date</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">Trainings</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">Farmers served</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">Trials</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">Villages</th>
-                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-right">Soil cards</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">{L('thDate')}</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">{L('thTrainings')}</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">{L('thFarmersServed')}</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">{L('thTrials')}</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-center">{L('thVillages')}</th>
+                      <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 text-right">{L('thSoilCards')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -507,7 +499,7 @@ export function AgriculturePortfolioDashboard({
                         return (
                           <tr>
                             <td colSpan={6} className="px-6 py-10 text-center text-slate-400 italic bg-white/20">
-                              No daily metrics for this date. Add data from the Agriculture admin panel.
+                              {L('noDailyMetrics')}
                             </td>
                           </tr>
                         );
@@ -541,71 +533,6 @@ export function AgriculturePortfolioDashboard({
                 </table>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Map Section with legend */}
-      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
-        <div className="rounded-3xl border border-emerald-200 bg-emerald-100/40 p-6 sm:p-8 shadow-sm backdrop-blur-md">
-          <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-[#0f172a]">
-                Agriculture Facility Location
-              </h2>
-              <p className="text-[13px] text-[#64748b] mt-1">
-                Agriculture facility location on map.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 rounded-full bg-white/70 px-4 py-2 border border-emerald-100 shadow-sm">
-              <div className="flex items-center gap-2">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-600" />
-                <span className="text-[11px] font-semibold text-slate-600">
-                  {t('map.legend', language)} · {t('map.viewProfile', language)}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="h-[400px] w-full rounded-xl bg-[#f8f9fa] overflow-hidden relative flex items-center justify-center">
-            {isLoaded ? (
-              <GoogleMap
-                mapContainerStyle={{ width: '100%', height: '100%' }}
-                center={mapCenter}
-                zoom={14}
-                options={{
-                  restriction: {
-                    latLngBounds: {
-                      south: GOPALPUR_BOUNDS.south,
-                      west: GOPALPUR_BOUNDS.west,
-                      north: GOPALPUR_BOUNDS.north,
-                      east: GOPALPUR_BOUNDS.east,
-                    },
-                    strictBounds: true,
-                  },
-                  styles: [
-                    { featureType: 'poi', elementType: 'all', stylers: [{ visibility: 'off' }] },
-                    { featureType: 'transit', elementType: 'all', stylers: [{ visibility: 'off' }] },
-                  ],
-                  disableDefaultUI: false,
-                  zoomControl: true,
-                  mapTypeControl: true,
-                  scaleControl: true,
-                  fullscreenControl: true,
-                  streetViewControl: false,
-                  minZoom: 11,
-                  maxZoom: 18,
-                }}
-              >
-                <Marker position={mapCenter} />
-              </GoogleMap>
-            ) : (
-              <div className="text-center">
-                <MapPin size={24} className="text-emerald-500 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-slate-700">
-                  {t('minor.map.loading', language)}
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </section>

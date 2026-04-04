@@ -212,7 +212,7 @@ export function HealthPortfolioDashboard({
 
   const topStats = [
     { label: t('health.stat.beds', language), value: beds, icon: BedDouble, color: 'amber' },
-    { label: 'Total staff', value: displayStaff.length, icon: Users, color: 'emerald' },
+    { label: t('health.portfolio.totalStaff', language), value: displayStaff.length, icon: Users, color: 'emerald' },
     { label: t('health.stat.icuBeds', language), value: icuBeds, icon: Stethoscope, color: 'indigo' },
   ];
 
@@ -234,10 +234,10 @@ export function HealthPortfolioDashboard({
       {/* Top Header */}
       <header className="mx-auto max-w-[1920px] px-4 pt-6 pb-6 sm:px-6 lg:px-8">
         <h1 className="text-xl font-bold tracking-tight text-[#1e293b] sm:text-3xl lg:text-[32px]">
-          Health Facility Dashboard
+          {t('health.portfolio.title', language)}
         </h1>
         <p className="mt-1 text-[15px] font-medium text-[#64748b]">
-          Facility details and resources from available data
+          {t('health.portfolio.subtitle', language)}
         </p>
       </header>
 
@@ -248,7 +248,7 @@ export function HealthPortfolioDashboard({
           <div className="relative z-10">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
               <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
-                Facility details
+                {t('portfolio.facilityDetails', language)}
               </h2>
               <div className="flex flex-wrap items-center justify-center sm:justify-start rounded-full bg-slate-100 p-1 w-full sm:w-auto">
                 <button
@@ -260,7 +260,7 @@ export function HealthPortfolioDashboard({
                     }`}
                 >
                   <Building size={14} />
-                  <span>{t('health.facilityProfileTitle', language) || 'Facility profile'}</span>
+                  <span>{t('health.facilityProfileTitle', language)}</span>
                 </button>
                 <button
                   type="button"
@@ -271,7 +271,7 @@ export function HealthPortfolioDashboard({
                     }`}
                 >
                   <Monitor size={14} />
-                  <span>Resources</span>
+                  <span>{t('health.portfolio.resources', language)}</span>
                 </button>
               </div>
             </div>
@@ -279,14 +279,14 @@ export function HealthPortfolioDashboard({
             {detailTab === 'profile' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[
-                  { label: 'Facility Name', val: org.name, icon: Building, color: 'blue' },
-                  { label: 'Facility Type', val: org.type, icon: MapPin, color: 'violet' },
-                  { label: 'ID', val: org.id, icon: Hash, color: 'slate' },
-                  { label: 'Block / ULB', val: healthProfile['block_ulb'] || healthProfile['block_name'], icon: MapPin, color: 'emerald' },
-                  { label: 'GP / Ward', val: healthProfile['gp_ward'] || healthProfile['district'], icon: Home, color: 'amber' },
-                  { label: 'Village', val: healthProfile['village'], icon: Home, color: 'sky' },
-                  { label: 'Latitude', val: org.latitude, icon: MapPin, color: 'rose' },
-                  { label: 'Longitude', val: org.longitude, icon: MapPin, color: 'pink' },
+                  { label: t('health.portfolio.facilityName', language), val: org.name, icon: Building, color: 'blue' },
+                  { label: t('health.portfolio.facilityType', language), val: org.type, icon: MapPin, color: 'violet' },
+                  { label: t('health.portfolio.id', language), val: org.id, icon: Hash, color: 'slate' },
+                  { label: getHealthProfileLabel('block_ulb', language), val: healthProfile['block_ulb'] || healthProfile['block_name'], icon: MapPin, color: 'emerald' },
+                  { label: getHealthProfileLabel('gp_ward', language), val: healthProfile['gp_ward'] || healthProfile['district'], icon: Home, color: 'amber' },
+                  { label: getHealthProfileLabel('village', language), val: healthProfile['village'], icon: Home, color: 'sky' },
+                  { label: getHealthProfileLabel('latitude', language), val: org.latitude, icon: MapPin, color: 'rose' },
+                  { label: getHealthProfileLabel('longitude', language), val: org.longitude, icon: MapPin, color: 'pink' },
                 ].map((item, idx) => {
                   const colorMap: Record<string, string> = {
                     blue: 'bg-blue-50 text-blue-600 border-blue-100',
@@ -372,7 +372,7 @@ export function HealthPortfolioDashboard({
                             <item.icon size={20} strokeWidth={2} />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">{getHealthProfileLabel(key)}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">{getHealthProfileLabel(key, language)}</p>
                             <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(value as string | number | null | undefined)}</p>
                           </div>
                         </div>
@@ -406,8 +406,8 @@ export function HealthPortfolioDashboard({
       <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
         <div className="rounded-3xl border border-violet-200 bg-violet-100/30 p-6 sm:p-8 shadow-sm backdrop-blur-md">
           <div className="mb-4">
-            <h2 className="text-xl font-bold text-[#0f172a]">Facility Location</h2>
-            <p className="text-[13px] text-[#64748b] mt-1">Health facility location on map.</p>
+            <h2 className="text-xl font-bold text-[#0f172a]">{t('portfolio.facilityLocation', language)}</h2>
+            <p className="text-[13px] text-[#64748b] mt-1">{t('health.portfolio.mapSubtitle', language)}</p>
           </div>
           <div className="h-[400px] w-full rounded-xl bg-[#f8f9fa] overflow-hidden relative flex items-center justify-center">
             {isLoaded ? (
@@ -444,7 +444,7 @@ export function HealthPortfolioDashboard({
             ) : (
               <div className="text-center">
                 <MapPin size={24} className="text-rose-500 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-slate-700">Loading map…</p>
+                <p className="text-sm font-semibold text-slate-700">{t('portfolio.loadingMap', language)}</p>
               </div>
             )}
           </div>
@@ -455,15 +455,15 @@ export function HealthPortfolioDashboard({
       <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-16">
         <div className="rounded-3xl border border-blue-200 bg-blue-50/60 p-6 sm:p-8 shadow-sm backdrop-blur-md">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-[#0f172a]">Daily Monitoring</h2>
-            <p className="text-[13px] text-[#64748b] mt-1">Daily tracking of medicine inventory, attendance and patient traffic.</p>
+            <h2 className="text-xl font-bold text-[#0f172a]">{t('health.monitoring.title', language)}</h2>
+            <p className="text-[13px] text-[#64748b] mt-1">{t('health.portfolio.dailyMonitoringSubtitle', language)}</p>
           </div>
 
           <div className="space-y-10">
             {/* Date Picker & Quick Status */}
             <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between border-b border-slate-200 pb-6">
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-[#64748b]">Select Monitoring Date</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-[#64748b]">{t('portfolio.selectMonitoringDate', language)}</label>
                 <input
                   type="date"
                   value={monitorDate}

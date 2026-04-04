@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import { Organization, CenterProfile, SnpDailyStock } from '../../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
-import { t } from '../i18n/messages';
+import { t, type MessageKey } from '../i18n/messages';
+import { getHealthProfileLabel } from '../../lib/profileLabels';
 import { Users, Building, MapPin, Contact, Home, Hash, UserCheck, FileText, Phone } from 'lucide-react';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
 import {
@@ -24,28 +25,15 @@ import { GOPALPUR_BOUNDS, AWC_MARKER_ICON } from '../../lib/mapConfig';
 const SNP_ROWS_PER_PAGE = 10;
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
-// Logical groups for portfolio tables – strictly from ICDS CSV
-const PROFILE_ROWS: { attribute: string; key: string }[] = [
-  { attribute: 'Block / ULB', key: 'block_name' },
-  { attribute: 'GP / Ward', key: 'gram_panchayat' },
-  { attribute: 'Village', key: 'village_ward' },
-  { attribute: 'Name of AWC', key: 'org.name' },
-  { attribute: 'AWC ID', key: 'center_code' },
-  { attribute: 'Building status', key: 'building_type' },
-  { attribute: 'Latitude', key: 'org.latitude' },
-  { attribute: 'Longitude', key: 'org.longitude' },
-  { attribute: 'Description', key: 'description' },
-];
-
-const CONTACT_ROWS: { attribute: string; key: string }[] = [
-  { attribute: 'CPDO name', key: 'cpdo_name' },
-  { attribute: 'CPDO contact no', key: 'cpdo_contact_no' },
-  { attribute: 'Supervisor name', key: 'supervisor_name' },
-  { attribute: 'Supervisor contact', key: 'supervisor_contact_name' },
-  { attribute: 'AWW name', key: 'worker_name' },
-  { attribute: 'AWW contact no', key: 'aww_contact_no' },
-  { attribute: 'AWH name', key: 'helper_name' },
-  { attribute: 'AWH contact no', key: 'awh_contact_no' },
+const CONTACT_ROWS: { key: string; labelKey: MessageKey }[] = [
+  { key: 'cpdo_name', labelKey: 'awc.stat.cpdoName' },
+  { key: 'cpdo_contact_no', labelKey: 'awc.contact.cpdoContactNo' },
+  { key: 'supervisor_name', labelKey: 'awc.stat.supervisorName' },
+  { key: 'supervisor_contact_name', labelKey: 'awc.contact.supervisorContact' },
+  { key: 'worker_name', labelKey: 'awc.stat.awwName' },
+  { key: 'aww_contact_no', labelKey: 'awc.contact.awwContactNo' },
+  { key: 'helper_name', labelKey: 'awc.contact.awhName' },
+  { key: 'awh_contact_no', labelKey: 'awc.contact.awhContactNo' },
 ];
 
 function formatVal(v: string | number | null | undefined): string {
@@ -162,10 +150,10 @@ export function AwcPortfolioDashboard({
       {/* Top Header */}
       <header className="mx-auto max-w-[1920px] px-4 pt-6 pb-6 sm:px-6 lg:px-8">
         <h1 className="text-xl font-bold tracking-tight text-[#1e293b] sm:text-3xl lg:text-[32px]">
-          Anganwadi Centre Dashboard
+          {t('awc.portfolio.title', language)}
         </h1>
         <p className="mt-1 text-[15px] font-medium text-[#64748b]">
-          Centre details and location from available data
+          {t('awc.portfolio.heroSubtitle', language)}
         </p>
       </header>
 
@@ -176,7 +164,7 @@ export function AwcPortfolioDashboard({
           <div className="relative z-10">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
               <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
-                Centre details
+                {t('awc.portfolio.centreDetailsSection', language)}
               </h2>
               <div className="flex flex-wrap items-center justify-center sm:justify-start rounded-full bg-slate-100 p-1 w-full sm:w-auto">
                 <button
@@ -188,7 +176,7 @@ export function AwcPortfolioDashboard({
                     }`}
                 >
                   <Building size={14} />
-                  <span>{t('awc.centreProfileTitle', language) || 'Centre profile'}</span>
+                  <span>{t('awc.centreProfileTitle', language)}</span>
                 </button>
                 <button
                   type="button"
@@ -199,7 +187,7 @@ export function AwcPortfolioDashboard({
                     }`}
                 >
                   <Contact size={14} />
-                  <span>{t('awc.staffContactTitle', language) || 'Staff & contact'}</span>
+                  <span>{t('awc.staffContactTitle', language)}</span>
                 </button>
               </div>
             </div>
@@ -211,7 +199,7 @@ export function AwcPortfolioDashboard({
                     <Building size={20} strokeWidth={2} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Org name</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">{t('awc.portfolio.orgNameLabel', language)}</p>
                     <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(org.name)}</p>
                   </div>
                 </div>
@@ -220,7 +208,7 @@ export function AwcPortfolioDashboard({
                     <MapPin size={20} strokeWidth={2} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Block / ULB</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">{getHealthProfileLabel('block_ulb', language)}</p>
                     <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(blockName)}</p>
                   </div>
                 </div>
@@ -229,7 +217,7 @@ export function AwcPortfolioDashboard({
                     <Home size={20} strokeWidth={2} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">GP / Ward</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">{getHealthProfileLabel('gp_ward', language)}</p>
                     <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(gramPanchayat)}</p>
                   </div>
                 </div>
@@ -238,7 +226,7 @@ export function AwcPortfolioDashboard({
                     <MapPin size={20} strokeWidth={2} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Village</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">{getHealthProfileLabel('village', language)}</p>
                     <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(villageWard)}</p>
                   </div>
                 </div>
@@ -247,7 +235,7 @@ export function AwcPortfolioDashboard({
                     <Hash size={20} strokeWidth={2} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">AWC ID</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">{t('awc.portfolio.awcIdLabel', language)}</p>
                     <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(centerCode)}</p>
                   </div>
                 </div>
@@ -256,7 +244,7 @@ export function AwcPortfolioDashboard({
                     <Building size={20} strokeWidth={2} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Building status</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">{t('awc.portfolio.buildingStatusLabel', language)}</p>
                     <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(buildingType)}</p>
                   </div>
                 </div>
@@ -265,7 +253,7 @@ export function AwcPortfolioDashboard({
                     <MapPin size={20} strokeWidth={2} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Latitude</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">{getHealthProfileLabel('latitude', language)}</p>
                     <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(org?.latitude)}</p>
                   </div>
                 </div>
@@ -274,7 +262,7 @@ export function AwcPortfolioDashboard({
                     <MapPin size={20} strokeWidth={2} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">Longitude</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">{getHealthProfileLabel('longitude', language)}</p>
                     <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(org?.longitude)}</p>
                   </div>
                 </div>
@@ -283,7 +271,7 @@ export function AwcPortfolioDashboard({
 
             {detailTab === 'staff' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {CONTACT_ROWS.map(({ attribute, key }, idx) => {
+                {CONTACT_ROWS.map(({ key, labelKey }, idx) => {
                   const value = getValue(org, awcProfile, key);
                   const iconStyles = [
                     'bg-indigo-50 text-indigo-600 border-indigo-100',
@@ -302,7 +290,7 @@ export function AwcPortfolioDashboard({
                         <Icon size={20} strokeWidth={2} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">{attribute}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">{t(labelKey, language)}</p>
                         <p className="text-[15px] font-bold text-[#0f172a] break-words">{formatVal(value)}</p>
                       </div>
                     </div>
@@ -319,9 +307,9 @@ export function AwcPortfolioDashboard({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="rounded-2xl border border-amber-200 bg-amber-100/40 p-6 shadow-sm flex justify-between items-center backdrop-blur-sm">
             <div className="min-w-0">
-              <p className="text-[13px] font-bold text-amber-900/70 mb-1 uppercase tracking-wider">Total enrollment</p>
+              <p className="text-[13px] font-bold text-amber-900/70 mb-1 uppercase tracking-wider">{t('awc.portfolio.totalEnrollment', language)}</p>
               <h3 className="text-[28px] sm:text-[32px] font-black text-amber-950 leading-none">{formatVal(studentStrength)}</h3>
-              <p className="text-[11px] text-amber-800/60 mt-1 font-medium">children</p>
+              <p className="text-[11px] text-amber-800/60 mt-1 font-medium">{t('awc.portfolio.children', language)}</p>
             </div>
             <div className="w-14 h-14 shrink-0 rounded-2xl bg-amber-200/50 flex items-center justify-center text-amber-700 ml-3 shadow-inner">
               <Users size={28} strokeWidth={2.5} />
@@ -329,9 +317,9 @@ export function AwcPortfolioDashboard({
           </div>
           <div className="rounded-2xl border border-emerald-200 bg-emerald-100/40 p-6 shadow-sm flex justify-between items-center backdrop-blur-sm">
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-bold text-emerald-900/70 mb-1 uppercase tracking-wider">AWW (Worker)</p>
+              <p className="text-[13px] font-bold text-emerald-900/70 mb-1 uppercase tracking-wider">{t('awc.portfolio.awwWorkerTitle', language)}</p>
               <p className="text-[16px] font-black text-emerald-950 truncate">{formatVal(workerName)}</p>
-              <p className="text-[11px] text-emerald-800/60 mt-0.5 font-medium">Anganwadi Worker</p>
+              <p className="text-[11px] text-emerald-800/60 mt-0.5 font-medium">{t('awc.portfolio.awwWorkerSubtitle', language)}</p>
             </div>
             <div className="w-14 h-14 shrink-0 rounded-2xl bg-emerald-200/50 flex items-center justify-center text-emerald-700 ml-3 shadow-inner">
               <UserCheck size={28} strokeWidth={2.5} />
@@ -339,9 +327,9 @@ export function AwcPortfolioDashboard({
           </div>
           <div className="rounded-2xl border border-indigo-200 bg-indigo-100/40 p-6 shadow-sm flex justify-between items-center backdrop-blur-sm">
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-bold text-indigo-900/70 mb-1 uppercase tracking-wider">Supervisor</p>
+              <p className="text-[13px] font-bold text-indigo-900/70 mb-1 uppercase tracking-wider">{t('awc.portfolio.supervisorTitle', language)}</p>
               <p className="text-[16px] font-black text-indigo-950 truncate">{formatVal(supervisorName)}</p>
-              <p className="text-[11px] text-indigo-800/60 mt-0.5 font-medium">Centre supervisor</p>
+              <p className="text-[11px] text-indigo-800/60 mt-0.5 font-medium">{t('awc.portfolio.supervisorSubtitle', language)}</p>
             </div>
             <div className="w-14 h-14 shrink-0 rounded-2xl bg-indigo-200/50 flex items-center justify-center text-indigo-700 ml-3 shadow-inner">
               <Contact size={28} strokeWidth={2.5} />
@@ -354,7 +342,7 @@ export function AwcPortfolioDashboard({
       {description != null && String(description).trim() !== '' && (
         <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
           <div className="rounded-3xl border border-slate-300 bg-slate-100/50 p-6 sm:p-8 shadow-sm backdrop-blur-md">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b] mb-2">About this centre</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b] mb-2">{t('awc.portfolio.aboutCentre', language)}</h2>
             <p className="text-[14px] text-[#334155] leading-relaxed">{formatVal(description)}</p>
           </div>
         </section>
@@ -364,8 +352,8 @@ export function AwcPortfolioDashboard({
       <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
         <div className="rounded-3xl border border-violet-200 bg-violet-100/30 p-6 sm:p-8 shadow-sm backdrop-blur-md">
           <div className="mb-4">
-            <h2 className="text-xl font-bold text-[#0f172a]">Centre Location</h2>
-            <p className="text-[13px] text-[#64748b] mt-1">Anganwadi centre location on map.</p>
+            <h2 className="text-xl font-bold text-[#0f172a]">{t('awc.portfolio.mapTitle', language)}</h2>
+            <p className="text-[13px] text-[#64748b] mt-1">{t('awc.portfolio.mapSubtitle', language)}</p>
           </div>
           <div className="h-[400px] w-full rounded-xl bg-[#f8f9fa] overflow-hidden relative flex items-center justify-center">
             {isLoaded ? (
@@ -402,7 +390,7 @@ export function AwcPortfolioDashboard({
             ) : (
               <div className="text-center">
                 <MapPin size={24} className="text-rose-500 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-slate-700">Loading map…</p>
+                <p className="text-sm font-semibold text-slate-700">{t('portfolio.loadingMap', language)}</p>
               </div>
             )}
           </div>
@@ -413,16 +401,14 @@ export function AwcPortfolioDashboard({
       <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-8">
         <div className="rounded-3xl border border-rose-200 bg-rose-100/30 p-6 sm:p-8 shadow-sm backdrop-blur-md">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-[#0f172a]">SNP Daily Stock</h2>
-            <p className="text-[13px] text-[#64748b] mt-1">
-              Opening balance, received and expenditure for Supplementary Nutrition Programme.
-            </p>
+            <h2 className="text-xl font-bold text-[#0f172a]">{t('awc.portfolio.snpDailyStockTitle', language)}</h2>
+            <p className="text-[13px] text-[#64748b] mt-1">{t('awc.portfolio.snpDailyStockDesc', language)}</p>
           </div>
 
           {/* SNP graphs – always visible; empty state when no data */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm backdrop-blur-sm">
-              <h3 className="text-sm font-bold text-sky-900 mb-3">Stock trend (Kg)</h3>
+              <h3 className="text-sm font-bold text-sky-900 mb-3">{t('awc.portfolio.chart.stockTrend', language)}</h3>
               <div className="h-[260px] w-full">
                 {snpChartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
@@ -436,20 +422,20 @@ export function AwcPortfolioDashboard({
                         contentStyle={{ fontSize: 12, borderRadius: 8 }}
                       />
                       <Legend wrapperStyle={{ fontSize: 11 }} />
-                      <Line type="monotone" dataKey="opening" name="Opening" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, fill: '#0ea5e9' }} />
-                      <Line type="monotone" dataKey="closing" name="Closing" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} />
+                      <Line type="monotone" dataKey="opening" name={t('awc.portfolio.chart.opening', language)} stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, fill: '#0ea5e9' }} />
+                      <Line type="monotone" dataKey="closing" name={t('awc.portfolio.chart.closing', language)} stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
                   <div className="h-full w-full flex flex-col items-center justify-center rounded-lg bg-slate-100/80 border border-dashed border-slate-300 text-slate-500">
-                    <p className="text-sm font-medium">No SNP data</p>
-                    <p className="text-xs mt-1">Add daily stock records to see the chart</p>
+                    <p className="text-sm font-medium">{t('awc.portfolio.noSnpData', language)}</p>
+                    <p className="text-xs mt-1">{t('awc.portfolio.noSnpDataHint', language)}</p>
                   </div>
                 )}
               </div>
             </div>
             <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm backdrop-blur-sm">
-              <h3 className="text-sm font-bold text-amber-900 mb-3">Received vs expenditure (Kg)</h3>
+              <h3 className="text-sm font-bold text-amber-900 mb-3">{t('awc.portfolio.chart.receivedVsExp', language)}</h3>
               <div className="h-[260px] w-full">
                 {snpChartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
@@ -463,14 +449,14 @@ export function AwcPortfolioDashboard({
                         contentStyle={{ fontSize: 12, borderRadius: 8 }}
                       />
                       <Legend wrapperStyle={{ fontSize: 11 }} />
-                      <Bar dataKey="received" name="Received" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="expenditure" name="Expenditure" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="received" name={t('awc.portfolio.chart.received', language)} fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="expenditure" name={t('awc.portfolio.chart.expenditure', language)} fill="#f59e0b" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
                   <div className="h-full w-full flex flex-col items-center justify-center rounded-lg bg-slate-100/80 border border-dashed border-slate-300 text-slate-500">
-                    <p className="text-sm font-medium">No SNP data</p>
-                    <p className="text-xs mt-1">Add daily stock records to see the chart</p>
+                    <p className="text-sm font-medium">{t('awc.portfolio.noSnpData', language)}</p>
+                    <p className="text-xs mt-1">{t('awc.portfolio.noSnpDataHint', language)}</p>
                   </div>
                 )}
               </div>
@@ -478,10 +464,10 @@ export function AwcPortfolioDashboard({
           </div>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-4">
-            <h3 className="text-[15px] font-semibold text-[#0f172a]">Daily records</h3>
+            <h3 className="text-[15px] font-semibold text-[#0f172a]">{t('awc.portfolio.dailyRecords', language)}</h3>
             <div className="flex flex-col items-start gap-2">
               <label className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider">
-                Filter by date
+                {t('awc.snp.filterByDate', language)}
               </label>
               <input
                 type="date"
@@ -499,18 +485,18 @@ export function AwcPortfolioDashboard({
             <table className="w-full text-center text-sm whitespace-nowrap lg:whitespace-normal">
               <thead className="bg-rose-100/40">
                 <tr>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-rose-800/80">Date</th>
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-rose-800/80">{t('awc.snp.date', language)}</th>
                   <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-rose-800/80">
-                    Opening balance
+                    {t('awc.snp.openingBalance', language)}
                   </th>
                   <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-rose-800/80">
-                    Received
+                    {t('awc.snp.received', language)}
                   </th>
                   <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-rose-800/80">
-                    Expenditure
+                    {t('awc.portfolio.chart.expenditure', language)}
                   </th>
                   <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-rose-800/80">
-                    Closing balance
+                    {t('awc.snp.closingBalance', language)}
                   </th>
                 </tr>
               </thead>
@@ -540,7 +526,7 @@ export function AwcPortfolioDashboard({
                       className="px-4 py-6 text-[13px] text-[#64748b] text-center"
                       colSpan={5}
                     >
-                      No SNP stock records available yet.
+                      {t('awc.portfolio.noSnpRows', language)}
                     </td>
                   </tr>
                 )}
@@ -550,15 +536,10 @@ export function AwcPortfolioDashboard({
 
           <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-[12px] text-[#64748b]">
             <span>
-              Showing{' '}
-              <span className="font-semibold text-[#0f172a]">
-                {snpShowStart}-{snpShowEnd}
-              </span>{' '}
-              of{' '}
-              <span className="font-semibold text-[#0f172a]">
-                {snpTotalRows}
-              </span>{' '}
-              days
+              {t('awc.portfolio.showingDaysRange', language)
+                .replace('{start}', String(snpShowStart))
+                .replace('{end}', String(snpShowEnd))
+                .replace('{total}', String(snpTotalRows))}
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -567,17 +548,12 @@ export function AwcPortfolioDashboard({
                 disabled={snpPageClamped <= 1}
                 className="rounded-md border border-slate-300 px-3 py-1 text-[12px] font-medium text-[#0f172a] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
               >
-                Previous
+                {t('awc.snp.prev', language)}
               </button>
               <span className="text-[12px] text-[#64748b]">
-                Page{' '}
-                <span className="font-semibold text-[#0f172a]">
-                  {snpPageClamped}
-                </span>{' '}
-                of{' '}
-                <span className="font-semibold text-[#0f172a]">
-                  {snpTotalPages}
-                </span>
+                {t('awc.portfolio.pageOf', language)
+                  .replace('{page}', String(snpPageClamped))
+                  .replace('{total}', String(snpTotalPages))}
               </span>
               <button
                 type="button"
@@ -585,7 +561,7 @@ export function AwcPortfolioDashboard({
                 disabled={snpPageClamped >= snpTotalPages}
                 className="rounded-md border border-slate-300 px-3 py-1 text-[12px] font-medium text-[#0f172a] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
               >
-                Next
+                {t('awc.snp.next', language)}
               </button>
             </div>
           </div>

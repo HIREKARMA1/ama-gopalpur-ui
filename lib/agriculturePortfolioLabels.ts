@@ -1,0 +1,87 @@
+import type { Language } from '../components/i18n/LanguageContext';
+
+/** UI labels for Agriculture portfolio dashboard (tiles, tabs, charts, tables). */
+const LABELS: Record<string, { en: string; or: string }> = {
+  dashboardTitle: {
+    en: 'Agriculture Facility Dashboard',
+    or: 'କୃଷି ସୁବିଧା ଡ୍ୟାସବୋର୍ଡ',
+  },
+  dashboardSubtitle: {
+    en: 'Facility profile, infrastructure and outreach from available data',
+    or: 'ଉପଲବ୍ଧ ତଥ୍ୟରୁ ସୁବିଧା ପ୍ରୋଫାଇଲ୍, ଭିତ୍ତିଭୂମି ଓ ପ୍ରସାର।',
+  },
+  facilityDetails: { en: 'Facility details', or: 'ସୁବିଧା ବିବରଣୀ' },
+  tabProfile: { en: 'Facility profile', or: 'ସୁବିଧା ପ୍ରୋଫାଇଲ୍' },
+  tabInfrastructure: { en: 'Infrastructure', or: 'ଭିତ୍ତିଭୂମି' },
+  tabOutreach: { en: 'Outreach', or: 'ପ୍ରସାର' },
+  tabSchemesNotes: { en: 'Schemes & notes', or: 'ଯୋଜନା ଓ ମନ୍ତବ୍ୟ' },
+  facilityName: { en: 'Facility name', or: 'ସୁବିଧା ନାମ' },
+  blockUlb: { en: 'Block / ULB', or: 'ବ୍ଲକ୍ / ULB' },
+  gpWard: { en: 'GP / Ward', or: 'ଜି.ପି. / ୱାର୍ଡ' },
+  villageLocality: { en: 'Village / Locality', or: 'ଗ୍ରାମ / ଅଞ୍ଚଳ' },
+  institutionType: { en: 'Institution type', or: 'ଅନୁଷ୍ଠାନ ପ୍ରକାର' },
+  institutionId: { en: 'Institution ID', or: 'ଅନୁଷ୍ଠାନ ଆଇଡି' },
+  hostInstitution: { en: 'Host institution / affiliating body', or: 'ମେଜବାନ ଅନୁଷ୍ଠାନ / ସଂଲଗ୍ନ ସଂସ୍ଥା' },
+  establishedYear: { en: 'Established year', or: 'ସ୍ଥାପନ ବର୍ଷ' },
+  pinCode: { en: 'PIN code', or: 'ପିନ୍ କୋଡ୍' },
+  campusAreaAcres: { en: 'Campus area (acres)', or: 'କ୍ୟାମ୍ପସ କ୍ଷେତ୍ରଫଳ (ଏକର)' },
+  trainingHall: { en: 'Training hall', or: 'ପ୍ରଶିକ୍ଷଣ ହଲ୍' },
+  trainingHallCapacity: { en: 'Training hall capacity (seats)', or: 'ପ୍ରଶିକ୍ଷଣ ହଲ୍ କ୍ଷମତା (ଆସନ)' },
+  soilTesting: { en: 'Soil testing', or: 'ମୃତ୍ତିକା ପରୀକ୍ଷା' },
+  soilSamplesPerYear: { en: 'Soil samples tested / year', or: 'ବର୍ଷକୁ ପରୀକ୍ଷିତ ମୃତ୍ତିକା ନମୁନା' },
+  seedDistProcessing: { en: 'Seed distribution / processing', or: 'ବିହନ ବିତରଣ / ପ୍ରକ୍ରିୟାକରଣ' },
+  seedStorageMt: { en: 'Seed storage capacity (MT)', or: 'ବିହନ ଭଣ୍ଡାର କ୍ଷମତା (MT)' },
+  machineryHiring: { en: 'Machinery custom hiring', or: 'ଯନ୍ତ୍ରପାତି ଭଡ଼ା' },
+  computerItLab: { en: 'Computer / IT lab', or: 'କମ୍ପ୍ୟୁଟର / IT ଲ୍ୟାବ୍' },
+  library: { en: 'Library', or: 'ପାଠାଗାର' },
+  demoFarm: { en: 'Demo farm', or: 'ପ୍ରଦର୍ଶନୀ କୃଷିକ୍ଷେତ୍ର' },
+  demoFarmArea: { en: 'Demo farm area (acres)', or: 'ପ୍ରଦର୍ଶନୀ କ୍ଷେତ୍ରଫଳ (ଏକର)' },
+  greenhousePolyhouse: { en: 'Greenhouse / polyhouse', or: 'ଗ୍ରୀନହାଉସ୍ / ପଲିହାଉସ୍' },
+  irrigationFacility: { en: 'Irrigation facility', or: 'ସେଚନ ସୁବିଧା' },
+  totalStaff: { en: 'Total staff', or: 'ମୋଟ କର୍ମଚାରୀ' },
+  scientistsOfficers: { en: 'Scientists / officers', or: 'ବୈଜ୍ଞାନିକ / ଅଧିକାରୀ' },
+  technicalStaff: { en: 'Technical staff', or: 'ପ୍ରଯୁକ୍ତିଗତ କର୍ମଚାରୀ' },
+  extensionWorkers: { en: 'Extension workers', or: 'ବିସ୍ତାର କର୍ମୀ' },
+  farmerTrainingCapacity: { en: 'Farmer training capacity (per batch)', or: 'କୃଷକ ପ୍ରଶିକ୍ଷଣ କ୍ଷମତା (ପ୍ରତି ବ୍ୟାଚ୍)' },
+  trainingsLastYear: { en: 'Trainings conducted last year', or: 'ଗତ ବର୍ଷ ପ୍ରଶିକ୍ଷଣ' },
+  trialsLastYear: { en: 'On-farm trials / FLD last year', or: 'ଗତ ବର୍ଷ ଖେତ ପରୀକ୍ଷା / FLD' },
+  villagesGpsCovered: { en: 'Villages / GPs covered (count)', or: 'ଆବୃତ ଗ୍ରାମ / ଜି.ପି. (ସଂଖ୍ୟା)' },
+  soilCardsLastYear: { en: 'Soil health cards issued last year', or: 'ଗତ ବର୍ଷ ମୃତ୍ତିକା ସ୍ୱାସ୍ଥ୍ୟ କାର୍ଡ' },
+  farmersServedLastYear: { en: 'Farmers served last year (approx)', or: 'ଗତ ବର୍ଷ ସେବିତ କୃଷକ (ଆନୁମାନିକ)' },
+  keySchemes: { en: 'Key schemes', or: 'ମୁଖ୍ୟ ଯୋଜନା' },
+  demoUnits: { en: 'Demo units', or: 'ପ୍ରଦର୍ଶନୀ ଏକକ' },
+  remarksDescription: { en: 'Remarks / description', or: 'ମନ୍ତବ୍ୟ / ବିବରଣୀ' },
+  noNotes: { en: 'No notes available.', or: 'କୌଣସି ମନ୍ତବ୍ୟ ନାହିଁ।' },
+  dailyMonitoringSubtitle: {
+    en: 'Trainings, farmers served and outreach metrics over time.',
+    or: 'ସମୟାନୁସାରେ ପ୍ରଶିକ୍ଷଣ, କୃଷକ ସେବା ଓ ପ୍ରସାର ସୂଚକ।',
+  },
+  selectDate: { en: 'Select date', or: 'ତାରିଖ ବାଛନ୍ତୁ' },
+  dailyOutreach: { en: 'Daily outreach', or: 'ଦୈନିକ ପ୍ରସାର' },
+  dailyOutreachHint: {
+    en: 'Trainings and farmers served (last 15 records)',
+    or: 'ପ୍ରଶିକ୍ଷଣ ଓ କୃଷକ ସେବା (ଶେଷ ୧୫ ରେକର୍ଡ)',
+  },
+  trainings: { en: 'Trainings', or: 'ପ୍ରଶିକ୍ଷଣ' },
+  farmers: { en: 'Farmers', or: 'କୃଷକ' },
+  monthlySummary: { en: 'Monthly summary', or: 'ମାସିକ ସାରାଂଶ' },
+  monthlyHint: { en: 'Totals by month (last 12 records)', or: 'ମାସ ଅନୁସାରେ ମୋଟ (ଶେଷ ୧୨ ରେକର୍ଡ)' },
+  dailyMetrics: { en: 'Daily metrics', or: 'ଦୈନିକ ସୂଚକ' },
+  recordsFor: { en: 'Records for', or: 'ଏହି ତାରିଖର ରେକର୍ଡ' },
+  thDate: { en: 'Date', or: 'ତାରିଖ' },
+  thTrainings: { en: 'Trainings', or: 'ପ୍ରଶିକ୍ଷଣ' },
+  thFarmersServed: { en: 'Farmers served', or: 'ସେବିତ କୃଷକ' },
+  thTrials: { en: 'Trials', or: 'ପରୀକ୍ଷା' },
+  thVillages: { en: 'Villages', or: 'ଗ୍ରାମ' },
+  thSoilCards: { en: 'Soil cards', or: 'ମୃତ୍ତିକା କାର୍ଡ' },
+  noDailyMetrics: {
+    en: 'No daily metrics for this date. Add data from the Agriculture admin panel.',
+    or: 'ଏହି ତାରିଖରେ ଦୈନିକ ସୂଚକ ନାହିଁ। କୃଷି ପ୍ରଶାସନ ପ୍ୟାନେଲରୁ ଡାଟା ଯୋଡନ୍ତୁ।',
+  },
+};
+
+export function getAgriculturePortfolioLabel(key: keyof typeof LABELS | string, language: Language): string {
+  const row = LABELS[key as string];
+  if (!row) return key;
+  return language === 'or' ? row.or : row.en;
+}

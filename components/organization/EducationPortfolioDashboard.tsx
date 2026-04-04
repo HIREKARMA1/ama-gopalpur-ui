@@ -544,7 +544,7 @@ export function EducationPortfolioDashboard({
     {
       // For ITI, we show monthly highest salary instead of LPA package.
       label: org.sub_department === 'ITI'
-        ? (language === 'or' ? 'ସର୍ବାଧିକ ଦରମା (ମାସିକ)' : 'Highest Salary (Monthly)')
+        ? t('edu.stat.highestSalaryMonthly', language)
         : t('edu.stat.highestPackage', language),
       value: org.sub_department === 'ITI'
         ? toStatVal(
@@ -626,9 +626,9 @@ export function EducationPortfolioDashboard({
             {detailTab === 'profile' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[
-                  { label: t('govBar.title', language).includes('Odisha') ? 'Institution Name' : 'ଅନୁଷ୍ଠାନର ନାମ', val: org.name, icon: Building, color: 'blue' },
-                  { label: t('govBar.title', language).includes('Odisha') ? 'Institution Type' : 'ଅନୁଷ୍ଠାନ ପ୍ରକାର', val: EDUCATION_TYPE_LABELS[org.type] || org.type, icon: GraduationCap, color: 'violet' },
-                  { label: t('govBar.title', language).includes('Odisha') ? 'ID' : 'ଆଇଡି', val: org.id, icon: IdCard, color: 'slate' },
+                  { label: t('edu.portfolio.institutionName', language), val: org.name, icon: Building, color: 'blue' },
+                  { label: t('edu.portfolio.institutionType', language), val: EDUCATION_TYPE_LABELS[org.type] || org.type, icon: GraduationCap, color: 'violet' },
+                  { label: t('edu.portfolio.id', language), val: org.id, icon: IdCard, color: 'slate' },
                   { label: getEducationProfileLabel('block_ulb', language), val: educationProfile['block_ulb'] || educationProfile['block'], icon: MapPin, color: 'emerald' },
                   { label: getEducationProfileLabel('gp_ward', language), val: educationProfile['gp_ward'] || educationProfile['gp_name'], icon: Home, color: 'amber' },
                   { label: getEducationProfileLabel('village', language), val: educationProfile['village'] || educationProfile['ward_village'] || educationProfile['village_locality'], icon: Home, color: 'sky' },
@@ -1051,7 +1051,7 @@ export function EducationPortfolioDashboard({
             ) : (
               <div className="text-center">
                 <MapPin size={24} className="text-rose-500 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-slate-700">Loading map…</p>
+                <p className="text-sm font-semibold text-slate-700">{t('portfolio.loadingMap', language)}</p>
               </div>
             )}
           </div>
