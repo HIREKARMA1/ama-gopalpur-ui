@@ -91,6 +91,7 @@ export type MessageKey =
   | 'awc.snp.totalStock'
   | 'awc.snp.exp'
   | 'awc.snp.bal'
+  | 'awc.snp.closingBalance'
   | 'awc.snp.filterByDate'
   | 'awc.snp.allDates'
   | 'awc.snp.showingRows'
@@ -205,6 +206,104 @@ export type MessageKey =
   | 'health.monitoring.patients.deliveries'
   | 'health.monitoring.patients.refIn'
   | 'health.monitoring.patients.refOut'
+  | 'portfolio.loadingMap'
+  | 'portfolio.facilityDetails'
+  | 'portfolio.facilityLocation'
+  | 'portfolio.facilityLocationDesc'
+  | 'portfolio.subtitleFromData'
+  | 'portfolio.selectDate'
+  | 'portfolio.selectMonitoringDate'
+  | 'health.portfolio.title'
+  | 'health.portfolio.subtitle'
+  | 'health.portfolio.resources'
+  | 'health.portfolio.facilityName'
+  | 'health.portfolio.facilityType'
+  | 'health.portfolio.id'
+  | 'health.portfolio.totalStaff'
+  | 'health.portfolio.mapSubtitle'
+  | 'health.portfolio.dailyMonitoringSubtitle'
+  | 'awc.portfolio.title'
+  | 'awc.portfolio.subtitle'
+  | 'awc.portfolio.heroSubtitle'
+  | 'awc.portfolio.centreDetailsSection'
+  | 'awc.portfolio.orgNameLabel'
+  | 'awc.portfolio.nameOfAwcLabel'
+  | 'awc.portfolio.awcIdLabel'
+  | 'awc.portfolio.buildingStatusLabel'
+  | 'awc.portfolio.mapTitle'
+  | 'awc.portfolio.mapSubtitle'
+  | 'awc.portfolio.aboutCentre'
+  | 'awc.portfolio.totalEnrollment'
+  | 'awc.portfolio.children'
+  | 'awc.portfolio.awwWorkerTitle'
+  | 'awc.portfolio.awwWorkerSubtitle'
+  | 'awc.portfolio.supervisorTitle'
+  | 'awc.portfolio.supervisorSubtitle'
+  | 'awc.portfolio.snpDailyStockTitle'
+  | 'awc.portfolio.snpDailyStockDesc'
+  | 'awc.portfolio.chart.stockTrend'
+  | 'awc.portfolio.chart.receivedVsExp'
+  | 'awc.portfolio.chart.opening'
+  | 'awc.portfolio.chart.closing'
+  | 'awc.portfolio.chart.received'
+  | 'awc.portfolio.chart.expenditure'
+  | 'awc.portfolio.noSnpData'
+  | 'awc.portfolio.noSnpDataHint'
+  | 'awc.portfolio.dailyRecords'
+  | 'awc.portfolio.noSnpRows'
+  | 'awc.contact.cpdoContactNo'
+  | 'awc.contact.supervisorContact'
+  | 'awc.contact.awwContactNo'
+  | 'awc.contact.awhName'
+  | 'awc.contact.awhContactNo'
+  | 'awc.portfolio.showingDaysRange'
+  | 'awc.portfolio.pageOf'
+  | 'water.portfolio.title'
+  | 'water.portfolio.subtitle'
+  | 'water.portfolio.schemeDetails'
+  | 'water.tab.profile'
+  | 'water.assets.waterAssets'
+  | 'water.assets.generalData'
+  | 'water.assets.waterQuality'
+  | 'water.assets.treatmentPlant'
+  | 'water.assets.pumpingPower'
+  | 'water.assets.distribution'
+  | 'water.assets.otherSpecs'
+  | 'water.field.stationName'
+  | 'water.field.stationId'
+  | 'water.field.stationType'
+  | 'water.field.schemeName'
+  | 'water.field.populationServed'
+  | 'water.field.sourceType'
+  | 'water.field.sourceName'
+  | 'water.overview.intakeCapacity'
+  | 'water.overview.designCapacity'
+  | 'water.overview.operationalCapacity'
+  | 'water.overview.supplyHours'
+  | 'water.overview.perCapita'
+  | 'water.overview.nrw'
+  | 'water.top.intakeCapacity'
+  | 'water.top.designCapacity'
+  | 'water.top.perCapita'
+  | 'water.daily.title'
+  | 'water.daily.subtitle'
+  | 'water.daily.activeLeakages'
+  | 'water.daily.leakagesCountLine'
+  | 'water.daily.leakagesNone'
+  | 'water.daily.productionVsSupply'
+  | 'water.daily.volumeMld15'
+  | 'water.daily.legend.produced'
+  | 'water.daily.legend.supplied'
+  | 'water.daily.pumpHours'
+  | 'water.daily.pumpHoursSubtitle'
+  | 'water.daily.tankLevelsTitle'
+  | 'water.daily.tankLevelsForDate'
+  | 'water.daily.tankName'
+  | 'water.daily.openingMl'
+  | 'water.daily.intakeMl'
+  | 'water.daily.distributedMl'
+  | 'water.daily.closingMl'
+  | 'water.daily.noTankData'
   | 'edu.tab.profile'
   | 'edu.tab.academic'
   | 'edu.tab.faculty'
@@ -217,6 +316,10 @@ export type MessageKey =
   | 'edu.stat.totalIntake'
   | 'edu.stat.placementPercent'
   | 'edu.stat.highestPackage'
+  | 'edu.stat.highestSalaryMonthly'
+  | 'edu.portfolio.institutionName'
+  | 'edu.portfolio.institutionType'
+  | 'edu.portfolio.id'
   | 'edu.location.title'
   | 'edu.location.subtitle'
   | 'edu.details.title'
@@ -673,6 +776,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     en: 'Balance',
     or: 'ବାକି',
   },
+  'awc.snp.closingBalance': {
+    en: 'Closing balance',
+    or: 'ଶେଷ ବାକି',
+  },
   'awc.snp.filterByDate': {
     en: 'Filter by date',
     or: 'ତାରିଖ ଦ୍ୱାରା ଫିଲ୍ଟର କରନ୍ତୁ',
@@ -901,6 +1008,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'edu.stat.totalIntake': { en: 'Total Intake', or: 'ମୋଟ ନାମଲେଖା' },
   'edu.stat.placementPercent': { en: 'Placement Percentage', or: 'ନିଯୁକ୍ତି ପ୍ରତିଶତ' },
   'edu.stat.highestPackage': { en: 'Highest Package (LPA)', or: 'ସର୍ବାଧିକ ପ୍ୟାକେଜ୍' },
+  'edu.stat.highestSalaryMonthly': { en: 'Highest Salary (Monthly)', or: 'ସର୍ବାଧିକ ଦରମା (ମାସିକ)' },
+  'edu.portfolio.institutionName': { en: 'Institution Name', or: 'ଅନୁଷ୍ଠାନର ନାମ' },
+  'edu.portfolio.institutionType': { en: 'Institution Type', or: 'ଅନୁଷ୍ଠାନ ପ୍ରକାର' },
+  'edu.portfolio.id': { en: 'ID', or: 'ଆଇଡି' },
   'edu.location.title': { en: 'Institution Location', or: 'ଅନୁଷ୍ଠାନର ଅବସ୍ଥିତି' },
   'edu.location.subtitle': { en: 'Geographic coordinates and mapping details', or: 'ଭୌଗୋଳିକ ସଂଯୋଜକ ଏବଂ ମାନଚିତ୍ର ବିବରଣୀ' },
   'edu.details.title': { en: 'Institution Details', or: 'ଅନୁଷ୍ଠାନର ବିବରଣୀ' },
@@ -1856,6 +1967,194 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'health.monitoring.patients.refOut': {
     en: 'Referrals Out',
     or: 'Referrals Out',
+  },
+  'portfolio.loadingMap': {
+    en: 'Loading map…',
+    or: 'ମାନଚିତ୍ର ଲୋଡ୍ ହେଉଛି…',
+  },
+  'portfolio.facilityDetails': {
+    en: 'Facility details',
+    or: 'ସୁବିଧା ବିବରଣୀ',
+  },
+  'portfolio.facilityLocation': {
+    en: 'Facility Location',
+    or: 'ସୁବିଧା ଅବସ୍ଥିତି',
+  },
+  'portfolio.facilityLocationDesc': {
+    en: 'Facility location on map.',
+    or: 'ମାନଚିତ୍ରରେ ସୁବିଧା ଅବସ୍ଥିତି।',
+  },
+  'portfolio.subtitleFromData': {
+    en: 'Facility details and resources from available data',
+    or: 'ଉପଲବ୍ଧ ତଥ୍ୟରୁ ସୁବିଧା ବିବରଣୀ ଓ ସମ୍ପତ୍ତି',
+  },
+  'portfolio.selectDate': {
+    en: 'Select date',
+    or: 'ତାରିଖ ବାଛନ୍ତୁ',
+  },
+  'portfolio.selectMonitoringDate': {
+    en: 'Select Monitoring Date',
+    or: 'ନିରୀକ୍ଷଣ ତାରିଖ ବାଛନ୍ତୁ',
+  },
+  'health.portfolio.title': {
+    en: 'Health Facility Dashboard',
+    or: 'ସ୍ୱାସ୍ଥ୍ୟ ସୁବିଧା ଡ୍ୟାସବୋର୍ଡ',
+  },
+  'health.portfolio.subtitle': {
+    en: 'Facility details and resources from available data',
+    or: 'ଉପଲବ୍ଧ ତଥ୍ୟରୁ ସୁବିଧା ବିବରଣୀ ଓ ସମ୍ପତ୍ତି',
+  },
+  'health.portfolio.resources': {
+    en: 'Resources',
+    or: 'ସମ୍ପତ୍ତି',
+  },
+  'health.portfolio.facilityName': {
+    en: 'Facility Name',
+    or: 'ସୁବିଧା ନାମ',
+  },
+  'health.portfolio.facilityType': {
+    en: 'Facility Type',
+    or: 'ସୁବିଧା ପ୍ରକାର',
+  },
+  'health.portfolio.id': {
+    en: 'ID',
+    or: 'ଆଇଡି',
+  },
+  'health.portfolio.totalStaff': {
+    en: 'Total staff',
+    or: 'ମୋଟ କର୍ମଚାରୀ',
+  },
+  'health.portfolio.mapSubtitle': {
+    en: 'Health facility location on map.',
+    or: 'ମାନଚିତ୍ରରେ ସ୍ୱାସ୍ଥ୍ୟ ସୁବିଧା ଅବସ୍ଥିତି।',
+  },
+  'health.portfolio.dailyMonitoringSubtitle': {
+    en: 'Daily tracking of medicine inventory, attendance and patient traffic.',
+    or: 'ଔଷଧ ଭଣ୍ଡାର, ଉପସ୍ଥିତି ଓ ରୋଗୀ ଚାପର ଦୈନିକ ଅନୁଧ୍ୟାନ।',
+  },
+  'awc.portfolio.title': {
+    en: 'Anganwadi Centre Dashboard',
+    or: 'ଆଙ୍ଗନୱାଡି କେନ୍ଦ୍ର ଡ୍ୟାସବୋର୍ଡ',
+  },
+  'awc.portfolio.subtitle': {
+    en: 'Centre profile and services from available data',
+    or: 'ଉପଲବ୍ଧ ତଥ୍ୟରୁ କେନ୍ଦ୍ର ପ୍ରୋଫାଇଲ୍ ଓ ସେବା',
+  },
+  'awc.portfolio.heroSubtitle': {
+    en: 'Centre details and location from available data',
+    or: 'ଉପଲବ୍ଧ ତଥ୍ୟରୁ କେନ୍ଦ୍ର ବିବରଣୀ ଓ ଅବସ୍ଥାନ',
+  },
+  'awc.portfolio.centreDetailsSection': {
+    en: 'Centre details',
+    or: 'କେନ୍ଦ୍ର ବିବରଣୀ',
+  },
+  'awc.portfolio.orgNameLabel': { en: 'Org name', or: 'ସଂସ୍ଥା ନାମ' },
+  'awc.portfolio.nameOfAwcLabel': { en: 'Name of AWC', or: 'ଆଙ୍ଗନୱାଡି କେନ୍ଦ୍ରର ନାମ' },
+  'awc.portfolio.awcIdLabel': { en: 'AWC ID', or: 'ଆଙ୍ଗନୱାଡି ଆଇଡି' },
+  'awc.portfolio.buildingStatusLabel': { en: 'Building status', or: 'ଭବନ ସ୍ଥିତି' },
+  'awc.portfolio.mapTitle': { en: 'Centre Location', or: 'କେନ୍ଦ୍ର ଅବସ୍ଥିତି' },
+  'awc.portfolio.mapSubtitle': {
+    en: 'Anganwadi centre location on map.',
+    or: 'ମାନଚିତ୍ରରେ ଆଙ୍ଗନୱାଡି କେନ୍ଦ୍ର ଅବସ୍ଥିତି।',
+  },
+  'awc.portfolio.aboutCentre': { en: 'About this centre', or: 'ଏହି କେନ୍ଦ୍ର ବିଷୟରେ' },
+  'awc.portfolio.totalEnrollment': { en: 'Total enrollment', or: 'ମୋଟ ନାମଲେଖା' },
+  'awc.portfolio.children': { en: 'children', or: 'ଶିଶୁ' },
+  'awc.portfolio.awwWorkerTitle': { en: 'AWW (Worker)', or: 'AWW (କର୍ମୀ)' },
+  'awc.portfolio.awwWorkerSubtitle': { en: 'Anganwadi Worker', or: 'ଆଙ୍ଗନୱାଡି କର୍ମୀ' },
+  'awc.portfolio.supervisorTitle': { en: 'Supervisor', or: 'ପର୍ଯ୍ୟବେକ୍ଷକ' },
+  'awc.portfolio.supervisorSubtitle': { en: 'Centre supervisor', or: 'କେନ୍ଦ୍ର ପର୍ଯ୍ୟବେକ୍ଷକ' },
+  'awc.portfolio.snpDailyStockTitle': { en: 'SNP Daily Stock', or: 'SNP ଦୈନିକ ଭଣ୍ଡାର' },
+  'awc.portfolio.snpDailyStockDesc': {
+    en: 'Opening balance, received and expenditure for Supplementary Nutrition Programme.',
+    or: 'ଅନୁପୂରକ ପୋଷଣ କାର୍ଯ୍ୟକ୍ରମ ପାଇଁ ଆରମ୍ଭିକ ସନ୍ତୁଳନ, ଗ୍ରହଣ ଓ ଖର୍ଚ୍ଚ।',
+  },
+  'awc.portfolio.chart.stockTrend': { en: 'Stock trend (Kg)', or: 'ଭଣ୍ଡାର ପ୍ରବୃତ୍ତି (କି.ଗ୍ରା.)' },
+  'awc.portfolio.chart.receivedVsExp': {
+    en: 'Received vs expenditure (Kg)',
+    or: 'ଗ୍ରହଣ ବିପରୀତ ଖର୍ଚ୍ଚ (କି.ଗ୍ରା.)',
+  },
+  'awc.portfolio.chart.opening': { en: 'Opening', or: 'ଆରମ୍ଭିକ' },
+  'awc.portfolio.chart.closing': { en: 'Closing', or: 'ଶେଷ' },
+  'awc.portfolio.chart.received': { en: 'Received', or: 'ଗ୍ରହଣ' },
+  'awc.portfolio.chart.expenditure': { en: 'Expenditure', or: 'ଖର୍ଚ୍ଚ' },
+  'awc.portfolio.noSnpData': { en: 'No SNP data', or: 'କୌଣସି SNP ତଥ୍ୟ ନାହିଁ' },
+  'awc.portfolio.noSnpDataHint': {
+    en: 'Add daily stock records to see the chart',
+    or: 'ଚାର୍ଟ ଦେଖିବାକୁ ଦୈନିକ ଭଣ୍ଡାର ରେକର୍ଡ ଯୋଗ କରନ୍ତୁ',
+  },
+  'awc.portfolio.dailyRecords': { en: 'Daily records', or: 'ଦୈନିକ ରେକର୍ଡ' },
+  'awc.portfolio.noSnpRows': { en: 'No SNP stock records available yet.', or: 'ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି SNP ଭଣ୍ଡାର ରେକର୍ଡ ନାହିଁ।' },
+  'awc.contact.cpdoContactNo': { en: 'CPDO contact no', or: 'CPDO ଯୋଗାଯୋଗ ନମ୍ବର' },
+  'awc.contact.supervisorContact': { en: 'Supervisor contact', or: 'ସୁପରଭାଇଜର ଯୋଗାଯୋଗ' },
+  'awc.contact.awwContactNo': { en: 'AWW contact no', or: 'AWW ଯୋଗାଯୋଗ ନମ୍ବର' },
+  'awc.contact.awhName': { en: 'AWH name', or: 'AWH ନାମ' },
+  'awc.contact.awhContactNo': { en: 'AWH contact no', or: 'AWH ଯୋଗାଯୋଗ ନମ୍ବର' },
+  'awc.portfolio.showingDaysRange': {
+    en: 'Showing {start}–{end} of {total} days',
+    or: '{total} ଦିନ ମଧ୍ୟରୁ {start}–{end} ଦେଖାଯାଉଛି',
+  },
+  'awc.portfolio.pageOf': {
+    en: 'Page {page} of {total}',
+    or: 'ପୃଷ୍ଠା {page} / {total}',
+  },
+  'water.portfolio.title': {
+    en: 'Water Supply Asset Dashboard',
+    or: 'ଜଳ ଯୋଗାଣ ସଂପତ୍ତି ଡ୍ୟାସବୋର୍ଡ',
+  },
+  'water.portfolio.subtitle': {
+    en: 'Scheme details and location from available WATCO/RWSS data.',
+    or: 'ଉପଲବ୍ଧ WATCO/RWSS ତଥ୍ୟରୁ ଯୋଜନା ବିବରଣୀ ଓ ଅବସ୍ଥାନ।',
+  },
+  'water.portfolio.schemeDetails': { en: 'Scheme details', or: 'ଯୋଜନା ବିବରଣୀ' },
+  'water.tab.profile': { en: 'Profile', or: 'ପ୍ରୋଫାଇଲ୍' },
+  'water.assets.waterAssets': { en: 'Water Assets', or: 'ଜଳ ସମ୍ପତ୍ତି' },
+  'water.assets.generalData': { en: 'General Data', or: 'ସାଧାରଣ ତଥ୍ୟ' },
+  'water.assets.waterQuality': { en: 'Water Quality', or: 'ଜଳ ଗୁଣବତ୍ତା' },
+  'water.assets.treatmentPlant': { en: 'Treatment Plant (WTP)', or: 'ଶୁଦ୍ଧିକରଣ କେନ୍ଦ୍ର (WTP)' },
+  'water.assets.pumpingPower': { en: 'Pumping & Power', or: 'ପମ୍ପିଂ ଓ ବିଦ୍ୟୁତ୍' },
+  'water.assets.distribution': { en: 'Distribution & More', or: 'ବିତରଣ ଓ ଅଧିକ' },
+  'water.assets.otherSpecs': { en: 'Other Specs', or: 'ଅନ୍ୟାନ୍ୟ ବିବରଣ' },
+  'water.field.stationName': { en: 'Station Name', or: 'ଷ୍ଟେସନ୍ ନାମ' },
+  'water.field.stationId': { en: 'Station ID', or: 'ଷ୍ଟେସନ୍ ଆଇଡି' },
+  'water.field.stationType': { en: 'Station Type', or: 'ଷ୍ଟେସନ୍ ପ୍ରକାର' },
+  'water.field.schemeName': { en: 'Scheme Name', or: 'ଯୋଜନା ନାମ' },
+  'water.field.populationServed': { en: 'Population served', or: 'ସେବା ପ୍ରାପ୍ତ ଜନସଂଖ୍ୟା' },
+  'water.field.sourceType': { en: 'Source Type', or: 'ଉତ୍ସ ପ୍ରକାର' },
+  'water.field.sourceName': { en: 'Source Name', or: 'ଉତ୍ସ ନାମ' },
+  'water.overview.intakeCapacity': { en: 'Intake Capacity (MLD)', or: 'ଗ୍ରହଣ କ୍ଷମତା (MLD)' },
+  'water.overview.designCapacity': { en: 'Design Capacity (MLD)', or: 'ଡିଜାଇନ୍ କ୍ଷମତା (MLD)' },
+  'water.overview.operationalCapacity': { en: 'Operational Capacity (MLD)', or: 'କାର୍ଯ୍ୟକ୍ଷମ କ୍ଷମତା (MLD)' },
+  'water.overview.supplyHours': { en: 'Supply Hours / Day', or: 'ଯୋଗାଣ ଘଣ୍ଟା / ଦିନ' },
+  'water.overview.perCapita': { en: 'Per Capita Supply (LPCD)', or: 'ମୁଣ୍ଡପିଛା ଯୋଗାଣ (LPCD)' },
+  'water.overview.nrw': { en: 'NRW (%)', or: 'NRW (%)' },
+  'water.top.intakeCapacity': { en: 'Intake Capacity (MLD)', or: 'ଗ୍ରହଣ କ୍ଷମତା (MLD)' },
+  'water.top.designCapacity': { en: 'Design Capacity (MLD)', or: 'ଡିଜାଇନ୍ କ୍ଷମତା (MLD)' },
+  'water.top.perCapita': { en: 'Per Capita Supply (LPCD)', or: 'ମୁଣ୍ଡପିଛା ଯୋଗାଣ (LPCD)' },
+  'water.daily.title': { en: 'Daily Monitoring', or: 'ଦୈନିକ ନିରୀକ୍ଷଣ' },
+  'water.daily.subtitle': {
+    en: 'Daily tracking of water operations, pump logs, and tank levels.',
+    or: 'ଜଳ କାର୍ଯ୍ୟ, ପମ୍ପ ଲଗ୍ ଓ ଟାଙ୍କି ସ୍ତରର ଦୈନିକ ଅନୁଧ୍ୟାନ।',
+  },
+  'water.daily.activeLeakages': { en: 'Active Leakages', or: 'ସକ୍ରିୟ ଲିକେଜ୍' },
+  'water.daily.leakagesCountLine': { en: '{count} reported', or: '{count} ରିପୋର୍ଟ' },
+  'water.daily.leakagesNone': { en: 'None', or: 'କିଛି ନାହିଁ' },
+  'water.daily.productionVsSupply': { en: 'Water Production vs Supply', or: 'ଜଳ ଉତ୍ପାଦନ ବିପରୀତ ଯୋଗାଣ' },
+  'water.daily.volumeMld15': { en: 'Volume in MLD (Last 15 records)', or: 'MLD ରେ ଆୟତନ (ଶେଷ ୧୫ ରେକର୍ଡ)' },
+  'water.daily.legend.produced': { en: 'Produced', or: 'ଉତ୍ପାଦିତ' },
+  'water.daily.legend.supplied': { en: 'Supplied', or: 'ଯୋଗାଣ' },
+  'water.daily.pumpHours': { en: 'Pump Running Hours', or: 'ପମ୍ପ ଚାଲନ ଘଣ୍ଟା' },
+  'water.daily.pumpHoursSubtitle': { en: 'Total run time (Last 15 records)', or: 'ମୋଟ ଚାଲନ ସମୟ (ଶେଷ ୧୫ ରେକର୍ଡ)' },
+  'water.daily.tankLevelsTitle': { en: 'Daily Reservoir / Tank Levels', or: 'ଦୈନିକ ଜଳାଶୟ / ଟାଙ୍କି ସ୍ତର' },
+  'water.daily.tankLevelsForDate': { en: 'Volume levels for {date}', or: '{date} ପାଇଁ ଆୟତନ ସ୍ତର' },
+  'water.daily.tankName': { en: 'Tank Name', or: 'ଟାଙ୍କି ନାମ' },
+  'water.daily.openingMl': { en: 'Opening (ML)', or: 'ଆରମ୍ଭ (ML)' },
+  'water.daily.intakeMl': { en: 'Intake (ML)', or: 'ଗ୍ରହଣ (ML)' },
+  'water.daily.distributedMl': { en: 'Distributed (ML)', or: 'ବିତରିତ (ML)' },
+  'water.daily.closingMl': { en: 'Closing (ML)', or: 'ଶେଷ (ML)' },
+  'water.daily.noTankData': {
+    en: 'No tank level data available for this date.',
+    or: 'ଏହି ତାରିଖ ପାଇଁ ଟାଙ୍କି ସ୍ତର ତଥ୍ୟ ଉପଲବ୍ଧ ନାହିଁ।',
   },
 };
 
