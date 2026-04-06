@@ -38,6 +38,7 @@ import type { DrainLineKind, RoadTypeKey } from '../../lib/mapConfig';
 import type { MessageKey } from '../i18n/messages';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
+import { MapCalloutCard, MapCalloutMetaMuted, MapCalloutMetaRow } from './MapCalloutCard';
 import { MapLegendPanel, MapLegendRow } from './MapLegend';
 
 const EDUCATION_TYPE_KEYS: Record<string, MessageKey> = {
@@ -1020,21 +1021,26 @@ export function ConstituencyMap({
                 position={{ lat, lng }}
                 onCloseClick={() => setSelectedRoad(null)}
               >
-                <div className="min-w-[190px] max-w-[260px]">
-                  <div className="rounded-2xl bg-white shadow-md border border-slate-200 px-3 py-0.5">
-                    <p className="text-[13px] font-semibold text-slate-900">{name}</p>
-                    {code && (
-                      <p className="mt-0.5 text-[11px] font-medium text-slate-600">
-                        {ROAD_TYPE_LABELS[roadType]} · <span className="font-mono text-[11px]">{code}</span>
-                      </p>
-                    )}
-                    {block && (
-                      <p className="mt-0.5 text-[11px] text-slate-500">
-                        {t('map.info.block', language)}: {block}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                <MapCalloutCard
+                  title={name}
+                  meta={
+                    code || block ? (
+                      <>
+                        {code ? (
+                          <MapCalloutMetaRow>
+                            <span className="font-semibold text-slate-700">{ROAD_TYPE_LABELS[roadType]}</span>
+                            <span className="font-mono text-slate-600"> · {code}</span>
+                          </MapCalloutMetaRow>
+                        ) : null}
+                        {block ? (
+                          <MapCalloutMetaMuted label={`${t('map.info.block', language)}:`}>
+                            {block}
+                          </MapCalloutMetaMuted>
+                        ) : null}
+                      </>
+                    ) : undefined
+                  }
+                />
               </InfoWindow>
             );
           })()}
@@ -1052,14 +1058,7 @@ export function ConstituencyMap({
                 position={{ lat, lng }}
                 onCloseClick={() => setSelectedDrain(null)}
               >
-                <div className="min-w-[190px] max-w-[260px]">
-                  <div className="rounded-2xl bg-white shadow-md border border-slate-200 px-3 py-0.5">
-                    <p className="text-[13px] font-semibold text-slate-900">{name}</p>
-                    <p className="mt-0.5 text-[11px] text-slate-500">
-                      {t('dept.drainage', language)}
-                    </p>
-                  </div>
-                </div>
+                <MapCalloutCard title={name} badge={t('dept.drainage', language)} />
               </InfoWindow>
             );
           })()}
@@ -1071,48 +1070,53 @@ export function ConstituencyMap({
               }}
               onCloseClick={() => setInfoWindowOrg(null)}
             >
-              <div className="min-w-[190px] max-w-[260px]">
-                <div className="rounded-2xl bg-white shadow-md border border-slate-200 px-3 py-2.5">
-                  <p className="text-[13px] font-semibold text-slate-900">{infoWindowOrg.name}</p>
-                  <p className="mt-0.5 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-700">
-                    {getTypeLabel(
-                      infoWindowOrg.type,
-                      language,
-                      infoWindowOrg.attributes,
-                      infoWindowOrg.sub_department
-                    )}
-                  </p>
-                  {infoWindowOrg.type === 'AWC' && infoWindowOrg.attributes && (
-                    <p className="mt-0.5 text-[11px] text-slate-500">
-                      {t('map.info.sector', language)}: {String(infoWindowOrg.attributes.sector || '–')}
-                      {(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village) && (
-                        <>
-                          {' '}
-                          · {t('map.info.gp', language)}:{' '}
-                          {String(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village)}
-                        </>
-                      )}
-                    </p>
-                  )}
-                  {infoWindowOrg.address && (
-                    <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
-                      {infoWindowOrg.address}
-                    </p>
-                  )}
-                  {onSelectOrganization && (
-                    <button
-                      type="button"
-                      className="mt-2 inline-flex items-center justify-center rounded-full bg-orange-500 px-3 py-1.5 text-[10px] font-semibold text-white shadow-sm hover:bg-orange-600"
-                      onClick={() => {
-                        onSelectOrganization(infoWindowOrg.id);
-                        setInfoWindowOrg(null);
-                      }}
-                    >
-                      {t('map.viewProfile', language)}
-                    </button>
-                  )}
-                </div>
-              </div>
+              <MapCalloutCard
+                title={infoWindowOrg.name}
+                badge={getTypeLabel(
+                  infoWindowOrg.type,
+                  language,
+                  infoWindowOrg.attributes,
+                  infoWindowOrg.sub_department,
+                )}
+                meta={
+                  (infoWindowOrg.type === 'AWC' && infoWindowOrg.attributes) || infoWindowOrg.address ? (
+                    <>
+                      {infoWindowOrg.type === 'AWC' && infoWindowOrg.attributes ? (
+                        <MapCalloutMetaRow>
+                          <span className="text-slate-500">{t('map.info.sector', language)}:</span>{' '}
+                          {String(infoWindowOrg.attributes.sector || '–')}
+                          {(infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village) && (
+                            <>
+                              {' '}
+                              <span className="text-slate-400">·</span>{' '}
+                              <span className="text-slate-500">{t('map.info.gp', language)}:</span>{' '}
+                              {String(
+                                infoWindowOrg.attributes.gp_name || infoWindowOrg.attributes.ward_village,
+                              )}
+                            </>
+                          )}
+                        </MapCalloutMetaRow>
+                      ) : null}
+                      {infoWindowOrg.address ? (
+                        <MapCalloutMetaRow className="leading-snug text-slate-600">
+                          {infoWindowOrg.address}
+                        </MapCalloutMetaRow>
+                      ) : null}
+                    </>
+                  ) : undefined
+                }
+                action={
+                  onSelectOrganization
+                    ? {
+                        label: t('map.viewProfile', language),
+                        onClick: () => {
+                          onSelectOrganization(infoWindowOrg.id);
+                          setInfoWindowOrg(null);
+                        },
+                      }
+                    : undefined
+                }
+              />
             </InfoWindow>
           )}
         </GoogleMap>
