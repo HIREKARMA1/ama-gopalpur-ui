@@ -274,7 +274,12 @@ export default function DepartmentAdminPage() {
           const list = await organizationsApi.listByDepartment(user.department_id, {
             skip: 0,
             limit: PAGE_SIZE,
-            sub_department: dept?.code === 'EDUCATION' ? educationSubDept : null,
+            sub_department:
+              dept?.code === 'EDUCATION'
+                ? educationSubDept
+                : dept?.code === 'REVENUE_LAND'
+                  ? 'TAHASIL_OFFICE'
+                  : null,
           });
           setOrgs(list);
           setPage(0);
@@ -579,7 +584,12 @@ export default function DepartmentAdminPage() {
         const list = await organizationsApi.listByDepartment(me.department_id, {
           skip: 0,
           limit: PAGE_SIZE,
-          sub_department: deptCode === 'EDUCATION' ? educationSubDept : null,
+          sub_department:
+            deptCode === 'EDUCATION'
+              ? educationSubDept
+              : deptCode === 'REVENUE_LAND'
+                ? 'TAHASIL_OFFICE'
+                : null,
         });
         setOrgs(list);
         setPage(0);
@@ -3939,6 +3949,12 @@ export default function DepartmentAdminPage() {
                         const list = await organizationsApi.listByDepartment(me.department_id, {
                           skip: newPage * PAGE_SIZE,
                           limit: PAGE_SIZE,
+                          sub_department:
+                            deptCode === 'EDUCATION'
+                              ? educationSubDept
+                              : deptCode === 'REVENUE_LAND'
+                                ? 'TAHASIL_OFFICE'
+                                : null,
                         });
                         setOrgs(list);
                         setPage(newPage);
@@ -3957,6 +3973,12 @@ export default function DepartmentAdminPage() {
                         const list = await organizationsApi.listByDepartment(me.department_id, {
                           skip: newPage * PAGE_SIZE,
                           limit: PAGE_SIZE,
+                          sub_department:
+                            deptCode === 'EDUCATION'
+                              ? educationSubDept
+                              : deptCode === 'REVENUE_LAND'
+                                ? 'TAHASIL_OFFICE'
+                                : null,
                         });
                         setOrgs(list);
                         setPage(newPage);
