@@ -158,10 +158,51 @@ export const ROAD_TYPE_LABELS: Record<RoadTypeKey, string> = {
  * Derive road type from road name or code for map coloring.
  */
 export function getRoadType(name: string, code: string): RoadTypeKey {
-  const n = (name || '').toUpperCase();
+  const raw = name || '';
   const c = (code || '').toUpperCase();
-  if (/\bNH[- ]?\d+/i.test(n) || /\bN\.?H\.?/i.test(n) || /^NH/i.test(c)) return 'NH';
-  if (/\bPWD\b/i.test(n) || /\bR&B\b/i.test(n) || /PWD|R&B/i.test(c)) return 'PWD';
-  if (/\bRD\s+road\b/i.test(n) || /\bRR\b/i.test(n) || /\bVR\b/i.test(n) || /^RR\(|^VR/i.test(c)) return 'RD';
+  // NH: numbered (NH-16, NH 5), standalone token (e.g. "NH Mandiapalli Jn"), or code prefix
+  if (
+    /\bNH[- ]?\d+/i.test(raw) ||
+    /\bNH\b/i.test(raw) ||
+    /\bN\.?\s*H\.?\s*\d+/i.test(raw) ||
+    /^NH\d/i.test(c) ||
+    /^NH[-(]/i.test(c)
+  ) {
+    return 'NH';
+  }
+  if (/\bPWD\b/i.test(raw) || /\bR&B\b/i.test(raw) || /PWD|R&B/i.test(c)) return 'PWD';
+  if (/\bRD\s+road\b/i.test(raw) || /\bRR\b/i.test(raw) || /\bVR\b/i.test(raw) || /^RR\(|^VR/i.test(c)) {
+    return 'RD';
+  }
   return 'OTHER';
 }
+
+/** Drain / nalla polylines: main trunk vs branch/link (from asset naming). */
+export type DrainLineKind = 'MAIN' | 'BRANCH';
+
+export function getDrainLineKind(drainName: string): DrainLineKind {
+  const n = drainName || '';
+  if (/\bbranch\b/i.test(n) || /\blink\b/i.test(n) || /-L-\d+/i.test(n)) {
+    return 'BRANCH';
+  }
+  return 'MAIN';
+}
+
+export const DRAIN_LINE_COLORS: Record<DrainLineKind, string> = {
+  MAIN: '#f97316',
+  BRANCH: '#2563eb',
+};
+
+/** Irrigation categories used on map legend (major + minor); keys are uppercase. */
+export const IRRIGATION_LEGEND_CATEGORIES = ['TANK', 'CHECK DAM', 'ANICUT', 'CANAL'] as const;
+
+/** Display order for minor irrigation legend types present in data (extras sort after). */
+export const MINOR_IRRIGATION_LEGEND_ORDER = [...IRRIGATION_LEGEND_CATEGORIES, 'FLOW MIP'] as const;
+
+export const IRRIGATION_CATEGORY_MARKER_COLORS: Record<string, string> = {
+  TANK: '#0284c7',
+  'CHECK DAM': '#16a34a',
+  ANICUT: '#d97706',
+  CANAL: '#4f46e5',
+  'FLOW MIP': '#db2777',
+};

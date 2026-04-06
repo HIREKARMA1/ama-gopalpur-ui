@@ -82,6 +82,18 @@ export default function HomePage() {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('ama_gopalpur_selected_dept_code', dept.code || '');
     }
+
+    if (isRoads) {
+      setDrains([]);
+      setOrganizations([]);
+    } else if (isDrainage) {
+      setRoads([]);
+      setOrganizations([]);
+    } else {
+      setRoads([]);
+      setDrains([]);
+    }
+
     setLoading(true);
     if (isRoads) {
       Promise.all(
