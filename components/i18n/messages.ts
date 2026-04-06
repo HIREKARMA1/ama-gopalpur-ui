@@ -609,11 +609,11 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   },
   'dept.icds': {
     en: 'ICDS',
-    or: 'ଆଇ.ସି.ଡି.ଏସ୍',
+    or: 'ସମନ୍ୱିତ ଶିଶୁ ବିକାଶ ସେବା',
   },
   'dept.roads': {
     en: 'Roads',
-    or: 'ରାସ୍ତା',
+    or: 'ରାସ୍ତାଘାଟ',
   },
   'dept.electricity': {
     en: 'Electricity',
@@ -625,7 +625,7 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   },
   'dept.minorIrrigation': {
     en: 'Minor Irrigation',
-    or: 'ସାନ ଜଳସେଚନ',
+    or: 'କ୍ଷୁଦ୍ର ଜଳସେଚନ',
   },
   'dept.drainage': {
     en: 'Drainage',
@@ -633,19 +633,19 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   },
   'dept.water': {
     en: 'WATCO/RWSS',
-    or: 'ଜଳ ଯୋଗାଣ',
+    or: 'ଜଳ ଯୋଗାଣ ଓ ପରିମଳ',
   },
   'dept.revenueLand': {
     en: 'Revenue Govt Land',
-    or: 'ରେଭେନ୍ୟୁ ସରକାରୀ ଜମି',
+    or: 'ରାଜସ୍ୱ ଓ ସରକାରୀ ଜମି',
   },
   'dept.arcs': {
     en: 'ARCS',
-    or: 'ସମବାୟ ସମିତି',
+    or: 'ସମବାୟ',
   },
   'minor.dashboard.title': {
     en: 'Minor Irrigation Portfolio Dashboard',
-    or: 'ସାନ ଜଳସେଚନ ପୋର୍ଟଫୋଲିଓ ଡ୍ୟାସବୋର୍ଡ',
+    or: 'କ୍ଷୁଦ୍ର ଜଳସେଚନ ପୋର୍ଟଫୋଲିଓ ଡ୍ୟାସବୋର୍ଡ',
   },
   'minor.dashboard.subtitle': {
     en: 'Project details from minister CSV data',
@@ -663,7 +663,7 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'minor.stat.ayacut': { en: 'Total ayacut (acres)', or: 'ମୋଟ ଆୟାକଟ୍ (ଏକର)' },
   'minor.stat.storage': { en: 'Storage (MCUM)', or: 'ସଂରକ୍ଷଣ (MCUM)' },
   'minor.map.title': { en: 'Project Location', or: 'ପ୍ରକଳ୍ପ ଅବସ୍ଥିତି' },
-  'minor.map.subtitle': { en: 'Minor irrigation project location on map.', or: 'ମାନଚିତ୍ରରେ ସାନ ଜଳସେଚନ ପ୍ରକଳ୍ପର ସ୍ଥାନ।' },
+  'minor.map.subtitle': { en: 'Minor irrigation project location on map.', or: 'ମାନଚିତ୍ରରେ କ୍ଷୁଦ୍ର ଜଳସେଚନ ପ୍ରକଳ୍ପର ସ୍ଥାନ।' },
   'minor.map.loading': { en: 'Loading map…', or: 'ମାନଚିତ୍ର ଲୋଡ୍ ହେଉଛି…' },
   'minor.field.department': { en: 'Department', or: 'ବିଭାଗ' },
   'irrigation.field.blockUlb': { en: 'Block / ULB', or: 'ବ୍ଲକ୍ / ULB' },
@@ -1040,7 +1040,7 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.legend.showOnly': { en: 'Show only', or: 'କେବଳ ଦେଖାନ୍ତୁ' },
   'roads.type.nh': { en: 'National Highway', or: 'ଜାତୀୟ ରାଜପଥ' },
   'roads.type.pwd': { en: 'PWD / R&B', or: 'PWD / R&B' },
-  'roads.type.rd': { en: 'Rural / Village Road', or: 'ଗ୍ରାମୀଣ / ଗାଁ ରାସ୍ତା' },
+  'roads.type.rd': { en: 'Rural / Village Road', or: 'ଗ୍ରାମୀଣ / ଗାଁ ରାସ୍ତାଘାଟ' },
   'roads.type.other': { en: 'Other', or: 'ଅନ୍ୟ' },
   'watco.type.megaEsr': { en: 'MEGA ESR', or: 'ମେଗା ESR' },
   'watco.type.existingEsr': { en: 'EXISTING ESR', or: 'ବିଦ୍ୟମାନ ESR' },
@@ -1053,7 +1053,7 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'irrigation.category.canal': { en: 'Canal', or: 'କ୍ୟାନାଲ୍' },
   'irrigation.category.flowMip': {
     en: 'Flow MIP',
-    or: 'ଫ୍ଲୋ ଏମ.ଆଇ.ପି. (ପ୍ରବାହ ସାନ ଜଳସେଚନ)',
+    or: 'ଫ୍ଲୋ ଏମ.ଆଇ.ପି. (ପ୍ରବାହ କ୍ଷୁଦ୍ର ଜଳସେଚନ)',
   },
   'map.info.sector': { en: 'Sector', or: 'ସେକ୍ଟର' },
   'map.info.gp': { en: 'GP', or: 'ଜି.ପି.' },
@@ -1069,14 +1069,14 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   },
   'map.arcs.society': {
     en: 'Cooperative society',
-    or: 'ସମବାୟ ସମିତି',
+    or: 'ସମବାୟ',
   },
   'arcs.type.rural': { en: 'Rural', or: 'ଗ୍ରାମୀଣ' },
   'arcs.type.urban': { en: 'Urban', or: 'ସହରୀ' },
   'arcs.type.mixed': { en: 'Mixed', or: 'ମିଶ୍ରିତ' },
   'arcs.dashboard.title': {
     en: 'Cooperative Society Portfolio',
-    or: 'ସମବାୟ ସମିତି ପୋର୍ଟଫୋଲିଓ',
+    or: 'ସମବାୟ ପୋର୍ଟଫୋଲିଓ',
   },
   'arcs.dashboard.subtitle': {
     en: 'Registration, membership and digitization metrics from ARCS records.',
@@ -1328,7 +1328,7 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   },
   'water.monitoring.title': {
     en: 'Daily Water Monitoring Data',
-    or: 'ଦୈନିକ ଜଳ ଯୋଗାଣ ତଥ୍ୟ',
+    or: 'ଦୈନିକ ଜଳ ଯୋଗାଣ ଓ ପରିମଳ ତଥ୍ୟ',
   },
   'electricity.monitoring.title': {
     en: 'Electricity Operations Monitoring',
@@ -2130,7 +2130,7 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   },
   'water.portfolio.title': {
     en: 'Water Supply Asset Dashboard',
-    or: 'ଜଳ ଯୋଗାଣ ସଂପତ୍ତି ଡ୍ୟାସବୋର୍ଡ',
+    or: 'ଜଳ ଯୋଗାଣ ଓ ପରିମଳ ସଂପତ୍ତି ଡ୍ୟାସବୋର୍ଡ',
   },
   'water.portfolio.subtitle': {
     en: 'Scheme details and location from available WATCO/RWSS data.',
