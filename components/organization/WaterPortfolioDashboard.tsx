@@ -495,7 +495,7 @@ export function WaterPortfolioDashboard({
             </h2>
             <p className="text-[13px] text-[#64748b] mt-1">
               {language === 'or'
-                ? 'ଜଳ ଯୋଗାଣ ସଂସ୍ଥାର ମାନଚ୍ଚିତ୍ର ଅବସ୍ଥାନ।'
+                ? 'ଜଳ ଯୋଗାଣ ଓ ପରିମଳ ସଂସ୍ଥାର ମାନଚ୍ଚିତ୍ର ଅବସ୍ଥାନ।'
                 : 'Water supply scheme location on the map.'}
             </p>
           </div>

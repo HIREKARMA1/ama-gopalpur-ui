@@ -45,227 +45,227 @@ const TAHASIL_RESOURCE_TAB_DEFS: {
   keys: readonly string[];
   icon: typeof Users;
 }[] = [
-  {
-    id: 'population',
-    label: 'Population & settlements',
-    shortLabel: 'Population',
-    icon: Users,
-    keys: [
-      'total_population',
-      'total_households',
-      'total_villages',
-      'total_gram_panchayats',
-      'total_wards',
-      'urban_areas_count',
-      'rural_areas_count',
-      'total_revenue_villages',
-      'total_inhabited_villages',
-      'total_uninhabited_villages',
-      'largest_village_name',
-      'smallest_village_name',
-    ],
-  },
-  {
-    id: 'land',
-    label: 'Land & records',
-    shortLabel: 'Land',
-    icon: Layers,
-    keys: [
-      'total_area_sq_km',
-      'total_panchayat_offices',
-      'total_village_roads_km',
-      'total_water_bodies',
-      'total_land_records',
-      'total_private_land_acres',
-      'total_government_land_acres',
-      'total_forest_land_acres',
-      'total_agricultural_land_acres',
-      'total_residential_land_acres',
-      'total_commercial_land_acres',
-      'total_waste_land_acres',
-      'total_plot_records',
-      'total_khata_records',
-      'total_ror_issued',
-    ],
-  },
-  {
-    id: 'mutations',
-    label: 'Mutations',
-    shortLabel: 'Mutations',
-    icon: FileText,
-    keys: [
-      'mutation_applications_received_yearly',
-      'mutation_approved',
-      'mutation_pending',
-      'mutation_rejected',
-      'avg_mutation_processing_days',
-    ],
-  },
-  {
-    id: 'revenue',
-    label: 'Revenue & tax',
-    shortLabel: 'Revenue',
-    icon: PieChart,
-    keys: [
-      'total_annual_revenue',
-      'land_revenue_collection',
-      'stamp_duty_collection',
-      'registration_fees',
-      'tax_collection',
-      'penalty_collection',
-      'monthly_revenue_target',
-      'revenue_target_achieved_percent',
-    ],
-  },
-  {
-    id: 'certificates',
-    label: 'Certificates',
-    shortLabel: 'Certificates',
-    icon: Shield,
-    keys: [
-      'caste_certificates_issued',
-      'income_certificates_issued',
-      'residence_certificates_issued',
-      'legal_heir_certificates',
-      'solvency_certificates',
-      'total_certificate_applications',
-      'certificates_approved',
-      'certificates_pending',
-      'certificates_rejected',
-      'avg_certificate_processing_days',
-    ],
-  },
-  {
-    id: 'cases',
-    label: 'Cases & grievances',
-    shortLabel: 'Cases',
-    icon: Gavel,
-    keys: [
-      'total_cases_registered',
-      'cases_resolved',
-      'cases_pending',
-      'overdue_cases',
-      'land_dispute_cases',
-      'civil_cases',
-      'criminal_cases',
-      'avg_case_resolution_days',
-      'total_grievances_received',
-      'grievances_resolved',
-      'grievances_pending',
-      'online_grievances',
-      'offline_grievances',
-      'avg_grievance_resolution_days',
-    ],
-  },
-  {
-    id: 'schemes',
-    label: 'Schemes & funds',
-    shortLabel: 'Schemes',
-    icon: HeartHandshake,
-    keys: [
-      'total_schemes_running',
-      'total_scheme_beneficiaries',
-      'pmay_beneficiaries',
-      'mgnrega_beneficiaries',
-      'old_age_pension_beneficiaries',
-      'disability_pension_beneficiaries',
-      'women_welfare_scheme_beneficiaries',
-      'student_scholarship_beneficiaries',
-      'funds_allocated',
-      'funds_utilized',
-      'funds_remaining',
-    ],
-  },
-  {
-    id: 'infrastructure',
-    label: 'Public infrastructure',
-    shortLabel: 'Infrastructure',
-    icon: Building,
-    keys: [
-      'total_schools',
-      'total_colleges',
-      'total_hospitals',
-      'total_primary_health_centers',
-      'total_anganwadi_centers',
-      'total_police_stations',
-      'total_fire_stations',
-      'total_banks',
-      'total_post_offices',
-      'total_market_places',
-      'total_roads_km',
-      'total_bridges',
-      'total_irrigation_projects',
-      'total_water_supply_projects',
-    ],
-  },
-  {
-    id: 'staff_digital',
-    label: 'Staff & digital',
-    shortLabel: 'Staff / IT',
-    icon: Briefcase,
-    keys: [
-      'total_staff',
-      'revenue_inspectors_count',
-      'amin_count',
-      'clerk_count',
-      'data_entry_operators',
-      'vacant_posts',
-      'filled_posts',
-      'staff_trained_in_digital_services',
-      'total_computers',
-      'internet_available',
-      'cctv_installed',
-      'online_services_available',
-      'total_online_applications',
-      'digital_records_percentage',
-      'website_available',
-    ],
-  },
-  {
-    id: 'budget',
-    label: 'Budget & expenditure',
-    shortLabel: 'Budget',
-    icon: Wallet,
-    keys: [
-      'annual_budget_allocated',
-      'budget_utilized',
-      'budget_remaining',
-      'development_expenditure',
-      'admin_expenditure',
-      'welfare_expenditure',
-    ],
-  },
-  {
-    id: 'literacy',
-    label: 'Literacy & coverage',
-    shortLabel: 'Literacy',
-    icon: GraduationCap,
-    keys: [
-      'literacy_rate_percent',
-      'male_literacy_percent',
-      'female_literacy_percent',
-      'employment_rate_percent',
-      'agriculture_dependent_percent',
-      'irrigated_land_percent',
-      'drinking_water_coverage_percent',
-      'electricity_coverage_percent',
-    ],
-  },
-  {
-    id: 'highlights',
-    label: 'Projects & highlights',
-    shortLabel: 'Highlights',
-    icon: Sparkles,
-    keys: [
-      'major_projects_running',
-      'upcoming_projects',
-      'key_challenges',
-      'achievements',
-      'awards_received',
-      'description',
-    ],
-  },
-];
+    {
+      id: 'population',
+      label: 'Population & settlements',
+      shortLabel: 'Population',
+      icon: Users,
+      keys: [
+        'total_population',
+        'total_households',
+        'total_villages',
+        'total_gram_panchayats',
+        'total_wards',
+        'urban_areas_count',
+        'rural_areas_count',
+        'total_revenue_villages',
+        'total_inhabited_villages',
+        'total_uninhabited_villages',
+        'largest_village_name',
+        'smallest_village_name',
+      ],
+    },
+    {
+      id: 'land',
+      label: 'Land & records',
+      shortLabel: 'Land',
+      icon: Layers,
+      keys: [
+        'total_area_sq_km',
+        'total_panchayat_offices',
+        'total_village_roads_km',
+        'total_water_bodies',
+        'total_land_records',
+        'total_private_land_acres',
+        'total_government_land_acres',
+        'total_forest_land_acres',
+        'total_agricultural_land_acres',
+        'total_residential_land_acres',
+        'total_commercial_land_acres',
+        'total_waste_land_acres',
+        'total_plot_records',
+        'total_khata_records',
+        'total_ror_issued',
+      ],
+    },
+    {
+      id: 'mutations',
+      label: 'Mutations',
+      shortLabel: 'Mutations',
+      icon: FileText,
+      keys: [
+        'mutation_applications_received_yearly',
+        'mutation_approved',
+        'mutation_pending',
+        'mutation_rejected',
+        'avg_mutation_processing_days',
+      ],
+    },
+    {
+      id: 'revenue',
+      label: 'Revenue & tax',
+      shortLabel: 'Revenue',
+      icon: PieChart,
+      keys: [
+        'total_annual_revenue',
+        'land_revenue_collection',
+        'stamp_duty_collection',
+        'registration_fees',
+        'tax_collection',
+        'penalty_collection',
+        'monthly_revenue_target',
+        'revenue_target_achieved_percent',
+      ],
+    },
+    {
+      id: 'certificates',
+      label: 'Certificates',
+      shortLabel: 'Certificates',
+      icon: Shield,
+      keys: [
+        'caste_certificates_issued',
+        'income_certificates_issued',
+        'residence_certificates_issued',
+        'legal_heir_certificates',
+        'solvency_certificates',
+        'total_certificate_applications',
+        'certificates_approved',
+        'certificates_pending',
+        'certificates_rejected',
+        'avg_certificate_processing_days',
+      ],
+    },
+    {
+      id: 'cases',
+      label: 'Cases & grievances',
+      shortLabel: 'Cases',
+      icon: Gavel,
+      keys: [
+        'total_cases_registered',
+        'cases_resolved',
+        'cases_pending',
+        'overdue_cases',
+        'land_dispute_cases',
+        'civil_cases',
+        'criminal_cases',
+        'avg_case_resolution_days',
+        'total_grievances_received',
+        'grievances_resolved',
+        'grievances_pending',
+        'online_grievances',
+        'offline_grievances',
+        'avg_grievance_resolution_days',
+      ],
+    },
+    {
+      id: 'schemes',
+      label: 'Schemes & funds',
+      shortLabel: 'Schemes',
+      icon: HeartHandshake,
+      keys: [
+        'total_schemes_running',
+        'total_scheme_beneficiaries',
+        'pmay_beneficiaries',
+        'mgnrega_beneficiaries',
+        'old_age_pension_beneficiaries',
+        'disability_pension_beneficiaries',
+        'women_welfare_scheme_beneficiaries',
+        'student_scholarship_beneficiaries',
+        'funds_allocated',
+        'funds_utilized',
+        'funds_remaining',
+      ],
+    },
+    {
+      id: 'infrastructure',
+      label: 'Public infrastructure',
+      shortLabel: 'Infrastructure',
+      icon: Building,
+      keys: [
+        'total_schools',
+        'total_colleges',
+        'total_hospitals',
+        'total_primary_health_centers',
+        'total_anganwadi_centers',
+        'total_police_stations',
+        'total_fire_stations',
+        'total_banks',
+        'total_post_offices',
+        'total_market_places',
+        'total_roads_km',
+        'total_bridges',
+        'total_irrigation_projects',
+        'total_water_supply_projects',
+      ],
+    },
+    {
+      id: 'staff_digital',
+      label: 'Staff & digital',
+      shortLabel: 'Staff / IT',
+      icon: Briefcase,
+      keys: [
+        'total_staff',
+        'revenue_inspectors_count',
+        'amin_count',
+        'clerk_count',
+        'data_entry_operators',
+        'vacant_posts',
+        'filled_posts',
+        'staff_trained_in_digital_services',
+        'total_computers',
+        'internet_available',
+        'cctv_installed',
+        'online_services_available',
+        'total_online_applications',
+        'digital_records_percentage',
+        'website_available',
+      ],
+    },
+    {
+      id: 'budget',
+      label: 'Budget & expenditure',
+      shortLabel: 'Budget',
+      icon: Wallet,
+      keys: [
+        'annual_budget_allocated',
+        'budget_utilized',
+        'budget_remaining',
+        'development_expenditure',
+        'admin_expenditure',
+        'welfare_expenditure',
+      ],
+    },
+    {
+      id: 'literacy',
+      label: 'Literacy & coverage',
+      shortLabel: 'Literacy',
+      icon: GraduationCap,
+      keys: [
+        'literacy_rate_percent',
+        'male_literacy_percent',
+        'female_literacy_percent',
+        'employment_rate_percent',
+        'agriculture_dependent_percent',
+        'irrigated_land_percent',
+        'drinking_water_coverage_percent',
+        'electricity_coverage_percent',
+      ],
+    },
+    {
+      id: 'highlights',
+      label: 'Projects & highlights',
+      shortLabel: 'Highlights',
+      icon: Sparkles,
+      keys: [
+        'major_projects_running',
+        'upcoming_projects',
+        'key_challenges',
+        'achievements',
+        'awards_received',
+        'description',
+      ],
+    },
+  ];
 
 /** Maps each known portfolio key to its Resources sub-tab id. */
 const TAHASIL_RESOURCE_KEY_TO_TAB: Record<string, string> = (() => {
@@ -331,7 +331,7 @@ const TAHASIL_ATTR_LABEL_OR: Record<string, string> = {
   // Land & records
   total_area_sq_km: 'ମୋଟ କ୍ଷେତ୍ରଫଳ (ବର୍ଗ କି.ମି.)',
   total_panchayat_offices: 'ମୋଟ ପଞ୍ଚାୟତ କାର୍ଯ୍ୟାଳୟ',
-  total_village_roads_km: 'ଗ୍ରାମୀଣ ରାସ୍ତା (କି.ମି.)',
+  total_village_roads_km: 'ଗ୍ରାମୀଣ ରାସ୍ତାଘାଟ (କି.ମି.)',
   total_water_bodies: 'ମୋଟ ଜଳାଶୟ',
   total_land_records: 'ମୋଟ ଜମି ରେକର୍ଡ',
   total_private_land_acres: 'ବେସରକାରୀ ଜମି (ଏକର)',
@@ -414,10 +414,10 @@ const TAHASIL_ATTR_LABEL_OR: Record<string, string> = {
   total_banks: 'ମୋଟ ବ୍ୟାଙ୍କ',
   total_post_offices: 'ମୋଟ ଡାକଘର',
   total_market_places: 'ମୋଟ ବଜାର ଜାଗା',
-  total_roads_km: 'ରାସ୍ତା (କି.ମି.)',
+  total_roads_km: 'ରାସ୍ତାଘାଟ (କି.ମି.)',
   total_bridges: 'ମୋଟ ପୋଲ୍/ସେତୁ',
   total_irrigation_projects: 'ମୋଟ ସିଚାଇ ପ୍ରକଳ୍ପ',
-  total_water_supply_projects: 'ମୋଟ ଜଳ ଯୋଗାଣ ପ୍ରକଳ୍ପ',
+  total_water_supply_projects: 'ମୋଟ ଜଳ ଯୋଗାଣ ଓ ପରିମଳ ପ୍ରକଳ୍ପ',
 
   // Staff & digital
   total_staff: 'ମୋଟ କର୍ମଚାରୀ',
@@ -996,11 +996,10 @@ export function RevenueLandPortfolioDashboard({
                     <button
                       type="button"
                       onClick={() => setTahasilOfficeTab('profile')}
-                      className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
-                        effectiveTahasilTab === 'profile'
-                          ? 'bg-white text-[#0f172a] shadow-sm'
-                          : 'text-[#64748b] hover:text-[#0f172a]'
-                      }`}
+                      className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${effectiveTahasilTab === 'profile'
+                        ? 'bg-white text-[#0f172a] shadow-sm'
+                        : 'text-[#64748b] hover:text-[#0f172a]'
+                        }`}
                     >
                       <span>{tr('Office profile', 'କାର୍ଯ୍ୟାଳୟ ପ୍ରୋଫାଇଲ୍')}</span>
                     </button>
@@ -1011,11 +1010,10 @@ export function RevenueLandPortfolioDashboard({
                           key={tab.id}
                           type="button"
                           onClick={() => setTahasilOfficeTab(tab.id)}
-                          className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition whitespace-nowrap ${
-                            active
-                              ? 'bg-white text-[#0f172a] shadow-sm'
-                              : 'text-[#64748b] hover:text-[#0f172a]'
-                          }`}
+                          className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition whitespace-nowrap ${active
+                            ? 'bg-white text-[#0f172a] shadow-sm'
+                            : 'text-[#64748b] hover:text-[#0f172a]'
+                            }`}
                         >
                           <span>{getTahasilResourceShortLabel(tab.id)}</span>
                         </button>
@@ -1236,7 +1234,7 @@ export function RevenueLandPortfolioDashboard({
           <div className="relative z-10">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
               <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
-                  {tr('Parcel details', 'ପାର୍ସେଲ୍ ବିବରଣୀ')}
+                {tr('Parcel details', 'ପାର୍ସେଲ୍ ବିବରଣୀ')}
               </h2>
               <div className="grid grid-cols-1 sm:flex items-center rounded-xl sm:rounded-full bg-slate-100 p-1 w-full sm:w-auto gap-1">
                 <button
