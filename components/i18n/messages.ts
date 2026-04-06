@@ -52,6 +52,9 @@ export type MessageKey =
   | 'irrigation.field.longitude'
   | 'shell.departmentsTab'
   | 'map.legend'
+  | 'map.drainage.legend.mainChannel'
+  | 'map.drainage.legend.branchLink'
+  | 'map.revenue.legend.tahasil'
   | 'map.viewProfile'
   | 'map.edu.primarySchool'
   | 'map.edu.upperPrimarySchool'
@@ -486,6 +489,7 @@ export type MessageKey =
   | 'irrigation.category.checkDam'
   | 'irrigation.category.anicut'
   | 'irrigation.category.canal'
+  | 'irrigation.category.flowMip'
   | 'map.info.sector'
   | 'map.info.gp'
   | 'map.info.block'
@@ -546,7 +550,9 @@ export type MessageKey =
   | 'revenue.type.private'
   | 'revenue.type.other'
   | 'agriculture.type.serviceCenter'
-  | 'agriculture.type.extensionCenter';
+  | 'agriculture.type.extensionCenter'
+  | 'agriculture.type.agrilFarmersEmpowerment'
+  | 'agriculture.type.odishaStateSeedCorporation';
 
 const messages: Record<MessageKey, { en: string; or: string }> = {
   'govBar.title': {
@@ -675,6 +681,18 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.legend': {
     en: 'Legend',
     or: 'ସୂଚନା',
+  },
+  'map.drainage.legend.mainChannel': {
+    en: 'Main drain / nalla',
+    or: 'ମୁଖ୍ୟ ଡ୍ରେନ୍ / ନଳା',
+  },
+  'map.drainage.legend.branchLink': {
+    en: 'Branch / link',
+    or: 'ଶାଖା / ଲିଙ୍କ୍',
+  },
+  'map.revenue.legend.tahasil': {
+    en: 'Tahasil office',
+    or: 'ତହସିଲ କାର୍ଯ୍ୟାଳୟ',
   },
   'map.viewProfile': {
     en: 'View profile',
@@ -1033,6 +1051,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'irrigation.category.checkDam': { en: 'Check Dam', or: 'ଚେକ୍ ଡ୍ୟାମ୍' },
   'irrigation.category.anicut': { en: 'Anicut', or: 'ଆନିକଟ୍' },
   'irrigation.category.canal': { en: 'Canal', or: 'କ୍ୟାନାଲ୍' },
+  'irrigation.category.flowMip': {
+    en: 'Flow MIP',
+    or: 'ଫ୍ଲୋ ଏମ.ଆଇ.ପି. (ପ୍ରବାହ ସାନ ଜଳସେଚନ)',
+  },
   'map.info.sector': { en: 'Sector', or: 'ସେକ୍ଟର' },
   'map.info.gp': { en: 'GP', or: 'ଜି.ପି.' },
   'map.info.block': { en: 'Block', or: 'ବ୍ଲକ' },
@@ -1147,6 +1169,14 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'agriculture.type.extensionCenter': {
     en: 'Agriculture Extension Center',
     or: 'କୃଷି ବିସ୍ତାର କେନ୍ଦ୍ର',
+  },
+  'agriculture.type.agrilFarmersEmpowerment': {
+    en: 'Agril. & Farmers Empowerment',
+    or: 'କୃଷି ଏବଂ କୃଷକ ସଶକ୍ତିକରଣ',
+  },
+  'agriculture.type.odishaStateSeedCorporation': {
+    en: 'Odisha State Seed Corporation',
+    or: 'ଓଡ଼ିଶା ରାଜ୍ୟ ବିହନ ନିଗମ',
   },
   'login.email': {
     en: 'Email',

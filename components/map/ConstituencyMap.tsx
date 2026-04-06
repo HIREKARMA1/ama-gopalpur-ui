@@ -29,11 +29,16 @@ import {
   ROAD_TYPE_LABELS,
   ELECTRICITY_MARKER_ICON,
   ELECTRICITY_TYPE_LABEL,
+  getDrainLineKind,
+  DRAIN_LINE_COLORS,
+  IRRIGATION_CATEGORY_MARKER_COLORS,
+  MINOR_IRRIGATION_LEGEND_ORDER,
 } from '../../lib/mapConfig';
-import type { RoadTypeKey } from '../../lib/mapConfig';
+import type { DrainLineKind, RoadTypeKey } from '../../lib/mapConfig';
 import type { MessageKey } from '../i18n/messages';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
+import { MapLegendPanel, MapLegendRow } from './MapLegend';
 
 const EDUCATION_TYPE_KEYS: Record<string, MessageKey> = {
   PRIMARY_SCHOOL: 'map.edu.primarySchool',
@@ -96,8 +101,83 @@ function translateIrrigationCategory(label: string, lang: 'en' | 'or'): string {
           ? ('irrigation.category.anicut' as MessageKey)
           : upper === 'CANAL'
             ? ('irrigation.category.canal' as MessageKey)
-            : null;
+            : upper === 'FLOW MIP' || upper === 'FLOW_MIP'
+              ? ('irrigation.category.flowMip' as MessageKey)
+              : null;
   return key ? t(key, lang) : v;
+}
+
+function normalizeMinorIrrigationCategoryType(raw: string | null | undefined): string {
+  return (raw || '')
+    .trim()
+    .toUpperCase()
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ');
+}
+
+/** Dept names for map search placeholder — use i18n so Odia toggle applies (e.g. କୃଷି). */
+const MAP_SEARCH_DEPT_LABEL_KEYS: Record<string, MessageKey> = {
+  EDUCATION: 'dept.education',
+  HEALTH: 'dept.health',
+  ICDS: 'dept.icds',
+  AWC_ICDS: 'dept.icds',
+  AGRICULTURE: 'dept.agriculture',
+  ROADS: 'dept.roads',
+  ELECTRICITY: 'dept.electricity',
+  DRAINAGE: 'dept.drainage',
+  WATCO_RWSS: 'dept.water',
+  IRRIGATION: 'dept.irrigation',
+  MINOR_IRRIGATION: 'dept.minorIrrigation',
+  REVENUE_LAND: 'dept.revenueLand',
+  ARCS: 'dept.arcs',
+};
+
+function mapSearchDeptPlaceholderLabel(code: string | undefined, lang: 'en' | 'or'): string {
+  const msgKey = MAP_SEARCH_DEPT_LABEL_KEYS[(code || '').toUpperCase()];
+  if (msgKey) return t(msgKey, lang);
+  if (!code) return '';
+  return code
+    .split('_')
+    .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
+const AGRICULTURE_LEGEND_ORDER = [
+  'AGRICULTURE SERVICE CENTER',
+  'AGRICULTURE EXTENSION CENTER',
+] as const;
+
+function normalizeAgricultureInstitutionKey(raw: string | null | undefined): string {
+  return (raw || '').trim().toUpperCase().replace(/\s+/g, ' ');
+}
+
+/** Institution / sub_dept values → i18n (include Odia for CSV/API variants). */
+const AGRICULTURE_INSTITUTION_I18N_KEY: Record<string, MessageKey> = {
+  'AGRICULTURE SERVICE CENTER': 'agriculture.type.serviceCenter',
+  'AGRICULTURE EXTENSION CENTER': 'agriculture.type.extensionCenter',
+  'AGRIL. & FARMERS EMPOWERMENT': 'agriculture.type.agrilFarmersEmpowerment',
+  'AGRIL & FARMERS EMPOWERMENT': 'agriculture.type.agrilFarmersEmpowerment',
+  'ODISHA STATE SEED CORPORATION': 'agriculture.type.odishaStateSeedCorporation',
+};
+
+function agricultureInstitutionI18nLookup(key: string): MessageKey | undefined {
+  const k = key.trim();
+  if (AGRICULTURE_INSTITUTION_I18N_KEY[k]) return AGRICULTURE_INSTITUTION_I18N_KEY[k];
+  const noDots = k.replace(/\./g, '').replace(/\s+/g, ' ');
+  if (AGRICULTURE_INSTITUTION_I18N_KEY[noDots]) return AGRICULTURE_INSTITUTION_I18N_KEY[noDots];
+  const ampToAnd = k.replace(/\s*&\s*/g, ' AND ');
+  if (AGRICULTURE_INSTITUTION_I18N_KEY[ampToAnd]) return AGRICULTURE_INSTITUTION_I18N_KEY[ampToAnd];
+  const relaxed = k.replace(/\./g, '').replace(/\s*&\s*/g, ' AND ');
+  if (AGRICULTURE_INSTITUTION_I18N_KEY[relaxed]) return AGRICULTURE_INSTITUTION_I18N_KEY[relaxed];
+  return undefined;
+}
+
+function agricultureInstitutionLegendLabel(key: string, lang: 'en' | 'or'): string {
+  const msgKey = agricultureInstitutionI18nLookup(key);
+  if (msgKey) return t(msgKey, lang);
+  return key
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export interface MapOrganization {
@@ -181,7 +261,13 @@ export function ConstituencyMap({
   const [legendFilterType, setLegendFilterType] = useState<string | null>(null);
   /** When set, only show roads of this type (Roads legend click). Click again to clear. */
   const [roadLegendFilterType, setRoadLegendFilterType] = useState<RoadTypeKey | null>(null);
+  /** When set, only show drain polylines of this kind (Drainage legend). */
+  const [drainKindFilter, setDrainKindFilter] = useState<DrainLineKind | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  /** Restore pan/zoom after remounting the map (polyline legend filters force remount to clear ghost overlays). */
+  const mapCameraPreserveRef = useRef<{ center: { lat: number; lng: number }; zoom: number } | null>(
+    null,
+  );
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   /** Load map in Odia when user has selected Odia. Read from localStorage so we use Odia on first paint after reload (context updates only in useEffect). Fixed at first mount so useJsApiLoader is never called with different options. */
@@ -228,25 +314,68 @@ export function ConstituencyMap({
     [organizations]
   );
 
-  const revenueLandLegendTypes = useMemo(() => {
-    if (selectedDepartmentCode?.toUpperCase() !== 'REVENUE_LAND') return [];
-    return Array.from(
+  const minorIrrigationLegendTypes = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'MINOR_IRRIGATION') return [];
+    const fromData = Array.from(
       new Set(
         orgsWithLocation
-          .map((org) => ((org.attributes?.land_type as string) || '').trim())
-          .filter((v) => v.length > 0),
+          .map((o) => normalizeMinorIrrigationCategoryType(o.attributes?.category_type as string))
+          .filter((t) => t.length > 0),
       ),
     );
+    const order = MINOR_IRRIGATION_LEGEND_ORDER as readonly string[];
+    const ordered = order.filter((c) => fromData.includes(c));
+    const extras = fromData.filter((c) => !order.includes(c)).sort();
+    return [...ordered, ...extras];
+  }, [orgsWithLocation, selectedDepartmentCode]);
+
+  const agricultureInstitutionLegendTypes = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'AGRICULTURE') return [];
+    const fromData = Array.from(
+      new Set(
+        orgsWithLocation
+          .map((o) =>
+            normalizeAgricultureInstitutionKey(
+              (o.sub_department as string) || (o.attributes?.sub_department as string) || '',
+            ),
+          )
+          .filter((k) => k.length > 0),
+      ),
+    );
+    const order = AGRICULTURE_LEGEND_ORDER as readonly string[];
+    const ordered = order.filter((c) => fromData.includes(c));
+    const extras = fromData.filter((c) => !order.includes(c)).sort();
+    return [...ordered, ...extras];
   }, [orgsWithLocation, selectedDepartmentCode]);
 
   const isRoadsDept = selectedDepartmentCode?.toUpperCase() === 'ROADS';
   const isDrainageDept = selectedDepartmentCode?.toUpperCase() === 'DRAINAGE';
+  /**
+   * Remount map when: switching polylines vs pins, or changing road/drain legend filter.
+   * @react-google-maps/api often leaves Polylines on the map when filtered out via conditional render.
+   */
+  const googleMapLayerKey = isRoadsDept
+    ? `roads-${roadLegendFilterType ?? 'all'}`
+    : isDrainageDept
+      ? `drainage-${drainKindFilter ?? 'all'}`
+      : 'orgs';
+
+  const preserveMapCameraForRemount = useCallback(() => {
+    if (!mapInstance) return;
+    const c = mapInstance.getCenter?.();
+    const z = mapInstance.getZoom?.();
+    if (c && typeof z === 'number' && Number.isFinite(z)) {
+      mapCameraPreserveRef.current = { center: { lat: c.lat(), lng: c.lng() }, zoom: z };
+    }
+  }, [mapInstance]);
 
   useEffect(() => {
     setLegendFilterType(null);
     setRoadLegendFilterType(null);
+    setDrainKindFilter(null);
     setSelectedRoad(null);
     setSelectedDrain(null);
+    mapCameraPreserveRef.current = null;
   }, [selectedDepartmentCode]);
 
   /** Road path as Google Maps LatLng[] (GeoJSON is [lng, lat]) */
@@ -342,7 +471,9 @@ export function ConstituencyMap({
 
       // AGRICULTURE – two types with distinct colors (match legend)
       if (code === 'AGRICULTURE') {
-        const sub = (subDept || attributes?.sub_department || '').toString().toUpperCase();
+        const sub = normalizeAgricultureInstitutionKey(
+          (subDept || attributes?.sub_department || '') as string,
+        );
         const color =
           sub === 'AGRICULTURE SERVICE CENTER'
             ? '#059669' // emerald-600
@@ -362,13 +493,23 @@ export function ConstituencyMap({
         return createCircleMarkerSvgIcon('#14b8a6'); // teal-500
       }
 
-      // REVENUE LAND – Tahasil offices (sky) vs land parcels (rose)
+      // REVENUE LAND – Tahasil (sky); parcel color by land type (legend)
       if (code === 'REVENUE_LAND') {
         const sub = (subDept || '').toUpperCase();
         if (sub === 'TAHASIL_OFFICE') {
           return createCircleMarkerSvgIcon('#0ea5e9');
         }
-        return createCircleMarkerSvgIcon('#f43f5e');
+        const lt = ((attributes?.land_type as string) || '').toUpperCase();
+        const parcelColor =
+          lt === 'PRIVATE' ? '#7c3aed' : lt === 'OTHER' ? '#64748b' : '#e11d48';
+        return createCircleMarkerSvgIcon(parcelColor);
+      }
+
+      // MINOR IRRIGATION – marker color by category/type (legend)
+      if (code === 'MINOR_IRRIGATION') {
+        const cat = normalizeMinorIrrigationCategoryType(attributes?.category_type as string);
+        const hex = IRRIGATION_CATEGORY_MARKER_COLORS[cat] || '#059669';
+        return createCircleMarkerSvgIcon(hex);
       }
 
       // ICDS / AWC – single pink color, matching legend
@@ -415,6 +556,13 @@ export function ConstituencyMap({
         if (instType.length > 0) return instType;
         return t('map.electricity.office', lang);
       }
+      if (code === 'AGRICULTURE') {
+        const sub = normalizeAgricultureInstitutionKey(
+          (subDept as string) || (attributes?.sub_department as string) || '',
+        );
+        if (sub.length > 0) return agricultureInstitutionLegendLabel(sub, lang);
+        return type.replace(/_/g, ' ');
+      }
       if (code === 'ARCS') {
         const j = ((attributes?.jurisdiction_type as string) || '').toUpperCase();
         if (j === 'RURAL') return t('arcs.type.rural', lang);
@@ -424,7 +572,7 @@ export function ConstituencyMap({
       }
       if (code === 'REVENUE_LAND') {
         if ((subDept || '').toUpperCase() === 'TAHASIL_OFFICE') {
-          return lang === 'or' ? 'ତହସିଲ କାର୍ଯ୍ୟାଳୟ' : 'Tahasil office';
+          return t('map.revenue.legend.tahasil', lang);
         }
         return lang === 'or' ? 'ଜମି ପାର୍ସେଲ୍' : 'Land parcel';
       }
@@ -452,10 +600,9 @@ export function ConstituencyMap({
           );
         } else if (code === 'AGRICULTURE') {
           result = result.filter((org) => {
-            const subDept =
-              ((org.sub_department as string) ||
-                (org.attributes?.sub_department as string) ||
-                '')?.toUpperCase();
+            const subDept = normalizeAgricultureInstitutionKey(
+              (org.sub_department as string) || (org.attributes?.sub_department as string) || '',
+            );
             return subDept === legendFilterType;
           });
         } else if (code === 'IRRIGATION') {
@@ -465,17 +612,17 @@ export function ConstituencyMap({
           });
         } else if (code === 'MINOR_IRRIGATION') {
           result = result.filter((org) => {
-            const catType =
-              ((org.attributes?.category_type as string) || '').toUpperCase();
+            const catType = normalizeMinorIrrigationCategoryType(
+              org.attributes?.category_type as string,
+            );
             return catType === legendFilterType;
           });
         } else if (code === 'REVENUE_LAND') {
           result = result.filter((org) => {
-            if ((org.sub_department || '').toUpperCase() === 'TAHASIL_OFFICE') {
-              return true;
+            if (legendFilterType === 'TAHASIL_OFFICE') {
+              return (org.sub_department || '').toUpperCase() === 'TAHASIL_OFFICE';
             }
-            const landType = ((org.attributes?.land_type as string) || '').toUpperCase();
-            return landType === legendFilterType;
+            return true;
           });
         } else if (code === 'ELECTRICITY') {
           result = result.filter((org) => {
@@ -674,7 +821,10 @@ export function ConstituencyMap({
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => setShowSearchDropdown(true)}
               onClick={() => setShowSearchDropdown(true)}
-              placeholder={t('map.search.placeholder', language).replace('{dept}', selectedDepartmentCode === 'AWC_ICDS' ? 'ICDS' : selectedDepartmentCode.charAt(0).toUpperCase() + selectedDepartmentCode.slice(1).toLowerCase())}
+              placeholder={t('map.search.placeholder', language).replace(
+                '{dept}',
+                mapSearchDeptPlaceholderLabel(selectedDepartmentCode, language),
+              )}
               className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
             />
             <button
@@ -728,11 +878,21 @@ export function ConstituencyMap({
       )}
       <div className="flex-1 w-full relative">
         <GoogleMap
+          key={googleMapLayerKey}
           mapContainerStyle={MAP_CONTAINER_STYLE}
           center={GOPALPUR_CENTER}
           zoom={DEFAULT_ZOOM}
           options={mapOptions}
-          onLoad={(map) => setMapInstance(map)}
+          onLoad={(map) => {
+            setMapInstance(map);
+            const snap = mapCameraPreserveRef.current;
+            if (snap) {
+              mapCameraPreserveRef.current = null;
+              map.setCenter(snap.center);
+              map.setZoom(snap.zoom);
+              setZoom(snap.zoom);
+            }
+          }}
           onZoomChanged={() => {
             if (mapInstance) {
               setZoom(mapInstance.getZoom());
@@ -773,9 +933,11 @@ export function ConstituencyMap({
               const roadType = getRoadType(name, code);
               if (roadLegendFilterType != null && roadType !== roadLegendFilterType) return null;
               const color = ROAD_TYPE_COLORS[roadType];
+              // Include filter in key so polylines remount when legend changes (@react-google-maps/api can leave stale overlays).
+              const filterKey = roadLegendFilterType ?? 'all';
               return (
                 <Polyline
-                  key={`road-${idx}-${name}`}
+                  key={`road-${filterKey}-${idx}-${name}`}
                   path={path}
                   options={{
                     strokeColor: color,
@@ -800,12 +962,16 @@ export function ConstituencyMap({
               if (path.length < 2) return null;
               const name =
                 drain.properties?.name ?? drain.properties?.drainName ?? 'Drain';
+              const lineKind = getDrainLineKind(name);
+              if (drainKindFilter != null && lineKind !== drainKindFilter) return null;
+              const strokeColor = DRAIN_LINE_COLORS[lineKind];
+              const drainFilterKey = drainKindFilter ?? 'all';
               return (
                 <Polyline
-                  key={`drain-${idx}-${name}`}
+                  key={`drain-${drainFilterKey}-${idx}-${name}`}
                   path={path}
                   options={{
-                    strokeColor: '#f97316', // orange-500
+                    strokeColor,
                     strokeWeight: 5,
                     strokeOpacity: 0.95,
                     clickable: true,
@@ -1019,62 +1185,35 @@ export function ConstituencyMap({
           </ul>
         </div>
       )}
-      {selectedDepartmentCode?.toUpperCase() === 'AGRICULTURE' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
-          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
-          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {Array.from(
-              new Set(
-                orgsWithLocation
-                  .map((org) =>
-                    (
-                      (org.sub_department as string) ||
-                      (org.attributes?.sub_department as string) ||
-                      ''
-                    ).trim(),
-                  )
-                  .filter((v) => v.length > 0),
-              ),
-            ).map((type) => {
-              const value = type.toUpperCase();
-              const labelKey =
-                value === 'AGRICULTURE SERVICE CENTER'
-                  ? ('agriculture.type.serviceCenter' as MessageKey)
-                  : value === 'AGRICULTURE EXTENSION CENTER'
-                    ? ('agriculture.type.extensionCenter' as MessageKey)
-                    : null;
-              const label = labelKey ? t(labelKey, language) : type;
-              const isSelected = legendFilterType === value;
-              const dotColor =
-                value === 'AGRICULTURE SERVICE CENTER'
-                  ? 'bg-emerald-600'
-                  : value === 'AGRICULTURE EXTENSION CENTER'
-                    ? 'bg-amber-500'
-                    : 'bg-emerald-600';
-              return (
-                <li key={type}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setLegendFilterType((prev) => (prev === value ? null : value))
-                    }
-                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
-                      isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
-                    }`}
-                    title={
-                      isSelected
-                        ? t('map.legend.showAll', language)
-                        : `${t('map.legend.showOnly', language)} ${label}`
-                    }
-                  >
-                    <span className={`inline-block h-2.5 w-2.5 rounded-full ${dotColor}`} />
-                    {label}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+      {selectedDepartmentCode?.toUpperCase() === 'AGRICULTURE' &&
+        orgsWithLocation.length > 0 &&
+        agricultureInstitutionLegendTypes.length > 0 && (
+        <MapLegendPanel className="pointer-events-auto z-[45] md:max-w-[280px]">
+          {agricultureInstitutionLegendTypes.map((instKey) => {
+            const isSelected = legendFilterType === instKey;
+            const label = agricultureInstitutionLegendLabel(instKey, language);
+            const dotColor =
+              instKey === 'AGRICULTURE SERVICE CENTER'
+                ? '#059669'
+                : instKey === 'AGRICULTURE EXTENSION CENTER'
+                  ? '#f59e0b'
+                  : '#059669';
+            return (
+              <MapLegendRow
+                key={instKey}
+                dotColor={dotColor}
+                label={label}
+                isSelected={isSelected}
+                onClick={() => setLegendFilterType((prev) => (prev === instKey ? null : instKey))}
+                title={
+                  isSelected
+                    ? t('map.legend.showAll', language)
+                    : `${t('map.legend.showOnly', language)} ${label}`
+                }
+              />
+            );
+          })}
+        </MapLegendPanel>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'IRRIGATION' && orgsWithLocation.length > 0 && (
         <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
@@ -1115,103 +1254,57 @@ export function ConstituencyMap({
           </ul>
         </div>
       )}
-      {selectedDepartmentCode?.toUpperCase() === 'MINOR_IRRIGATION' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
-          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
-          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {Array.from(
-              new Set(
-                orgsWithLocation
-                  .map(
-                    (org) =>
-                      ((org.attributes?.category_type as string) || '').trim(),
-                  )
-                  .filter((v) => v.length > 0),
-              ),
-            ).map((type) => {
-              const value = type.toUpperCase();
-              const isSelected = legendFilterType === value;
-              const label = translateIrrigationCategory(type, language);
-              return (
-                <li key={type}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setLegendFilterType((prev) => (prev === value ? null : value))
-                    }
-                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
-                      isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
-                    }`}
-                    title={
-                      isSelected
-                        ? t('map.legend.showAll', language)
-                        : `${t('map.legend.showOnly', language)} ${label}`
-                    }
-                  >
-                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-600" />
-                    {label}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-      {selectedDepartmentCode?.toUpperCase() === 'REVENUE_LAND' &&
+      {selectedDepartmentCode?.toUpperCase() === 'MINOR_IRRIGATION' &&
         orgsWithLocation.length > 0 &&
-        revenueLandLegendTypes.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
-          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
-          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {revenueLandLegendTypes.map((type) => {
-              const value = type.toUpperCase();
-              const isSelected = legendFilterType === value;
-              const labelKey =
-                value === 'GOVT'
-                  ? ('revenue.type.govt' as MessageKey)
-                  : value === 'PRIVATE'
-                    ? ('revenue.type.private' as MessageKey)
-                    : value === 'OTHER'
-                      ? ('revenue.type.other' as MessageKey)
-                      : null;
-              const label = labelKey ? t(labelKey, language) : type;
-              return (
-                <li key={type}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setLegendFilterType((prev) => (prev === value ? null : value))
-                    }
-                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
-                      isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
-                    }`}
-                    title={
-                      isSelected
-                        ? t('map.legend.showAll', language)
-                        : `${t('map.legend.showOnly', language)} ${label}`
-                    }
-                  >
-                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-rose-500" />
-                    {label}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        minorIrrigationLegendTypes.length > 0 && (
+        <MapLegendPanel className="md:max-w-[260px]">
+          {minorIrrigationLegendTypes.map((cat) => {
+            const value = cat;
+            const isSelected = legendFilterType === value;
+            const label = translateIrrigationCategory(cat, language);
+            const dotColor = IRRIGATION_CATEGORY_MARKER_COLORS[cat] ?? '#059669';
+            return (
+              <MapLegendRow
+                key={cat}
+                dotColor={dotColor}
+                label={label}
+                isSelected={isSelected}
+                onClick={() => setLegendFilterType((prev) => (prev === value ? null : value))}
+                title={
+                  isSelected
+                    ? t('map.legend.showAll', language)
+                    : `${t('map.legend.showOnly', language)} ${label}`
+                }
+              />
+            );
+          })}
+        </MapLegendPanel>
+      )}
+      {selectedDepartmentCode?.toUpperCase() === 'REVENUE_LAND' && orgsWithLocation.length > 0 && (
+        <MapLegendPanel className="md:max-w-[220px]">
+          <MapLegendRow
+            dotColor="#0ea5e9"
+            label={t('map.revenue.legend.tahasil', language)}
+            isSelected={legendFilterType === 'TAHASIL_OFFICE'}
+            onClick={() =>
+              setLegendFilterType((prev) => (prev === 'TAHASIL_OFFICE' ? null : 'TAHASIL_OFFICE'))
+            }
+            title={
+              legendFilterType === 'TAHASIL_OFFICE'
+                ? t('map.legend.showAll', language)
+                : `${t('map.legend.showOnly', language)} ${t('map.revenue.legend.tahasil', language)}`
+            }
+          />
+        </MapLegendPanel>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'ARCS' && orgsWithLocation.length > 0 && (
         <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[280px] z-10">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {['RURAL', 'URBAN', 'MIXED'].map((jur) => {
+            {['RURAL', 'URBAN'].map((jur) => {
               const isSelected = legendFilterType === jur;
               const labelKey =
-                jur === 'RURAL'
-                  ? ('arcs.type.rural' as MessageKey)
-                  : jur === 'URBAN'
-                    ? ('arcs.type.urban' as MessageKey)
-                    : ('arcs.type.mixed' as MessageKey);
+                jur === 'RURAL' ? ('arcs.type.rural' as MessageKey) : ('arcs.type.urban' as MessageKey);
               return (
                 <li key={jur}>
                   <button
@@ -1367,44 +1460,75 @@ export function ConstituencyMap({
         </div>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'HEALTH' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
-          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
-          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {Object.entries(HEALTH_TYPE_LABELS)
-              .filter(([type]) => !['HOSPITAL', 'HEALTH_CENTRE', 'OTHER'].includes(type))
-              .map(([type]) => {
-                const isSelected = legendFilterType === type;
-                return (
-                  <li key={type}>
-                    <button
-                      type="button"
-                      onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
-                      className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
-                      title={isSelected ? t('map.legend.showAll', language) : `${t('map.legend.showOnly', language)} ${getTypeLabel(type, language)}`}
-                    >
-                      <span
-                        className="inline-block h-2 w-2 rounded-full shrink-0"
-                        style={{
-                          backgroundColor:
-                            type === 'HOSPITAL' ? '#ea4335' :
-                              type === 'CHC' ? '#1967d2' :
-                                type === 'PHC' ? '#fbbc04' :
-                                  type === 'SC' ? '#34a853' :
-                                    type === 'UAAM' ? '#ff9800' :
-                                      type === 'UPHC' ? '#9c27b0' :
-                                        type === 'HEALTH_CENTRE' ? '#1967d2' : '#34a853',
-                        }}
-                      />
-                      {getTypeLabel(type, language)}
-                    </button>
-                  </li>
-                );
-              })}
-          </ul>
-        </div>
+        <MapLegendPanel className="md:max-w-[200px]">
+          {Object.entries(HEALTH_TYPE_LABELS)
+            .filter(([type]) => !['HOSPITAL', 'HEALTH_CENTRE', 'OTHER'].includes(type))
+            .map(([type]) => {
+              const isSelected = legendFilterType === type;
+              const dotColor =
+                type === 'HOSPITAL'
+                  ? '#ea4335'
+                  : type === 'CHC'
+                    ? '#1967d2'
+                    : type === 'PHC'
+                      ? '#fbbc04'
+                      : type === 'SC'
+                        ? '#34a853'
+                        : type === 'UAAM'
+                          ? '#ff9800'
+                          : type === 'UPHC'
+                            ? '#9c27b0'
+                            : type === 'HEALTH_CENTRE'
+                              ? '#1967d2'
+                              : '#34a853';
+              return (
+                <MapLegendRow
+                  key={type}
+                  dotColor={dotColor}
+                  label={getTypeLabel(type, language)}
+                  isSelected={isSelected}
+                  onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
+                  title={
+                    isSelected
+                      ? t('map.legend.showAll', language)
+                      : `${t('map.legend.showOnly', language)} ${getTypeLabel(type, language)}`
+                  }
+                />
+              );
+            })}
+        </MapLegendPanel>
+      )}
+      {isDrainageDept && drains.length > 0 && (
+        <MapLegendPanel className="md:max-w-[260px]">
+          {(['MAIN', 'BRANCH'] as const).map((kind) => {
+            const isSelected = drainKindFilter === kind;
+            const label =
+              kind === 'MAIN'
+                ? t('map.drainage.legend.mainChannel', language)
+                : t('map.drainage.legend.branchLink', language);
+            return (
+              <MapLegendRow
+                key={kind}
+                dotColor={DRAIN_LINE_COLORS[kind]}
+                label={label}
+                isSelected={isSelected}
+                onClick={() => {
+                  preserveMapCameraForRemount();
+                  setSelectedDrain(null);
+                  setDrainKindFilter((prev) => (prev === kind ? null : kind));
+                }}
+                title={
+                  isSelected
+                    ? t('map.legend.showAll', language)
+                    : `${t('map.legend.showOnly', language)} ${label}`
+                }
+              />
+            );
+          })}
+        </MapLegendPanel>
       )}
       {isRoadsDept && roads.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[220px] z-10">
+        <div className="pointer-events-auto absolute bottom-4 left-4 right-4 z-[45] md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[220px]">
           <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
             {(Object.entries(ROAD_TYPE_LABELS) as [RoadTypeKey, string][]).map(([type]) => {
@@ -1415,7 +1539,12 @@ export function ConstituencyMap({
                 <li key={type}>
                   <button
                     type="button"
-                    onClick={() => setRoadLegendFilterType((prev) => (prev === type ? null : type))}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      preserveMapCameraForRemount();
+                      setSelectedRoad(null);
+                      setRoadLegendFilterType((prev) => (prev === type ? null : type));
+                    }}
                     className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
                     title={isSelected ? t('map.legend.showAll', language) : `${t('map.legend.showOnly', language)} ${label}`}
                   >
