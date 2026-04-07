@@ -326,10 +326,15 @@ export const educationApi = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
-  bulkCsv: (file: File) => {
+  bulkCsv: (file: File, subDepartment?: string) => {
     const form = new FormData();
     form.append('file', file);
-    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/education/bulk-csv', {
+    const params = new URLSearchParams();
+    if (subDepartment) params.set('sub_department', subDepartment);
+    const url = params.toString()
+      ? `/api/v1/education/bulk-csv?${params.toString()}`
+      : '/api/v1/education/bulk-csv';
+    return apiFetch<{ imported: number; errors: string[] }>(url, {
       method: 'POST',
       body: form,
     });
