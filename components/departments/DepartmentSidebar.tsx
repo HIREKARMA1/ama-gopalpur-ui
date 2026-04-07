@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fa';
 import type { MessageKey } from '../i18n/messages';
 import { Department } from '../../services/api';
+import { formatLocaleDigits } from '../../lib/localeDigits';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
 
@@ -107,6 +108,7 @@ export function DepartmentSidebar({
             {departments.map((dept) => {
               const isSelected = dept.id === selectedId;
               const count = countByDepartmentId[dept.id];
+              const countDisplay = count != null ? formatLocaleDigits(count, language) : null;
               const Icon = getDepartmentIcon(dept.code, dept.name);
 
               return (
@@ -129,18 +131,18 @@ export function DepartmentSidebar({
                       <p className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-slate-100'}`}>
                         {getDepartmentLabel(dept, language)}
                       </p>
-                      {count != null && (
+                      {countDisplay != null && (
                         <p className={`mt-0.5 text-xs ${isSelected ? 'text-orange-50' : 'text-slate-400'}`}>
-                          {count} {language === 'or' ? t('sidebar.total', language) : countLabel}
+                          {countDisplay} {language === 'or' ? t('sidebar.total', language) : countLabel}
                         </p>
                       )}
                     </div>
-                    {count != null && (
+                    {countDisplay != null && (
                       <span
                         className={`ml-1 inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${isSelected ? 'bg-white/20 text-white' : 'bg-orange-50 text-orange-700'
                           }`}
                       >
-                        {count}
+                        {countDisplay}
                       </span>
                     )}
                     <span className={isSelected ? 'text-orange-50' : 'text-slate-400'}>
