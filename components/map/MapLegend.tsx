@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { ReactNode, MouseEventHandler } from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
 
@@ -30,21 +30,36 @@ export function MapLegendRow({
   onClick,
   title,
   roundedRect,
+  count,
+  dotClassName,
 }: {
   label: ReactNode;
   dotColor: string;
   isSelected: boolean;
-  onClick: () => void;
+  onClick: MouseEventHandler<HTMLButtonElement>;
   title: string;
   /** Roads-style legend uses a short wide chip */
   roundedRect?: boolean;
+  /** When set, label is shown as "label: count" (counts from loaded map data / API). */
+  count?: number;
+  /** Optional extra classes for the color swatch (e.g. size). */
+  dotClassName?: string;
 }) {
+  const dotShape = roundedRect ? 'h-2 w-3 rounded-sm' : 'h-2 w-2 rounded-full';
   const dot = (
     <span
-      className={`inline-block shrink-0 ${roundedRect ? 'h-2 w-3 rounded-sm' : 'h-2 w-2 rounded-full'}`}
+      className={`inline-block shrink-0 ${dotShape} ${dotClassName ?? ''}`}
       style={{ backgroundColor: dotColor }}
     />
   );
+  const text =
+    count !== undefined ? (
+      <span className="tabular-nums">
+        {label}: {count}
+      </span>
+    ) : (
+      label
+    );
   return (
     <li>
       <button
@@ -56,7 +71,7 @@ export function MapLegendRow({
         }`}
       >
         {dot}
-        {label}
+        {text}
       </button>
     </li>
   );
