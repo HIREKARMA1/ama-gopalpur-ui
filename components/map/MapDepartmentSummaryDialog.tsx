@@ -84,6 +84,7 @@ export function MapDepartmentSummaryDialog({
   if (!open || typeof document === 'undefined' || !box) return null;
 
   const body = mapSummary?.trim() ? mapSummary : t(emptyKey, language);
+  const portalTarget = (document.fullscreenElement as HTMLElement | null) ?? document.body;
 
   return createPortal(
     <div
@@ -121,6 +122,6 @@ export function MapDepartmentSummaryDialog({
         {body}
       </div>
     </div>,
-    document.body,
+    portalTarget,
   );
 }
