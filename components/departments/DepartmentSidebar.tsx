@@ -37,7 +37,7 @@ const DEPT_MESSAGE_KEYS: Record<string, MessageKey> = {
   ARCS: 'dept.arcs',
 };
 
-function getDepartmentLabel(dept: Department, language: 'en' | 'or'): string {
+export function getDepartmentLabel(dept: Department, language: 'en' | 'or'): string {
   const key = DEPT_MESSAGE_KEYS[dept.code?.toUpperCase() ?? ''];
   return key ? t(key, language) : dept.name;
 }
