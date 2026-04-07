@@ -40,6 +40,7 @@ import { t } from '../i18n/messages';
 import { MapCalloutCard, MapCalloutMetaMuted, MapCalloutMetaRow } from './MapCalloutCard';
 import { MapLegendPanel, MapLegendRow } from './MapLegend';
 import { MapViewToolbar } from './MapViewToolbar';
+import { MapBlockFilter } from './MapBlockFilter';
 
 const EDUCATION_TYPE_KEYS: Record<string, MessageKey> = {
   PRIMARY_SCHOOL: 'map.edu.primarySchool',
@@ -116,6 +117,26 @@ const EDUCATION_SUB_DEPT_DOT_COLORS: Record<string, string> = {
   UNIVERSITY: '#f97316',
   DIPLOMA_COLLEGE: '#8b5cf6',
 };
+
+const CONSTITUENCY_BLOCK_OPTIONS = [
+  { value: 'ALL', label: 'All blocks' },
+  { value: 'RANGEILUNDA', label: 'Rangeilunda' },
+  { value: 'KUKUDAKHANDI', label: 'Kukudakhandi' },
+  { value: 'BERHAMPUR_URBAN_I', label: 'Berhampur Urban-I' },
+] as const;
+
+function normalizeConstituencyBlock(raw: string | null | undefined): string {
+  const v = (raw || '')
+    .toUpperCase()
+    .replace(/[_-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!v) return '';
+  if (v.includes('RANGEILUNDA')) return 'RANGEILUNDA';
+  if (v.includes('KUKUDAKHANDI')) return 'KUKUDAKHANDI';
+  if (v.includes('BERHAMPUR') && v.includes('URBAN')) return 'BERHAMPUR_URBAN_I';
+  return '';
+}
 
 function translateIrrigationCategory(label: string, lang: 'en' | 'or'): string {
   const v = (label || '').trim();
@@ -297,6 +318,7 @@ export function ConstituencyMap({
   const [roadLegendFilterType, setRoadLegendFilterType] = useState<RoadTypeKey | null>(null);
   /** When set, only show drain polylines of this kind (Drainage legend). */
   const [drainKindFilter, setDrainKindFilter] = useState<DrainLineKind | null>(null);
+  const [selectedBlockFilter, setSelectedBlockFilter] = useState<string>('ALL');
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const mapWrapRef = useRef<HTMLDivElement>(null);
   /** Restore pan/zoom after remounting the map (polyline legend filters force remount to clear ghost overlays). */
@@ -336,8 +358,25 @@ export function ConstituencyMap({
     };
   }, [showSearchDropdown]);
 
+  const organizationsByBlock = useMemo(() => {
+    const normalizedSelectedBlock = normalizeConstituencyBlock(selectedBlockFilter);
+    if (!normalizedSelectedBlock || normalizedSelectedBlock === 'ALL') return organizations;
+    return organizations.filter((org) => {
+      const rawBlock =
+        (org.attributes?.ulb_block as string | undefined) ||
+        (org.attributes?.block_ulb as string | undefined) ||
+        (org.attributes?.block_name as string | undefined) ||
+        (org.attributes?.blockName as string | undefined) ||
+        (org.attributes?.block as string | undefined) ||
+        (org.address as string | undefined) ||
+        '';
+      const normalizedOrgBlock = normalizeConstituencyBlock(rawBlock);
+      return normalizedOrgBlock === normalizedSelectedBlock;
+    });
+  }, [organizations, selectedBlockFilter]);
+
   /** Only organizations with valid coordinates */
-  const orgsWithLocation = useMemo(
+  const allOrgsWithLocation = useMemo(
     () =>
       organizations.filter(
         (org): org is MapOrganization & { latitude: number; longitude: number } =>
@@ -349,11 +388,24 @@ export function ConstituencyMap({
     [organizations]
   );
 
+  /** Only organizations with valid coordinates */
+  const orgsWithLocation = useMemo(
+    () =>
+      organizationsByBlock.filter(
+        (org): org is MapOrganization & { latitude: number; longitude: number } =>
+          org.latitude != null &&
+          org.longitude != null &&
+          Number.isFinite(org.latitude) &&
+          Number.isFinite(org.longitude)
+      ),
+    [organizationsByBlock]
+  );
+
   const minorIrrigationLegendTypes = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'MINOR_IRRIGATION') return [];
     const fromData = Array.from(
       new Set(
-        orgsWithLocation
+        allOrgsWithLocation
           .map((o) => normalizeMinorIrrigationCategoryType(o.attributes?.category_type as string))
           .filter((t) => t.length > 0),
       ),
@@ -362,13 +414,13 @@ export function ConstituencyMap({
     const ordered = order.filter((c) => fromData.includes(c));
     const extras = fromData.filter((c) => !order.includes(c)).sort();
     return [...ordered, ...extras];
-  }, [orgsWithLocation, selectedDepartmentCode]);
+  }, [allOrgsWithLocation, selectedDepartmentCode]);
 
   const agricultureInstitutionLegendTypes = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'AGRICULTURE') return [];
     const fromData = Array.from(
       new Set(
-        orgsWithLocation
+        allOrgsWithLocation
           .map((o) =>
             normalizeAgricultureInstitutionKey(
               (o.sub_department as string) || (o.attributes?.sub_department as string) || '',
@@ -381,7 +433,29 @@ export function ConstituencyMap({
     const ordered = order.filter((c) => fromData.includes(c));
     const extras = fromData.filter((c) => !order.includes(c)).sort();
     return [...ordered, ...extras];
-  }, [orgsWithLocation, selectedDepartmentCode]);
+  }, [allOrgsWithLocation, selectedDepartmentCode]);
+
+  const irrigationLegendTypes = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'IRRIGATION') return [];
+    return Array.from(
+      new Set(
+        allOrgsWithLocation
+          .map((org) => ((org.attributes?.category as string) || '').trim())
+          .filter((v) => v.length > 0),
+      ),
+    );
+  }, [allOrgsWithLocation, selectedDepartmentCode]);
+
+  const electricityLegendTypes = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'ELECTRICITY') return [];
+    return Array.from(
+      new Set(
+        allOrgsWithLocation
+          .map((org) => ((org.attributes?.institution_type as string) || '').trim())
+          .filter((v) => v.length > 0),
+      ),
+    );
+  }, [allOrgsWithLocation, selectedDepartmentCode]);
 
   /** Counts per education sub-department from loaded orgs (API/Memo). */
   const educationSubDeptCounts = useMemo(() => {
@@ -392,23 +466,23 @@ export function ConstituencyMap({
     for (const key of Object.keys(EDUCATION_SUB_DEPT_LABELS)) {
       counts[key] = 0;
     }
-    for (const org of organizations) {
+    for (const org of organizationsByBlock) {
       const sub = (org.sub_department || '').toUpperCase();
       if (sub in counts) counts[sub] += 1;
     }
     return counts;
-  }, [organizations, selectedDepartmentCode]);
+  }, [organizationsByBlock, selectedDepartmentCode]);
 
   const awcIcdsLegendCount = useMemo(() => {
     const code = selectedDepartmentCode?.toUpperCase();
     if (code !== 'AWC_ICDS' && code !== 'ICDS') return 0;
-    return organizations.filter((o) => (o.type || '').toUpperCase() === 'AWC').length;
-  }, [organizations, selectedDepartmentCode]);
+    return organizationsByBlock.filter((o) => (o.type || '').toUpperCase() === 'AWC').length;
+  }, [organizationsByBlock, selectedDepartmentCode]);
 
   const agricultureInstitutionCounts = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'AGRICULTURE') return {} as Record<string, number>;
     const acc: Record<string, number> = {};
-    for (const org of organizations) {
+    for (const org of organizationsByBlock) {
       const k = normalizeAgricultureInstitutionKey(
         (org.sub_department as string) || (org.attributes?.sub_department as string) || '',
       );
@@ -416,44 +490,44 @@ export function ConstituencyMap({
       acc[k] = (acc[k] ?? 0) + 1;
     }
     return acc;
-  }, [organizations, selectedDepartmentCode]);
+  }, [organizationsByBlock, selectedDepartmentCode]);
 
   const irrigationCategoryCounts = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'IRRIGATION') return {} as Record<string, number>;
     const acc: Record<string, number> = {};
-    for (const org of organizations) {
+    for (const org of organizationsByBlock) {
       const cat = ((org.attributes?.category as string) || '').trim().toUpperCase();
       if (!cat) continue;
       acc[cat] = (acc[cat] ?? 0) + 1;
     }
     return acc;
-  }, [organizations, selectedDepartmentCode]);
+  }, [organizationsByBlock, selectedDepartmentCode]);
 
   const minorIrrigationCategoryCounts = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'MINOR_IRRIGATION') return {} as Record<string, number>;
     const acc: Record<string, number> = {};
-    for (const org of organizations) {
+    for (const org of organizationsByBlock) {
       const key = normalizeMinorIrrigationCategoryType(org.attributes?.category_type as string);
       if (!key) continue;
       acc[key] = (acc[key] ?? 0) + 1;
     }
     return acc;
-  }, [organizations, selectedDepartmentCode]);
+  }, [organizationsByBlock, selectedDepartmentCode]);
 
   const revenueTahasilLegendCount = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'REVENUE_LAND') return 0;
-    return organizations.filter((o) => (o.sub_department || '').toUpperCase() === 'TAHASIL_OFFICE').length;
-  }, [organizations, selectedDepartmentCode]);
+    return organizationsByBlock.filter((o) => (o.sub_department || '').toUpperCase() === 'TAHASIL_OFFICE').length;
+  }, [organizationsByBlock, selectedDepartmentCode]);
 
   const arcsJurisdictionCounts = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'ARCS') return {} as Record<string, number>;
     const acc: Record<string, number> = { RURAL: 0, URBAN: 0 };
-    for (const org of organizations) {
+    for (const org of organizationsByBlock) {
       const jt = ((org.attributes?.jurisdiction_type as string) || '').toUpperCase();
       if (jt === 'RURAL' || jt === 'URBAN') acc[jt] += 1;
     }
     return acc;
-  }, [organizations, selectedDepartmentCode]);
+  }, [organizationsByBlock, selectedDepartmentCode]);
 
   const electricityInstitutionCounts = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'ELECTRICITY') {
@@ -461,7 +535,7 @@ export function ConstituencyMap({
     }
     const byType: Record<string, number> = {};
     let emptyInstType = 0;
-    for (const org of organizations) {
+    for (const org of organizationsByBlock) {
       const raw = ((org.attributes?.institution_type as string) || '').trim();
       if (!raw) {
         emptyInstType += 1;
@@ -471,29 +545,29 @@ export function ConstituencyMap({
       byType[key] = (byType[key] ?? 0) + 1;
     }
     return { byType, emptyInstType };
-  }, [organizations, selectedDepartmentCode]);
+  }, [organizationsByBlock, selectedDepartmentCode]);
 
   const watcoStationCounts = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'WATCO_RWSS') return {} as Record<string, number>;
     const acc: Record<string, number> = {};
     for (const t of WATCO_STATION_TYPES) acc[t.toUpperCase()] = 0;
-    for (const org of organizations) {
+    for (const org of organizationsByBlock) {
       const st = ((org.attributes?.station_type as string) || '').trim().toUpperCase();
       if (st && acc[st] !== undefined) acc[st] += 1;
     }
     return acc;
-  }, [organizations, selectedDepartmentCode]);
+  }, [organizationsByBlock, selectedDepartmentCode]);
 
   const healthCategoryLegendCounts = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'HEALTH') return {} as Record<string, number>;
     const acc: Record<string, number> = {};
-    for (const org of organizations) {
+    for (const org of organizationsByBlock) {
       const cat = ((org.attributes?.category as string) || '').toUpperCase();
       if (!cat) continue;
       acc[cat] = (acc[cat] ?? 0) + 1;
     }
     return acc;
-  }, [organizations, selectedDepartmentCode]);
+  }, [organizationsByBlock, selectedDepartmentCode]);
 
   const drainKindCounts = useMemo(() => {
     const acc: Record<DrainLineKind, number> = { MAIN: 0, BRANCH: 0 };
@@ -516,6 +590,7 @@ export function ConstituencyMap({
 
   const isRoadsDept = selectedDepartmentCode?.toUpperCase() === 'ROADS';
   const isDrainageDept = selectedDepartmentCode?.toUpperCase() === 'DRAINAGE';
+  const showBlockFilter = !!selectedDepartmentCode && !isRoadsDept && !isDrainageDept;
   /**
    * Remount map when: switching polylines vs pins, or changing road/drain legend filter.
    * @react-google-maps/api often leaves Polylines on the map when filtered out via conditional render.
@@ -539,6 +614,7 @@ export function ConstituencyMap({
     setLegendFilterType(null);
     setRoadLegendFilterType(null);
     setDrainKindFilter(null);
+    setSelectedBlockFilter('ALL');
     setSelectedRoad(null);
     setSelectedDrain(null);
     mapCameraPreserveRef.current = null;
@@ -962,69 +1038,78 @@ export function ConstituencyMap({
           ref={searchContainerRef}
           className="pointer-events-none sm:absolute sm:top-[10px] sm:left-4 sm:right-auto z-20 flex items-center justify-start px-4 sm:px-0 w-full sm:w-auto py-2 sm:py-0"
         >
-          <form
-            onSubmit={handleSearchSubmit}
-            className="pointer-events-auto relative flex w-full max-w-xl items-center gap-2 rounded-sm bg-white/95 px-3 py-1.5 shadow-sm ring-1 ring-slate-200"
-          >
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onFocus={() => setShowSearchDropdown(true)}
-              onClick={() => setShowSearchDropdown(true)}
-              placeholder={t('map.search.placeholder', language).replace(
-                '{dept}',
-                mapSearchDeptPlaceholderLabel(selectedDepartmentCode, language),
-              )}
-              className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
-            />
-            <button
-              type="button"
-              onClick={() => setShowSearchDropdown((open) => !open)}
-              className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground hover:opacity-90"
-              aria-label="Open location search"
+          <div className="flex w-full max-w-[calc(100vw-2rem)] items-center gap-2 sm:w-auto sm:max-w-none">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="pointer-events-auto relative flex w-full max-w-xl items-center gap-2 rounded-sm bg-white/95 px-3 py-1.5 shadow-sm ring-1 ring-slate-200"
             >
-              <Search size={14} />
-            </button>
-            {showSearchDropdown && (
-              <div className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg z-30 text-sm">
-                {searchSuggestions.length === 0 && (
-                  <div className="px-3 py-3 text-xs text-slate-500">
-                    {t('map.search.noResults', language)}
-                  </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onFocus={() => setShowSearchDropdown(true)}
+                onClick={() => setShowSearchDropdown(true)}
+                placeholder={t('map.search.placeholder', language).replace(
+                  '{dept}',
+                  mapSearchDeptPlaceholderLabel(selectedDepartmentCode, language),
                 )}
-                {searchSuggestions.map((org) => (
-                  <button
-                    key={org.id}
-                    type="button"
-                    onClick={() => {
-                      focusOrganization(org as MapOrganization & { latitude: number; longitude: number });
-                      setShowSearchDropdown(false);
-                    }}
-                    className="w-full px-3 py-2 text-left hover:bg-slate-50"
-                  >
-                    <div className="font-medium text-slate-900 truncate">{org.name}</div>
-                    {(org.address || org.attributes?.ulb_block || org.attributes?.gp_name || org.attributes?.ward_village) && (
-                      <div className="mt-0.5 text-[11px] text-slate-500 truncate">
-                        {org.address ||
-                          [org.attributes?.ulb_block, org.attributes?.gp_name, org.attributes?.ward_village]
-                            .filter((v) => v != null && String(v).trim() !== '')
-                            .join(', ')}
-                      </div>
-                    )}
-                  </button>
-                ))}
-                {searchTerm.trim() && (
-                  <button
-                    type="submit"
-                    className="w-full px-3 py-2 text-left text-xs font-semibold text-primary border-t border-slate-100 hover:bg-slate-50"
-                  >
-                    {t('map.search.submit', language)} “{searchTerm.trim()}”
-                  </button>
-                )}
-              </div>
+                className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setShowSearchDropdown((open) => !open)}
+                className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground hover:opacity-90"
+                aria-label="Open location search"
+              >
+                <Search size={14} />
+              </button>
+              {showSearchDropdown && (
+                <div className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg z-30 text-sm">
+                  {searchSuggestions.length === 0 && (
+                    <div className="px-3 py-3 text-xs text-slate-500">
+                      {t('map.search.noResults', language)}
+                    </div>
+                  )}
+                  {searchSuggestions.map((org) => (
+                    <button
+                      key={org.id}
+                      type="button"
+                      onClick={() => {
+                        focusOrganization(org as MapOrganization & { latitude: number; longitude: number });
+                        setShowSearchDropdown(false);
+                      }}
+                      className="w-full px-3 py-2 text-left hover:bg-slate-50"
+                    >
+                      <div className="font-medium text-slate-900 truncate">{org.name}</div>
+                      {(org.address || org.attributes?.ulb_block || org.attributes?.gp_name || org.attributes?.ward_village) && (
+                        <div className="mt-0.5 text-[11px] text-slate-500 truncate">
+                          {org.address ||
+                            [org.attributes?.ulb_block, org.attributes?.gp_name, org.attributes?.ward_village]
+                              .filter((v) => v != null && String(v).trim() !== '')
+                              .join(', ')}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                  {searchTerm.trim() && (
+                    <button
+                      type="submit"
+                      className="w-full px-3 py-2 text-left text-xs font-semibold text-primary border-t border-slate-100 hover:bg-slate-50"
+                    >
+                      {t('map.search.submit', language)} “{searchTerm.trim()}”
+                    </button>
+                  )}
+                </div>
+              )}
+            </form>
+            {showBlockFilter && (
+              <MapBlockFilter
+                value={selectedBlockFilter}
+                options={CONSTITUENCY_BLOCK_OPTIONS.map((o) => ({ ...o }))}
+                onChange={setSelectedBlockFilter}
+              />
             )}
-          </form>
+          </div>
         </div>
       )}
       <div ref={mapWrapRef} className="flex-1 w-full relative min-h-0">
@@ -1285,7 +1370,7 @@ export function ConstituencyMap({
           fullscreenLabelKey="map.controls.fullscreen"
         />
       </div>
-      {selectedDepartmentCode?.toUpperCase() === 'EDUCATION' && organizations.length > 0 && (
+      {selectedDepartmentCode?.toUpperCase() === 'EDUCATION' && (
         <MapLegendPanel className="md:max-w-[300px]">
           {Object.keys(EDUCATION_SUB_DEPT_LABELS).map((type) => {
             const isSelected = legendFilterType === type;
@@ -1309,8 +1394,7 @@ export function ConstituencyMap({
         </MapLegendPanel>
       )}
       {(selectedDepartmentCode?.toUpperCase() === 'AWC_ICDS' ||
-        selectedDepartmentCode?.toUpperCase() === 'ICDS') &&
-        organizations.length > 0 && (
+        selectedDepartmentCode?.toUpperCase() === 'ICDS') && (
           <MapLegendPanel className="md:max-w-[200px]">
             <MapLegendRow
               dotColor="#ec4899"
@@ -1328,7 +1412,6 @@ export function ConstituencyMap({
           </MapLegendPanel>
         )}
       {selectedDepartmentCode?.toUpperCase() === 'AGRICULTURE' &&
-        orgsWithLocation.length > 0 &&
         agricultureInstitutionLegendTypes.length > 0 && (
         <MapLegendPanel className="pointer-events-auto z-[45] md:max-w-[280px]">
           {agricultureInstitutionLegendTypes.map((instKey) => {
@@ -1358,15 +1441,9 @@ export function ConstituencyMap({
           })}
         </MapLegendPanel>
       )}
-      {selectedDepartmentCode?.toUpperCase() === 'IRRIGATION' && orgsWithLocation.length > 0 && (
+      {selectedDepartmentCode?.toUpperCase() === 'IRRIGATION' && (
         <MapLegendPanel className="md:max-w-[260px]">
-          {Array.from(
-            new Set(
-              orgsWithLocation
-                .map((org) => ((org.attributes?.category as string) || '').trim())
-                .filter((v) => v.length > 0),
-            ),
-          ).map((type) => {
+          {irrigationLegendTypes.map((type) => {
             const value = type.toUpperCase();
             const isSelected = legendFilterType === value;
             const label = translateIrrigationCategory(type, language);
@@ -1390,7 +1467,6 @@ export function ConstituencyMap({
         </MapLegendPanel>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'MINOR_IRRIGATION' &&
-        orgsWithLocation.length > 0 &&
         minorIrrigationLegendTypes.length > 0 && (
         <MapLegendPanel className="md:max-w-[260px]">
           {minorIrrigationLegendTypes.map((cat) => {
@@ -1416,7 +1492,7 @@ export function ConstituencyMap({
           })}
         </MapLegendPanel>
       )}
-      {selectedDepartmentCode?.toUpperCase() === 'REVENUE_LAND' && orgsWithLocation.length > 0 && (
+      {selectedDepartmentCode?.toUpperCase() === 'REVENUE_LAND' && (
         <MapLegendPanel className="md:max-w-[220px]">
           <MapLegendRow
             dotColor="#0ea5e9"
@@ -1434,7 +1510,7 @@ export function ConstituencyMap({
           />
         </MapLegendPanel>
       )}
-      {selectedDepartmentCode?.toUpperCase() === 'ARCS' && orgsWithLocation.length > 0 && (
+      {selectedDepartmentCode?.toUpperCase() === 'ARCS' && (
         <MapLegendPanel className="md:max-w-[280px]">
           {(['RURAL', 'URBAN'] as const).map((jur) => {
             const isSelected = legendFilterType === jur;
@@ -1460,16 +1536,10 @@ export function ConstituencyMap({
           })}
         </MapLegendPanel>
       )}
-      {selectedDepartmentCode?.toUpperCase() === 'ELECTRICITY' && orgsWithLocation.length > 0 && (
+      {selectedDepartmentCode?.toUpperCase() === 'ELECTRICITY' && (
         <MapLegendPanel className="md:max-w-[260px]">
           {(() => {
-            const types = Array.from(
-              new Set(
-                orgsWithLocation
-                  .map((org) => ((org.attributes?.institution_type as string) || '').trim())
-                  .filter((v) => v.length > 0),
-              ),
-            );
+            const types = electricityLegendTypes;
 
             if (types.length === 0) {
               const fallbackKey = ELECTRICITY_TYPE_LABEL.toUpperCase();
@@ -1525,7 +1595,7 @@ export function ConstituencyMap({
           })()}
         </MapLegendPanel>
       )}
-      {selectedDepartmentCode?.toUpperCase() === 'WATCO_RWSS' && orgsWithLocation.length > 0 && (
+      {selectedDepartmentCode?.toUpperCase() === 'WATCO_RWSS' && (
         <MapLegendPanel className="md:max-w-[260px]">
           {WATCO_STATION_TYPES.map((type) => {
             const value = type.toUpperCase();
@@ -1550,7 +1620,7 @@ export function ConstituencyMap({
           })}
         </MapLegendPanel>
       )}
-      {selectedDepartmentCode?.toUpperCase() === 'HEALTH' && orgsWithLocation.length > 0 && (
+      {selectedDepartmentCode?.toUpperCase() === 'HEALTH' && (
         <MapLegendPanel className="md:max-w-[200px]">
           {Object.entries(HEALTH_TYPE_LABELS)
             .filter(([type]) => !['HOSPITAL', 'HEALTH_CENTRE', 'OTHER'].includes(type))
