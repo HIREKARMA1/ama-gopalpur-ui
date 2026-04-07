@@ -34,8 +34,10 @@ import { compressImage } from '../../../lib/imageCompression';
 const ICDS_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF AWC,AWC ID,BUILDING STATUS,LATITUDE,LONGITUDE,STUDENT STRENGTH,CPDO NAME,CPDO CONTACT NO,SUPERVISOR NAME,SUPERVISOR CONTACT NAME,AWW NAME,AWW CONTACT NO,AWH NAME,AWH CONTACT NO,DESCRIPTION,SECTOR,LGD CODE\n';
 
-const EDUCATION_CSV_HEADER =
-  'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF SCHOOL,SCHOOL ID,ESST YEAR,CATEGORY,I,II,III,IV,V,VI,VII,VIII,IX,X,DEO NAME,DEO CONTACT,BEO NAME,BEO CONTACT,BRCC NAME,BRCC CONTACT,CRCC NAME,CRCC CONTACT,NAME OF HM,CONTACT OF HM,NO OF TS,NO OF NTS,NO OF TGP(PCM),NO OF TGP(CBZ),NO OF TGT(ARTS),BUILDING STATUS,NO OF ROOMS,NO OF SMART CLASS ROOMS,SCIENCE LAB,TOILET(M),TOILET(F),RAMP,MEETING HALL,STAFF COMMON ROOM,NCC,NSS,JRC,ECO CLUB,LIBRARY,ICC HEAD NAME,ICC HEAD CONTACT,PLAY GROUND,CYCLE STAND,DRINKING WATER(TW),DRINKING WATER(TAP),DRINKING WATER(OVERHEAD TAP),DRINKING WATER(AQUAGUARD),LATITUDE,LONGITUDE,DESCRIPTION\n';
+const EDUCATION_CSV_COMMON_PREFIX =
+  'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF SCHOOL,SCHOOL ID,ESST YEAR,CATEGORY';
+const EDUCATION_CSV_COMMON_SUFFIX =
+  'DEO NAME,DEO CONTACT,BEO NAME,BEO CONTACT,BRCC NAME,BRCC CONTACT,CRCC NAME,CRCC CONTACT,NAME OF HM,CONTACT OF HM,NO OF TS,NO OF NTS,NO OF TGP(PCM),NO OF TGP(CBZ),NO OF TGT(ARTS),BUILDING STATUS,NO OF ROOMS,NO OF SMART CLASS ROOMS,SCIENCE LAB,TOILET(M),TOILET(F),RAMP,MEETING HALL,STAFF COMMON ROOM,NCC,NSS,JRC,ECO CLUB,LIBRARY,ICC HEAD NAME,ICC HEAD CONTACT,PLAY GROUND,CYCLE STAND,DRINKING WATER(TW),DRINKING WATER(TAP),DRINKING WATER(OVERHEAD TAP),DRINKING WATER(AQUAGUARD),LATITUDE,LONGITUDE,DESCRIPTION';
 const HEALTH_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,LATITUDE,LONGITUDE,NAME,INSTITUTION ID,CATEGORY,INST HEAD NAME,INST HEAD CONTACT,NO OF TS,NO OF NTS,NO OF MO,NO OF PHARMACIST,NO OF ANM,NO OF HEALTH WORKER,NO OF PATHOLOGY,NO OF CLERK,NO OF SWEEPER,NO OF NW,NO OF BED,NO OF ICU,X-RAY AVAILABILTY,CT-SCAN AVAILABILITY,AVAILABILITY OF PATHOLOGY TESTING,DESCRIPTION\n';
 
@@ -102,13 +104,70 @@ const getEducationHeadersForSubDept = (subDept: string): string[] => {
   }
 };
 
+const EDUCATION_SCHOOL_SUB_DEPTS = [
+  'PS',
+  'UPS',
+  'HS',
+  'HSS',
+  'SSS',
+  // 'OTHER', // temporarily disabled by request
+] as const;
+type EducationSchoolSubDept = (typeof EDUCATION_SCHOOL_SUB_DEPTS)[number];
+
+const SCHOOL_SUB_DEPT_TO_ORG_TYPE: Record<EducationSchoolSubDept, string> = {
+  PS: 'PRIMARY_SCHOOL',
+  UPS: 'UPPER_PRIMARY_SCHOOL',
+  HS: 'HIGH_SCHOOL',
+  HSS: 'HIGHER_SECONDARY',
+  SSS: 'SENIOR_SECONDARY',
+};
+
+const SCHOOL_CLASS_FIELDS_BY_SUB_DEPT: Record<EducationSchoolSubDept, string[]> = {
+  PS: ['class_i', 'class_ii', 'class_iii', 'class_iv', 'class_v'],
+  UPS: ['class_vi', 'class_vii', 'class_viii'],
+  HS: ['class_viii', 'class_ix', 'class_x'],
+  HSS: ['class_xi', 'class_xii'],
+  SSS: ['class_xi', 'class_xii'],
+};
+
+const SCHOOL_CLASS_LABELS: Record<string, string> = {
+  class_i: 'I',
+  class_ii: 'II',
+  class_iii: 'III',
+  class_iv: 'IV',
+  class_v: 'V',
+  class_vi: 'VI',
+  class_vii: 'VII',
+  class_viii: 'VIII',
+  class_ix: 'IX',
+  class_x: 'X',
+  class_xi: 'XI',
+  class_xii: 'XII',
+};
+
+function schoolClassFields(subDept: string): string[] {
+  if (!isEducationSchoolSubDept(subDept)) return [];
+  return SCHOOL_CLASS_FIELDS_BY_SUB_DEPT[subDept] ?? [];
+}
+
+function educationSchoolCsvHeader(subDept: string): string {
+  const classHeaders = schoolClassFields(subDept)
+    .map((k) => SCHOOL_CLASS_LABELS[k])
+    .join(',');
+  return `${EDUCATION_CSV_COMMON_PREFIX},${classHeaders},${EDUCATION_CSV_COMMON_SUFFIX}\n`;
+}
+
+function isEducationSchoolSubDept(value: string): value is EducationSchoolSubDept {
+  return (EDUCATION_SCHOOL_SUB_DEPTS as readonly string[]).includes(value);
+}
+
 export default function DepartmentAdminPage() {
   const router = useRouter();
   const { language } = useLanguage();
   const [me, setMe] = useState<User | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [deptCode, setDeptCode] = useState<string | null>(null);
-  const [educationSubDept, setEducationSubDept] = useState<string>('SCHOOL');
+  const [educationSubDept, setEducationSubDept] = useState<string>('PS');
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -170,7 +229,7 @@ export default function DepartmentAdminPage() {
   const [editingEducationId, setEditingEducationId] = useState<number | null>(null);
   const emptyEducationOrg = () => ({
     block_ulb: '', gp_ward: '', village: '', name_of_school: '', school_id: '', esst_year: '', category: '',
-    class_i: '', class_ii: '', class_iii: '', class_iv: '', class_v: '', class_vi: '', class_vii: '', class_viii: '', class_ix: '', class_x: '',
+    class_i: '', class_ii: '', class_iii: '', class_iv: '', class_v: '', class_vi: '', class_vii: '', class_viii: '', class_ix: '', class_x: '', class_xi: '', class_xii: '',
     deo_name: '', deo_contact: '', beo_name: '', beo_contact: '', brcc_name: '', brcc_contact: '', crcc_name: '', crcc_contact: '',
     name_of_hm: '', contact_of_hm: '', no_of_ts: '', no_of_nts: '', no_of_tgp_pcm: '', no_of_tgp_cbz: '', no_of_tgt_arts: '',
     building_status: '', no_of_rooms: '', no_of_smart_class_rooms: '', science_lab: '', toilet_m: '', toilet_f: '',
@@ -318,7 +377,7 @@ export default function DepartmentAdminPage() {
 
   // Reset generic Education form when switching sub-departments
   useEffect(() => {
-    if (deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL') {
+    if (deptCode === 'EDUCATION' && !isEducationSchoolSubDept(educationSubDept)) {
       setEduFormValues({});
     }
   }, [deptCode, educationSubDept]);
@@ -509,8 +568,8 @@ export default function DepartmentAdminPage() {
     try {
       if (deptCode === 'EDUCATION') {
         let result;
-        if (educationSubDept === 'SCHOOL') {
-          result = await educationApi.bulkCsv(file);
+        if (isEducationSchoolSubDept(educationSubDept)) {
+          result = await educationApi.bulkCsv(file, educationSubDept);
         } else if (educationSubDept === 'ENGINEERING_COLLEGE') {
           result = await educationApi.bulkEngineeringCollegesCsv(file);
         } else if (educationSubDept === 'ITI') {
@@ -608,9 +667,9 @@ export default function DepartmentAdminPage() {
     let csvContent: string;
     let filename: string;
     if (deptCode === 'EDUCATION') {
-      if (educationSubDept === 'SCHOOL') {
-        csvContent = EDUCATION_CSV_HEADER;
-        filename = 'education_schools_template.csv';
+      if (isEducationSchoolSubDept(educationSubDept)) {
+        csvContent = educationSchoolCsvHeader(educationSubDept);
+        filename = `education_${educationSubDept.toLowerCase()}_template.csv`;
       } else if (educationSubDept === 'ENGINEERING_COLLEGE') {
         csvContent = EDUCATION_ENGINEERING_CSV_HEADER;
         filename = 'education_engineering_colleges_template.csv';
@@ -624,7 +683,7 @@ export default function DepartmentAdminPage() {
         csvContent = EDUCATION_DIPLOMA_CSV_HEADER;
         filename = 'education_diploma_colleges_template.csv';
       } else {
-        csvContent = EDUCATION_CSV_HEADER;
+        csvContent = educationSchoolCsvHeader('PS');
         filename = 'education_template.csv';
       }
     } else if (deptCode === 'HEALTH') {
@@ -770,7 +829,12 @@ export default function DepartmentAdminPage() {
                       }
                     }}
                   >
-                    <option value="SCHOOL">School</option>
+                    <option value="PS">PS</option>
+                    <option value="UPS">UPS</option>
+                    <option value="HS">HS</option>
+                    <option value="HSS">HSS</option>
+                    <option value="SSS">SSS</option>
+                    {/* <option value="OTHER">OTHER</option> */}
                     <option value="ENGINEERING_COLLEGE">Engineering College</option>
                     <option value="ITI">ITI</option>
                     <option value="UNIVERSITY">University</option>
@@ -1943,7 +2007,7 @@ export default function DepartmentAdminPage() {
               </section>
             )}
 
-            {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
+            {deptCode === 'EDUCATION' && isEducationSchoolSubDept(educationSubDept) && (
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual School entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
@@ -1981,7 +2045,7 @@ export default function DepartmentAdminPage() {
                           ward_village: newEducationOrg.village || null,
                           sector: newEducationOrg.category || null,
                         } as Record<string, string | number | null>,
-                        sub_department: 'SCHOOL',
+                        sub_department: educationSubDept,
                       };
                       let updated: Organization;
                       if (editingEducationId) {
@@ -1990,7 +2054,7 @@ export default function DepartmentAdminPage() {
                       } else {
                         const created = await organizationsApi.create({
                           department_id: me.department_id,
-                          type: 'PRIMARY_SCHOOL',
+                          type: SCHOOL_SUB_DEPT_TO_ORG_TYPE[educationSubDept],
                           ...basePayload,
                         });
                         updated = created;
@@ -2007,6 +2071,7 @@ export default function DepartmentAdminPage() {
                         class_i: _n(newEducationOrg.class_i), class_ii: _n(newEducationOrg.class_ii), class_iii: _n(newEducationOrg.class_iii),
                         class_iv: _n(newEducationOrg.class_iv), class_v: _n(newEducationOrg.class_v), class_vi: _n(newEducationOrg.class_vi),
                         class_vii: _n(newEducationOrg.class_vii), class_viii: _n(newEducationOrg.class_viii), class_ix: _n(newEducationOrg.class_ix), class_x: _n(newEducationOrg.class_x),
+                        class_xi: _n(newEducationOrg.class_xi), class_xii: _n(newEducationOrg.class_xii),
                         deo_name: _s(newEducationOrg.deo_name), deo_contact: _s(newEducationOrg.deo_contact),
                         beo_name: _s(newEducationOrg.beo_name), beo_contact: _s(newEducationOrg.beo_contact),
                         brcc_name: _s(newEducationOrg.brcc_name), brcc_contact: _s(newEducationOrg.brcc_contact),
@@ -2076,16 +2141,22 @@ export default function DepartmentAdminPage() {
                     <label className="block text-text">Longitude</label>
                     <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.longitude} onChange={(e) => setNewEducationOrg((s) => ({ ...s, longitude: e.target.value }))} required />
                   </div>
-                  <div className="space-y-1"><label className="block text-text">Class I</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_i} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_i: e.target.value }))} /></div>
-                  <div className="space-y-1"><label className="block text-text">Class II</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_ii} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_ii: e.target.value }))} /></div>
-                  <div className="space-y-1"><label className="block text-text">Class III</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_iii} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_iii: e.target.value }))} /></div>
-                  <div className="space-y-1"><label className="block text-text">Class IV</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_iv} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_iv: e.target.value }))} /></div>
-                  <div className="space-y-1"><label className="block text-text">Class V</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_v} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_v: e.target.value }))} /></div>
-                  <div className="space-y-1"><label className="block text-text">Class VI</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_vi} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_vi: e.target.value }))} /></div>
-                  <div className="space-y-1"><label className="block text-text">Class VII</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_vii} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_vii: e.target.value }))} /></div>
-                  <div className="space-y-1"><label className="block text-text">Class VIII</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_viii} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_viii: e.target.value }))} /></div>
-                  <div className="space-y-1"><label className="block text-text">Class IX</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_ix} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_ix: e.target.value }))} /></div>
-                  <div className="space-y-1"><label className="block text-text">Class X</label><input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.class_x} onChange={(e) => setNewEducationOrg((s) => ({ ...s, class_x: e.target.value }))} /></div>
+                  {schoolClassFields(educationSubDept).map((fieldKey) => (
+                    <div key={fieldKey} className="space-y-1">
+                      <label className="block text-text">{`Class ${SCHOOL_CLASS_LABELS[fieldKey]}`}</label>
+                      <input
+                        type="number"
+                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                        value={(newEducationOrg as Record<string, string>)[fieldKey] || ''}
+                        onChange={(e) =>
+                          setNewEducationOrg((s) => ({
+                            ...s,
+                            [fieldKey]: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  ))}
                   <div className="space-y-1"><label className="block text-text">DEO Name</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.deo_name} onChange={(e) => setNewEducationOrg((s) => ({ ...s, deo_name: e.target.value }))} /></div>
                   <div className="space-y-1"><label className="block text-text">DEO Contact</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.deo_contact} onChange={(e) => setNewEducationOrg((s) => ({ ...s, deo_contact: e.target.value }))} /></div>
                   <div className="space-y-1"><label className="block text-text">BEO Name</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.beo_name} onChange={(e) => setNewEducationOrg((s) => ({ ...s, beo_name: e.target.value }))} /></div>
@@ -2133,7 +2204,7 @@ export default function DepartmentAdminPage() {
               </section>
             )}
 
-            {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
+            {deptCode === 'EDUCATION' && !isEducationSchoolSubDept(educationSubDept) && (
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">
                   Manual{' '}
@@ -2770,7 +2841,7 @@ export default function DepartmentAdminPage() {
               <h2 className="text-sm font-semibold text-text">Bulk CSV upload</h2>
               <p className="mt-1 text-xs text-text-muted">
                 {deptCode === 'EDUCATION'
-                  ? educationSubDept === 'SCHOOL'
+                  ? isEducationSchoolSubDept(educationSubDept)
                     ? 'Upload Education minister CSV for schools. Organizations and profiles will be created or updated by NAME OF SCHOOL, LATITUDE, LONGITUDE.'
                     : 'Upload Education CSV for the selected sub-department. Organizations and profiles will be created or updated by name and location.'
                   : deptCode === 'HEALTH'
@@ -2829,7 +2900,7 @@ export default function DepartmentAdminPage() {
                       <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Sl. No.</th>
                       <th className="px-2 py-1 text-left font-medium text-text">
                         {deptCode === 'EDUCATION'
-                          ? educationSubDept === 'SCHOOL'
+                          ? isEducationSchoolSubDept(educationSubDept)
                             ? 'School Name'
                             : 'Institution Name'
                           : deptCode === 'HEALTH'
@@ -2903,7 +2974,7 @@ export default function DepartmentAdminPage() {
                           ))}
                         </>
                       )}
-                      {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
+                      {deptCode === 'EDUCATION' && isEducationSchoolSubDept(educationSubDept) && (
                         <>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
@@ -2911,16 +2982,11 @@ export default function DepartmentAdminPage() {
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">School ID</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ESST Year</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Category</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">I</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">II</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">III</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">IV</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">V</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">VI</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">VII</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">VIII</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">IX</th>
-                          <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">X</th>
+                          {schoolClassFields(educationSubDept).map((fieldKey) => (
+                            <th key={fieldKey} className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">
+                              {SCHOOL_CLASS_LABELS[fieldKey]}
+                            </th>
+                          ))}
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">DEO Name</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">DEO Contact</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">BEO Name</th>
@@ -2962,7 +3028,7 @@ export default function DepartmentAdminPage() {
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Longitude</th>
                         </>
                       )}
-                      {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
+                      {deptCode === 'EDUCATION' && !isEducationSchoolSubDept(educationSubDept) && (
                         <>
                           {getEducationHeadersForSubDept(educationSubDept).map((header) => (
                             <th
@@ -3242,7 +3308,7 @@ export default function DepartmentAdminPage() {
                                 })}
                               </>
                             )}
-                            {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
+                            {deptCode === 'EDUCATION' && isEducationSchoolSubDept(educationSubDept) && (
                               <>
                                 <td className="px-2 py-1 text-text-muted">{_(ep?.block_ulb ?? o.attributes?.ulb_block)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(ep?.gp_ward ?? o.attributes?.gp_name)}</td>
@@ -3250,16 +3316,11 @@ export default function DepartmentAdminPage() {
                                 <td className="px-2 py-1 text-text-muted">{_(ep?.school_id)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(ep?.esst_year)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(ep?.category)}</td>
-                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_i)}</td>
-                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_ii)}</td>
-                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_iii)}</td>
-                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_iv)}</td>
-                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_v)}</td>
-                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_vi)}</td>
-                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_vii)}</td>
-                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_viii)}</td>
-                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_ix)}</td>
-                                <td className="px-2 py-1 text-text-muted">{_(ep?.class_x)}</td>
+                                {schoolClassFields(educationSubDept).map((fieldKey) => (
+                                  <td key={fieldKey} className="px-2 py-1 text-text-muted">
+                                    {_((ep as Record<string, unknown> | undefined)?.[fieldKey])}
+                                  </td>
+                                ))}
                                 <td className="px-2 py-1 text-text-muted">{_(ep?.deo_name)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(ep?.deo_contact)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(ep?.beo_name)}</td>
@@ -3301,7 +3362,7 @@ export default function DepartmentAdminPage() {
                                 <td className="px-2 py-1 text-text-muted">{o.longitude != null ? o.longitude.toFixed(6) : '—'}</td>
                               </>
                             )}
-                            {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
+                            {deptCode === 'EDUCATION' && !isEducationSchoolSubDept(educationSubDept) && (
                               <>
                                 {getEducationHeadersForSubDept(educationSubDept).map((header) => {
                                   const key = snakeFromHeader(header);
@@ -3742,7 +3803,7 @@ export default function DepartmentAdminPage() {
                                   Edit
                                 </button>
                               )}
-                              {deptCode === 'EDUCATION' && educationSubDept === 'SCHOOL' && (
+                              {deptCode === 'EDUCATION' && isEducationSchoolSubDept(educationSubDept) && (
                                 <button
                                   type="button"
                                   className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
@@ -3761,6 +3822,7 @@ export default function DepartmentAdminPage() {
                                       class_i: v(p?.class_i), class_ii: v(p?.class_ii), class_iii: v(p?.class_iii),
                                       class_iv: v(p?.class_iv), class_v: v(p?.class_v), class_vi: v(p?.class_vi),
                                       class_vii: v(p?.class_vii), class_viii: v(p?.class_viii), class_ix: v(p?.class_ix), class_x: v(p?.class_x),
+                                      class_xi: v(p?.class_xi), class_xii: v(p?.class_xii),
                                       deo_name: v(p?.deo_name), deo_contact: v(p?.deo_contact),
                                       beo_name: v(p?.beo_name), beo_contact: v(p?.beo_contact),
                                       brcc_name: v(p?.brcc_name), brcc_contact: v(p?.brcc_contact),
@@ -3786,7 +3848,7 @@ export default function DepartmentAdminPage() {
                                   Edit
                                 </button>
                               )}
-                              {deptCode === 'EDUCATION' && educationSubDept !== 'SCHOOL' && (
+                              {deptCode === 'EDUCATION' && !isEducationSchoolSubDept(educationSubDept) && (
                                 <button
                                   type="button"
                                   className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
@@ -4025,4 +4087,5 @@ export default function DepartmentAdminPage() {
     </SuperAdminDashboardLayout >
   );
 }
+
 

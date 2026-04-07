@@ -76,9 +76,16 @@ export type MessageKey =
   | 'map.edu.upperPrimarySchool'
   | 'map.edu.highSchool'
   | 'map.edu.higherSecondary'
+  | 'map.edu.seniorSecondary'
   | 'map.edu.college'
   | 'map.edu.university'
   | 'map.edu.sub.school'
+  | 'map.edu.sub.ps'
+  | 'map.edu.sub.ups'
+  | 'map.edu.sub.hs'
+  | 'map.edu.sub.hss'
+  | 'map.edu.sub.sss'
+  | 'map.edu.sub.other'
   | 'map.edu.sub.engineeringCollege'
   | 'map.edu.sub.iti'
   | 'map.edu.sub.university'
@@ -782,9 +789,16 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.edu.upperPrimarySchool': { en: 'Upper Primary School', or: 'ଉଚ୍ଚ ପ୍ରାଥମିକ ବିଦ୍ୟାଳୟ' },
   'map.edu.highSchool': { en: 'High School', or: 'ହାଇସ୍କୁଲ୍' },
   'map.edu.higherSecondary': { en: 'Higher Secondary', or: 'ଉଚ୍ଚ ମାଧ୍ୟମିକ' },
+  'map.edu.seniorSecondary': { en: 'Senior Secondary', or: 'ସିନିଅର ସେକେଣ୍ଡାରୀ' },
   'map.edu.college': { en: 'College', or: 'ମହାବିଦ୍ୟାଳୟ' },
   'map.edu.university': { en: 'University', or: 'ବିଶ୍ୱବିଦ୍ୟାଳୟ' },
   'map.edu.sub.school': { en: 'School', or: 'ବିଦ୍ୟାଳୟ' },
+  'map.edu.sub.ps': { en: 'PS', or: 'ପି.ଏସ୍.' },
+  'map.edu.sub.ups': { en: 'UPS', or: 'ୟୁ.ପି.ଏସ୍.' },
+  'map.edu.sub.hs': { en: 'HS', or: 'ଏଚ୍.ଏସ୍.' },
+  'map.edu.sub.hss': { en: 'HSS', or: 'ଏଚ୍.ଏସ୍.ଏସ୍.' },
+  'map.edu.sub.sss': { en: 'SSS', or: 'ଏସ୍.ଏସ୍.ଏସ୍.' },
+  'map.edu.sub.other': { en: 'Other', or: 'ଅନ୍ୟ' },
   'map.edu.sub.engineeringCollege': { en: 'Engineering College', or: 'ଇଞ୍ଜିନିୟରିଂ କଲେଜ' },
   'map.edu.sub.iti': { en: 'ITI', or: 'ଆଇ.ଟି.ଆଇ.' },
   'map.edu.sub.university': { en: 'University', or: 'ବିଶ୍ୱବିଦ୍ୟାଳୟ' },

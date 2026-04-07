@@ -51,6 +51,7 @@ export const EDUCATION_MARKER_ICONS: Record<string, string> = {
   UPPER_PRIMARY_SCHOOL: MARKER_COLORS.blue,
   HIGH_SCHOOL: MARKER_COLORS.green,
   HIGHER_SECONDARY: MARKER_COLORS.orange,
+  SENIOR_SECONDARY: MARKER_COLORS.orange,
   COLLEGE: MARKER_COLORS.purple,
   UNIVERSITY: MARKER_COLORS.yellow,
 };
@@ -60,13 +61,19 @@ export const EDUCATION_TYPE_LABELS: Record<string, string> = {
   UPPER_PRIMARY_SCHOOL: 'Upper Primary School',
   HIGH_SCHOOL: 'High School',
   HIGHER_SECONDARY: 'Higher Secondary',
+  SENIOR_SECONDARY: 'Senior Secondary',
   COLLEGE: 'College',
   UNIVERSITY: 'University',
 };
 
 /** Education sub-departments for top-level legend/filtering */
 export const EDUCATION_SUB_DEPT_LABELS: Record<string, string> = {
-  SCHOOL: 'School',
+  PS: 'PS',
+  UPS: 'UPS',
+  HS: 'HS',
+  HSS: 'HSS',
+  SSS: 'SSS',
+  // OTHER: 'Other',
   ENGINEERING_COLLEGE: 'Engineering College',
   ITI: 'ITI',
   UNIVERSITY: 'University',
@@ -75,8 +82,13 @@ export const EDUCATION_SUB_DEPT_LABELS: Record<string, string> = {
 
 /** Marker colors for Education sub-departments */
 export const EDUCATION_SUB_DEPT_MARKERS: Record<string, string> = {
-  SCHOOL: MARKER_COLORS.red,
-  ENGINEERING_COLLEGE: MARKER_COLORS.blue,
+  PS: MARKER_COLORS.red,
+  UPS: MARKER_COLORS.blue,
+  HS: MARKER_COLORS.green,
+  HSS: MARKER_COLORS.green,
+  SSS: MARKER_COLORS.orange,
+  // OTHER: MARKER_COLORS.purple,
+  ENGINEERING_COLLEGE: MARKER_COLORS.yellow,
   ITI: MARKER_COLORS.green,
   UNIVERSITY: MARKER_COLORS.yellow,
   DIPLOMA_COLLEGE: MARKER_COLORS.purple,
@@ -206,3 +218,4 @@ export const IRRIGATION_CATEGORY_MARKER_COLORS: Record<string, string> = {
   CANAL: '#4f46e5',
   'FLOW MIP': '#db2777',
 };
+

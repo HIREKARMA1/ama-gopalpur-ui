@@ -46,11 +46,17 @@ const EDUCATION_TYPE_KEYS: Record<string, MessageKey> = {
   UPPER_PRIMARY_SCHOOL: 'map.edu.upperPrimarySchool',
   HIGH_SCHOOL: 'map.edu.highSchool',
   HIGHER_SECONDARY: 'map.edu.higherSecondary',
+  SENIOR_SECONDARY: 'map.edu.seniorSecondary',
   COLLEGE: 'map.edu.college',
   UNIVERSITY: 'map.edu.university',
 };
 const EDUCATION_SUB_DEPT_KEYS: Record<string, MessageKey> = {
-  SCHOOL: 'map.edu.sub.school',
+  PS: 'map.edu.sub.ps',
+  UPS: 'map.edu.sub.ups',
+  HS: 'map.edu.sub.hs',
+  HSS: 'map.edu.sub.hss',
+  SSS: 'map.edu.sub.sss',
+  OTHER: 'map.edu.sub.other',
   ENGINEERING_COLLEGE: 'map.edu.sub.engineeringCollege',
   ITI: 'map.edu.sub.iti',
   UNIVERSITY: 'map.edu.sub.university',
@@ -99,11 +105,16 @@ const WATCO_MARKER_HEX: Record<(typeof WATCO_STATION_TYPES)[number], string> = {
 };
 
 const EDUCATION_SUB_DEPT_DOT_COLORS: Record<string, string> = {
-  SCHOOL: '#ea4335',
-  ENGINEERING_COLLEGE: '#1967d2',
-  ITI: '#34a853',
-  UNIVERSITY: '#fbbc04',
-  DIPLOMA_COLLEGE: '#9c27b0',
+  PS: '#ea4335',
+  UPS: '#1967d2',
+  HS: '#34a853',
+  HSS: '#34a853',
+  SSS: '#fbbc04',
+  OTHER: '#9c27b0',
+  ENGINEERING_COLLEGE: '#22c55e',
+  ITI: '#0ea5e9',
+  UNIVERSITY: '#f97316',
+  DIPLOMA_COLLEGE: '#8b5cf6',
 };
 
 function translateIrrigationCategory(label: string, lang: 'en' | 'or'): string {
@@ -590,13 +601,7 @@ export function ConstituencyMap({
       // EDUCATION – match legend colors exactly
       if (code === 'EDUCATION') {
         const sub = (subDept || '').toUpperCase();
-        const color =
-          sub === 'SCHOOL' ? '#ea4335' :
-            sub === 'ENGINEERING_COLLEGE' ? '#1967d2' :
-              sub === 'ITI' ? '#34a853' :
-                sub === 'UNIVERSITY' ? '#fbbc04' :
-                  sub === 'DIPLOMA_COLLEGE' ? '#9c27b0' :
-                    '#ea4335';
+        const color = EDUCATION_SUB_DEPT_DOT_COLORS[sub] ?? '#ea4335';
         return createCircleMarkerSvgIcon(color);
       }
 
@@ -1647,3 +1652,4 @@ export function ConstituencyMap({
     </div>
   );
 }
+
