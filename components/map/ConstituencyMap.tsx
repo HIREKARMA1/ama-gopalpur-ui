@@ -18,7 +18,6 @@ import {
   EDUCATION_MARKER_ICONS,
   EDUCATION_TYPE_LABELS,
   EDUCATION_SUB_DEPT_LABELS,
-  EDUCATION_SUB_DEPT_MARKERS,
   AWC_MARKER_ICON,
   MARKER_COLORS,
   HEALTH_MARKER_ICONS,
@@ -88,6 +87,22 @@ const WATCO_TYPE_LABEL_KEYS: Record<(typeof WATCO_STATION_TYPES)[number], Messag
   'IBPS PUMP HOUSE': 'watco.type.ibpsPumpHouse',
   'INTAKE WELL': 'watco.type.intakeWell',
   'PRODUCTION WELL': 'watco.type.productionWell',
+};
+
+const WATCO_MARKER_HEX: Record<(typeof WATCO_STATION_TYPES)[number], string> = {
+  'MEGA ESR': '#0ea5e9',
+  'EXISTING ESR': '#22c55e',
+  'IBPS PUMP HOUSE': '#f97316',
+  'INTAKE WELL': '#6366f1',
+  'PRODUCTION WELL': '#e11d48',
+};
+
+const EDUCATION_SUB_DEPT_DOT_COLORS: Record<string, string> = {
+  SCHOOL: '#ea4335',
+  ENGINEERING_COLLEGE: '#1967d2',
+  ITI: '#34a853',
+  UNIVERSITY: '#fbbc04',
+  DIPLOMA_COLLEGE: '#9c27b0',
 };
 
 function translateIrrigationCategory(label: string, lang: 'en' | 'or'): string {
@@ -348,6 +363,137 @@ export function ConstituencyMap({
     const extras = fromData.filter((c) => !order.includes(c)).sort();
     return [...ordered, ...extras];
   }, [orgsWithLocation, selectedDepartmentCode]);
+
+  /** Counts per education sub-department from loaded orgs (API/Memo). */
+  const educationSubDeptCounts = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'EDUCATION') {
+      return {} as Record<string, number>;
+    }
+    const counts: Record<string, number> = {};
+    for (const key of Object.keys(EDUCATION_SUB_DEPT_LABELS)) {
+      counts[key] = 0;
+    }
+    for (const org of organizations) {
+      const sub = (org.sub_department || '').toUpperCase();
+      if (sub in counts) counts[sub] += 1;
+    }
+    return counts;
+  }, [organizations, selectedDepartmentCode]);
+
+  const awcIcdsLegendCount = useMemo(() => {
+    const code = selectedDepartmentCode?.toUpperCase();
+    if (code !== 'AWC_ICDS' && code !== 'ICDS') return 0;
+    return organizations.filter((o) => (o.type || '').toUpperCase() === 'AWC').length;
+  }, [organizations, selectedDepartmentCode]);
+
+  const agricultureInstitutionCounts = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'AGRICULTURE') return {} as Record<string, number>;
+    const acc: Record<string, number> = {};
+    for (const org of organizations) {
+      const k = normalizeAgricultureInstitutionKey(
+        (org.sub_department as string) || (org.attributes?.sub_department as string) || '',
+      );
+      if (!k) continue;
+      acc[k] = (acc[k] ?? 0) + 1;
+    }
+    return acc;
+  }, [organizations, selectedDepartmentCode]);
+
+  const irrigationCategoryCounts = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'IRRIGATION') return {} as Record<string, number>;
+    const acc: Record<string, number> = {};
+    for (const org of organizations) {
+      const cat = ((org.attributes?.category as string) || '').trim().toUpperCase();
+      if (!cat) continue;
+      acc[cat] = (acc[cat] ?? 0) + 1;
+    }
+    return acc;
+  }, [organizations, selectedDepartmentCode]);
+
+  const minorIrrigationCategoryCounts = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'MINOR_IRRIGATION') return {} as Record<string, number>;
+    const acc: Record<string, number> = {};
+    for (const org of organizations) {
+      const key = normalizeMinorIrrigationCategoryType(org.attributes?.category_type as string);
+      if (!key) continue;
+      acc[key] = (acc[key] ?? 0) + 1;
+    }
+    return acc;
+  }, [organizations, selectedDepartmentCode]);
+
+  const revenueTahasilLegendCount = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'REVENUE_LAND') return 0;
+    return organizations.filter((o) => (o.sub_department || '').toUpperCase() === 'TAHASIL_OFFICE').length;
+  }, [organizations, selectedDepartmentCode]);
+
+  const arcsJurisdictionCounts = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'ARCS') return {} as Record<string, number>;
+    const acc: Record<string, number> = { RURAL: 0, URBAN: 0 };
+    for (const org of organizations) {
+      const jt = ((org.attributes?.jurisdiction_type as string) || '').toUpperCase();
+      if (jt === 'RURAL' || jt === 'URBAN') acc[jt] += 1;
+    }
+    return acc;
+  }, [organizations, selectedDepartmentCode]);
+
+  const electricityInstitutionCounts = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'ELECTRICITY') {
+      return { byType: {} as Record<string, number>, emptyInstType: 0 };
+    }
+    const byType: Record<string, number> = {};
+    let emptyInstType = 0;
+    for (const org of organizations) {
+      const raw = ((org.attributes?.institution_type as string) || '').trim();
+      if (!raw) {
+        emptyInstType += 1;
+        continue;
+      }
+      const key = raw.toUpperCase();
+      byType[key] = (byType[key] ?? 0) + 1;
+    }
+    return { byType, emptyInstType };
+  }, [organizations, selectedDepartmentCode]);
+
+  const watcoStationCounts = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'WATCO_RWSS') return {} as Record<string, number>;
+    const acc: Record<string, number> = {};
+    for (const t of WATCO_STATION_TYPES) acc[t.toUpperCase()] = 0;
+    for (const org of organizations) {
+      const st = ((org.attributes?.station_type as string) || '').trim().toUpperCase();
+      if (st && acc[st] !== undefined) acc[st] += 1;
+    }
+    return acc;
+  }, [organizations, selectedDepartmentCode]);
+
+  const healthCategoryLegendCounts = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'HEALTH') return {} as Record<string, number>;
+    const acc: Record<string, number> = {};
+    for (const org of organizations) {
+      const cat = ((org.attributes?.category as string) || '').toUpperCase();
+      if (!cat) continue;
+      acc[cat] = (acc[cat] ?? 0) + 1;
+    }
+    return acc;
+  }, [organizations, selectedDepartmentCode]);
+
+  const drainKindCounts = useMemo(() => {
+    const acc: Record<DrainLineKind, number> = { MAIN: 0, BRANCH: 0 };
+    for (const drain of drains) {
+      const name = drain.properties?.name ?? drain.properties?.drainName ?? 'Drain';
+      acc[getDrainLineKind(name)] += 1;
+    }
+    return acc;
+  }, [drains]);
+
+  const roadTypeCounts = useMemo(() => {
+    const acc: Record<RoadTypeKey, number> = { NH: 0, PWD: 0, RD: 0, OTHER: 0 };
+    for (const road of roads) {
+      const name = road.properties?.name ?? road.properties?.roadName ?? 'Road';
+      const code = road.properties?.code ?? '';
+      acc[getRoadType(name, code)] += 1;
+    }
+    return acc;
+  }, [roads]);
 
   const isRoadsDept = selectedDepartmentCode?.toUpperCase() === 'ROADS';
   const isDrainageDept = selectedDepartmentCode?.toUpperCase() === 'DRAINAGE';
@@ -1121,74 +1267,48 @@ export function ConstituencyMap({
           )}
         </GoogleMap>
       </div>
-      {selectedDepartmentCode?.toUpperCase() === 'EDUCATION' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[300px] z-10">
-          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
-          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {Object.entries(EDUCATION_SUB_DEPT_LABELS).map(([sub, label]) => {
-              const type = sub; // sub is used as filter type here
-              const isSelected = legendFilterType === type;
-              return (
-                <li key={type}>
-                  <button
-                    type="button"
-                    onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
-                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
-                    title={isSelected ? t('map.legend.showAll', language) : `${t('map.legend.showOnly', language)} ${t(EDUCATION_SUB_DEPT_KEYS[type] as any, language)}`}
-                  >
-                    <span
-                      className="inline-block h-2 w-2 rounded-full shrink-0"
-                      style={{
-                        backgroundColor:
-                          type === 'SCHOOL' ? '#ea4335' :
-                            type === 'ENGINEERING_COLLEGE' ? '#1967d2' :
-                              type === 'ITI' ? '#34a853' :
-                                type === 'UNIVERSITY' ? '#fbbc04' :
-                                  type === 'DIPLOMA_COLLEGE' ? '#9c27b0' : '#ea4335',
-                      }}
-                    />
-                    {t(EDUCATION_SUB_DEPT_KEYS[type] as any, language)}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+      {selectedDepartmentCode?.toUpperCase() === 'EDUCATION' && organizations.length > 0 && (
+        <MapLegendPanel className="md:max-w-[300px]">
+          {Object.keys(EDUCATION_SUB_DEPT_LABELS).map((type) => {
+            const isSelected = legendFilterType === type;
+            const labelText = t(EDUCATION_SUB_DEPT_KEYS[type] as MessageKey, language);
+            return (
+              <MapLegendRow
+                key={type}
+                dotColor={EDUCATION_SUB_DEPT_DOT_COLORS[type] ?? '#ea4335'}
+                label={labelText}
+                count={educationSubDeptCounts[type] ?? 0}
+                isSelected={isSelected}
+                onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
+                title={
+                  isSelected
+                    ? t('map.legend.showAll', language)
+                    : `${t('map.legend.showOnly', language)} ${labelText}`
+                }
+              />
+            );
+          })}
+        </MapLegendPanel>
       )}
-      {(selectedDepartmentCode?.toUpperCase() === 'AWC_ICDS' || selectedDepartmentCode?.toUpperCase() === 'ICDS') && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[200px] z-10">
-          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
-          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            <li>
-              {(() => {
-                const type = 'AWC';
-                const isSelected = legendFilterType === type;
-                return (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setLegendFilterType((prev) => (prev === type ? null : type))
-                    }
-                    className={`flex items-center gap-2 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
-                      isSelected
-                        ? 'ring-1 ring-slate-400 bg-slate-100 font-medium'
-                        : 'hover:bg-slate-50'
-                    }`}
-                    title={
-                      isSelected
-                        ? t('map.legend.showAll', language)
-                        : `${t('map.legend.showOnly', language)} ${t('map.awc.label', language)}`
-                    }
-                  >
-                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-pink-500" />
-                    {t('map.awc.label', language)}
-                  </button>
-                );
-              })()}
-            </li>
-          </ul>
-        </div>
-      )}
+      {(selectedDepartmentCode?.toUpperCase() === 'AWC_ICDS' ||
+        selectedDepartmentCode?.toUpperCase() === 'ICDS') &&
+        organizations.length > 0 && (
+          <MapLegendPanel className="md:max-w-[200px]">
+            <MapLegendRow
+              dotColor="#ec4899"
+              label={t('map.awc.label', language)}
+              count={awcIcdsLegendCount}
+              isSelected={legendFilterType === 'AWC'}
+              onClick={() => setLegendFilterType((prev) => (prev === 'AWC' ? null : 'AWC'))}
+              dotClassName="h-2.5 w-2.5"
+              title={
+                legendFilterType === 'AWC'
+                  ? t('map.legend.showAll', language)
+                  : `${t('map.legend.showOnly', language)} ${t('map.awc.label', language)}`
+              }
+            />
+          </MapLegendPanel>
+        )}
       {selectedDepartmentCode?.toUpperCase() === 'AGRICULTURE' &&
         orgsWithLocation.length > 0 &&
         agricultureInstitutionLegendTypes.length > 0 && (
@@ -1207,6 +1327,7 @@ export function ConstituencyMap({
                 key={instKey}
                 dotColor={dotColor}
                 label={label}
+                count={agricultureInstitutionCounts[instKey] ?? 0}
                 isSelected={isSelected}
                 onClick={() => setLegendFilterType((prev) => (prev === instKey ? null : instKey))}
                 title={
@@ -1220,43 +1341,35 @@ export function ConstituencyMap({
         </MapLegendPanel>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'IRRIGATION' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
-          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
-          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {Array.from(
-              new Set(
-                orgsWithLocation
-                  .map((org) => ((org.attributes?.category as string) || '').trim())
-                  .filter((v) => v.length > 0),
-              ),
-            ).map((type) => {
-              const value = type.toUpperCase();
-              const isSelected = legendFilterType === value;
-              const label = translateIrrigationCategory(type, language);
-              return (
-                <li key={type}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setLegendFilterType((prev) => (prev === value ? null : value))
-                    }
-                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
-                      isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
-                    }`}
-                    title={
-                      isSelected
-                        ? t('map.legend.showAll', language)
-                        : `${t('map.legend.showOnly', language)} ${label}`
-                    }
-                  >
-                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-sky-600" />
-                    {label}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        <MapLegendPanel className="md:max-w-[260px]">
+          {Array.from(
+            new Set(
+              orgsWithLocation
+                .map((org) => ((org.attributes?.category as string) || '').trim())
+                .filter((v) => v.length > 0),
+            ),
+          ).map((type) => {
+            const value = type.toUpperCase();
+            const isSelected = legendFilterType === value;
+            const label = translateIrrigationCategory(type, language);
+            return (
+              <MapLegendRow
+                key={type}
+                dotColor="#0284c7"
+                label={label}
+                count={irrigationCategoryCounts[value] ?? 0}
+                isSelected={isSelected}
+                onClick={() => setLegendFilterType((prev) => (prev === value ? null : value))}
+                dotClassName="h-2.5 w-2.5"
+                title={
+                  isSelected
+                    ? t('map.legend.showAll', language)
+                    : `${t('map.legend.showOnly', language)} ${label}`
+                }
+              />
+            );
+          })}
+        </MapLegendPanel>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'MINOR_IRRIGATION' &&
         orgsWithLocation.length > 0 &&
@@ -1272,6 +1385,7 @@ export function ConstituencyMap({
                 key={cat}
                 dotColor={dotColor}
                 label={label}
+                count={minorIrrigationCategoryCounts[cat] ?? 0}
                 isSelected={isSelected}
                 onClick={() => setLegendFilterType((prev) => (prev === value ? null : value))}
                 title={
@@ -1289,6 +1403,7 @@ export function ConstituencyMap({
           <MapLegendRow
             dotColor="#0ea5e9"
             label={t('map.revenue.legend.tahasil', language)}
+            count={revenueTahasilLegendCount}
             isSelected={legendFilterType === 'TAHASIL_OFFICE'}
             onClick={() =>
               setLegendFilterType((prev) => (prev === 'TAHASIL_OFFICE' ? null : 'TAHASIL_OFFICE'))
@@ -1302,166 +1417,120 @@ export function ConstituencyMap({
         </MapLegendPanel>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'ARCS' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[280px] z-10">
-          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
-          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {['RURAL', 'URBAN'].map((jur) => {
-              const isSelected = legendFilterType === jur;
-              const labelKey =
-                jur === 'RURAL' ? ('arcs.type.rural' as MessageKey) : ('arcs.type.urban' as MessageKey);
-              return (
-                <li key={jur}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setLegendFilterType((prev) => (prev === jur ? null : jur))
-                    }
-                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
-                      isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
-                    }`}
-                    title={
-                      isSelected
-                        ? t('map.legend.showAll', language)
-                        : `${t('map.legend.showOnly', language)} ${t(labelKey, language)}`
-                    }
-                  >
-                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-teal-500" />
-                    {t(labelKey, language)}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        <MapLegendPanel className="md:max-w-[280px]">
+          {(['RURAL', 'URBAN'] as const).map((jur) => {
+            const isSelected = legendFilterType === jur;
+            const labelKey =
+              jur === 'RURAL' ? ('arcs.type.rural' as MessageKey) : ('arcs.type.urban' as MessageKey);
+            const rowLabel = t(labelKey, language);
+            return (
+              <MapLegendRow
+                key={jur}
+                dotColor="#14b8a6"
+                label={rowLabel}
+                count={arcsJurisdictionCounts[jur] ?? 0}
+                isSelected={isSelected}
+                onClick={() => setLegendFilterType((prev) => (prev === jur ? null : jur))}
+                dotClassName="h-2.5 w-2.5"
+                title={
+                  isSelected
+                    ? t('map.legend.showAll', language)
+                    : `${t('map.legend.showOnly', language)} ${rowLabel}`
+                }
+              />
+            );
+          })}
+        </MapLegendPanel>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'ELECTRICITY' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
-          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
-          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {(() => {
-              const types = Array.from(
-                new Set(
-                  orgsWithLocation
-                    .map(
-                      (org) =>
-                        ((org.attributes?.institution_type as string) || '').trim(),
-                    )
-                    .filter((v) => v.length > 0),
-                  ),
+        <MapLegendPanel className="md:max-w-[260px]">
+          {(() => {
+            const types = Array.from(
+              new Set(
+                orgsWithLocation
+                  .map((org) => ((org.attributes?.institution_type as string) || '').trim())
+                  .filter((v) => v.length > 0),
+              ),
+            );
+
+            if (types.length === 0) {
+              const fallbackKey = ELECTRICITY_TYPE_LABEL.toUpperCase();
+              const isSelected = legendFilterType === fallbackKey;
+              const officeLabel = t('map.electricity.office', language);
+              return (
+                <MapLegendRow
+                  key="electricity-fallback"
+                  dotColor="#facc15"
+                  label={officeLabel}
+                  count={electricityInstitutionCounts.emptyInstType}
+                  isSelected={isSelected}
+                  onClick={() =>
+                    setLegendFilterType((prev) => (prev === fallbackKey ? null : fallbackKey))
+                  }
+                  dotClassName="h-2.5 w-2.5"
+                  title={
+                    isSelected
+                      ? t('map.legend.showAll', language)
+                      : `${t('map.legend.showOnly', language)} ${officeLabel}`
+                  }
+                />
               );
+            }
 
-              // If no institution_type present yet, fall back to single generic entry
-              if (types.length === 0) {
-                const isSelected = legendFilterType === ELECTRICITY_TYPE_LABEL.toUpperCase();
-                return (
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setLegendFilterType((prev) =>
-                          prev === ELECTRICITY_TYPE_LABEL.toUpperCase()
-                            ? null
-                            : ELECTRICITY_TYPE_LABEL.toUpperCase(),
-                        )
-                      }
-                      className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
-                        isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
-                      }`}
-                      title={
-                        isSelected
-                          ? t('map.legend.showAll', language)
-                          : `${t('map.legend.showOnly', language)} ${t('map.electricity.office', language)}`
-                      }
-                    >
-                      <span className="inline-block h-2.5 w-2.5 rounded-full bg-yellow-400" />
-                      {t('map.electricity.office', language)}
-                    </button>
-                  </li>
-                );
-              }
-
-              return types.map((type) => {
-                const value = type.toUpperCase();
-                const isSelected = legendFilterType === value;
-                const labelKey =
-                  value === 'GOVT' || value === 'GOVERNMENT'
-                    ? ('electricity.type.govt' as MessageKey)
-                    : value === 'PVT' || value === 'PRIVATE'
-                      ? ('electricity.type.pvt' as MessageKey)
-                      : null;
-                const label = labelKey ? t(labelKey, language) : type;
-                return (
-                  <li key={type}>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setLegendFilterType((prev) => (prev === value ? null : value))
-                      }
-                      className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
-                        isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
-                      }`}
-                      title={
-                        isSelected
-                          ? t('map.legend.showAll', language)
-                          : `${t('map.legend.showOnly', language)} ${label}`
-                      }
-                    >
-                      <span className="inline-block h-2.5 w-2.5 rounded-full bg-yellow-400" />
-                      {label}
-                    </button>
-                  </li>
-                );
-              });
-            })()}
-          </ul>
-        </div>
-      )}
-      {selectedDepartmentCode?.toUpperCase() === 'WATCO_RWSS' && orgsWithLocation.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[260px] z-10">
-          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
-          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {WATCO_STATION_TYPES.map((type) => {
+            return types.map((type) => {
               const value = type.toUpperCase();
               const isSelected = legendFilterType === value;
-              const labelKey = WATCO_TYPE_LABEL_KEYS[type];
+              const labelKey =
+                value === 'GOVT' || value === 'GOVERNMENT'
+                  ? ('electricity.type.govt' as MessageKey)
+                  : value === 'PVT' || value === 'PRIVATE'
+                    ? ('electricity.type.pvt' as MessageKey)
+                    : null;
               const label = labelKey ? t(labelKey, language) : type;
               return (
-                <li key={type}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setLegendFilterType((prev) => (prev === value ? null : value))
-                    }
-                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
-                      }`}
-                    title={
-                      isSelected
-                        ? t('map.legend.showAll', language)
-                        : `${t('map.legend.showOnly', language)} ${label}`
-                    }
-                  >
-                    <span
-                      className="inline-block h-2 w-2 rounded-full shrink-0"
-                      style={{
-                        backgroundColor:
-                          type === 'MEGA ESR'
-                            ? '#0ea5e9'
-                            : type === 'EXISTING ESR'
-                              ? '#22c55e'
-                              : type === 'IBPS PUMP HOUSE'
-                                ? '#f97316'
-                                : type === 'INTAKE WELL'
-                                  ? '#6366f1'
-                                  : '#e11d48',
-                      }}
-                    />
-                    {label}
-                  </button>
-                </li>
+                <MapLegendRow
+                  key={type}
+                  dotColor="#facc15"
+                  label={label}
+                  count={electricityInstitutionCounts.byType[value] ?? 0}
+                  isSelected={isSelected}
+                  onClick={() => setLegendFilterType((prev) => (prev === value ? null : value))}
+                  dotClassName="h-2.5 w-2.5"
+                  title={
+                    isSelected
+                      ? t('map.legend.showAll', language)
+                      : `${t('map.legend.showOnly', language)} ${label}`
+                  }
+                />
               );
-            })}
-          </ul>
-        </div>
+            });
+          })()}
+        </MapLegendPanel>
+      )}
+      {selectedDepartmentCode?.toUpperCase() === 'WATCO_RWSS' && orgsWithLocation.length > 0 && (
+        <MapLegendPanel className="md:max-w-[260px]">
+          {WATCO_STATION_TYPES.map((type) => {
+            const value = type.toUpperCase();
+            const isSelected = legendFilterType === value;
+            const labelKey = WATCO_TYPE_LABEL_KEYS[type];
+            const label = labelKey ? t(labelKey, language) : type;
+            return (
+              <MapLegendRow
+                key={type}
+                dotColor={WATCO_MARKER_HEX[type]}
+                label={label}
+                count={watcoStationCounts[value] ?? 0}
+                isSelected={isSelected}
+                onClick={() => setLegendFilterType((prev) => (prev === value ? null : value))}
+                title={
+                  isSelected
+                    ? t('map.legend.showAll', language)
+                    : `${t('map.legend.showOnly', language)} ${label}`
+                }
+              />
+            );
+          })}
+        </MapLegendPanel>
       )}
       {selectedDepartmentCode?.toUpperCase() === 'HEALTH' && orgsWithLocation.length > 0 && (
         <MapLegendPanel className="md:max-w-[200px]">
@@ -1490,6 +1559,7 @@ export function ConstituencyMap({
                   key={type}
                   dotColor={dotColor}
                   label={getTypeLabel(type, language)}
+                  count={healthCategoryLegendCounts[type] ?? 0}
                   isSelected={isSelected}
                   onClick={() => setLegendFilterType((prev) => (prev === type ? null : type))}
                   title={
@@ -1515,8 +1585,10 @@ export function ConstituencyMap({
                 key={kind}
                 dotColor={DRAIN_LINE_COLORS[kind]}
                 label={label}
+                count={drainKindCounts[kind]}
                 isSelected={isSelected}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   preserveMapCameraForRemount();
                   setSelectedDrain(null);
                   setDrainKindFilter((prev) => (prev === kind ? null : kind));
@@ -1532,37 +1604,32 @@ export function ConstituencyMap({
         </MapLegendPanel>
       )}
       {isRoadsDept && roads.length > 0 && (
-        <div className="pointer-events-auto absolute bottom-4 left-4 right-4 z-[45] md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 md:max-w-[220px]">
-          <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
-          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">
-            {(Object.entries(ROAD_TYPE_LABELS) as [RoadTypeKey, string][]).map(([type]) => {
-              const isSelected = roadLegendFilterType === type;
-              const labelKey = ROAD_TYPE_LABEL_KEYS[type];
-              const label = labelKey ? t(labelKey, language) : ROAD_TYPE_LABELS[type];
-              return (
-                <li key={type}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      preserveMapCameraForRemount();
-                      setSelectedRoad(null);
-                      setRoadLegendFilterType((prev) => (prev === type ? null : type));
-                    }}
-                    className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'}`}
-                    title={isSelected ? t('map.legend.showAll', language) : `${t('map.legend.showOnly', language)} ${label}`}
-                  >
-                    <span
-                      className="inline-block h-2 w-3 rounded-sm shrink-0"
-                      style={{ backgroundColor: ROAD_TYPE_COLORS[type] }}
-                    />
-                    {label}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        <MapLegendPanel className="pointer-events-auto z-[45] md:max-w-[220px]">
+          {(Object.entries(ROAD_TYPE_LABELS) as [RoadTypeKey, string][]).map(([type]) => {
+            const isSelected = roadLegendFilterType === type;
+            const labelKey = ROAD_TYPE_LABEL_KEYS[type];
+            const label = labelKey ? t(labelKey, language) : ROAD_TYPE_LABELS[type];
+            return (
+              <MapLegendRow
+                key={type}
+                dotColor={ROAD_TYPE_COLORS[type]}
+                label={label}
+                count={roadTypeCounts[type]}
+                isSelected={isSelected}
+                roundedRect
+                onClick={(e) => {
+                  e.stopPropagation();
+                  preserveMapCameraForRemount();
+                  setSelectedRoad(null);
+                  setRoadLegendFilterType((prev) => (prev === type ? null : type));
+                }}
+                title={
+                  isSelected ? t('map.legend.showAll', language) : `${t('map.legend.showOnly', language)} ${label}`
+                }
+              />
+            );
+          })}
+        </MapLegendPanel>
       )}
     </div>
   );
