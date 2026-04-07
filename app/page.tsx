@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation';
 import { Shell } from '../components/layout/Shell';
 import { ConstituencyMap } from '../components/map/ConstituencyMap';
 import type { RoadFeature, DrainFeature } from '../components/map/ConstituencyMap';
-import { DepartmentSidebar, getDepartmentIcon } from '../components/departments/DepartmentSidebar';
+import {
+  DepartmentSidebar,
+  getDepartmentIcon,
+  getDepartmentLabel,
+} from '../components/departments/DepartmentSidebar';
 import { useLanguage } from '../components/i18n/LanguageContext';
 import {
   departmentsApi,
@@ -284,6 +288,8 @@ export default function HomePage() {
           <div className="h-full w-full rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden ring-1 ring-slate-200/50">
             <ConstituencyMap
               selectedDepartmentCode={selectedDept?.code}
+              mapDepartmentLabel={selectedDept ? getDepartmentLabel(selectedDept, language) : ''}
+              mapSummary={selectedDept?.map_summary ?? null}
               organizations={organizations}
               roads={roads}
               drains={drains}

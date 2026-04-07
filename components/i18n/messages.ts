@@ -52,6 +52,22 @@ export type MessageKey =
   | 'irrigation.field.longitude'
   | 'shell.departmentsTab'
   | 'map.legend'
+  | 'map.deptInfo.open'
+  | 'map.deptInfo.title'
+  | 'map.deptInfo.empty'
+  | 'map.deptInfo.close'
+  | 'map.controls.map'
+  | 'map.controls.satellite'
+  | 'map.controls.fullscreen'
+  | 'admin.dept.mapSummary.title'
+  | 'admin.dept.mapSummary.subtitle'
+  | 'admin.dept.mapSummary.label'
+  | 'admin.dept.mapSummary.placeholder'
+  | 'admin.dept.mapSummary.charCount'
+  | 'admin.dept.mapSummary.save'
+  | 'admin.dept.mapSummary.saving'
+  | 'admin.dept.mapSummary.saved'
+  | 'admin.dept.mapSummary.error'
   | 'map.drainage.legend.mainChannel'
   | 'map.drainage.legend.branchLink'
   | 'map.revenue.legend.tahasil'
@@ -681,6 +697,70 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.legend': {
     en: 'Legend',
     or: 'ସୂଚନା',
+  },
+  'map.deptInfo.open': {
+    en: 'About this department',
+    or: 'ଏହି ବିଭାଗ ବିଷୟରେ',
+  },
+  'map.deptInfo.title': {
+    en: 'Department summary',
+    or: 'ବିଭାଗ ସାରାଂଶ',
+  },
+  'map.deptInfo.empty': {
+    en: 'No summary has been added for this department yet.',
+    or: 'ଏହି ବିଭାଗ ପାଇଁ ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ସାରାଂଶ ଯୋଡ଼ା ଯାଇ ନାହିଁ ।',
+  },
+  'map.deptInfo.close': {
+    en: 'Close',
+    or: 'ବନ୍ଦ କରନ୍ତୁ',
+  },
+  'map.controls.map': {
+    en: 'Map',
+    or: 'ମାନଚିତ୍ର',
+  },
+  'map.controls.satellite': {
+    en: 'Satellite',
+    or: 'ଉପଗ୍ରହ',
+  },
+  'map.controls.fullscreen': {
+    en: 'Full screen',
+    or: 'ପୂର୍ଣ୍ଣ ପରଦା',
+  },
+  'admin.dept.mapSummary.title': {
+    en: 'Constituency map summary',
+    or: 'ନିର୍ବାଚନ ମଣ୍ଡଳୀ ମାନଚିତ୍ର ସାରାଂଶ',
+  },
+  'admin.dept.mapSummary.subtitle': {
+    en: 'Short text shown to citizens when they tap the information button on the public map (max {max} characters).',
+    or: 'ସର୍ବସାଧାରଣ ମାନଚିତ୍ରରେ ସୂଚନା ବଟନ୍ ଦବାଇଲେ ଦେଖାଯିବ — ସଂକ୍ଷିପ୍ତ ବିବରଣୀ (ସର୍ବାଧିକ {max} ଅକ୍ଷର) ।',
+  },
+  'admin.dept.mapSummary.label': {
+    en: 'Summary for map',
+    or: 'ମାନଚିତ୍ର ପାଇଁ ସାରାଂଶ',
+  },
+  'admin.dept.mapSummary.placeholder': {
+    en: 'Describe what this department layer shows on the map…',
+    or: 'ଏହି ବିଭାଗର ମାନଚିତ୍ରରେ କଣ ଦେଖାଯାଏ ତାର ବର୍ଣ୍ଣନା ଲେଖନ୍ତୁ…',
+  },
+  'admin.dept.mapSummary.charCount': {
+    en: '{used} / {max} characters',
+    or: '{used} / {max} ଅକ୍ଷର',
+  },
+  'admin.dept.mapSummary.save': {
+    en: 'Save summary',
+    or: 'ସାରାଂଶ ସଂରକ୍ଷଣ',
+  },
+  'admin.dept.mapSummary.saving': {
+    en: 'Saving…',
+    or: 'ସଂରକ୍ଷଣ ହେଉଛି…',
+  },
+  'admin.dept.mapSummary.saved': {
+    en: 'Saved',
+    or: 'ସଂରକ୍ଷିତ',
+  },
+  'admin.dept.mapSummary.error': {
+    en: 'Could not save. Try again.',
+    or: 'ସଂରକ୍ଷଣ ହେଲା ନାହିଁ । ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ ।',
   },
   'map.drainage.legend.mainChannel': {
     en: 'Main drain / nalla',

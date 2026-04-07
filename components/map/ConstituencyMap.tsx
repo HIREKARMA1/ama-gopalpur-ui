@@ -39,6 +39,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
 import { MapCalloutCard, MapCalloutMetaMuted, MapCalloutMetaRow } from './MapCalloutCard';
 import { MapLegendPanel, MapLegendRow } from './MapLegend';
+import { MapViewToolbar } from './MapViewToolbar';
 
 const EDUCATION_TYPE_KEYS: Record<string, MessageKey> = {
   PRIMARY_SCHOOL: 'map.edu.primarySchool',
@@ -224,6 +225,10 @@ export interface DrainFeature {
 interface ConstituencyMapProps {
   /** Department code (e.g. 'EDUCATION', 'ROADS') */
   selectedDepartmentCode?: string;
+  /** Localized label for map summary dialog (sidebar name) */
+  mapDepartmentLabel?: string;
+  /** Public map summary from API (department admin) */
+  mapSummary?: string | null;
   /** Organizations to show as pins (only those with lat/lng are displayed) */
   organizations?: MapOrganization[];
   /** Road segments to show as polylines when department is ROADS */
@@ -260,6 +265,8 @@ function createCircleMarkerSvgIcon(fillColor: string): string {
 
 export function ConstituencyMap({
   selectedDepartmentCode,
+  mapDepartmentLabel = '',
+  mapSummary = null,
   organizations = [],
   roads = [],
   drains = [],
@@ -280,6 +287,7 @@ export function ConstituencyMap({
   /** When set, only show drain polylines of this kind (Drainage legend). */
   const [drainKindFilter, setDrainKindFilter] = useState<DrainLineKind | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const mapWrapRef = useRef<HTMLDivElement>(null);
   /** Restore pan/zoom after remounting the map (polyline legend filters force remount to clear ghost overlays). */
   const mapCameraPreserveRef = useRef<{ center: { lat: number; lng: number }; zoom: number } | null>(
     null,
@@ -563,20 +571,11 @@ export function ConstituencyMap({
       ],
       disableDefaultUI: false,
       zoomControl: false,
-      mapTypeControl: true,
-      mapTypeControlOptions: {
-        position: 3, // google.maps.ControlPosition.TOP_RIGHT
-      },
+      mapTypeControl: false,
       scaleControl: true,
-      fullscreenControl: true,
-      fullscreenControlOptions: {
-        position: 3,
-      },
+      fullscreenControl: false,
       streetViewControl: false,
-      rotateControl: true,
-      rotateControlOptions: {
-        position: 3, // TOP_RIGHT
-      },
+      rotateControl: false,
       minZoom: 11,
       maxZoom: 18,
     }),
@@ -1023,7 +1022,7 @@ export function ConstituencyMap({
           </form>
         </div>
       )}
-      <div className="flex-1 w-full relative">
+      <div ref={mapWrapRef} className="flex-1 w-full relative min-h-0">
         <GoogleMap
           key={googleMapLayerKey}
           mapContainerStyle={MAP_CONTAINER_STYLE}
@@ -1266,6 +1265,20 @@ export function ConstituencyMap({
             </InfoWindow>
           )}
         </GoogleMap>
+        <MapViewToolbar
+          mapInstance={mapInstance}
+          mapContainerRef={mapWrapRef}
+          departmentTitle={mapDepartmentLabel}
+          mapSummary={mapSummary}
+          showDepartmentInfo={!!selectedDepartmentCode}
+          infoButtonLabelKey="map.deptInfo.open"
+          dialogTitleKey="map.deptInfo.title"
+          dialogEmptyKey="map.deptInfo.empty"
+          dialogCloseKey="map.deptInfo.close"
+          mapLabelKey="map.controls.map"
+          satelliteLabelKey="map.controls.satellite"
+          fullscreenLabelKey="map.controls.fullscreen"
+        />
       </div>
       {selectedDepartmentCode?.toUpperCase() === 'EDUCATION' && organizations.length > 0 && (
         <MapLegendPanel className="md:max-w-[300px]">

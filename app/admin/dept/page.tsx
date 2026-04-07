@@ -27,6 +27,7 @@ import { SuperAdminDashboardLayout } from '../../../components/layout/SuperAdmin
 import { useLanguage } from '../../../components/i18n/LanguageContext';
 import { t } from '../../../components/i18n/messages';
 import { Loader } from '../../../components/common/Loader';
+import { DepartmentMapSummaryEditor } from '../../../components/admin/DepartmentMapSummaryEditor';
 import { compressImage } from '../../../lib/imageCompression';
 
 /** ICDS minister CSV: all attributes for AWC profile (no SL NO; use system-generated org id). */
@@ -719,6 +720,33 @@ export default function DepartmentAdminPage() {
         ) : (
           <>
             {error && <p className="text-xs text-red-500">{error}</p>}
+
+            {me?.department_id ? (
+              <DepartmentMapSummaryEditor
+                key={me.department_id}
+                departmentId={me.department_id}
+                initialSummary={departments.find((d) => d.id === me.department_id)?.map_summary}
+                onSaved={(summary) => {
+                  setDepartments((prev) =>
+                    prev.map((d) =>
+                      d.id === me.department_id ? { ...d, map_summary: summary } : d,
+                    ),
+                  );
+                }}
+                saveAction={async (id, map_summary) => {
+                  await departmentsApi.updateMapSummary(id, { map_summary });
+                }}
+                titleKey="admin.dept.mapSummary.title"
+                subtitleKey="admin.dept.mapSummary.subtitle"
+                labelKey="admin.dept.mapSummary.label"
+                placeholderKey="admin.dept.mapSummary.placeholder"
+                charCountKey="admin.dept.mapSummary.charCount"
+                saveKey="admin.dept.mapSummary.save"
+                savingKey="admin.dept.mapSummary.saving"
+                savedKey="admin.dept.mapSummary.saved"
+                errorKey="admin.dept.mapSummary.error"
+              />
+            ) : null}
 
             {deptCode === 'EDUCATION' && (
               <section className="rounded-lg border border-border bg-background p-3 text-xs">

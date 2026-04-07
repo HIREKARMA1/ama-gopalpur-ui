@@ -66,6 +66,8 @@ export interface Department {
   code: string;
   name: string;
   description?: string | null;
+  /** Public summary for constituency map (i) dialog; max length enforced server-side */
+  map_summary?: string | null;
 }
 
 export interface User {
@@ -99,6 +101,11 @@ export interface Organization {
 
 export const departmentsApi = {
   list: () => apiFetch<Department[]>('/api/v1/departments/'),
+  updateMapSummary: (departmentId: number, payload: { map_summary: string | null }) =>
+    apiFetch<Department>(`/api/v1/departments/${departmentId}/map-summary`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
 };
 
 export const organizationsApi = {
