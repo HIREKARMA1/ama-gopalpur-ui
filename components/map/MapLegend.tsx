@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode, MouseEventHandler } from 'react';
+import { formatLocaleDigits } from '../../lib/localeDigits';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
 
@@ -45,6 +46,7 @@ export function MapLegendRow({
   /** Optional extra classes for the color swatch (e.g. size). */
   dotClassName?: string;
 }) {
+  const { language } = useLanguage();
   const dotShape = roundedRect ? 'h-2 w-3 rounded-sm' : 'h-2 w-2 rounded-full';
   const dot = (
     <span
@@ -52,10 +54,11 @@ export function MapLegendRow({
       style={{ backgroundColor: dotColor }}
     />
   );
+  const countStr = count !== undefined ? formatLocaleDigits(count, language) : null;
   const text =
-    count !== undefined ? (
-      <span className="tabular-nums">
-        {label}: {count}
+    countStr != null ? (
+      <span className={language === 'or' ? '' : 'tabular-nums'}>
+        {label}: {countStr}
       </span>
     ) : (
       label
