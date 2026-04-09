@@ -8,9 +8,23 @@ import { ImageSlider } from './ImageSlider';
 export type Faculty = { name?: string; subject?: string; qualification?: string; photo?: string };
 export type GalleryItem = { image?: string; category?: string; title?: string; description?: string };
 export type IntakeRow = { class_name?: string; intake?: string | number };
-export type IntakeCard = { class_name?: string; strength?: string | number; subjects?: string; image?: string };
-export type Testimonial = { name?: string; role?: string; message?: string; image?: string };
-export type FacilityCard = { image?: string; title?: string; description?: string };
+export type IntakeCard = { class_name?: string; strength?: string | number; registered_this_year?: string | number; subjects?: string; image?: string };
+export type MdmDailyRecord = {
+  date?: string;
+  register_image?: string;
+  image?: string;
+  total_boys?: string | number;
+  total_girls?: string | number;
+  total_students?: string | number;
+  total_present?: string | number;
+};
+export type ParentTeacherMeetingRecord = {
+  date?: string;
+  image?: string;
+  description?: string;
+};
+export type FacilityCardImage = { url?: string; title?: string; image?: string };
+export type FacilityCard = { image?: string; title?: string; description?: string; images?: FacilityCardImage[] };
 export type Lang = 'en' | 'od';
 
 export function asString(v: unknown): string {
@@ -141,6 +155,8 @@ export function PsAboutSection({ org, profile, language, sliderImages }: { org: 
   const headmasterTitle = language === 'od' ? 'ପ୍ରଧାନଶିକ୍ଷକ' : 'Headmaster';
   const qualification = asString(profile.hm_qualification) || '—';
   const experience = asString(profile.hm_experience) || '—';
+  const pastExperience = getText(profile, 'hm_past_experience', language) || asString(profile.hm_past_experience_en) || EMPTY;
+  const currentExperience = getText(profile, 'hm_current_experience', language) || asString(profile.hm_current_experience_en) || EMPTY;
   const headmasterContact = asString(profile.headmaster_contact) || asString(profile.contact_of_hm) || '—';
   const headmasterEmail = asString(profile.headmaster_email) || asString(profile.contact_email) || '—';
   const aboutImage = asString(profile.about_image) || sliderImages[0] || '';
@@ -286,6 +302,12 @@ export function PsAboutSection({ org, profile, language, sliderImages }: { org: 
               <p className="mt-1 break-all text-xs text-slate-500">
                 {language === 'od' ? 'ଇମେଲ' : 'Email'}: {headmasterEmail}
               </p>
+              <div className="mt-3 space-y-2 border-t border-slate-200 pt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Past Experience</p>
+                <p className="text-xs leading-relaxed text-slate-700">{pastExperience}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Current Experience</p>
+                <p className="text-xs leading-relaxed text-slate-700">{currentExperience}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -332,33 +354,6 @@ export function PsAboutSection({ org, profile, language, sliderImages }: { org: 
   );
 }
 
-/** Optional extra cover + description from profile (admin Section K). */
-export function PsOptionalExtrasSection({ profile, language }: { profile: Record<string, unknown>; language: Lang }) {
-  const cover = asString(profile.extra_cover_image);
-  const desc = getText(profile, 'portfolio_description', language);
-  return (
-    <section className="py-2 md:py-4" aria-label="Optional portfolio extras">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="grid md:grid-cols-2">
-          <div className="min-h-[220px] bg-slate-100">
-            {cover ? (
-              <img src={cover} alt="" className="h-full min-h-[220px] w-full object-cover" />
-            ) : (
-              <div className="flex min-h-[220px] flex-col items-center justify-center gap-2">
-                <Images className="h-8 w-8 text-slate-400" />
-                <p className="text-sm text-slate-500">{EMPTY}</p>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center p-6">
-            <p className="text-sm leading-relaxed text-slate-700 sm:text-base">{displayText(desc)}</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export function PsAdministrationSection({ profile }: { profile: Record<string, unknown> }) {
   const admins = [
     {
@@ -376,10 +371,17 @@ export function PsAdministrationSection({ profile }: { profile: Record<string, u
       email: asString(profile.beo_email) || '—',
     },
     {
-      role: 'CRC',
+      role: 'BRCC',
+      image: asString(profile.brcc_image),
+      name: asString(profile.brcc_name) || EMPTY,
+      contact: asString(profile.brcc_contact) || '—',
+      email: asString(profile.brcc_email) || '—',
+    },
+    {
+      role: 'CRCC',
       image: asString(profile.crc_image),
-      name: asString(profile.crc_name) || EMPTY,
-      contact: asString(profile.crc_contact) || '—',
+      name: asString(profile.crc_name || profile.crcc_name) || EMPTY,
+      contact: asString(profile.crc_contact || profile.crcc_contact) || '—',
       email: asString(profile.crc_email) || '—',
     },
   ];
@@ -388,13 +390,13 @@ export function PsAdministrationSection({ profile }: { profile: Record<string, u
     <section className="py-2 md:py-4">
       <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Administration</h2>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {admins.map((admin) => (
           <article
             key={admin.role}
-            className="flex min-h-[340px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white"
+            className="flex min-h-[370px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white"
           >
-            <div className="h-[210px] w-full overflow-hidden bg-slate-100">
+            <div className="h-[230px] w-full overflow-hidden bg-slate-100">
               {admin.image ? (
                 <img src={admin.image} alt={admin.name} className="h-full w-full object-cover" />
               ) : (
@@ -518,6 +520,20 @@ export function PsAcademicSection({ profile, language }: { profile: Record<strin
 
 const EMPTY_FACILITY_SLOTS = 7;
 
+function facilityImagesFromCard(card: FacilityCard): { url: string; title: string }[] {
+  const fromArray = (Array.isArray(card.images) ? card.images : [])
+    .map((it) => {
+      const rec = (it || {}) as Record<string, unknown>;
+      const url = asString(rec.url || rec.image);
+      const title = asString(rec.title);
+      return url ? { url, title } : null;
+    })
+    .filter(Boolean) as { url: string; title: string }[];
+  if (fromArray.length) return fromArray;
+  const legacy = asString(card.image);
+  return legacy ? [{ url: legacy, title: '' }] : [];
+}
+
 export function PsFacilitiesCarouselSection({ profile, facilities }: { profile: Record<string, unknown>; facilities?: FacilityCard[] }) {
   const fromProps = facilities && facilities.length ? facilities : parseArray<FacilityCard>(profile.facility_cards);
   const cards = fromProps.length ? fromProps : Array.from({ length: EMPTY_FACILITY_SLOTS }, () => ({}) as FacilityCard);
@@ -525,7 +541,7 @@ export function PsFacilitiesCarouselSection({ profile, facilities }: { profile: 
   const desktopTotalPages = Math.max(1, Math.ceil(cards.length / desktopPageSize));
   const [currentDesktopPage, setCurrentDesktopPage] = useState(0);
   const [currentMobileSlide, setCurrentMobileSlide] = useState(0);
-  const [previewCard, setPreviewCard] = useState<FacilityCard | null>(null);
+  const [previewCard, setPreviewCard] = useState<{ card: FacilityCard; imageIndex: number } | null>(null);
   const [isPreviewClosing, setIsPreviewClosing] = useState(false);
 
   const goPrevDesktop = () => setCurrentDesktopPage((p) => (p - 1 + desktopTotalPages) % desktopTotalPages);
@@ -565,13 +581,13 @@ export function PsFacilitiesCarouselSection({ profile, facilities }: { profile: 
                     type="button"
                     onClick={() => {
                       setIsPreviewClosing(false);
-                      setPreviewCard(card);
+                      setPreviewCard({ card, imageIndex: 0 });
                     }}
                     className="block w-full cursor-pointer"
                     aria-label={`Open ${displayText(card.title)}`}
                   >
-                    {asString(card.image) ? (
-                      <img src={asString(card.image)} alt={displayText(card.title)} className="h-[220px] w-full object-cover sm:h-[240px]" />
+                    {facilityImagesFromCard(card).length ? (
+                      <img src={facilityImagesFromCard(card)[0].url} alt={displayText(card.title)} className="h-[220px] w-full object-cover sm:h-[240px]" />
                     ) : (
                       <div className="flex h-[220px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 sm:h-[240px]">
                         <div className="text-center">
@@ -608,13 +624,13 @@ export function PsFacilitiesCarouselSection({ profile, facilities }: { profile: 
                           type="button"
                           onClick={() => {
                             setIsPreviewClosing(false);
-                            setPreviewCard(card);
+                            setPreviewCard({ card, imageIndex: 0 });
                           }}
                           className="block w-full cursor-pointer"
                           aria-label={`Open ${displayText(card.title)}`}
                         >
-                          {asString(card.image) ? (
-                            <img src={asString(card.image)} alt={displayText(card.title)} className="h-[220px] w-full object-cover sm:h-[240px]" />
+                          {facilityImagesFromCard(card).length ? (
+                            <img src={facilityImagesFromCard(card)[0].url} alt={displayText(card.title)} className="h-[220px] w-full object-cover sm:h-[240px]" />
                           ) : (
                             <div className="flex h-[220px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 sm:h-[240px]">
                               <div className="text-center">
@@ -648,12 +664,50 @@ export function PsFacilitiesCarouselSection({ profile, facilities }: { profile: 
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative">
-              {asString(previewCard.image) ? (
-                <img src={asString(previewCard.image)} alt={displayText(previewCard.title)} className="max-h-[70vh] w-full object-contain bg-slate-100" />
+              {facilityImagesFromCard(previewCard.card).length ? (
+                <img
+                  src={facilityImagesFromCard(previewCard.card)[previewCard.imageIndex].url}
+                  alt={displayText(previewCard.card.title)}
+                  className="max-h-[70vh] w-full object-contain bg-slate-100"
+                />
               ) : (
                 <div className="flex h-[420px] w-full items-center justify-center bg-slate-100">
                   <p className="text-sm text-slate-500">{EMPTY}</p>
                 </div>
+              )}
+              {facilityImagesFromCard(previewCard.card).length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPreviewCard((prev) => {
+                        if (!prev) return prev;
+                        const imgs = facilityImagesFromCard(prev.card);
+                        const nextIdx = (prev.imageIndex - 1 + imgs.length) % imgs.length;
+                        return { ...prev, imageIndex: nextIdx };
+                      })
+                    }
+                    className="absolute left-3 top-1/2 h-9 w-9 -translate-y-1/2 rounded-full bg-black/65 text-white hover:bg-black/80"
+                    aria-label="Previous image"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPreviewCard((prev) => {
+                        if (!prev) return prev;
+                        const imgs = facilityImagesFromCard(prev.card);
+                        const nextIdx = (prev.imageIndex + 1) % imgs.length;
+                        return { ...prev, imageIndex: nextIdx };
+                      })
+                    }
+                    className="absolute right-14 top-1/2 h-9 w-9 -translate-y-1/2 rounded-full bg-black/65 text-white hover:bg-black/80"
+                    aria-label="Next image"
+                  >
+                    ›
+                  </button>
+                </>
               )}
               <button
                 type="button"
@@ -665,8 +719,445 @@ export function PsFacilitiesCarouselSection({ profile, facilities }: { profile: 
               </button>
             </div>
             <div className="border-t border-slate-200 p-4">
-              <h3 className="text-xl font-bold tracking-tight text-slate-900">{displayText(previewCard.title)}</h3>
-              <p className="mt-2 text-sm text-slate-600">{displayText(previewCard.description)}</p>
+              <h3 className="text-xl font-bold tracking-tight text-slate-900">{displayText(previewCard.card.title)}</h3>
+              {facilityImagesFromCard(previewCard.card).length ? (
+                <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+                  {displayText(facilityImagesFromCard(previewCard.card)[previewCard.imageIndex].title)}
+                </p>
+              ) : null}
+              <p className="mt-2 text-sm text-slate-600">{displayText(previewCard.card.description)}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      <style jsx>{`
+        @keyframes psModalFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes psModalScaleIn {
+          from {
+            opacity: 0;
+            transform: translateY(8px) scale(0.98);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        @keyframes psModalFadeOut {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+        @keyframes psModalScaleOut {
+          from {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+          to {
+            opacity: 0;
+            transform: translateY(8px) scale(0.98);
+          }
+        }
+      `}</style>
+    </section>
+  );
+}
+
+const EMPTY_MDM_SLOTS = 10;
+
+export function PsMidDayMealSection({ records }: { records: MdmDailyRecord[] }) {
+  const normalized = records.map((r) => {
+    const date = asString(r.date);
+    const image = asString(r.register_image || r.image);
+    const totalBoys = r.total_boys;
+    const totalGirls = r.total_girls;
+    const totalStudents = r.total_students ?? r.total_present;
+    return { date, image, totalBoys, totalGirls, totalStudents };
+  });
+  const sorted = [...normalized].sort((a, b) => {
+    const ad = Date.parse(a.date || '');
+    const bd = Date.parse(b.date || '');
+    if (Number.isNaN(ad) && Number.isNaN(bd)) return 0;
+    if (Number.isNaN(ad)) return 1;
+    if (Number.isNaN(bd)) return -1;
+    return bd - ad;
+  });
+  const list = (
+    sorted.length
+      ? sorted.slice(0, 10)
+      : Array.from({ length: EMPTY_MDM_SLOTS }, () => ({ date: '', image: '', totalBoys: '', totalGirls: '', totalStudents: '' }))
+  );
+
+  const desktopPageSize = 3;
+  const desktopTotalPages = Math.max(1, Math.ceil(list.length / desktopPageSize));
+  const [currentDesktopPage, setCurrentDesktopPage] = useState(0);
+  const [currentMobileSlide, setCurrentMobileSlide] = useState(0);
+  const [previewDay, setPreviewDay] = useState<(typeof list)[number] | null>(null);
+  const [isPreviewClosing, setIsPreviewClosing] = useState(false);
+
+  const goPrevDesktop = () => setCurrentDesktopPage((p) => (p - 1 + desktopTotalPages) % desktopTotalPages);
+  const goNextDesktop = () => setCurrentDesktopPage((p) => (p + 1) % desktopTotalPages);
+  const goPrevMobile = () => setCurrentMobileSlide((p) => (p - 1 + list.length) % list.length);
+  const goNextMobile = () => setCurrentMobileSlide((p) => (p + 1) % list.length);
+  const closePreview = () => {
+    setIsPreviewClosing(true);
+    window.setTimeout(() => {
+      setPreviewDay(null);
+      setIsPreviewClosing(false);
+    }, 180);
+  };
+
+  return (
+    <section className="py-2 md:py-4">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Mid Day Meal</h2>
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={goPrevMobile} className="h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:hidden" aria-label="Previous MDM day">‹</button>
+          <button type="button" onClick={goNextMobile} className="h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:hidden" aria-label="Next MDM day">›</button>
+          <button type="button" onClick={goPrevDesktop} className="hidden h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:inline-flex md:items-center md:justify-center" aria-label="Previous MDM set">‹</button>
+          <button type="button" onClick={goNextDesktop} className="hidden h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:inline-flex md:items-center md:justify-center" aria-label="Next MDM set">›</button>
+        </div>
+      </div>
+
+      <div className="mt-5 overflow-hidden md:hidden">
+        <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${currentMobileSlide * 100}%)` }}>
+          {list.map((day, idx) => (
+            <button
+              key={`mdm-mobile-${idx}`}
+              type="button"
+              className="w-full shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white text-left"
+              onClick={() => {
+                setIsPreviewClosing(false);
+                setPreviewDay(day);
+              }}
+            >
+              {day.image ? (
+                <img src={day.image} alt={displayText(day.date)} className="h-[220px] w-full object-cover" />
+              ) : (
+                <div className="flex h-[220px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
+                  <div className="text-center">
+                    <Images className="mx-auto h-6 w-6 text-slate-500" />
+                    <p className="mt-2 text-xs text-slate-600">{EMPTY}</p>
+                  </div>
+                </div>
+              )}
+              <div className="p-4">
+                <p className="text-sm font-semibold text-slate-900">{displayText(day.date)}</p>
+                <p className="mt-1 text-sm text-slate-700">
+                  <span className="font-semibold">Total boys:</span>{' '}
+                  {day.totalBoys != null && String(day.totalBoys).trim() ? String(day.totalBoys) : EMPTY}
+                </p>
+                <p className="mt-1 text-sm text-slate-700">
+                  <span className="font-semibold">Total girls:</span>{' '}
+                  {day.totalGirls != null && String(day.totalGirls).trim() ? String(day.totalGirls) : EMPTY}
+                </p>
+                <p className="mt-1 text-sm text-slate-700">
+                  <span className="font-semibold">Total students:</span>{' '}
+                  {day.totalStudents != null && String(day.totalStudents).trim() ? String(day.totalStudents) : EMPTY}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-5 hidden overflow-hidden md:block">
+        <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${currentDesktopPage * 100}%)` }}>
+          {Array.from({ length: desktopTotalPages }).map((_, pageIdx) => {
+            const pageCards = list.slice(pageIdx * desktopPageSize, pageIdx * desktopPageSize + desktopPageSize);
+            return (
+              <article key={`mdm-page-${pageIdx}`} className="w-full shrink-0">
+                <div className="grid gap-5 md:grid-cols-3">
+                  {pageCards.map((day, idx) => (
+                    <button
+                      key={`mdm-${pageIdx}-${idx}`}
+                      type="button"
+                      className="overflow-hidden rounded-lg border border-slate-200 bg-white text-left"
+                      onClick={() => {
+                        setIsPreviewClosing(false);
+                        setPreviewDay(day);
+                      }}
+                    >
+                      {day.image ? (
+                        <img src={day.image} alt={displayText(day.date)} className="h-[220px] w-full object-cover" />
+                      ) : (
+                        <div className="flex h-[220px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
+                          <div className="text-center">
+                            <Images className="mx-auto h-6 w-6 text-slate-500" />
+                            <p className="mt-2 text-xs text-slate-600">{EMPTY}</p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="p-4">
+                        <p className="text-sm font-semibold text-slate-900">{displayText(day.date)}</p>
+                        <p className="mt-1 text-sm text-slate-700">
+                          <span className="font-semibold">Total boys:</span>{' '}
+                          {day.totalBoys != null && String(day.totalBoys).trim() ? String(day.totalBoys) : EMPTY}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-700">
+                          <span className="font-semibold">Total girls:</span>{' '}
+                          {day.totalGirls != null && String(day.totalGirls).trim() ? String(day.totalGirls) : EMPTY}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-700">
+                          <span className="font-semibold">Total students:</span>{' '}
+                          {day.totalStudents != null && String(day.totalStudents).trim() ? String(day.totalStudents) : EMPTY}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+      {previewDay && (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 ${
+            isPreviewClosing ? 'animate-[psModalFadeOut_180ms_ease-in_forwards]' : 'animate-[psModalFadeIn_220ms_ease-out]'
+          }`}
+          onClick={closePreview}
+        >
+          <div
+            className={`w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl ${
+              isPreviewClosing ? 'animate-[psModalScaleOut_180ms_ease-in_forwards]' : 'animate-[psModalScaleIn_220ms_ease-out]'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative">
+              {previewDay.image ? (
+                <img src={previewDay.image} alt={displayText(previewDay.date)} className="h-[320px] w-full object-cover" />
+              ) : (
+                <div className="flex h-[320px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
+                  <div className="text-center">
+                    <Images className="mx-auto h-8 w-8 text-slate-500" />
+                    <p className="mt-2 text-sm text-slate-600">{EMPTY}</p>
+                  </div>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={closePreview}
+                className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                aria-label="Close MDM preview"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-2 p-4">
+              <p className="text-lg font-bold text-slate-900">{displayText(previewDay.date)}</p>
+              <p className="text-sm text-slate-700">
+                <span className="font-semibold">Total boys:</span>{' '}
+                {previewDay.totalBoys != null && String(previewDay.totalBoys).trim() ? String(previewDay.totalBoys) : EMPTY}
+              </p>
+              <p className="text-sm text-slate-700">
+                <span className="font-semibold">Total girls:</span>{' '}
+                {previewDay.totalGirls != null && String(previewDay.totalGirls).trim() ? String(previewDay.totalGirls) : EMPTY}
+              </p>
+              <p className="text-sm text-slate-700">
+                <span className="font-semibold">Total students:</span>{' '}
+                {previewDay.totalStudents != null && String(previewDay.totalStudents).trim() ? String(previewDay.totalStudents) : EMPTY}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      <style jsx>{`
+        @keyframes psModalFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes psModalScaleIn {
+          from {
+            opacity: 0;
+            transform: translateY(8px) scale(0.98);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        @keyframes psModalFadeOut {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+        @keyframes psModalScaleOut {
+          from {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+          to {
+            opacity: 0;
+            transform: translateY(8px) scale(0.98);
+          }
+        }
+      `}</style>
+    </section>
+  );
+}
+
+const EMPTY_PTM_SLOTS = 6;
+
+export function PsParentTeacherMeetingSection({ records }: { records: ParentTeacherMeetingRecord[] }) {
+  const normalized = records.map((r) => ({
+    date: asString(r.date),
+    image: asString(r.image),
+    description: asString(r.description),
+  }));
+  const sorted = [...normalized].sort((a, b) => {
+    const ad = Date.parse(a.date || '');
+    const bd = Date.parse(b.date || '');
+    if (Number.isNaN(ad) && Number.isNaN(bd)) return 0;
+    if (Number.isNaN(ad)) return 1;
+    if (Number.isNaN(bd)) return -1;
+    return bd - ad;
+  });
+  const list = (sorted.length
+    ? sorted.slice(0, 10)
+    : Array.from({ length: EMPTY_PTM_SLOTS }, () => ({ date: '', image: '', description: '' })));
+
+  const desktopPageSize = 3;
+  const desktopTotalPages = Math.max(1, Math.ceil(list.length / desktopPageSize));
+  const [currentDesktopPage, setCurrentDesktopPage] = useState(0);
+  const [currentMobileSlide, setCurrentMobileSlide] = useState(0);
+  const [previewMeeting, setPreviewMeeting] = useState<(typeof list)[number] | null>(null);
+  const [isPreviewClosing, setIsPreviewClosing] = useState(false);
+
+  const goPrevDesktop = () => setCurrentDesktopPage((p) => (p - 1 + desktopTotalPages) % desktopTotalPages);
+  const goNextDesktop = () => setCurrentDesktopPage((p) => (p + 1) % desktopTotalPages);
+  const goPrevMobile = () => setCurrentMobileSlide((p) => (p - 1 + list.length) % list.length);
+  const goNextMobile = () => setCurrentMobileSlide((p) => (p + 1) % list.length);
+  const closePreview = () => {
+    setIsPreviewClosing(true);
+    window.setTimeout(() => {
+      setPreviewMeeting(null);
+      setIsPreviewClosing(false);
+    }, 180);
+  };
+
+  return (
+    <section className="py-2 md:py-4">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Parent Teacher Meeting</h2>
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={goPrevMobile} className="h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:hidden" aria-label="Previous PTM day">‹</button>
+          <button type="button" onClick={goNextMobile} className="h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:hidden" aria-label="Next PTM day">›</button>
+          <button type="button" onClick={goPrevDesktop} className="hidden h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:inline-flex md:items-center md:justify-center" aria-label="Previous PTM set">‹</button>
+          <button type="button" onClick={goNextDesktop} className="hidden h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:inline-flex md:items-center md:justify-center" aria-label="Next PTM set">›</button>
+        </div>
+      </div>
+
+      <div className="mt-5 overflow-hidden md:hidden">
+        <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${currentMobileSlide * 100}%)` }}>
+          {list.map((item, idx) => (
+            <button
+              key={`ptm-mobile-${idx}`}
+              type="button"
+              className="w-full shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white text-left"
+              onClick={() => {
+                setIsPreviewClosing(false);
+                setPreviewMeeting(item);
+              }}
+            >
+              {item.image ? (
+                <img src={item.image} alt={displayText(item.date)} className="h-[220px] w-full object-cover" />
+              ) : (
+                <div className="flex h-[220px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
+                  <div className="text-center">
+                    <Images className="mx-auto h-6 w-6 text-slate-500" />
+                    <p className="mt-2 text-xs text-slate-600">{EMPTY}</p>
+                  </div>
+                </div>
+              )}
+              <div className="p-4">
+                <p className="text-sm font-semibold text-slate-900">{displayText(item.date)}</p>
+                <p className="mt-1 line-clamp-3 text-sm text-slate-700">{displayText(item.description)}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-5 hidden overflow-hidden md:block">
+        <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${currentDesktopPage * 100}%)` }}>
+          {Array.from({ length: desktopTotalPages }).map((_, pageIdx) => {
+            const pageCards = list.slice(pageIdx * desktopPageSize, pageIdx * desktopPageSize + desktopPageSize);
+            return (
+              <article key={`ptm-page-${pageIdx}`} className="w-full shrink-0">
+                <div className="grid gap-5 md:grid-cols-3">
+                  {pageCards.map((item, idx) => (
+                    <button
+                      key={`ptm-${pageIdx}-${idx}`}
+                      type="button"
+                      className="overflow-hidden rounded-lg border border-slate-200 bg-white text-left"
+                      onClick={() => {
+                        setIsPreviewClosing(false);
+                        setPreviewMeeting(item);
+                      }}
+                    >
+                      {item.image ? (
+                        <img src={item.image} alt={displayText(item.date)} className="h-[220px] w-full object-cover" />
+                      ) : (
+                        <div className="flex h-[220px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
+                          <div className="text-center">
+                            <Images className="mx-auto h-6 w-6 text-slate-500" />
+                            <p className="mt-2 text-xs text-slate-600">{EMPTY}</p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="p-4">
+                        <p className="text-sm font-semibold text-slate-900">{displayText(item.date)}</p>
+                        <p className="mt-1 line-clamp-3 text-sm text-slate-700">{displayText(item.description)}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+      {previewMeeting && (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 ${
+            isPreviewClosing ? 'animate-[psModalFadeOut_180ms_ease-in_forwards]' : 'animate-[psModalFadeIn_220ms_ease-out]'
+          }`}
+          onClick={closePreview}
+        >
+          <div
+            className={`w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl ${
+              isPreviewClosing ? 'animate-[psModalScaleOut_180ms_ease-in_forwards]' : 'animate-[psModalScaleIn_220ms_ease-out]'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative">
+              {previewMeeting.image ? (
+                <img src={previewMeeting.image} alt={displayText(previewMeeting.date)} className="h-[320px] w-full object-cover" />
+              ) : (
+                <div className="flex h-[320px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
+                  <div className="text-center">
+                    <Images className="mx-auto h-8 w-8 text-slate-500" />
+                    <p className="mt-2 text-sm text-slate-600">{EMPTY}</p>
+                  </div>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={closePreview}
+                className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                aria-label="Close PTM preview"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-2 p-4">
+              <p className="text-lg font-bold text-slate-900">{displayText(previewMeeting.date)}</p>
+              <p className="text-sm text-slate-700">{displayText(previewMeeting.description)}</p>
             </div>
           </div>
         </div>
@@ -707,12 +1198,46 @@ export function PsFacilitiesCarouselSection({ profile, facilities }: { profile: 
 
 const EMPTY_FACULTY_SLOTS = 4;
 
-export function PsFacultySection({ faculty }: { faculty: Faculty[] }) {
+function todayKeyLocal(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+export function PsFacultySection({ faculty, profile }: { faculty: Faculty[]; profile: Record<string, unknown> }) {
   const list = (faculty.length ? faculty : Array.from({ length: EMPTY_FACULTY_SLOTS }, () => ({} as Faculty))).slice(0, 8);
   const desktopPageSize = 4;
   const desktopTotalPages = Math.max(1, Math.ceil(list.length / desktopPageSize));
   const [currentDesktopPage, setCurrentDesktopPage] = useState(0);
   const [currentMobileSlide, setCurrentMobileSlide] = useState(0);
+  const [previewFaculty, setPreviewFaculty] = useState<{ faculty: Faculty; index: number } | null>(null);
+  const [isPreviewClosing, setIsPreviewClosing] = useState(false);
+
+  const attendanceByDay = (() => {
+    const raw = profile.faculty_attendance;
+    if (!raw) return {} as Record<string, Record<string, boolean>>;
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? (parsed as Record<string, Record<string, boolean>>) : {};
+      } catch {
+        return {};
+      }
+    }
+    return typeof raw === 'object' ? (raw as Record<string, Record<string, boolean>>) : {};
+  })();
+  const today = todayKeyLocal();
+  const isPresentToday = (index: number): boolean => Boolean(attendanceByDay[today]?.[`row_${index}`]);
+
+  const closePreview = () => {
+    setIsPreviewClosing(true);
+    window.setTimeout(() => {
+      setPreviewFaculty(null);
+      setIsPreviewClosing(false);
+    }, 180);
+  };
 
   const goPrevDesktop = () => setCurrentDesktopPage((p) => (p - 1 + desktopTotalPages) % desktopTotalPages);
   const goNextDesktop = () => setCurrentDesktopPage((p) => (p + 1) % desktopTotalPages);
@@ -739,16 +1264,26 @@ export function PsFacultySection({ faculty }: { faculty: Faculty[] }) {
         <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${currentMobileSlide * 100}%)` }}>
           {list.map((f, i) => (
             <article key={`${f.name || 'faculty-mobile'}-${i}`} className="w-full shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
-              {asString(f.photo) ? (
-                <img src={asString(f.photo)} alt={displayText(f.name)} className="h-[280px] w-full object-cover" />
-              ) : (
-                <div className="flex h-[280px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
-                  <div className="text-center">
-                    <Images className="mx-auto h-6 w-6 text-slate-500" />
-                    <p className="mt-2 text-xs text-slate-600">{EMPTY}</p>
+              <button
+                type="button"
+                className="block w-full text-left"
+                onClick={() => {
+                  setIsPreviewClosing(false);
+                  setPreviewFaculty({ faculty: f, index: i });
+                }}
+                aria-label={`Open ${displayText(f.name)} details`}
+              >
+                {asString(f.photo) ? (
+                  <img src={asString(f.photo)} alt={displayText(f.name)} className="h-[280px] w-full object-cover" />
+                ) : (
+                  <div className="flex h-[280px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
+                    <div className="text-center">
+                      <Images className="mx-auto h-6 w-6 text-slate-500" />
+                      <p className="mt-2 text-xs text-slate-600">{EMPTY}</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </button>
               <div className="p-4">
                 <h3 className="text-lg font-bold tracking-tight text-slate-900">{displayText(f.name)}</h3>
                 <p className="mt-2 text-sm text-slate-700"><span className="font-semibold">Subject:</span> {displayText(f.subject)}</p>
@@ -769,16 +1304,26 @@ export function PsFacultySection({ faculty }: { faculty: Faculty[] }) {
                 <div className="grid gap-5 lg:grid-cols-4">
                   {pageCards.map((f, i) => (
                     <article key={`${f.name || 'faculty-desktop'}-${pageIdx}-${i}`} className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                      {asString(f.photo) ? (
-                        <img src={asString(f.photo)} alt={displayText(f.name)} className="h-[320px] w-full object-cover transition duration-300 hover:scale-[1.03]" />
-                      ) : (
-                        <div className="flex h-[320px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
-                          <div className="text-center">
-                            <Images className="mx-auto h-6 w-6 text-slate-500" />
-                            <p className="mt-2 text-xs text-slate-600">{EMPTY}</p>
+                      <button
+                        type="button"
+                        className="block w-full text-left"
+                        onClick={() => {
+                          setIsPreviewClosing(false);
+                          setPreviewFaculty({ faculty: f, index: pageIdx * desktopPageSize + i });
+                        }}
+                        aria-label={`Open ${displayText(f.name)} details`}
+                      >
+                        {asString(f.photo) ? (
+                          <img src={asString(f.photo)} alt={displayText(f.name)} className="h-[320px] w-full object-cover" />
+                        ) : (
+                          <div className="flex h-[320px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
+                            <div className="text-center">
+                              <Images className="mx-auto h-6 w-6 text-slate-500" />
+                              <p className="mt-2 text-xs text-slate-600">{EMPTY}</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </button>
                       <div className="p-4">
                         <h3 className="text-lg font-bold tracking-tight text-slate-900">{displayText(f.name)}</h3>
                         <p className="mt-2 text-sm text-slate-700"><span className="font-semibold">Subject:</span> {displayText(f.subject)}</p>
@@ -792,6 +1337,76 @@ export function PsFacultySection({ faculty }: { faculty: Faculty[] }) {
           })}
         </div>
       </div>
+
+      {previewFaculty && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/75 p-4"
+          style={{ animation: isPreviewClosing ? 'psModalFadeOut 180ms ease-in forwards' : 'psModalFadeIn 180ms ease-out' }}
+          onClick={closePreview}
+        >
+          <div
+            className="w-full max-w-xl overflow-hidden rounded-lg bg-white"
+            style={{ animation: isPreviewClosing ? 'psModalScaleOut 180ms ease-in forwards' : 'psModalScaleIn 220ms ease-out' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative">
+              {asString(previewFaculty.faculty.photo) ? (
+                <img src={asString(previewFaculty.faculty.photo)} alt={displayText(previewFaculty.faculty.name)} className="h-[320px] w-full object-contain bg-slate-100" />
+              ) : (
+                <div className="flex h-[320px] w-full items-center justify-center bg-slate-100">
+                  <p className="text-sm text-slate-500">{EMPTY}</p>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={closePreview}
+                className="absolute right-3 top-3 h-9 w-9 rounded-full bg-black/65 text-white hover:bg-black/80"
+                aria-label="Close preview"
+              >
+                ×
+              </button>
+            </div>
+            <div className="border-t border-slate-200 p-4">
+              <h3 className="text-xl font-bold tracking-tight text-slate-900">{displayText(previewFaculty.faculty.name)}</h3>
+              <p className="mt-2 text-sm text-slate-700"><span className="font-semibold">Subject:</span> {displayText(previewFaculty.faculty.subject)}</p>
+              <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Qualification:</span> {displayText(previewFaculty.faculty.qualification)}</p>
+              <p className="mt-3 inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                Attendance ({today}): {isPresentToday(previewFaculty.index) ? 'Present' : 'Absent'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      <style jsx>{`
+        @keyframes psModalFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes psModalScaleIn {
+          from {
+            opacity: 0;
+            transform: translateY(8px) scale(0.98);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        @keyframes psModalFadeOut {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+        @keyframes psModalScaleOut {
+          from {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+          to {
+            opacity: 0;
+            transform: translateY(8px) scale(0.98);
+          }
+        }
+      `}</style>
     </section>
   );
 }
@@ -975,9 +1590,12 @@ export function PsIntakeSection({ intakeRows, profile }: { intakeRows: IntakeRow
   const intakeCardsFromProfile = profile ? parseArray<IntakeCard>(profile.intake_cards) : [];
   const fromRows: IntakeCard[] = intakeRows.map((r) => {
     const rec = r as Record<string, unknown>;
+    const regRaw = rec.registered_this_year ?? rec.registered_students_this_year;
     return {
       class_name: r.class_name,
       strength: r.intake,
+      registered_this_year:
+        typeof regRaw === 'number' || typeof regRaw === 'string' ? regRaw : '',
       subjects: asString(rec.subjects),
       image: asString(rec.image),
     };
@@ -1044,6 +1662,7 @@ export function PsIntakeSection({ intakeRows, profile }: { intakeRows: IntakeRow
               <div className="p-4">
                 <h3 className="text-xl font-bold tracking-tight text-slate-900">{displayText(item.class_name)}</h3>
                 <p className="mt-2 text-sm text-slate-700"><span className="font-semibold">Strength:</span> {item.strength != null && String(item.strength).trim() ? String(item.strength) : EMPTY}</p>
+                <p className="mt-1 text-sm text-slate-700"><span className="font-semibold">Registered this year:</span> {item.registered_this_year != null && String(item.registered_this_year).trim() ? String(item.registered_this_year) : EMPTY}</p>
                 <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Subjects:</span> {displayText(item.subjects)}</p>
               </div>
             </button>
@@ -1083,6 +1702,7 @@ export function PsIntakeSection({ intakeRows, profile }: { intakeRows: IntakeRow
                       <div className="p-4">
                         <h3 className="text-xl font-bold tracking-tight text-slate-900">{displayText(item.class_name)}</h3>
                         <p className="mt-2 text-sm text-slate-700"><span className="font-semibold">Strength:</span> {item.strength != null && String(item.strength).trim() ? String(item.strength) : EMPTY}</p>
+                        <p className="mt-1 text-sm text-slate-700"><span className="font-semibold">Registered this year:</span> {item.registered_this_year != null && String(item.registered_this_year).trim() ? String(item.registered_this_year) : EMPTY}</p>
                         <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Subjects:</span> {displayText(item.subjects)}</p>
                       </div>
                     </button>
@@ -1125,6 +1745,7 @@ export function PsIntakeSection({ intakeRows, profile }: { intakeRows: IntakeRow
             <div className="border-t border-slate-200 p-4">
               <h3 className="text-2xl font-bold tracking-tight text-slate-900">{displayText(previewCard.class_name)}</h3>
               <p className="mt-2 text-sm text-slate-700"><span className="font-semibold">Strength:</span> {previewCard.strength != null && String(previewCard.strength).trim() ? String(previewCard.strength) : EMPTY}</p>
+              <p className="mt-1 text-sm text-slate-700"><span className="font-semibold">Registered this year:</span> {previewCard.registered_this_year != null && String(previewCard.registered_this_year).trim() ? String(previewCard.registered_this_year) : EMPTY}</p>
               <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Subjects:</span> {displayText(previewCard.subjects)}</p>
             </div>
           </div>
@@ -1160,106 +1781,6 @@ export function PsIntakeSection({ intakeRows, profile }: { intakeRows: IntakeRow
           }
         }
       `}</style>
-    </section>
-  );
-}
-
-const EMPTY_TESTIMONIAL_SLOTS = 5;
-
-export function PsTestimonialsSection({ testimonials }: { testimonials: Testimonial[] }) {
-  const list = testimonials.length ? testimonials : Array.from({ length: EMPTY_TESTIMONIAL_SLOTS }, () => ({} as Testimonial));
-  const loopList = [...list, ...list];
-  return (
-    <section className="py-2 md:py-4">
-      <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Testimonials</h2>
-
-      <div className="mt-6 overflow-hidden">
-        <div className="testimonial-marquee-track flex w-max gap-4">
-          {loopList.map((t, i) => (
-            <article
-              key={`${t.name || 'testimonial'}-${i}`}
-              className="flex h-[200px] w-[320px] shrink-0 flex-col rounded-xl border border-slate-200 bg-white p-4"
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 overflow-hidden rounded-full bg-slate-100">
-                  {asString(t.image) ? (
-                    <img src={asString(t.image)} alt={displayText(t.name)} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs font-bold text-slate-500">
-                      {asString(t.name).charAt(0) || EMPTY}
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-slate-900">{displayText(t.name)}</p>
-                  <p className="text-xs text-indigo-600">{displayText(t.role)}</p>
-                </div>
-              </div>
-              <p className="mt-4 line-clamp-4 text-sm leading-relaxed text-slate-700">{`"${displayText(t.message)}"`}</p>
-            </article>
-          ))}
-        </div>
-      </div>
-
-      <style jsx>{`
-        .testimonial-marquee-track {
-          animation: testimonial-scroll 36s linear infinite;
-        }
-        .testimonial-marquee-track:hover {
-          animation-play-state: paused;
-        }
-        @keyframes testimonial-scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
-    </section>
-  );
-}
-
-const EMPTY_FAQ_SLOTS = 5;
-
-export function PsFaqSection({ profile }: { profile: Record<string, unknown> }) {
-  const [openIndex, setOpenIndex] = useState<number>(-1);
-  const faqs = parseArray<{ question?: string; answer?: string }>(profile.faq_items);
-  const list = faqs.length ? faqs : Array.from({ length: EMPTY_FAQ_SLOTS }, () => ({} as { question?: string; answer?: string }));
-
-  return (
-    <section className="py-2 md:py-4">
-      <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">FAQs</h2>
-
-      <div className="mt-6">
-        {list.map((faq, index) => {
-          const isOpen = openIndex === index;
-          return (
-            <div key={`${faq.question || 'faq'}-${index}`} className="border-b border-slate-200 py-4">
-              <button
-                type="button"
-                onClick={() => setOpenIndex(isOpen ? -1 : index)}
-                className="flex w-full items-start justify-between gap-4 text-left"
-                aria-expanded={isOpen}
-              >
-                <span className="text-sm font-semibold text-slate-900 sm:text-base">{displayText(faq.question)}</span>
-                <span className="mt-0.5 text-lg font-bold leading-none text-slate-500">{isOpen ? '−' : '+'}</span>
-              </button>
-              <div
-                className="grid transition-all duration-300 ease-in-out"
-                style={{ gridTemplateRows: isOpen ? '1fr' : '0fr' }}
-              >
-                <div className="overflow-hidden">
-                  <p
-                    className={`max-w-4xl pr-8 text-sm leading-relaxed text-slate-700 transition-all duration-300 sm:text-base ${
-                      isOpen ? 'mt-3 opacity-100' : 'mt-0 opacity-0'
-                    }`}
-                  >
-                    {displayText(faq.answer)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
     </section>
   );
 }

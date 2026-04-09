@@ -19,9 +19,40 @@ function safeParseJsonArray<T extends object>(raw: string, fallback: T[]): T[] {
   }
 }
 
-function rowsToJson(rows: Record<string, string>[]): string {
+function rowsToJson(rows: Record<string, unknown>[]): string {
   const cleaned = rows.filter((r) => Object.values(r).some((v) => String(v).trim()));
   return JSON.stringify(cleaned.length ? cleaned : []);
+}
+
+type FacilityImageRow = { url: string; title: string };
+type FacultyAttendanceByDay = Record<string, Record<string, boolean>>;
+
+function normalizeFacilityImages(row: Record<string, unknown>): FacilityImageRow[] {
+  const images = Array.isArray(row.images) ? row.images : [];
+  if (images.length) {
+    // Preserve empty rows too, so "Add image" immediately reflects in UI.
+    return images.map((it) => {
+      if (!it || typeof it !== 'object') return { url: '', title: '' };
+      const rec = it as Record<string, unknown>;
+      return {
+        url: String(rec.url ?? rec.image ?? '').trim(),
+        // Do not trim title while editing; it blocks natural spacing input.
+        title: String(rec.title ?? ''),
+      };
+    });
+  }
+
+  const legacyImage = String(row.image ?? '').trim();
+  if (legacyImage) return [{ url: legacyImage, title: '' }];
+  return [{ url: '', title: '' }];
+}
+
+function getTodayKey(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 async function uploadAsset(orgId: number, file: File, assetType: string): Promise<string> {
@@ -114,24 +145,51 @@ export function EducationPsPortfolioAdminForm({
   setOrg: React.Dispatch<React.SetStateAction<PsPortfolioOrgFields>>;
 }) {
   const patch = useCallback((p: Partial<PsPortfolioOrgFields>) => {
-    setOrg((prev) => ({ ...prev, ...p }));
+    setOrg((prev) => {
+      const next: PsPortfolioOrgFields = { ...prev };
+      Object.entries(p).forEach(([key, value]) => {
+        if (value !== undefined) next[key] = value;
+      });
+      return next;
+    });
   }, [setOrg]);
 
-  const facilityRows = safeParseJsonArray<Record<string, string>>(org.facility_cards_json || '', []);
+  const facilityRows = safeParseJsonArray<Record<string, unknown>>(org.facility_cards_json || '', []);
   const facultyRows = safeParseJsonArray<Record<string, string>>(org.faculty_cards_json || '', []);
   const galleryRows = safeParseJsonArray<Record<string, string>>(org.photo_gallery_json || '', []);
   const classRows = safeParseJsonArray<Record<string, string>>(org.intake_cards_json || '', []);
-  const testimonialRows = safeParseJsonArray<Record<string, string>>(org.testimonials_json || '', []);
-  const faqRows = safeParseJsonArray<Record<string, string>>(org.faq_items_json || '', []);
+  const mdmRows = safeParseJsonArray<Record<string, string>>(org.mdm_daily_json || '', []);
+  const ptmRows = safeParseJsonArray<Record<string, string>>(org.ptm_meetings_json || '', []);
 
-  const setFacilities = (rows: Record<string, string>[]) => patch({ facility_cards_json: rowsToJson(rows) });
+  const setFacilities = (rows: Record<string, unknown>[]) => patch({ facility_cards_json: rowsToJson(rows) });
   const setFaculty = (rows: Record<string, string>[]) => patch({ faculty_cards_json: rowsToJson(rows) });
   const setGallery = (rows: Record<string, string>[]) => patch({ photo_gallery_json: rowsToJson(rows) });
   const setClasses = (rows: Record<string, string>[]) => patch({ intake_cards_json: rowsToJson(rows) });
-  const setTestimonials = (rows: Record<string, string>[]) => patch({ testimonials_json: rowsToJson(rows) });
-  const setFaqs = (rows: Record<string, string>[]) => patch({ faq_items_json: rowsToJson(rows) });
+  const setMdmRows = (rows: Record<string, string>[]) => patch({ mdm_daily_json: rowsToJson(rows) });
+  const setPtmRows = (rows: Record<string, string>[]) => patch({ ptm_meetings_json: rowsToJson(rows) });
+  const attendanceByDay: FacultyAttendanceByDay = (() => {
+    try {
+      const parsed = org.faculty_attendance_json?.trim() ? JSON.parse(org.faculty_attendance_json) : {};
+      return parsed && typeof parsed === 'object' ? (parsed as FacultyAttendanceByDay) : {};
+    } catch {
+      return {};
+    }
+  })();
+  const todayKey = getTodayKey();
+  const markFacultyPresent = (facultyIndex: number) => {
+    const rowKey = `row_${facultyIndex}`;
+    const next: FacultyAttendanceByDay = { ...attendanceByDay };
+    const today = { ...(next[todayKey] || {}) };
+    today[rowKey] = true;
+    next[todayKey] = today;
+    patch({ faculty_attendance_json: JSON.stringify(next) });
+  };
+  const isFacultyPresentToday = (facultyIndex: number): boolean => {
+    const rowKey = `row_${facultyIndex}`;
+    return Boolean(attendanceByDay[todayKey]?.[rowKey]);
+  };
 
-  const ensureRows = (rows: Record<string, string>[], min: number, empty: Record<string, string>) => {
+  const ensureRows = <T extends Record<string, unknown>>(rows: T[], min: number, empty: T) => {
     const next = [...rows];
     while (next.length < min) next.push({ ...empty });
     return next;
@@ -241,6 +299,26 @@ export function EducationPsPortfolioAdminForm({
             <label className="text-[11px] text-text">Experience (max 200)</label>
             <input maxLength={200} className="w-full rounded border border-border bg-background px-2 py-1 text-xs" value={org.hm_experience} onChange={(e) => patch({ hm_experience: e.target.value })} />
           </div>
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-[11px] text-text">Past experience (paragraph, max 1000)</label>
+            <textarea
+              maxLength={1000}
+              rows={2}
+              className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
+              value={org.hm_past_experience_en || ''}
+              onChange={(e) => patch({ hm_past_experience_en: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-[11px] text-text">Current experience (paragraph, max 1000)</label>
+            <textarea
+              maxLength={1000}
+              rows={2}
+              className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
+              value={org.hm_current_experience_en || ''}
+              onChange={(e) => patch({ hm_current_experience_en: e.target.value })}
+            />
+          </div>
           <div className="space-y-1">
             <label className="text-[11px] text-text">Headmaster contact</label>
             <input maxLength={20} className="w-full rounded border border-border bg-background px-2 py-1 text-xs" value={org.headmaster_contact} onChange={(e) => patch({ headmaster_contact: e.target.value })} />
@@ -272,9 +350,9 @@ export function EducationPsPortfolioAdminForm({
         </div>
       </SectionBox>
 
-      <SectionBox id="ps-section-c" title="Section C — Administration (DEO, BEO, CRC)">
+      <SectionBox id="ps-section-c" title="Section C — Administration (DEO, BEO, BRCC, CRCC)">
         <p className="mb-2 text-[10px] text-text-muted">Names can match the main school form; photos and emails are for the public website.</p>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <div className="space-y-2 rounded border border-border bg-background p-2">
             <p className="text-[11px] font-semibold uppercase text-text">DEO</p>
             <ImgSlot label="Photo" organizationId={organizationId} assetType="ps_admin_deo" url={org.deo_image} onUrl={(u) => patch({ deo_image: u })} />
@@ -290,7 +368,14 @@ export function EducationPsPortfolioAdminForm({
             <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Email" type="email" maxLength={254} value={org.beo_email} onChange={(e) => patch({ beo_email: e.target.value })} />
           </div>
           <div className="space-y-2 rounded border border-border bg-background p-2">
-            <p className="text-[11px] font-semibold uppercase text-text">CRC</p>
+            <p className="text-[11px] font-semibold uppercase text-text">BRCC</p>
+            <ImgSlot label="Photo" organizationId={organizationId} assetType="ps_admin_brcc" url={org.brcc_image || ''} onUrl={(u) => patch({ brcc_image: u })} />
+            <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Name" maxLength={120} value={org.brcc_name} onChange={(e) => patch({ brcc_name: e.target.value })} />
+            <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Contact" maxLength={20} value={org.brcc_contact} onChange={(e) => patch({ brcc_contact: e.target.value })} />
+            <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Email" type="email" maxLength={254} value={org.brcc_email || ''} onChange={(e) => patch({ brcc_email: e.target.value })} />
+          </div>
+          <div className="space-y-2 rounded border border-border bg-background p-2">
+            <p className="text-[11px] font-semibold uppercase text-text">CRCC</p>
             <ImgSlot label="Photo" organizationId={organizationId} assetType="ps_admin_crc" url={org.crc_image} onUrl={(u) => patch({ crc_image: u })} />
             <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Name" maxLength={120} value={org.crc_name} onChange={(e) => patch({ crc_name: e.target.value })} />
             <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Contact" maxLength={20} value={org.crc_contact} onChange={(e) => patch({ crc_contact: e.target.value })} />
@@ -302,42 +387,241 @@ export function EducationPsPortfolioAdminForm({
       <SectionBox id="ps-section-d" title="Section D — Facilities (add rows as needed)">
         <div className="space-y-3">
           {ensureRows(facilityRows, 7, { image: '', title: '', description: '' }).map((row, i, arr) => (
-            <div key={i} className="grid gap-2 rounded border border-border p-2 md:grid-cols-[1fr_1fr_2fr_auto] md:items-end">
-              <ImgSlot label={`Facility ${i + 1} image`} organizationId={organizationId} assetType="ps_facility" url={row.image || ''} onUrl={(u) => {
-                const next = [...arr];
-                next[i] = { ...row, image: u };
-                setFacilities(next);
-              }} />
-              <div className="space-y-1">
-                <label className="text-[10px] text-text-muted">Title (100)</label>
-                <input maxLength={100} className="w-full rounded border border-border px-2 py-1 text-xs" value={row.title || ''} onChange={(e) => {
-                  const next = [...arr];
-                  next[i] = { ...row, title: e.target.value };
+            <div key={i} className="space-y-3 rounded border border-border p-2">
+              <div className="grid gap-2 md:grid-cols-[1fr_2fr_auto] md:items-end">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-text-muted">Facility title (100)</label>
+                  <input maxLength={100} className="w-full rounded border border-border px-2 py-1 text-xs" value={String(row.title ?? '')} onChange={(e) => {
+                    const next = [...arr];
+                    next[i] = { ...row, title: e.target.value };
+                    setFacilities(next);
+                  }} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-text-muted">Description (600)</label>
+                  <textarea maxLength={600} rows={2} className="w-full rounded border border-border px-2 py-1 text-xs" value={String(row.description ?? '')} onChange={(e) => {
+                    const next = [...arr];
+                    next[i] = { ...row, description: e.target.value };
+                    setFacilities(next);
+                  }} />
+                </div>
+                <button type="button" className="text-[10px] text-red-600" onClick={() => {
+                  const next = arr.filter((_, j) => j !== i);
                   setFacilities(next);
-                }} />
+                }}>Remove</button>
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] text-text-muted">Description (600)</label>
-                <textarea maxLength={600} rows={2} className="w-full rounded border border-border px-2 py-1 text-xs" value={row.description || ''} onChange={(e) => {
-                  const next = [...arr];
-                  next[i] = { ...row, description: e.target.value };
-                  setFacilities(next);
-                }} />
+
+              <div className="space-y-2 rounded border border-border/70 bg-background p-2">
+                <p className="text-[10px] font-semibold text-text-muted">Facility images (multiple)</p>
+                {normalizeFacilityImages(row).map((img, imgIdx, imgs) => (
+                  <div key={imgIdx} className="grid gap-2 rounded border border-border/70 p-2 md:grid-cols-[1fr_1fr_auto] md:items-end">
+                    <ImgSlot
+                      label={`Image ${imgIdx + 1}`}
+                      organizationId={organizationId}
+                      assetType="ps_facility"
+                      url={img.url}
+                      onUrl={(u) => {
+                        const nextImgs = [...imgs];
+                        nextImgs[imgIdx] = { ...img, url: u };
+                        const next = [...arr];
+                        next[i] = { ...row, images: nextImgs, image: '' };
+                        setFacilities(next);
+                      }}
+                    />
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-text-muted">Image title (120)</label>
+                      <input
+                        maxLength={120}
+                        className="w-full rounded border border-border px-2 py-1 text-xs"
+                        value={img.title}
+                        onChange={(e) => {
+                          const nextImgs = [...imgs];
+                          nextImgs[imgIdx] = { ...img, title: e.target.value };
+                          const next = [...arr];
+                          next[i] = { ...row, images: nextImgs, image: '' };
+                          setFacilities(next);
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="text-[10px] text-red-600"
+                      onClick={() => {
+                        const nextImgs = imgs.filter((_, k) => k !== imgIdx);
+                        const next = [...arr];
+                        next[i] = { ...row, images: nextImgs.length ? nextImgs : [{ url: '', title: '' }], image: '' };
+                        setFacilities(next);
+                      }}
+                    >
+                      Remove image
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="rounded border border-border px-2 py-1 text-[11px]"
+                  onClick={() => {
+                    const imgs = normalizeFacilityImages(row);
+                    const next = [...arr];
+                    next[i] = { ...row, images: [...imgs, { url: '', title: '' }], image: '' };
+                    setFacilities(next);
+                  }}
+                >
+                  + Add image
+                </button>
               </div>
-              <button type="button" className="text-[10px] text-red-600" onClick={() => {
-                const next = arr.filter((_, j) => j !== i);
-                setFacilities(next);
-              }}>Remove</button>
             </div>
           ))}
           <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => setFacilities([...facilityRows, { image: '', title: '', description: '' }])}>+ Add facility row</button>
         </div>
       </SectionBox>
 
-      <SectionBox id="ps-section-e" title="Section E — Faculty">
+      <SectionBox id="ps-section-e" title="Section E — Mid Day Meal (daily)">
+        <p className="mb-2 text-[10px] text-text-muted">
+          Add daily MDM register entry with date, register photo, and total present students (Girls + Boys).
+        </p>
+        <div className="space-y-3">
+          {ensureRows(mdmRows, 1, { date: '', register_image: '', total_boys: '', total_girls: '', total_students: '' }).map((row, i, arr) => (
+            <div key={i} className="grid gap-2 rounded border border-border p-2 md:grid-cols-[1fr_auto_1fr_1fr_1fr_auto] md:items-end">
+              <div className="space-y-1">
+                <label className="text-[10px] text-text-muted">Date</label>
+                <input
+                  type="date"
+                  className="w-full rounded border border-border px-2 py-1 text-xs"
+                  value={row.date || ''}
+                  onChange={(e) => {
+                    const next = [...arr];
+                    next[i] = { ...row, date: e.target.value };
+                    setMdmRows(next);
+                  }}
+                />
+              </div>
+              <ImgSlot
+                label="MDM register image"
+                organizationId={organizationId}
+                assetType="ps_mdm_register"
+                url={row.register_image || ''}
+                onUrl={(u) => {
+                  const next = [...arr];
+                  next[i] = { ...row, register_image: u };
+                  setMdmRows(next);
+                }}
+              />
+              <div className="space-y-1">
+                <label className="text-[10px] text-text-muted">Total boys</label>
+                <input
+                  maxLength={10}
+                  className="w-full rounded border border-border px-2 py-1 text-xs"
+                  value={row.total_boys || ''}
+                  onChange={(e) => {
+                    const next = [...arr];
+                    next[i] = { ...row, total_boys: e.target.value };
+                    setMdmRows(next);
+                  }}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-text-muted">Total girls</label>
+                <input
+                  maxLength={10}
+                  className="w-full rounded border border-border px-2 py-1 text-xs"
+                  value={row.total_girls || ''}
+                  onChange={(e) => {
+                    const next = [...arr];
+                    next[i] = { ...row, total_girls: e.target.value };
+                    setMdmRows(next);
+                  }}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-text-muted">Total students</label>
+                <input
+                  maxLength={10}
+                  className="w-full rounded border border-border px-2 py-1 text-xs"
+                  value={row.total_students || row.total_present || ''}
+                  onChange={(e) => {
+                    const next = [...arr];
+                    next[i] = { ...row, total_students: e.target.value };
+                    setMdmRows(next);
+                  }}
+                />
+              </div>
+              <button type="button" className="text-[10px] text-red-600" onClick={() => setMdmRows(arr.filter((_, j) => j !== i))}>Remove</button>
+            </div>
+          ))}
+          <button
+            type="button"
+            className="rounded border border-border px-2 py-1 text-[11px]"
+            onClick={() => setMdmRows([...mdmRows, { date: '', register_image: '', total_boys: '', total_girls: '', total_students: '' }])}
+          >
+            + Add MDM day
+          </button>
+        </div>
+      </SectionBox>
+
+      <SectionBox id="ps-section-f" title="Section F — Parent Teacher Meeting">
+        <p className="mb-2 text-[10px] text-text-muted">
+          Add PTM meeting details with date, image, and short description.
+        </p>
+        <div className="space-y-3">
+          {ensureRows(ptmRows, 1, { date: '', image: '', description: '' }).map((row, i, arr) => (
+            <div key={i} className="grid gap-2 rounded border border-border p-2 md:grid-cols-[1fr_auto_2fr_auto] md:items-end">
+              <div className="space-y-1">
+                <label className="text-[10px] text-text-muted">Meeting date</label>
+                <input
+                  type="date"
+                  className="w-full rounded border border-border px-2 py-1 text-xs"
+                  value={row.date || ''}
+                  onChange={(e) => {
+                    const next = [...arr];
+                    next[i] = { ...row, date: e.target.value };
+                    setPtmRows(next);
+                  }}
+                />
+              </div>
+              <ImgSlot
+                label="PTM image"
+                organizationId={organizationId}
+                assetType="ps_ptm_image"
+                url={row.image || ''}
+                onUrl={(u) => {
+                  const next = [...arr];
+                  next[i] = { ...row, image: u };
+                  setPtmRows(next);
+                }}
+              />
+              <div className="space-y-1">
+                <label className="text-[10px] text-text-muted">Short description</label>
+                <textarea
+                  maxLength={600}
+                  rows={2}
+                  className="w-full rounded border border-border px-2 py-1 text-xs"
+                  value={row.description || ''}
+                  onChange={(e) => {
+                    const next = [...arr];
+                    next[i] = { ...row, description: e.target.value };
+                    setPtmRows(next);
+                  }}
+                />
+              </div>
+              <button type="button" className="text-[10px] text-red-600" onClick={() => setPtmRows(arr.filter((_, j) => j !== i))}>Remove</button>
+            </div>
+          ))}
+          <button
+            type="button"
+            className="rounded border border-border px-2 py-1 text-[11px]"
+            onClick={() => setPtmRows([...ptmRows, { date: '', image: '', description: '' }])}
+          >
+            + Add PTM meeting
+          </button>
+        </div>
+      </SectionBox>
+
+      <SectionBox id="ps-section-g" title="Section G — Faculty">
+        <p className="mb-2 text-[10px] text-text-muted">Use Check in to mark today&apos;s attendance. Status resets automatically for the next day.</p>
         <div className="space-y-3">
           {ensureRows(facultyRows, 4, { photo: '', name: '', subject: '', qualification: '' }).map((row, i, arr) => (
-            <div key={i} className="grid gap-2 rounded border border-border p-2 md:grid-cols-[auto_1fr_1fr_1fr_auto] md:items-end">
+            <div key={i} className="grid gap-2 rounded border border-border p-2 md:grid-cols-[auto_1fr_1fr_1fr_auto_auto] md:items-end">
               <ImgSlot label="Photo" organizationId={organizationId} assetType="ps_faculty" url={row.photo || ''} onUrl={(u) => {
                 const next = [...arr];
                 next[i] = { ...row, photo: u };
@@ -352,6 +636,14 @@ export function EducationPsPortfolioAdminForm({
               <input placeholder="Qualification" maxLength={200} className="rounded border border-border px-2 py-1 text-xs" value={row.qualification || ''} onChange={(e) => {
                 const next = [...arr]; next[i] = { ...row, qualification: e.target.value }; setFaculty(next);
               }} />
+              <button
+                type="button"
+                className={`rounded border px-2 py-1 text-[11px] ${isFacultyPresentToday(i) ? 'border-emerald-400 bg-emerald-50 text-emerald-700' : 'border-border text-text hover:bg-gray-50'}`}
+                onClick={() => markFacultyPresent(i)}
+                title={todayKey}
+              >
+                {isFacultyPresentToday(i) ? 'Present today' : 'Check in'}
+              </button>
               <button type="button" className="text-[10px] text-red-600" onClick={() => setFaculty(arr.filter((_, j) => j !== i))}>Remove</button>
             </div>
           ))}
@@ -359,7 +651,7 @@ export function EducationPsPortfolioAdminForm({
         </div>
       </SectionBox>
 
-      <SectionBox id="ps-section-f" title="Section F — Gallery (min 8 items recommended)">
+      <SectionBox id="ps-section-h" title="Section H — Gallery (min 8 items recommended)">
         <div className="space-y-3">
           {ensureRows(galleryRows, 8, { image: '', title: '', category: '', description: '' }).map((row, i, arr) => (
             <div key={i} className="grid gap-2 rounded border border-border p-2 md:grid-cols-[auto_1fr_1fr_2fr_auto] md:items-end">
@@ -382,10 +674,10 @@ export function EducationPsPortfolioAdminForm({
         </div>
       </SectionBox>
 
-      <SectionBox id="ps-section-g" title="Section G — Class / intake">
+      <SectionBox id="ps-section-i" title="Section I — Class / intake">
         <div className="space-y-3">
-          {ensureRows(classRows, 5, { image: '', class_name: '', strength: '', subjects: '' }).map((row, i, arr) => (
-            <div key={i} className="grid gap-2 rounded border border-border p-2 md:grid-cols-[auto_1fr_1fr_2fr_auto] md:items-end">
+          {ensureRows(classRows, 5, { image: '', class_name: '', strength: '', registered_this_year: '', subjects: '' }).map((row, i, arr) => (
+            <div key={i} className="grid gap-2 rounded border border-border p-2 md:grid-cols-[auto_1fr_1fr_1fr_2fr_auto] md:items-end">
               <ImgSlot label="Classroom image" organizationId={organizationId} assetType="ps_class" url={row.image || ''} onUrl={(u) => {
                 const next = [...arr]; next[i] = { ...row, image: u }; setClasses(next);
               }} />
@@ -395,53 +687,16 @@ export function EducationPsPortfolioAdminForm({
               <input placeholder="Strength" maxLength={10} className="rounded border border-border px-2 py-1 text-xs" value={row.strength || ''} onChange={(e) => {
                 const next = [...arr]; next[i] = { ...row, strength: e.target.value }; setClasses(next);
               }} />
+              <input placeholder="Registered this year" maxLength={10} className="rounded border border-border px-2 py-1 text-xs" value={row.registered_this_year || ''} onChange={(e) => {
+                const next = [...arr]; next[i] = { ...row, registered_this_year: e.target.value }; setClasses(next);
+              }} />
               <textarea placeholder="Subjects (500)" maxLength={500} rows={2} className="rounded border border-border px-2 py-1 text-xs" value={row.subjects || ''} onChange={(e) => {
                 const next = [...arr]; next[i] = { ...row, subjects: e.target.value }; setClasses(next);
               }} />
               <button type="button" className="text-[10px] text-red-600" onClick={() => setClasses(arr.filter((_, j) => j !== i))}>Remove</button>
             </div>
           ))}
-          <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => setClasses([...classRows, { image: '', class_name: '', strength: '', subjects: '' }])}>+ Add class row</button>
-        </div>
-      </SectionBox>
-
-      <SectionBox id="ps-section-h" title="Section H — Testimonials (min 5 recommended)">
-        <div className="space-y-3">
-          {ensureRows(testimonialRows, 5, { image: '', name: '', role: 'Student', message: '' }).map((row, i, arr) => (
-            <div key={i} className="grid gap-2 rounded border border-border p-2 md:grid-cols-[auto_1fr_1fr_2fr_auto] md:items-end">
-              <ImgSlot label="Student photo" organizationId={organizationId} assetType="ps_testimonial" url={row.image || ''} onUrl={(u) => {
-                const next = [...arr]; next[i] = { ...row, image: u }; setTestimonials(next);
-              }} />
-              <input placeholder="Name" maxLength={120} className="rounded border border-border px-2 py-1 text-xs" value={row.name || ''} onChange={(e) => {
-                const next = [...arr]; next[i] = { ...row, name: e.target.value }; setTestimonials(next);
-              }} />
-              <input placeholder="Tag (Student)" maxLength={40} className="rounded border border-border px-2 py-1 text-xs" value={row.role || ''} onChange={(e) => {
-                const next = [...arr]; next[i] = { ...row, role: e.target.value }; setTestimonials(next);
-              }} />
-              <textarea placeholder="Feedback (800)" maxLength={800} rows={2} className="rounded border border-border px-2 py-1 text-xs" value={row.message || ''} onChange={(e) => {
-                const next = [...arr]; next[i] = { ...row, message: e.target.value }; setTestimonials(next);
-              }} />
-              <button type="button" className="text-[10px] text-red-600" onClick={() => setTestimonials(arr.filter((_, j) => j !== i))}>Remove</button>
-            </div>
-          ))}
-          <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => setTestimonials([...testimonialRows, { image: '', name: '', role: 'Student', message: '' }])}>+ Add testimonial</button>
-        </div>
-      </SectionBox>
-
-      <SectionBox id="ps-section-i" title="Section I — FAQs (min 5 recommended)">
-        <div className="space-y-3">
-          {ensureRows(faqRows, 5, { question: '', answer: '' }).map((row, i, arr) => (
-            <div key={i} className="grid gap-2 rounded border border-border p-2 md:grid-cols-[1fr_2fr_auto] md:items-start">
-              <input placeholder="Question (200)" maxLength={200} className="rounded border border-border px-2 py-1 text-xs" value={row.question || ''} onChange={(e) => {
-                const next = [...arr]; next[i] = { ...row, question: e.target.value }; setFaqs(next);
-              }} />
-              <textarea placeholder="Answer (1200)" maxLength={1200} rows={2} className="rounded border border-border px-2 py-1 text-xs" value={row.answer || ''} onChange={(e) => {
-                const next = [...arr]; next[i] = { ...row, answer: e.target.value }; setFaqs(next);
-              }} />
-              <button type="button" className="text-[10px] text-red-600" onClick={() => setFaqs(arr.filter((_, j) => j !== i))}>Remove</button>
-            </div>
-          ))}
-          <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => setFaqs([...faqRows, { question: '', answer: '' }])}>+ Add FAQ</button>
+          <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => setClasses([...classRows, { image: '', class_name: '', strength: '', registered_this_year: '', subjects: '' }])}>+ Add class row</button>
         </div>
       </SectionBox>
 
@@ -483,22 +738,6 @@ export function EducationPsPortfolioAdminForm({
             <label className="text-[11px] text-text">Longitude (map)</label>
             <input maxLength={20} className="w-full rounded border border-border px-2 py-1 text-xs" value={org.longitude} onChange={(e) => patch({ longitude: e.target.value })} />
           </div>
-        </div>
-      </SectionBox>
-
-      <SectionBox id="ps-section-k" title="Section K — Optional">
-        <div className="grid gap-2 md:grid-cols-2">
-          <ImgSlot label="Extra cover / banner image" organizationId={organizationId} assetType="ps_extra_cover" url={org.portfolio_extra_cover} onUrl={(u) => patch({ portfolio_extra_cover: u })} />
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-[11px] text-text">Separate short description (if different from About)</label>
-            <textarea maxLength={2000} rows={3} className="w-full rounded border border-border px-2 py-1 text-xs" value={org.portfolio_extra_description_en} onChange={(e) => patch({ portfolio_extra_description_en: e.target.value })} />
-          </div>
-          {/* Odia — re-enable when localizing
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-[11px] text-text">Same (Odia)</label>
-            <textarea maxLength={2000} rows={3} className="w-full rounded border border-border px-2 py-1 text-xs" value={org.portfolio_extra_description_od} onChange={(e) => patch({ portfolio_extra_description_od: e.target.value })} />
-          </div>
-          */}
         </div>
       </SectionBox>
 

@@ -247,17 +247,16 @@ export default function DepartmentAdminPage() {
     hero_slide_1: '', hero_slide_2: '', hero_slide_3: '',
     about_short_en: '', about_short_od: '', school_type_en: '', school_type_od: '', location_en: '', location_od: '',
     about_image: '', headmaster_photo: '', headmaster_contact: '', headmaster_email: '',
-    deo_image: '', deo_email: '', beo_image: '', beo_email: '',
+    deo_image: '', deo_email: '', beo_image: '', beo_email: '', brcc_image: '', brcc_email: '',
     crc_image: '', crc_name: '', crc_contact: '', crc_email: '',
     vision_text_en: '', vision_text_od: '', mission_text_en: '', mission_text_od: '',
-    hm_qualification: '', hm_experience: '', headmaster_message_en: '', headmaster_message_od: '',
+    hm_qualification: '', hm_experience: '', hm_past_experience_en: '', hm_current_experience_en: '', headmaster_message_en: '', headmaster_message_od: '',
     curriculum_text_en: '', curriculum_text_od: '', academic_calendar_text_en: '', academic_calendar_text_od: '',
     class_structure_text_en: '', class_structure_text_od: '', subjects_offered_text_en: '', subjects_offered_text_od: '',
     facilities_list: '', total_students: '', facilities_count: '', years_of_service: '',
-    faculty_cards_json: '', facility_cards_json: '', infrastructure_images_json: '', activity_events_json: '', student_intake_rows_json: '',
-    intake_cards_json: '', photo_gallery_json: '', testimonials_json: '', faq_items_json: '',
+    faculty_cards_json: '', faculty_attendance_json: '', facility_cards_json: '', infrastructure_images_json: '', activity_events_json: '', student_intake_rows_json: '',
+    intake_cards_json: '', mdm_daily_json: '', ptm_meetings_json: '', photo_gallery_json: '',
     contact_address_en: '', contact_address_od: '', contact_phone: '', contact_email: '', office_hours_en: '', office_hours_od: '',
-    portfolio_extra_cover: '', portfolio_extra_description_en: '', portfolio_extra_description_od: '',
   });
   const [newEducationOrg, setNewEducationOrg] = useState(emptyEducationOrg());
 
@@ -2122,6 +2121,8 @@ export default function DepartmentAdminPage() {
                         school_type_en: _s(newEducationOrg.school_type_en), school_type_od: _s(newEducationOrg.school_type_od),
                         location_en: _s(newEducationOrg.location_en), location_od: _s(newEducationOrg.location_od),
                         hm_qualification: _s(newEducationOrg.hm_qualification), hm_experience: _s(newEducationOrg.hm_experience),
+                        hm_past_experience_en: _s(newEducationOrg.hm_past_experience_en),
+                        hm_current_experience_en: _s(newEducationOrg.hm_current_experience_en),
                         headmaster_photo: _s(newEducationOrg.headmaster_photo),
                         headmaster_contact: _s(newEducationOrg.headmaster_contact),
                         headmaster_email: _s(newEducationOrg.headmaster_email),
@@ -2130,11 +2131,9 @@ export default function DepartmentAdminPage() {
                         mission_text_en: _s(newEducationOrg.mission_text_en), mission_text_od: _s(newEducationOrg.mission_text_od),
                         deo_image: _s(newEducationOrg.deo_image), deo_email: _s(newEducationOrg.deo_email),
                         beo_image: _s(newEducationOrg.beo_image), beo_email: _s(newEducationOrg.beo_email),
+                        brcc_image: _s(newEducationOrg.brcc_image), brcc_email: _s(newEducationOrg.brcc_email),
                         crc_image: _s(newEducationOrg.crc_image), crc_name: _s(newEducationOrg.crc_name),
                         crc_contact: _s(newEducationOrg.crc_contact), crc_email: _s(newEducationOrg.crc_email),
-                        extra_cover_image: _s(newEducationOrg.portfolio_extra_cover),
-                        portfolio_description_en: _s(newEducationOrg.portfolio_extra_description_en),
-                        portfolio_description_od: _s(newEducationOrg.portfolio_extra_description_od),
                         curriculum_text_en: _s(newEducationOrg.curriculum_text_en), curriculum_text_od: _s(newEducationOrg.curriculum_text_od),
                         academic_calendar_text_en: _s(newEducationOrg.academic_calendar_text_en), academic_calendar_text_od: _s(newEducationOrg.academic_calendar_text_od),
                         class_structure_text_en: _s(newEducationOrg.class_structure_text_en), class_structure_text_od: _s(newEducationOrg.class_structure_text_od),
@@ -2144,14 +2143,15 @@ export default function DepartmentAdminPage() {
                         facilities_count: _n(newEducationOrg.facilities_count),
                         years_of_service: _n(newEducationOrg.years_of_service),
                         faculty_cards: (() => { try { return newEducationOrg.faculty_cards_json.trim() ? JSON.parse(newEducationOrg.faculty_cards_json) : undefined; } catch { return undefined; } })(),
+                        faculty_attendance: (() => { try { return newEducationOrg.faculty_attendance_json.trim() ? JSON.parse(newEducationOrg.faculty_attendance_json) : undefined; } catch { return undefined; } })(),
                         facility_cards: (() => { try { return newEducationOrg.facility_cards_json.trim() ? JSON.parse(newEducationOrg.facility_cards_json) : undefined; } catch { return undefined; } })(),
                         infrastructure_images: (() => { try { return newEducationOrg.infrastructure_images_json.trim() ? JSON.parse(newEducationOrg.infrastructure_images_json) : undefined; } catch { return undefined; } })(),
                         activity_events: (() => { try { return newEducationOrg.activity_events_json.trim() ? JSON.parse(newEducationOrg.activity_events_json) : undefined; } catch { return undefined; } })(),
                         student_intake_rows: (() => { try { return newEducationOrg.student_intake_rows_json.trim() ? JSON.parse(newEducationOrg.student_intake_rows_json) : undefined; } catch { return undefined; } })(),
                         intake_cards: (() => { try { return newEducationOrg.intake_cards_json.trim() ? JSON.parse(newEducationOrg.intake_cards_json) : undefined; } catch { return undefined; } })(),
+                        mdm_daily_records: (() => { try { return newEducationOrg.mdm_daily_json.trim() ? JSON.parse(newEducationOrg.mdm_daily_json) : undefined; } catch { return undefined; } })(),
+                        parent_teacher_meetings: (() => { try { return newEducationOrg.ptm_meetings_json.trim() ? JSON.parse(newEducationOrg.ptm_meetings_json) : undefined; } catch { return undefined; } })(),
                         photo_gallery: (() => { try { return newEducationOrg.photo_gallery_json.trim() ? JSON.parse(newEducationOrg.photo_gallery_json) : undefined; } catch { return undefined; } })(),
-                        testimonials: (() => { try { return newEducationOrg.testimonials_json.trim() ? JSON.parse(newEducationOrg.testimonials_json) : undefined; } catch { return undefined; } })(),
-                        faq_items: (() => { try { return newEducationOrg.faq_items_json.trim() ? JSON.parse(newEducationOrg.faq_items_json) : undefined; } catch { return undefined; } })(),
                         contact_address_en: _s(newEducationOrg.contact_address_en), contact_address_od: _s(newEducationOrg.contact_address_od),
                         contact_phone: _s(newEducationOrg.contact_phone), contact_email: _s(newEducationOrg.contact_email),
                         office_hours_en: _s(newEducationOrg.office_hours_en), office_hours_od: _s(newEducationOrg.office_hours_od),
@@ -3930,18 +3930,6 @@ export default function DepartmentAdminPage() {
                                         })),
                                       );
                                     })();
-                                    const testimonialsJson = (() => {
-                                      const arr = p?.testimonials;
-                                      if (!Array.isArray(arr) || !arr.length) return '';
-                                      return JSON.stringify(
-                                        arr.map((item: Record<string, unknown>) => ({
-                                          image: item.image ?? '',
-                                          name: item.name ?? '',
-                                          role: item.role ?? item.tag ?? 'Student',
-                                          message: item.message ?? item.feedback ?? '',
-                                        })),
-                                      );
-                                    })();
                                     const intakeCardsJson = (() => {
                                       let arr = p?.intake_cards;
                                       if (
@@ -3952,6 +3940,7 @@ export default function DepartmentAdminPage() {
                                         arr = (p.student_intake_rows as Record<string, unknown>[]).map((row) => ({
                                           class_name: row.class_name,
                                           strength: row.intake ?? row.strength ?? '',
+                                          registered_this_year: row.registered_this_year ?? row.registered_students_this_year ?? '',
                                           subjects: row.subjects ?? '',
                                           image: row.image ?? '',
                                         }));
@@ -4000,6 +3989,8 @@ export default function DepartmentAdminPage() {
                                       school_type_en: v(p?.school_type_en), school_type_od: v(p?.school_type_od),
                                       location_en: v(p?.location_en), location_od: v(p?.location_od),
                                       hm_qualification: v(p?.hm_qualification), hm_experience: v(p?.hm_experience),
+                                      hm_past_experience_en: v(p?.hm_past_experience_en ?? p?.hm_past_experience),
+                                      hm_current_experience_en: v(p?.hm_current_experience_en ?? p?.hm_current_experience),
                                       headmaster_photo: v(p?.headmaster_photo),
                                       headmaster_contact: v(p?.headmaster_contact ?? p?.contact_of_hm),
                                       headmaster_email: v(p?.headmaster_email),
@@ -4008,6 +3999,7 @@ export default function DepartmentAdminPage() {
                                       mission_text_en: v(p?.mission_text_en), mission_text_od: v(p?.mission_text_od),
                                       deo_image: v(p?.deo_image), deo_email: v(p?.deo_email),
                                       beo_image: v(p?.beo_image), beo_email: v(p?.beo_email),
+                                      brcc_image: v(p?.brcc_image), brcc_email: v(p?.brcc_email),
                                       crc_image: v(p?.crc_image),
                                       crc_name: v(p?.crc_name ?? p?.crcc_name),
                                       crc_contact: v(p?.crc_contact ?? p?.crcc_contact),
@@ -4019,17 +4011,15 @@ export default function DepartmentAdminPage() {
                                       facilities_list: v(p?.facilities_list), total_students: v(p?.total_students),
                                       facilities_count: v(p?.facilities_count), years_of_service: v(p?.years_of_service),
                                       faculty_cards_json: facultyCardsJson,
+                                      faculty_attendance_json: p?.faculty_attendance && typeof p.faculty_attendance === 'object' ? JSON.stringify(p.faculty_attendance) : '',
                                       facility_cards_json: jsonArr(p?.facility_cards),
                                       infrastructure_images_json: p?.infrastructure_images ? JSON.stringify(p.infrastructure_images) : '',
                                       activity_events_json: p?.activity_events ? JSON.stringify(p.activity_events) : '',
                                       student_intake_rows_json: p?.student_intake_rows ? JSON.stringify(p.student_intake_rows) : '',
                                       intake_cards_json: intakeCardsJson,
+                                      mdm_daily_json: jsonArr(p?.mdm_daily_records ?? p?.mdm_daily ?? p?.mid_day_meal_daily),
+                                      ptm_meetings_json: jsonArr(p?.parent_teacher_meetings ?? p?.ptm_meetings ?? p?.parent_teacher_meeting_records),
                                       photo_gallery_json: galleryJson,
-                                      testimonials_json: testimonialsJson,
-                                      faq_items_json: jsonArr(p?.faq_items),
-                                      portfolio_extra_cover: v(p?.extra_cover_image ?? p?.portfolio_extra_cover),
-                                      portfolio_extra_description_en: v(p?.portfolio_description_en),
-                                      portfolio_extra_description_od: v(p?.portfolio_description_od),
                                       contact_address_en: v(p?.contact_address_en), contact_address_od: v(p?.contact_address_od),
                                       contact_phone: v(p?.contact_phone), contact_email: v(p?.contact_email),
                                       office_hours_en: v(p?.office_hours_en), office_hours_od: v(p?.office_hours_od),
