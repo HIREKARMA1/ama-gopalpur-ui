@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent, type Dispatch, type SetStateAction } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -29,6 +29,10 @@ import { t } from '../../../components/i18n/messages';
 import { Loader } from '../../../components/common/Loader';
 import { DepartmentMapSummaryEditor } from '../../../components/admin/DepartmentMapSummaryEditor';
 import { compressImage } from '../../../lib/imageCompression';
+import {
+  EducationPsPortfolioAdminForm,
+  type PsPortfolioOrgFields,
+} from '../../../components/admin/EducationPsPortfolioAdminForm';
 
 /** ICDS minister CSV: all attributes for AWC profile (no SL NO; use system-generated org id). */
 const ICDS_CSV_HEADER =
@@ -237,6 +241,23 @@ export default function DepartmentAdminPage() {
     icc_head_name: '', icc_head_contact: '', play_ground: '', cycle_stand: '',
     drinking_water_tw: '', drinking_water_tap: '', drinking_water_overhead_tap: '', drinking_water_aquaguard: '',
     latitude: '', longitude: '', description: '',
+    language: 'en',
+    school_name_en: '', school_name_od: '', hero_tagline_en: '', hero_tagline_od: '',
+    hero_primary_tagline_en: '', hero_primary_tagline_od: '',
+    hero_slide_1: '', hero_slide_2: '', hero_slide_3: '',
+    about_short_en: '', about_short_od: '', school_type_en: '', school_type_od: '', location_en: '', location_od: '',
+    about_image: '', headmaster_photo: '', headmaster_contact: '', headmaster_email: '',
+    deo_image: '', deo_email: '', beo_image: '', beo_email: '',
+    crc_image: '', crc_name: '', crc_contact: '', crc_email: '',
+    vision_text_en: '', vision_text_od: '', mission_text_en: '', mission_text_od: '',
+    hm_qualification: '', hm_experience: '', headmaster_message_en: '', headmaster_message_od: '',
+    curriculum_text_en: '', curriculum_text_od: '', academic_calendar_text_en: '', academic_calendar_text_od: '',
+    class_structure_text_en: '', class_structure_text_od: '', subjects_offered_text_en: '', subjects_offered_text_od: '',
+    facilities_list: '', total_students: '', facilities_count: '', years_of_service: '',
+    faculty_cards_json: '', facility_cards_json: '', infrastructure_images_json: '', activity_events_json: '', student_intake_rows_json: '',
+    intake_cards_json: '', photo_gallery_json: '', testimonials_json: '', faq_items_json: '',
+    contact_address_en: '', contact_address_od: '', contact_phone: '', contact_email: '', office_hours_en: '', office_hours_od: '',
+    portfolio_extra_cover: '', portfolio_extra_description_en: '', portfolio_extra_description_od: '',
   });
   const [newEducationOrg, setNewEducationOrg] = useState(emptyEducationOrg());
 
@@ -2088,6 +2109,52 @@ export default function DepartmentAdminPage() {
                         drinking_water_tw: _s(newEducationOrg.drinking_water_tw), drinking_water_tap: _s(newEducationOrg.drinking_water_tap),
                         drinking_water_overhead_tap: _s(newEducationOrg.drinking_water_overhead_tap), drinking_water_aquaguard: _s(newEducationOrg.drinking_water_aquaguard),
                         latitude: lat, longitude: lng, description: _s(newEducationOrg.description),
+                        language: _s(newEducationOrg.language),
+                        school_name_en: _s(newEducationOrg.school_name_en), school_name_od: _s(newEducationOrg.school_name_od),
+                        hero_tagline_en: _s(newEducationOrg.hero_tagline_en), hero_tagline_od: _s(newEducationOrg.hero_tagline_od),
+                        hero_primary_tagline_en: _s(newEducationOrg.hero_primary_tagline_en), hero_primary_tagline_od: _s(newEducationOrg.hero_primary_tagline_od),
+                        hero_slides: (() => {
+                          const slides = [_s(newEducationOrg.hero_slide_1), _s(newEducationOrg.hero_slide_2), _s(newEducationOrg.hero_slide_3)].filter(Boolean) as string[];
+                          return slides.length ? slides : undefined;
+                        })(),
+                        about_short_en: _s(newEducationOrg.about_short_en), about_short_od: _s(newEducationOrg.about_short_od),
+                        about_image: _s(newEducationOrg.about_image),
+                        school_type_en: _s(newEducationOrg.school_type_en), school_type_od: _s(newEducationOrg.school_type_od),
+                        location_en: _s(newEducationOrg.location_en), location_od: _s(newEducationOrg.location_od),
+                        hm_qualification: _s(newEducationOrg.hm_qualification), hm_experience: _s(newEducationOrg.hm_experience),
+                        headmaster_photo: _s(newEducationOrg.headmaster_photo),
+                        headmaster_contact: _s(newEducationOrg.headmaster_contact),
+                        headmaster_email: _s(newEducationOrg.headmaster_email),
+                        headmaster_message_en: _s(newEducationOrg.headmaster_message_en), headmaster_message_od: _s(newEducationOrg.headmaster_message_od),
+                        vision_text_en: _s(newEducationOrg.vision_text_en), vision_text_od: _s(newEducationOrg.vision_text_od),
+                        mission_text_en: _s(newEducationOrg.mission_text_en), mission_text_od: _s(newEducationOrg.mission_text_od),
+                        deo_image: _s(newEducationOrg.deo_image), deo_email: _s(newEducationOrg.deo_email),
+                        beo_image: _s(newEducationOrg.beo_image), beo_email: _s(newEducationOrg.beo_email),
+                        crc_image: _s(newEducationOrg.crc_image), crc_name: _s(newEducationOrg.crc_name),
+                        crc_contact: _s(newEducationOrg.crc_contact), crc_email: _s(newEducationOrg.crc_email),
+                        extra_cover_image: _s(newEducationOrg.portfolio_extra_cover),
+                        portfolio_description_en: _s(newEducationOrg.portfolio_extra_description_en),
+                        portfolio_description_od: _s(newEducationOrg.portfolio_extra_description_od),
+                        curriculum_text_en: _s(newEducationOrg.curriculum_text_en), curriculum_text_od: _s(newEducationOrg.curriculum_text_od),
+                        academic_calendar_text_en: _s(newEducationOrg.academic_calendar_text_en), academic_calendar_text_od: _s(newEducationOrg.academic_calendar_text_od),
+                        class_structure_text_en: _s(newEducationOrg.class_structure_text_en), class_structure_text_od: _s(newEducationOrg.class_structure_text_od),
+                        subjects_offered_text_en: _s(newEducationOrg.subjects_offered_text_en), subjects_offered_text_od: _s(newEducationOrg.subjects_offered_text_od),
+                        facilities_list: _s(newEducationOrg.facilities_list),
+                        total_students: _n(newEducationOrg.total_students),
+                        facilities_count: _n(newEducationOrg.facilities_count),
+                        years_of_service: _n(newEducationOrg.years_of_service),
+                        faculty_cards: (() => { try { return newEducationOrg.faculty_cards_json.trim() ? JSON.parse(newEducationOrg.faculty_cards_json) : undefined; } catch { return undefined; } })(),
+                        facility_cards: (() => { try { return newEducationOrg.facility_cards_json.trim() ? JSON.parse(newEducationOrg.facility_cards_json) : undefined; } catch { return undefined; } })(),
+                        infrastructure_images: (() => { try { return newEducationOrg.infrastructure_images_json.trim() ? JSON.parse(newEducationOrg.infrastructure_images_json) : undefined; } catch { return undefined; } })(),
+                        activity_events: (() => { try { return newEducationOrg.activity_events_json.trim() ? JSON.parse(newEducationOrg.activity_events_json) : undefined; } catch { return undefined; } })(),
+                        student_intake_rows: (() => { try { return newEducationOrg.student_intake_rows_json.trim() ? JSON.parse(newEducationOrg.student_intake_rows_json) : undefined; } catch { return undefined; } })(),
+                        intake_cards: (() => { try { return newEducationOrg.intake_cards_json.trim() ? JSON.parse(newEducationOrg.intake_cards_json) : undefined; } catch { return undefined; } })(),
+                        photo_gallery: (() => { try { return newEducationOrg.photo_gallery_json.trim() ? JSON.parse(newEducationOrg.photo_gallery_json) : undefined; } catch { return undefined; } })(),
+                        testimonials: (() => { try { return newEducationOrg.testimonials_json.trim() ? JSON.parse(newEducationOrg.testimonials_json) : undefined; } catch { return undefined; } })(),
+                        faq_items: (() => { try { return newEducationOrg.faq_items_json.trim() ? JSON.parse(newEducationOrg.faq_items_json) : undefined; } catch { return undefined; } })(),
+                        contact_address_en: _s(newEducationOrg.contact_address_en), contact_address_od: _s(newEducationOrg.contact_address_od),
+                        contact_phone: _s(newEducationOrg.contact_phone), contact_email: _s(newEducationOrg.contact_email),
+                        office_hours_en: _s(newEducationOrg.office_hours_en), office_hours_od: _s(newEducationOrg.office_hours_od),
                       };
                       await educationApi.putProfile(updated.id, profileData);
                       if (educationImageFile) {
@@ -2195,6 +2262,23 @@ export default function DepartmentAdminPage() {
                   <div className="space-y-1"><label className="block text-text">Drinking Water (Overhead Tap)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.drinking_water_overhead_tap} onChange={(e) => setNewEducationOrg((s) => ({ ...s, drinking_water_overhead_tap: e.target.value }))} /></div>
                   <div className="space-y-1"><label className="block text-text">Drinking Water (Aquaguard)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.drinking_water_aquaguard} onChange={(e) => setNewEducationOrg((s) => ({ ...s, drinking_water_aquaguard: e.target.value }))} /></div>
                   <div className="space-y-1 md:col-span-2"><label className="block text-text">Description</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.description} onChange={(e) => setNewEducationOrg((s) => ({ ...s, description: e.target.value }))} /></div>
+                  {educationSubDept === 'PS' ? (
+                    <EducationPsPortfolioAdminForm
+                      organizationId={editingEducationId}
+                      org={newEducationOrg as PsPortfolioOrgFields}
+                      setOrg={setNewEducationOrg as Dispatch<SetStateAction<PsPortfolioOrgFields>>}
+                    />
+                  ) : (
+                    <div className="md:col-span-2 mt-2 rounded-md border border-border bg-background-muted/40 p-3">
+                      <h3 className="text-xs font-semibold text-text">School website extras (JSON)</h3>
+                      <p className="mt-1 text-[11px] text-text-muted">For non–PS sub-departments, edit portfolio JSON fields here if needed.</p>
+                      <div className="mt-3 grid gap-3 md:grid-cols-2">
+                        <div className="space-y-1"><label className="block text-text">Language (en/od)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.language} onChange={(e) => setNewEducationOrg((s) => ({ ...s, language: e.target.value }))} /></div>
+                        <div className="space-y-1 md:col-span-2"><label className="block text-text">Faculty Cards JSON</label><textarea rows={3} className="w-full rounded-md border border-border bg-background px-2 py-1.5 font-mono text-xs outline-none focus:border-primary" value={newEducationOrg.faculty_cards_json} onChange={(e) => setNewEducationOrg((s) => ({ ...s, faculty_cards_json: e.target.value }))} /></div>
+                        <div className="space-y-1 md:col-span-2"><label className="block text-text">Photo Gallery JSON</label><textarea rows={3} className="w-full rounded-md border border-border bg-background px-2 py-1.5 font-mono text-xs outline-none focus:border-primary" value={newEducationOrg.photo_gallery_json} onChange={(e) => setNewEducationOrg((s) => ({ ...s, photo_gallery_json: e.target.value }))} /></div>
+                      </div>
+                    </div>
+                  )}
                   <div className="md:col-span-2">
                     <button type="submit" disabled={creating} className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60">
                       {creating ? 'Saving...' : editingEducationId ? 'Update School' : 'Save School'}
@@ -3809,8 +3893,71 @@ export default function DepartmentAdminPage() {
                                   className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
                                   onClick={async () => {
                                     setEditingEducationId(o.id);
-                                    const p = await educationApi.getProfile(o.id) as Record<string, unknown> | undefined;
+                                    const p = (await educationApi.getProfile(o.id)) as Record<string, unknown> | undefined;
                                     const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
+                                    const heroSlideAt = (i: number): string => {
+                                      const slides = p?.hero_slides;
+                                      if (!Array.isArray(slides) || slides[i] == null) return '';
+                                      const ent = slides[i];
+                                      if (typeof ent === 'string') return v(ent);
+                                      if (ent && typeof ent === 'object' && 'url' in ent) {
+                                        return v((ent as { url: unknown }).url);
+                                      }
+                                      return '';
+                                    };
+                                    const jsonArr = (x: unknown) => (Array.isArray(x) && x.length ? JSON.stringify(x) : '');
+                                    const facultyCardsJson = (() => {
+                                      const arr = p?.faculty_cards;
+                                      if (!Array.isArray(arr) || !arr.length) return '';
+                                      return JSON.stringify(
+                                        arr.map((item: Record<string, unknown>) => ({
+                                          photo: item.photo ?? item.image ?? '',
+                                          name: item.name ?? '',
+                                          subject: item.subject ?? '',
+                                          qualification: item.qualification ?? '',
+                                        })),
+                                      );
+                                    })();
+                                    const galleryJson = (() => {
+                                      const arr = p?.photo_gallery;
+                                      if (!Array.isArray(arr) || !arr.length) return '';
+                                      return JSON.stringify(
+                                        arr.map((item: Record<string, unknown>) => ({
+                                          image: item.image ?? item.url ?? '',
+                                          title: item.title ?? '',
+                                          category: item.category ?? '',
+                                          description: item.description ?? '',
+                                        })),
+                                      );
+                                    })();
+                                    const testimonialsJson = (() => {
+                                      const arr = p?.testimonials;
+                                      if (!Array.isArray(arr) || !arr.length) return '';
+                                      return JSON.stringify(
+                                        arr.map((item: Record<string, unknown>) => ({
+                                          image: item.image ?? '',
+                                          name: item.name ?? '',
+                                          role: item.role ?? item.tag ?? 'Student',
+                                          message: item.message ?? item.feedback ?? '',
+                                        })),
+                                      );
+                                    })();
+                                    const intakeCardsJson = (() => {
+                                      let arr = p?.intake_cards;
+                                      if (
+                                        (!Array.isArray(arr) || !arr.length) &&
+                                        Array.isArray(p?.student_intake_rows) &&
+                                        p.student_intake_rows.length
+                                      ) {
+                                        arr = (p.student_intake_rows as Record<string, unknown>[]).map((row) => ({
+                                          class_name: row.class_name,
+                                          strength: row.intake ?? row.strength ?? '',
+                                          subjects: row.subjects ?? '',
+                                          image: row.image ?? '',
+                                        }));
+                                      }
+                                      return jsonArr(arr);
+                                    })();
                                     setNewEducationOrg({
                                       block_ulb: v(p?.block_ulb ?? o.attributes?.ulb_block),
                                       gp_ward: v(p?.gp_ward ?? o.attributes?.gp_name),
@@ -3841,6 +3988,51 @@ export default function DepartmentAdminPage() {
                                       latitude: o.latitude != null ? String(o.latitude) : '',
                                       longitude: o.longitude != null ? String(o.longitude) : '',
                                       description: v(p?.description),
+                                      language: v(p?.language || 'en'),
+                                      school_name_en: v(p?.school_name_en), school_name_od: v(p?.school_name_od),
+                                      hero_tagline_en: v(p?.hero_tagline_en), hero_tagline_od: v(p?.hero_tagline_od),
+                                      hero_primary_tagline_en: v(p?.hero_primary_tagline_en), hero_primary_tagline_od: v(p?.hero_primary_tagline_od),
+                                      hero_slide_1: heroSlideAt(0),
+                                      hero_slide_2: heroSlideAt(1),
+                                      hero_slide_3: heroSlideAt(2),
+                                      about_short_en: v(p?.about_short_en), about_short_od: v(p?.about_short_od),
+                                      about_image: v(p?.about_image),
+                                      school_type_en: v(p?.school_type_en), school_type_od: v(p?.school_type_od),
+                                      location_en: v(p?.location_en), location_od: v(p?.location_od),
+                                      hm_qualification: v(p?.hm_qualification), hm_experience: v(p?.hm_experience),
+                                      headmaster_photo: v(p?.headmaster_photo),
+                                      headmaster_contact: v(p?.headmaster_contact ?? p?.contact_of_hm),
+                                      headmaster_email: v(p?.headmaster_email),
+                                      headmaster_message_en: v(p?.headmaster_message_en), headmaster_message_od: v(p?.headmaster_message_od),
+                                      vision_text_en: v(p?.vision_text_en), vision_text_od: v(p?.vision_text_od),
+                                      mission_text_en: v(p?.mission_text_en), mission_text_od: v(p?.mission_text_od),
+                                      deo_image: v(p?.deo_image), deo_email: v(p?.deo_email),
+                                      beo_image: v(p?.beo_image), beo_email: v(p?.beo_email),
+                                      crc_image: v(p?.crc_image),
+                                      crc_name: v(p?.crc_name ?? p?.crcc_name),
+                                      crc_contact: v(p?.crc_contact ?? p?.crcc_contact),
+                                      crc_email: v(p?.crc_email),
+                                      curriculum_text_en: v(p?.curriculum_text_en), curriculum_text_od: v(p?.curriculum_text_od),
+                                      academic_calendar_text_en: v(p?.academic_calendar_text_en), academic_calendar_text_od: v(p?.academic_calendar_text_od),
+                                      class_structure_text_en: v(p?.class_structure_text_en), class_structure_text_od: v(p?.class_structure_text_od),
+                                      subjects_offered_text_en: v(p?.subjects_offered_text_en), subjects_offered_text_od: v(p?.subjects_offered_text_od),
+                                      facilities_list: v(p?.facilities_list), total_students: v(p?.total_students),
+                                      facilities_count: v(p?.facilities_count), years_of_service: v(p?.years_of_service),
+                                      faculty_cards_json: facultyCardsJson,
+                                      facility_cards_json: jsonArr(p?.facility_cards),
+                                      infrastructure_images_json: p?.infrastructure_images ? JSON.stringify(p.infrastructure_images) : '',
+                                      activity_events_json: p?.activity_events ? JSON.stringify(p.activity_events) : '',
+                                      student_intake_rows_json: p?.student_intake_rows ? JSON.stringify(p.student_intake_rows) : '',
+                                      intake_cards_json: intakeCardsJson,
+                                      photo_gallery_json: galleryJson,
+                                      testimonials_json: testimonialsJson,
+                                      faq_items_json: jsonArr(p?.faq_items),
+                                      portfolio_extra_cover: v(p?.extra_cover_image ?? p?.portfolio_extra_cover),
+                                      portfolio_extra_description_en: v(p?.portfolio_description_en),
+                                      portfolio_extra_description_od: v(p?.portfolio_description_od),
+                                      contact_address_en: v(p?.contact_address_en), contact_address_od: v(p?.contact_address_od),
+                                      contact_phone: v(p?.contact_phone), contact_email: v(p?.contact_email),
+                                      office_hours_en: v(p?.office_hours_en), office_hours_od: v(p?.office_hours_od),
                                     });
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}

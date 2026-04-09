@@ -36,6 +36,7 @@ import {
 import { Loader } from '../../../components/common/Loader';
 import { AwcPortfolioDashboard } from '../../../components/organization/AwcPortfolioDashboard';
 import { EducationPortfolioDashboard } from '../../../components/organization/EducationPortfolioDashboard';
+import { EducationPsPortfolioWebsite } from '../../../components/organization/EducationPsPortfolioWebsite';
 import { HealthPortfolioDashboard } from '../../../components/organization/HealthPortfolioDashboard';
 import { ElectricityPortfolioDashboard } from '../../../components/organization/ElectricityPortfolioDashboard';
 import { ArcsPortfolioDashboard } from '../../../components/organization/ArcsPortfolioDashboard';
@@ -386,6 +387,20 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
       ? ((educationProfile as any).gallery_images as string[])
       : [];
     const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
+    if ((org.sub_department || '').toUpperCase() === 'PS') {
+      const lang = String((educationProfile as Record<string, unknown>)?.language || 'en').toLowerCase() === 'od' ? 'od' : 'en';
+      return (
+        <div className="page-container">
+          <Navbar />
+          <EducationPsPortfolioWebsite
+            org={org}
+            profile={educationProfile}
+            images={images}
+            language={lang}
+          />
+        </div>
+      );
+    }
     return (
       <div className="page-container">
         <Navbar />
@@ -516,8 +531,8 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   if (deptCode === 'ARCS') {
     const galleryImages = Array.isArray((arcsProfile as Record<string, unknown>)?.gallery_images)
       ? ((arcsProfile as Record<string, unknown>).gallery_images as string[]).filter(
-          (u): u is string => typeof u === 'string',
-        )
+        (u): u is string => typeof u === 'string',
+      )
       : [];
     const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
     return (

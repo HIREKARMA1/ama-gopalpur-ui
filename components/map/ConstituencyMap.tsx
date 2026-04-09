@@ -1137,7 +1137,7 @@ export function ConstituencyMap({
           onClick={() => {
             setInfoWindowOrg(null);
             setSelectedRoad(null);
-          setSelectedDrain(null);
+            setSelectedDrain(null);
           }}
         >
           <Polyline
@@ -1343,12 +1343,12 @@ export function ConstituencyMap({
                 action={
                   onSelectOrganization
                     ? {
-                        label: t('map.viewProfile', language),
-                        onClick: () => {
-                          onSelectOrganization(infoWindowOrg.id);
-                          setInfoWindowOrg(null);
-                        },
-                      }
+                      label: t('map.viewProfile', language),
+                      onClick: () => {
+                        onSelectOrganization(infoWindowOrg.id);
+                        setInfoWindowOrg(null);
+                      },
+                    }
                     : undefined
                 }
               />
@@ -1413,34 +1413,34 @@ export function ConstituencyMap({
         )}
       {selectedDepartmentCode?.toUpperCase() === 'AGRICULTURE' &&
         agricultureInstitutionLegendTypes.length > 0 && (
-        <MapLegendPanel className="pointer-events-auto z-[45] md:max-w-[280px]">
-          {agricultureInstitutionLegendTypes.map((instKey) => {
-            const isSelected = legendFilterType === instKey;
-            const label = agricultureInstitutionLegendLabel(instKey, language);
-            const dotColor =
-              instKey === 'AGRICULTURE SERVICE CENTER'
-                ? '#059669'
-                : instKey === 'AGRICULTURE EXTENSION CENTER'
-                  ? '#f59e0b'
-                  : '#059669';
-            return (
-              <MapLegendRow
-                key={instKey}
-                dotColor={dotColor}
-                label={label}
-                count={agricultureInstitutionCounts[instKey] ?? 0}
-                isSelected={isSelected}
-                onClick={() => setLegendFilterType((prev) => (prev === instKey ? null : instKey))}
-                title={
-                  isSelected
-                    ? t('map.legend.showAll', language)
-                    : `${t('map.legend.showOnly', language)} ${label}`
-                }
-              />
-            );
-          })}
-        </MapLegendPanel>
-      )}
+          <MapLegendPanel className="pointer-events-auto z-[45] md:max-w-[280px]">
+            {agricultureInstitutionLegendTypes.map((instKey) => {
+              const isSelected = legendFilterType === instKey;
+              const label = agricultureInstitutionLegendLabel(instKey, language);
+              const dotColor =
+                instKey === 'AGRICULTURE SERVICE CENTER'
+                  ? '#059669'
+                  : instKey === 'AGRICULTURE EXTENSION CENTER'
+                    ? '#f59e0b'
+                    : '#059669';
+              return (
+                <MapLegendRow
+                  key={instKey}
+                  dotColor={dotColor}
+                  label={label}
+                  count={agricultureInstitutionCounts[instKey] ?? 0}
+                  isSelected={isSelected}
+                  onClick={() => setLegendFilterType((prev) => (prev === instKey ? null : instKey))}
+                  title={
+                    isSelected
+                      ? t('map.legend.showAll', language)
+                      : `${t('map.legend.showOnly', language)} ${label}`
+                  }
+                />
+              );
+            })}
+          </MapLegendPanel>
+        )}
       {selectedDepartmentCode?.toUpperCase() === 'IRRIGATION' && (
         <MapLegendPanel className="md:max-w-[260px]">
           {irrigationLegendTypes.map((type) => {
@@ -1468,30 +1468,30 @@ export function ConstituencyMap({
       )}
       {selectedDepartmentCode?.toUpperCase() === 'MINOR_IRRIGATION' &&
         minorIrrigationLegendTypes.length > 0 && (
-        <MapLegendPanel className="md:max-w-[260px]">
-          {minorIrrigationLegendTypes.map((cat) => {
-            const value = cat;
-            const isSelected = legendFilterType === value;
-            const label = translateIrrigationCategory(cat, language);
-            const dotColor = IRRIGATION_CATEGORY_MARKER_COLORS[cat] ?? '#059669';
-            return (
-              <MapLegendRow
-                key={cat}
-                dotColor={dotColor}
-                label={label}
-                count={minorIrrigationCategoryCounts[cat] ?? 0}
-                isSelected={isSelected}
-                onClick={() => setLegendFilterType((prev) => (prev === value ? null : value))}
-                title={
-                  isSelected
-                    ? t('map.legend.showAll', language)
-                    : `${t('map.legend.showOnly', language)} ${label}`
-                }
-              />
-            );
-          })}
-        </MapLegendPanel>
-      )}
+          <MapLegendPanel className="md:max-w-[260px]">
+            {minorIrrigationLegendTypes.map((cat) => {
+              const value = cat;
+              const isSelected = legendFilterType === value;
+              const label = translateIrrigationCategory(cat, language);
+              const dotColor = IRRIGATION_CATEGORY_MARKER_COLORS[cat] ?? '#059669';
+              return (
+                <MapLegendRow
+                  key={cat}
+                  dotColor={dotColor}
+                  label={label}
+                  count={minorIrrigationCategoryCounts[cat] ?? 0}
+                  isSelected={isSelected}
+                  onClick={() => setLegendFilterType((prev) => (prev === value ? null : value))}
+                  title={
+                    isSelected
+                      ? t('map.legend.showAll', language)
+                      : `${t('map.legend.showOnly', language)} ${label}`
+                  }
+                />
+              );
+            })}
+          </MapLegendPanel>
+        )}
       {selectedDepartmentCode?.toUpperCase() === 'REVENUE_LAND' && (
         <MapLegendPanel className="md:max-w-[220px]">
           <MapLegendRow
