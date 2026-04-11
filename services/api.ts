@@ -186,6 +186,16 @@ export const organizationsApi = {
       body: form,
     });
   },
+  /** Health facility portfolio image; stored under Departments/Health/{Org}/health-portfolio/{section}/ */
+  uploadHealthPortfolioAsset: (id: number, file: File, assetType: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('asset_type', assetType);
+    return apiFetch<{ url: string }>(`/api/v1/organizations/${id}/health-portfolio-asset`, {
+      method: 'POST',
+      body: form,
+    });
+  },
 };
 
 export const authApi = {

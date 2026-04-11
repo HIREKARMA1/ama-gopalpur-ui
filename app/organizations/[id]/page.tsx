@@ -22,17 +22,9 @@ import {
   EducationSchoolMaster,
   EducationInfrastructure,
   EducationGovtRegistry,
-  HealthFacilityMaster,
-  HealthInfrastructure as HealthInfra,
   ElectricityMaster,
 } from '../../../services/api';
 import { EDUCATION_TYPE_LABELS } from '../../../lib/mapConfig';
-import {
-  getEducationProfileLabel,
-  getHealthProfileLabel,
-  EDUCATION_PROFILE_KEYS,
-  HEALTH_PROFILE_KEYS,
-} from '../../../lib/profileLabels';
 import { Loader } from '../../../components/common/Loader';
 import { AwcPortfolioDashboard } from '../../../components/organization/AwcPortfolioDashboard';
 import { EducationPortfolioDashboard } from '../../../components/organization/EducationPortfolioDashboard';
@@ -155,18 +147,6 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [departments, setDepartments] = useState<Department[]>([]);
   const [deptCode, setDeptCode] = useState<string | null>(null);
   const [awcProfile, setAwcProfile] = useState<CenterProfile | null>(null);
-  const [healthMaster, setHealthMaster] = useState<HealthFacilityMaster | null>(null);
-  const [healthInfra, setHealthInfra] = useState<HealthInfra | null>(null);
-  const [healthStaff, setHealthStaff] = useState<Awaited<ReturnType<typeof healthApi.listStaff>>>([]);
-  const [healthEquipment, setHealthEquipment] = useState<Awaited<ReturnType<typeof healthApi.listEquipment>>>([]);
-  const [healthPatient, setHealthPatient] = useState<Awaited<ReturnType<typeof healthApi.listPatientServices>>>([]);
-  const [healthImmunisation, setHealthImmunisation] = useState<Awaited<ReturnType<typeof healthApi.listImmunisation>>>([]);
-  const [healthMedicines, setHealthMedicines] = useState<Awaited<ReturnType<typeof healthApi.listMedicinesStock>>>([]);
-  const [healthSchemes, setHealthSchemes] = useState<Awaited<ReturnType<typeof healthApi.listSchemes>>>([]);
-  const [healthMonthly, setHealthMonthly] = useState<Awaited<ReturnType<typeof healthApi.listMonthlyReport>>>([]);
-  const [healthDailyAttendance, setHealthDailyAttendance] = useState<Awaited<ReturnType<typeof healthApi.listDailyAttendance>>>([]);
-  const [healthDailyMedicineStock, setHealthDailyMedicineStock] = useState<Awaited<ReturnType<typeof healthApi.listDailyMedicineStock>>>([]);
-  const [healthDailyExtraData, setHealthDailyExtraData] = useState<Awaited<ReturnType<typeof healthApi.listDailyExtraData>>>([]);
   const [educationProfile, setEducationProfile] = useState<Record<string, unknown>>({});
   const [healthProfile, setHealthProfile] = useState<Record<string, unknown>>({});
   const [electricityProfile, setElectricityProfile] = useState<Record<string, unknown>>({});
@@ -217,50 +197,10 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
         } else if (code === 'HEALTH') {
-          const [
-            master,
-            infra,
-            staff,
-            equipment,
-            patient,
-            immunisation,
-            medicines,
-            schemes,
-            monthly,
-            profile,
-            dailyAtt,
-            dailyMed,
-            dailyExtra
-          ] = await Promise.all([
-            healthApi.getFacilityMaster(id),
-            healthApi.getInfrastructure(id),
-            healthApi.listStaff(id),
-            healthApi.listEquipment(id),
-            healthApi.listPatientServices(id),
-            healthApi.listImmunisation(id),
-            healthApi.listMedicinesStock(id),
-            healthApi.listSchemes(id),
-            healthApi.listMonthlyReport(id),
-            healthApi.getProfile(id),
-            healthApi.listDailyAttendance(id),
-            healthApi.listDailyMedicineStock(id),
-            healthApi.listDailyExtraData(id),
-          ]);
-          setHealthMaster(master ?? null);
-          setHealthInfra(infra ?? null);
-          setHealthStaff(staff ?? []);
-          setHealthEquipment(equipment ?? []);
-          setHealthPatient(patient ?? []);
-          setHealthImmunisation(immunisation ?? []);
-          setHealthMedicines(medicines ?? []);
-          setHealthSchemes(schemes ?? []);
-          setHealthMonthly(monthly ?? []);
+          const profile = await healthApi.getProfile(id);
           setHealthProfile(
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
-          setHealthDailyAttendance(dailyAtt ?? []);
-          setHealthDailyMedicineStock(dailyMed ?? []);
-          setHealthDailyExtraData(dailyExtra ?? []);
         } else if (code === 'ARCS') {
           const prof = await arcsApi.getProfile(id);
           setArcsProfile(prof && typeof prof === 'object' ? (prof as Record<string, unknown>) : {});
@@ -414,30 +354,13 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   }
 
   if (deptCode === 'HEALTH') {
-    const galleryImages = Array.isArray((healthProfile as any)?.gallery_images)
-      ? ((healthProfile as any).gallery_images as string[])
-      : [];
-    const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
     return (
       <div className="page-container">
         <Navbar />
         <HealthPortfolioDashboard
           org={org}
-          facilityMaster={healthMaster}
-          infra={healthInfra}
           healthProfile={healthProfile}
-          staff={healthStaff}
-          equipment={healthEquipment}
-          patientServices={healthPatient}
-          immunisation={healthImmunisation}
-          medicines={healthMedicines}
-          schemes={healthSchemes}
-          monthly={healthMonthly}
-          dailyAttendance={healthDailyAttendance}
-          dailyMedicineStock={healthDailyMedicineStock}
-          dailyExtraData={healthDailyExtraData}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
-          images={images}
         />
       </div>
     );
