@@ -10,6 +10,12 @@ export interface ImageSliderProps {
   altPrefix?: string;
   /** Auto-advance interval in ms; 0 to disable */
   autoAdvanceMs?: number;
+  /** Show previous/next arrow controls */
+  showArrows?: boolean;
+  /** Number of rotating placeholder slides when no images are available */
+  placeholderCount?: number;
+  /** Hide placeholder text overlay */
+  hidePlaceholderText?: boolean;
   className?: string;
 }
 
@@ -17,9 +23,13 @@ export function ImageSlider({
   images = [],
   altPrefix = 'Organization',
   autoAdvanceMs = 5000,
+  showArrows = true,
+  placeholderCount = 1,
+  hidePlaceholderText = false,
   className = '',
 }: ImageSliderProps) {
-  const count = Math.max(1, images.length || 1);
+  const safePlaceholderCount = Math.max(1, placeholderCount);
+  const count = images.length > 0 ? images.length : safePlaceholderCount;
   const [index, setIndex] = useState(0);
 
   const go = useCallback(
@@ -43,23 +53,41 @@ export function ImageSlider({
         className="relative w-full h-full min-h-[120px] bg-gradient-to-br from-orange-50 to-amber-50"
       >
         {showPlaceholder ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 text-orange-500">
-              <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
-              </svg>
-            </div>
-            <p className="text-sm font-medium text-slate-600">Photo gallery</p>
-            <p className="text-xs text-slate-500 max-w-xs">
-              Images can be added from the department admin panel and will appear here.
-            </p>
-          </div>
+          <>
+            {Array.from({ length: safePlaceholderCount }).map((_, i) => (
+              <div
+                key={`placeholder-${i}`}
+                className="absolute inset-0 transition-opacity duration-500"
+                style={{ opacity: i === index ? 1 : 0, zIndex: i === index ? 1 : 0 }}
+              >
+                <div className={`h-full w-full ${i % 3 === 0
+                    ? 'bg-gradient-to-br from-slate-300 via-slate-200 to-slate-300'
+                    : i % 3 === 1
+                      ? 'bg-gradient-to-br from-indigo-200 via-sky-100 to-slate-200'
+                      : 'bg-gradient-to-br from-emerald-200 via-cyan-100 to-slate-200'
+                  }`} />
+              </div>
+            ))}
+            {!hidePlaceholderText && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 text-orange-500">
+                  <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-slate-600">Photo gallery</p>
+                <p className="text-xs text-slate-500 max-w-xs">
+                  Images can be added from the department admin panel and will appear here.
+                </p>
+              </div>
+            )}
+          </>
         ) : (
           <>
             {images.map((src, i) => (
               <div
                 key={src}
-                className="absolute inset-0 transition-opacity duration-500"
+                className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
                 style={{ opacity: i === index ? 1 : 0, zIndex: i === index ? 1 : 0 }}
               >
                 <Image
@@ -77,7 +105,7 @@ export function ImageSlider({
       </div>
 
       {/* Arrows – show for real images or keep hidden for single placeholder */}
-      {images.length > 1 && (
+      {showArrows && images.length > 1 && (
         <>
           <button
             type="button"
@@ -104,13 +132,13 @@ export function ImageSlider({
 
       {/* Dots */}
       {count > 1 && (
-        <div className="absolute bottom-3 left-0 right-0 z-10 flex justify-center gap-1.5">
+        <div className="absolute bottom-3 left-0 right-0 z-30 flex justify-center gap-1.5">
           {Array.from({ length: count }).map((_, i) => (
             <button
               key={i}
               type="button"
               onClick={() => setIndex(i)}
-              className={`h-2 rounded-full transition-all ${i === index ? 'w-6 bg-white' : 'w-2 bg-white/60 hover:bg-white/80'
+              className={`h-2.5 rounded-full border border-white transition-all ${i === index ? 'w-6 bg-white shadow-sm' : 'w-2.5 bg-white hover:bg-white'
                 }`}
               aria-label={`Go to image ${i + 1}`}
             />
