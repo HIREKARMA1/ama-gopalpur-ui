@@ -354,7 +354,14 @@ export function PsAboutSection({ org, profile, language, sliderImages }: { org: 
   );
 }
 
-export function PsAdministrationSection({ profile }: { profile: Record<string, unknown> }) {
+export function PsAdministrationSection({
+  profile,
+  subDepartment,
+}: {
+  profile: Record<string, unknown>;
+  subDepartment?: string;
+}) {
+  const isHighSchool = (subDepartment || '').toUpperCase() === 'HS';
   const admins = [
     {
       role: 'DEO',
@@ -370,27 +377,31 @@ export function PsAdministrationSection({ profile }: { profile: Record<string, u
       contact: asString(profile.beo_contact) || '—',
       email: asString(profile.beo_email) || '—',
     },
-    {
-      role: 'BRCC',
-      image: asString(profile.brcc_image),
-      name: asString(profile.brcc_name) || EMPTY,
-      contact: asString(profile.brcc_contact) || '—',
-      email: asString(profile.brcc_email) || '—',
-    },
-    {
-      role: 'CRCC',
-      image: asString(profile.crc_image),
-      name: asString(profile.crc_name || profile.crcc_name) || EMPTY,
-      contact: asString(profile.crc_contact || profile.crcc_contact) || '—',
-      email: asString(profile.crc_email) || '—',
-    },
+    ...(isHighSchool
+      ? []
+      : [
+          {
+            role: 'BRCC',
+            image: asString(profile.brcc_image),
+            name: asString(profile.brcc_name) || EMPTY,
+            contact: asString(profile.brcc_contact) || '—',
+            email: asString(profile.brcc_email) || '—',
+          },
+          {
+            role: 'CRCC',
+            image: asString(profile.crc_image),
+            name: asString(profile.crc_name || profile.crcc_name) || EMPTY,
+            contact: asString(profile.crc_contact || profile.crcc_contact) || '—',
+            email: asString(profile.crc_email) || '—',
+          },
+        ]),
   ];
 
   return (
     <section className="py-2 md:py-4">
       <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Administration</h2>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className={`mt-6 grid gap-4 md:grid-cols-2 ${isHighSchool ? 'xl:grid-cols-2' : 'xl:grid-cols-4'}`}>
         {admins.map((admin) => (
           <article
             key={admin.role}

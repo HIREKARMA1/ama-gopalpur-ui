@@ -139,10 +139,12 @@ export function EducationPsPortfolioAdminForm({
   organizationId,
   org,
   setOrg,
+  subDepartment,
 }: {
   organizationId: number | null;
   org: PsPortfolioOrgFields;
   setOrg: React.Dispatch<React.SetStateAction<PsPortfolioOrgFields>>;
+  subDepartment?: string;
 }) {
   const patch = useCallback((p: Partial<PsPortfolioOrgFields>) => {
     setOrg((prev) => {
@@ -196,11 +198,12 @@ export function EducationPsPortfolioAdminForm({
   };
 
   const uploadHint = !organizationId;
+  const isHighSchool = (subDepartment || '').toUpperCase() === 'HS';
 
   return (
     <div className="md:col-span-2 space-y-2 rounded-md border border-border bg-background-muted/40 p-3">
       <div>
-        <h3 className="text-xs font-semibold text-text">PS portfolio website (section-wise)</h3>
+        <h3 className="text-xs font-semibold text-text">School portfolio website (section-wise)</h3>
         <p className="mt-1 text-[11px] leading-relaxed text-text-muted">
           Instructions: Fill all sections in English. Use file upload for images; keep each file under {MAX_UPLOAD_KB} KB (JPEG or PNG). For lists
           (facilities, faculty, gallery, etc.), add only the rows you need.
@@ -350,9 +353,12 @@ export function EducationPsPortfolioAdminForm({
         </div>
       </SectionBox>
 
-      <SectionBox id="ps-section-c" title="Section C — Administration (DEO, BEO, BRCC, CRCC)">
+      <SectionBox
+        id="ps-section-c"
+        title={isHighSchool ? 'Section C — Administration (DEO, BEO)' : 'Section C — Administration (DEO, BEO, BRCC, CRCC)'}
+      >
         <p className="mb-2 text-[10px] text-text-muted">Names can match the main school form; photos and emails are for the public website.</p>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className={`grid gap-3 md:grid-cols-2 ${isHighSchool ? 'xl:grid-cols-2' : 'xl:grid-cols-4'}`}>
           <div className="space-y-2 rounded border border-border bg-background p-2">
             <p className="text-[11px] font-semibold uppercase text-text">DEO</p>
             <ImgSlot label="Photo" organizationId={organizationId} assetType="ps_admin_deo" url={org.deo_image} onUrl={(u) => patch({ deo_image: u })} />
@@ -367,20 +373,24 @@ export function EducationPsPortfolioAdminForm({
             <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Contact" maxLength={20} value={org.beo_contact} onChange={(e) => patch({ beo_contact: e.target.value })} />
             <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Email" type="email" maxLength={254} value={org.beo_email} onChange={(e) => patch({ beo_email: e.target.value })} />
           </div>
-          <div className="space-y-2 rounded border border-border bg-background p-2">
-            <p className="text-[11px] font-semibold uppercase text-text">BRCC</p>
-            <ImgSlot label="Photo" organizationId={organizationId} assetType="ps_admin_brcc" url={org.brcc_image || ''} onUrl={(u) => patch({ brcc_image: u })} />
-            <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Name" maxLength={120} value={org.brcc_name} onChange={(e) => patch({ brcc_name: e.target.value })} />
-            <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Contact" maxLength={20} value={org.brcc_contact} onChange={(e) => patch({ brcc_contact: e.target.value })} />
-            <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Email" type="email" maxLength={254} value={org.brcc_email || ''} onChange={(e) => patch({ brcc_email: e.target.value })} />
-          </div>
-          <div className="space-y-2 rounded border border-border bg-background p-2">
-            <p className="text-[11px] font-semibold uppercase text-text">CRCC</p>
-            <ImgSlot label="Photo" organizationId={organizationId} assetType="ps_admin_crc" url={org.crc_image} onUrl={(u) => patch({ crc_image: u })} />
-            <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Name" maxLength={120} value={org.crc_name} onChange={(e) => patch({ crc_name: e.target.value })} />
-            <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Contact" maxLength={20} value={org.crc_contact} onChange={(e) => patch({ crc_contact: e.target.value })} />
-            <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Email" type="email" maxLength={254} value={org.crc_email} onChange={(e) => patch({ crc_email: e.target.value })} />
-          </div>
+          {!isHighSchool && (
+            <div className="space-y-2 rounded border border-border bg-background p-2">
+              <p className="text-[11px] font-semibold uppercase text-text">BRCC</p>
+              <ImgSlot label="Photo" organizationId={organizationId} assetType="ps_admin_brcc" url={org.brcc_image || ''} onUrl={(u) => patch({ brcc_image: u })} />
+              <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Name" maxLength={120} value={org.brcc_name} onChange={(e) => patch({ brcc_name: e.target.value })} />
+              <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Contact" maxLength={20} value={org.brcc_contact} onChange={(e) => patch({ brcc_contact: e.target.value })} />
+              <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Email" type="email" maxLength={254} value={org.brcc_email || ''} onChange={(e) => patch({ brcc_email: e.target.value })} />
+            </div>
+          )}
+          {!isHighSchool && (
+            <div className="space-y-2 rounded border border-border bg-background p-2">
+              <p className="text-[11px] font-semibold uppercase text-text">CRCC</p>
+              <ImgSlot label="Photo" organizationId={organizationId} assetType="ps_admin_crc" url={org.crc_image} onUrl={(u) => patch({ crc_image: u })} />
+              <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Name" maxLength={120} value={org.crc_name} onChange={(e) => patch({ crc_name: e.target.value })} />
+              <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Contact" maxLength={20} value={org.crc_contact} onChange={(e) => patch({ crc_contact: e.target.value })} />
+              <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Email" type="email" maxLength={254} value={org.crc_email} onChange={(e) => patch({ crc_email: e.target.value })} />
+            </div>
+          )}
         </div>
       </SectionBox>
 
@@ -476,6 +486,7 @@ export function EducationPsPortfolioAdminForm({
         </div>
       </SectionBox>
 
+      {!isHighSchool && (
       <SectionBox id="ps-section-e" title="Section E — Mid Day Meal (daily)">
         <p className="mb-2 text-[10px] text-text-muted">
           Add daily MDM register entry with date, register photo, and total present students (Girls + Boys).
@@ -558,6 +569,7 @@ export function EducationPsPortfolioAdminForm({
           </button>
         </div>
       </SectionBox>
+      )}
 
       <SectionBox id="ps-section-f" title="Section F — Parent Teacher Meeting">
         <p className="mb-2 text-[10px] text-text-muted">

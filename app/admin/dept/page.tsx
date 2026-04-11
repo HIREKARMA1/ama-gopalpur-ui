@@ -33,6 +33,7 @@ import {
   EducationPsPortfolioAdminForm,
   type PsPortfolioOrgFields,
 } from '../../../components/admin/EducationPsPortfolioAdminForm';
+import { ArcsPortfolioAdminForm } from '../../../components/admin/ArcsPortfolioAdminForm';
 
 /** ICDS minister CSV: all attributes for AWC profile (no SL NO; use system-generated org id). */
 const ICDS_CSV_HEADER =
@@ -2131,9 +2132,12 @@ export default function DepartmentAdminPage() {
                         mission_text_en: _s(newEducationOrg.mission_text_en), mission_text_od: _s(newEducationOrg.mission_text_od),
                         deo_image: _s(newEducationOrg.deo_image), deo_email: _s(newEducationOrg.deo_email),
                         beo_image: _s(newEducationOrg.beo_image), beo_email: _s(newEducationOrg.beo_email),
-                        brcc_image: _s(newEducationOrg.brcc_image), brcc_email: _s(newEducationOrg.brcc_email),
-                        crc_image: _s(newEducationOrg.crc_image), crc_name: _s(newEducationOrg.crc_name),
-                        crc_contact: _s(newEducationOrg.crc_contact), crc_email: _s(newEducationOrg.crc_email),
+                        brcc_image: educationSubDept === 'HS' ? undefined : _s(newEducationOrg.brcc_image),
+                        brcc_email: educationSubDept === 'HS' ? undefined : _s(newEducationOrg.brcc_email),
+                        crc_image: educationSubDept === 'HS' ? undefined : _s(newEducationOrg.crc_image),
+                        crc_name: educationSubDept === 'HS' ? undefined : _s(newEducationOrg.crc_name),
+                        crc_contact: educationSubDept === 'HS' ? undefined : _s(newEducationOrg.crc_contact),
+                        crc_email: educationSubDept === 'HS' ? undefined : _s(newEducationOrg.crc_email),
                         curriculum_text_en: _s(newEducationOrg.curriculum_text_en), curriculum_text_od: _s(newEducationOrg.curriculum_text_od),
                         academic_calendar_text_en: _s(newEducationOrg.academic_calendar_text_en), academic_calendar_text_od: _s(newEducationOrg.academic_calendar_text_od),
                         class_structure_text_en: _s(newEducationOrg.class_structure_text_en), class_structure_text_od: _s(newEducationOrg.class_structure_text_od),
@@ -2149,7 +2153,17 @@ export default function DepartmentAdminPage() {
                         activity_events: (() => { try { return newEducationOrg.activity_events_json.trim() ? JSON.parse(newEducationOrg.activity_events_json) : undefined; } catch { return undefined; } })(),
                         student_intake_rows: (() => { try { return newEducationOrg.student_intake_rows_json.trim() ? JSON.parse(newEducationOrg.student_intake_rows_json) : undefined; } catch { return undefined; } })(),
                         intake_cards: (() => { try { return newEducationOrg.intake_cards_json.trim() ? JSON.parse(newEducationOrg.intake_cards_json) : undefined; } catch { return undefined; } })(),
-                        mdm_daily_records: (() => { try { return newEducationOrg.mdm_daily_json.trim() ? JSON.parse(newEducationOrg.mdm_daily_json) : undefined; } catch { return undefined; } })(),
+                        ...(educationSubDept !== 'HS'
+                          ? {
+                              mdm_daily_records: (() => {
+                                try {
+                                  return newEducationOrg.mdm_daily_json.trim() ? JSON.parse(newEducationOrg.mdm_daily_json) : undefined;
+                                } catch {
+                                  return undefined;
+                                }
+                              })(),
+                            }
+                          : {}),
                         parent_teacher_meetings: (() => { try { return newEducationOrg.ptm_meetings_json.trim() ? JSON.parse(newEducationOrg.ptm_meetings_json) : undefined; } catch { return undefined; } })(),
                         photo_gallery: (() => { try { return newEducationOrg.photo_gallery_json.trim() ? JSON.parse(newEducationOrg.photo_gallery_json) : undefined; } catch { return undefined; } })(),
                         contact_address_en: _s(newEducationOrg.contact_address_en), contact_address_od: _s(newEducationOrg.contact_address_od),
@@ -2262,11 +2276,12 @@ export default function DepartmentAdminPage() {
                   <div className="space-y-1"><label className="block text-text">Drinking Water (Overhead Tap)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.drinking_water_overhead_tap} onChange={(e) => setNewEducationOrg((s) => ({ ...s, drinking_water_overhead_tap: e.target.value }))} /></div>
                   <div className="space-y-1"><label className="block text-text">Drinking Water (Aquaguard)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.drinking_water_aquaguard} onChange={(e) => setNewEducationOrg((s) => ({ ...s, drinking_water_aquaguard: e.target.value }))} /></div>
                   <div className="space-y-1 md:col-span-2"><label className="block text-text">Description</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.description} onChange={(e) => setNewEducationOrg((s) => ({ ...s, description: e.target.value }))} /></div>
-                  {educationSubDept === 'PS' ? (
+                  {['PS', 'UPS', 'HS'].includes(educationSubDept) ? (
                     <EducationPsPortfolioAdminForm
                       organizationId={editingEducationId}
                       org={newEducationOrg as PsPortfolioOrgFields}
                       setOrg={setNewEducationOrg as Dispatch<SetStateAction<PsPortfolioOrgFields>>}
+                      subDepartment={educationSubDept}
                     />
                   ) : (
                     <div className="md:col-span-2 mt-2 rounded-md border border-border bg-background-muted/40 p-3">
@@ -2795,9 +2810,9 @@ export default function DepartmentAdminPage() {
 
             {deptCode === 'ARCS' && (
               <section className="rounded-lg border border-border bg-background p-4">
-                <h2 className="text-sm font-semibold text-text">Manual ARCS (cooperative) entry</h2>
+                <h2 className="text-sm font-semibold text-text">ARCS portfolio entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
-                  Add or update one society manually. Fields match the downloadable CSV template.
+                  Add or update ARCS section-wise data (hero, about, incharge, membership, fertiliser, seed, mini bank loans).
                 </p>
                 <form
                   className="mt-3 grid gap-3 text-xs md:grid-cols-2"
@@ -2807,17 +2822,11 @@ export default function DepartmentAdminPage() {
                       setError('Department is not set for this admin user.');
                       return;
                     }
-                    const headers = splitHeader(ARCS_CSV_HEADER);
-                    const nameKey = snakeFromHeader('SOCIETY NAME');
-                    const latKey = snakeFromHeader('LATITUDE');
-                    const lngKey = snakeFromHeader('LONGITUDE');
-                    const jurKey = snakeFromHeader('JURISDICTION TYPE (RURAL/URBAN/MIXED)');
-                    const blockKey = snakeFromHeader('BLOCK/ULB');
-                    const name = (arcsFormValues[nameKey] || '').trim();
-                    const latStr = arcsFormValues[latKey] || '';
-                    const lngStr = arcsFormValues[lngKey] || '';
+                    const name = (arcsFormValues.arcs_name || arcsFormValues.society_name || '').trim();
+                    const latStr = arcsFormValues.latitude || '';
+                    const lngStr = arcsFormValues.longitude || '';
                     if (!name || !latStr.trim() || !lngStr.trim()) {
-                      setError('Society name, Latitude and Longitude are required.');
+                      setError('ARCS name, Latitude and Longitude are required.');
                       return;
                     }
                     setCreating(true);
@@ -2828,8 +2837,8 @@ export default function DepartmentAdminPage() {
                       if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
                         throw new Error('Latitude and Longitude must be valid numbers.');
                       }
-                      const block = arcsFormValues[blockKey] || '';
-                      const jurRaw = (arcsFormValues[jurKey] || '').trim();
+                      const block = arcsFormValues.block_ulb || '';
+                      const jurRaw = (arcsFormValues.jurisdiction_type || '').trim();
                       const ju = jurRaw.toUpperCase();
                       let jurisdictionBucket = '';
                       if (ju.includes('RURAL') && ju.includes('URBAN')) jurisdictionBucket = 'MIXED';
@@ -2840,7 +2849,7 @@ export default function DepartmentAdminPage() {
                         name,
                         latitude: lat,
                         longitude: lng,
-                        address: (arcsFormValues[snakeFromHeader('FULL ADDRESS')] || '').trim() || undefined,
+                        address: (arcsFormValues.full_address || '').trim() || undefined,
                         attributes: {
                           jurisdiction_type: jurisdictionBucket || null,
                           ulb_block: block.trim() || null,
@@ -2858,16 +2867,35 @@ export default function DepartmentAdminPage() {
                         });
                         setOrgs((prev) => [org, ...prev]);
                       }
-                      const profileData: Record<string, unknown> = {};
-                      headers.forEach((h) => {
-                        const key = snakeFromHeader(h);
-                        const val = arcsFormValues[key];
-                        if (val != null && String(val).trim() !== '') {
-                          profileData[key] = val;
-                        }
-                      });
-                      profileData[latKey] = lat;
-                      profileData[lngKey] = lng;
+                      const parseRows = (raw: string | undefined) => {
+                        if (!raw || !raw.trim()) return undefined;
+                        try { return JSON.parse(raw); } catch { return undefined; }
+                      };
+                      const profileData: Record<string, unknown> = {
+                        block_ulb: arcsFormValues.block_ulb || undefined,
+                        society_name: name,
+                        registration_number: arcsFormValues.registration_number || undefined,
+                        jurisdiction_type_rural_urban_mixed: arcsFormValues.jurisdiction_type || undefined,
+                        full_address: arcsFormValues.full_address || undefined,
+                        latitude: lat,
+                        longitude: lng,
+                        office_phone: arcsFormValues.office_phone || undefined,
+                        office_email: arcsFormValues.office_email || undefined,
+                        secretary_name: arcsFormValues.secretary_name || undefined,
+                        arcs_name: arcsFormValues.arcs_name || undefined,
+                        arcs_tagline: arcsFormValues.arcs_tagline || undefined,
+                        arcs_about: arcsFormValues.arcs_about || undefined,
+                        arcs_about_image: arcsFormValues.arcs_about_image || undefined,
+                        arcs_secretary_image: arcsFormValues.arcs_secretary_image || undefined,
+                        arcs_hero_1: arcsFormValues.arcs_hero_1 || undefined,
+                        arcs_hero_2: arcsFormValues.arcs_hero_2 || undefined,
+                        arcs_hero_3: arcsFormValues.arcs_hero_3 || undefined,
+                        arcs_incharge_cards: parseRows(arcsFormValues.arcs_incharge_cards_json),
+                        arcs_membership_rows: parseRows(arcsFormValues.arcs_membership_rows_json),
+                        arcs_fertiliser_cards: parseRows(arcsFormValues.arcs_fertiliser_cards_json),
+                        arcs_seed_cards: parseRows(arcsFormValues.arcs_seed_cards_json),
+                        arcs_loan_cards: parseRows(arcsFormValues.arcs_loan_cards_json),
+                      };
                       await arcsApi.putProfile(org.id, profileData);
                       if (arcsImageFile) {
                         const compressed = await compressImage(arcsImageFile, { maxSizeMB: 0.5 });
@@ -2884,21 +2912,49 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  {splitHeader(ARCS_CSV_HEADER).map((header) => {
-                    const key = snakeFromHeader(header);
-                    return (
-                      <div key={key} className="space-y-1">
-                        <label className="block text-text">{header}</label>
-                        <input
-                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
-                          value={arcsFormValues[key] ?? ''}
-                          onChange={(e) =>
-                            setArcsFormValues((prev) => ({ ...prev, [key]: e.target.value }))
-                          }
-                        />
-                      </div>
-                    );
-                  })}
+                  <div className="space-y-1">
+                    <label className="block text-text">ARCS name</label>
+                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.arcs_name ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, arcs_name: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Registration number</label>
+                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.registration_number ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, registration_number: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Block/ULB</label>
+                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.block_ulb ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, block_ulb: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Jurisdiction</label>
+                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.jurisdiction_type ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, jurisdiction_type: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Latitude</label>
+                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.latitude ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, latitude: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Longitude</label>
+                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.longitude ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, longitude: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="block text-text">Full address</label>
+                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.full_address ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, full_address: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Office phone</label>
+                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.office_phone ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, office_phone: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Office email</label>
+                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.office_email ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, office_email: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="block text-text">Secretary name</label>
+                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.secretary_name ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, secretary_name: e.target.value }))} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <ArcsPortfolioAdminForm organizationId={editingArcsId} form={arcsFormValues} setForm={setArcsFormValues} />
+                  </div>
                   <div className="md:col-span-2 space-y-1">
                     <label className="block text-text font-medium">Profile image (optional)</label>
                     <input
@@ -3870,16 +3926,28 @@ export default function DepartmentAdminPage() {
                                     const p = (arcsProfiles[o.id] || await arcsApi.getProfile(o.id)) as Record<string, unknown>;
                                     const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
                                     const vals: Record<string, string> = {};
-                                    splitHeader(ARCS_CSV_HEADER).forEach((h) => {
-                                      const k = snakeFromHeader(h);
-                                      vals[k] = v(p[k]);
-                                    });
-                                    const nameKey = snakeFromHeader('SOCIETY NAME');
-                                    const latKey = snakeFromHeader('LATITUDE');
-                                    const lngKey = snakeFromHeader('LONGITUDE');
-                                    if (!vals[nameKey]) vals[nameKey] = o.name;
-                                    if (!vals[latKey]) vals[latKey] = o.latitude != null ? String(o.latitude) : '';
-                                    if (!vals[lngKey]) vals[lngKey] = o.longitude != null ? String(o.longitude) : '';
+                                    vals.arcs_name = v(p.arcs_name ?? p.society_name ?? o.name);
+                                    vals.registration_number = v(p.registration_number);
+                                    vals.block_ulb = v(p.block_ulb);
+                                    vals.jurisdiction_type = v(p.jurisdiction_type_rural_urban_mixed ?? p.jurisdiction_type);
+                                    vals.latitude = v(p.latitude ?? o.latitude);
+                                    vals.longitude = v(p.longitude ?? o.longitude);
+                                    vals.full_address = v(p.full_address ?? o.address);
+                                    vals.office_phone = v(p.office_phone);
+                                    vals.office_email = v(p.office_email);
+                                    vals.secretary_name = v(p.secretary_name);
+                                    vals.arcs_tagline = v(p.arcs_tagline);
+                                    vals.arcs_about = v(p.arcs_about);
+                                    vals.arcs_about_image = v(p.arcs_about_image);
+                                    vals.arcs_secretary_image = v(p.arcs_secretary_image);
+                                    vals.arcs_hero_1 = v(p.arcs_hero_1);
+                                    vals.arcs_hero_2 = v(p.arcs_hero_2);
+                                    vals.arcs_hero_3 = v(p.arcs_hero_3);
+                                    vals.arcs_incharge_cards_json = Array.isArray(p.arcs_incharge_cards) ? JSON.stringify(p.arcs_incharge_cards) : '';
+                                    vals.arcs_membership_rows_json = Array.isArray(p.arcs_membership_rows) ? JSON.stringify(p.arcs_membership_rows) : '';
+                                    vals.arcs_fertiliser_cards_json = Array.isArray(p.arcs_fertiliser_cards) ? JSON.stringify(p.arcs_fertiliser_cards) : '';
+                                    vals.arcs_seed_cards_json = Array.isArray(p.arcs_seed_cards) ? JSON.stringify(p.arcs_seed_cards) : '';
+                                    vals.arcs_loan_cards_json = Array.isArray(p.arcs_loan_cards) ? JSON.stringify(p.arcs_loan_cards) : '';
                                     setArcsFormValues(vals);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}

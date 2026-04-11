@@ -39,7 +39,7 @@ import { EducationPortfolioDashboard } from '../../../components/organization/Ed
 import { EducationPsPortfolioWebsite } from '../../../components/organization/EducationPsPortfolioWebsite';
 import { HealthPortfolioDashboard } from '../../../components/organization/HealthPortfolioDashboard';
 import { ElectricityPortfolioDashboard } from '../../../components/organization/ElectricityPortfolioDashboard';
-import { ArcsPortfolioDashboard } from '../../../components/organization/ArcsPortfolioDashboard';
+import { ArcsPortfolioWebsite } from '../../../components/organization/ArcsPortfolioWebsite';
 import { WaterPortfolioDashboard } from '../../../components/organization/WaterPortfolioDashboard';
 import { RevenueLandPortfolioDashboard } from '../../../components/organization/RevenueLandPortfolioDashboard';
 import { AgriculturePortfolioDashboard } from '../../../components/organization/AgriculturePortfolioDashboard';
@@ -387,7 +387,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
       ? ((educationProfile as any).gallery_images as string[])
       : [];
     const images = galleryImages.length > 0 ? galleryImages : org.cover_image_key ? [org.cover_image_key] : [];
-    if ((org.sub_department || '').toUpperCase() === 'PS') {
+    if (['PS', 'UPS', 'HS'].includes((org.sub_department || '').toUpperCase())) {
       const lang = String((educationProfile as Record<string, unknown>)?.language || 'en').toLowerCase() === 'od' ? 'od' : 'en';
       return (
         <div className="page-container">
@@ -538,10 +538,9 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
     return (
       <div className="page-container">
         <Navbar />
-        <ArcsPortfolioDashboard
+        <ArcsPortfolioWebsite
           org={org}
           profile={arcsProfile}
-          departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
         />
       </div>

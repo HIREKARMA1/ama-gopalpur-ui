@@ -176,6 +176,16 @@ export const organizationsApi = {
       body: form,
     });
   },
+  /** ARCS portfolio image; stored under Departments/Arcs/{Org}/arcs-portfolio/{section}/ */
+  uploadArcsPortfolioAsset: (id: number, file: File, assetType: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('asset_type', assetType);
+    return apiFetch<{ url: string }>(`/api/v1/organizations/${id}/arcs-portfolio-asset`, {
+      method: 'POST',
+      body: form,
+    });
+  },
 };
 
 export const authApi = {
