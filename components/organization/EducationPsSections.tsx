@@ -5,7 +5,13 @@ import { Clock, GraduationCap, Images, Mail, MapPin, Phone, School, Star, Users,
 import { Organization } from '../../services/api';
 import { ImageSlider } from './ImageSlider';
 
-export type Faculty = { name?: string; subject?: string; qualification?: string; photo?: string };
+export type Faculty = {
+  name?: string;
+  subject?: string;
+  qualification?: string;
+  photo?: string;
+  designation?: string;
+};
 export type GalleryItem = { image?: string; category?: string; title?: string; description?: string };
 export type IntakeRow = { class_name?: string; intake?: string | number };
 export type IntakeCard = { class_name?: string; strength?: string | number; registered_this_year?: string | number; subjects?: string; image?: string };
@@ -123,7 +129,7 @@ export function PsHeroSection({ org, profile, language, sliderImages }: { org: O
       <ImageSlider
         images={heroSlides}
         altPrefix={asString(org.name) || 'School'}
-        className="h-[450px] sm:h-[550px]"
+        className="min-h-[560px] h-[min(72vh,680px)] sm:min-h-0 sm:h-[580px] lg:h-[600px]"
         showArrows={false}
         autoAdvanceMs={4500}
         placeholderCount={3}
@@ -131,7 +137,7 @@ export function PsHeroSection({ org, profile, language, sliderImages }: { org: O
       />
       {/* Fixed readability layer: keeps text clear while background slides */}
       <div className="absolute inset-0 z-10 bg-gradient-to-tr from-slate-700/55 via-slate-500/35 to-slate-400/25" />
-      <div className="absolute inset-0 z-20 flex items-center">
+      <div className="absolute inset-0 z-20 flex items-start justify-center pt-16 sm:items-center sm:justify-start sm:pt-0">
         <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-extrabold tracking-tight text-white drop-shadow-md sm:text-5xl">
             {getText(profile, 'school_name', language) || org.name || EMPTY}
@@ -151,6 +157,9 @@ export function PsAboutSection({
   language,
   sliderImages,
   aboutLeaderRole = 'headmaster',
+  hideVisionMission = false,
+  leaderLabels,
+  hideExtendedLeaderBio = false,
 }: {
   org: Organization;
   profile: Record<string, unknown>;
@@ -158,6 +167,12 @@ export function PsAboutSection({
   sliderImages: string[];
   /** ARCS public site uses secretary labels while keeping the same layout as PS. */
   aboutLeaderRole?: 'headmaster' | 'secretary';
+  /** When true, Vision / Mission blocks are omitted (e.g. Health portfolio). */
+  hideVisionMission?: boolean;
+  /** Override leader role title and message section heading (e.g. Institution Head). */
+  leaderLabels?: { title: string; messageHeading: string };
+  /** When true, Past/Current experience block in the leader modal is omitted. */
+  hideExtendedLeaderBio?: boolean;
 }) {
   const [isHeadmasterModalOpen, setIsHeadmasterModalOpen] = useState(false);
   const [isHeadmasterModalClosing, setIsHeadmasterModalClosing] = useState(false);
@@ -166,15 +181,17 @@ export function PsAboutSection({
   const headmasterMessage = getText(profile, 'headmaster_message', language) || EMPTY;
   const headmasterName = asString(profile.name_of_hm) || EMPTY;
   const headmasterTitle =
-    aboutLeaderRole === 'secretary' ? (language === 'od' ? 'ସଚିବ' : 'Secretary') : language === 'od' ? 'ପ୍ରଧାନଶିକ୍ଷକ' : 'Headmaster';
+    leaderLabels?.title ??
+    (aboutLeaderRole === 'secretary' ? (language === 'od' ? 'ସଚିବ' : 'Secretary') : language === 'od' ? 'ପ୍ରଧାନଶିକ୍ଷକ' : 'Headmaster');
   const leaderMessageHeading =
-    aboutLeaderRole === 'secretary'
+    leaderLabels?.messageHeading ??
+    (aboutLeaderRole === 'secretary'
       ? language === 'od'
         ? 'ସଚିବଙ୍କ ବାର୍ତ୍ତା'
         : "Secretary's message"
       : language === 'od'
         ? 'ପ୍ରଧାନଶିକ୍ଷକଙ୍କ ବାର୍ତ୍ତା'
-        : "Headmaster's Message";
+        : "Headmaster's Message");
   const qualification = asString(profile.hm_qualification) || '—';
   const experience = asString(profile.hm_experience) || '—';
   const pastExperience = getText(profile, 'hm_past_experience', language) || asString(profile.hm_past_experience_en) || EMPTY;
@@ -265,16 +282,18 @@ export function PsAboutSection({
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="border-l-2 border-slate-300 pl-4">
-              <h4 className="text-xl font-extrabold tracking-tight text-slate-900">Vision</h4>
-              <p className="mt-2 text-sm leading-relaxed text-slate-700 sm:text-base">{visionText}</p>
+          {!hideVisionMission ? (
+            <div className="space-y-4">
+              <div className="border-l-2 border-slate-300 pl-4">
+                <h4 className="text-xl font-extrabold tracking-tight text-slate-900">Vision</h4>
+                <p className="mt-2 text-sm leading-relaxed text-slate-700 sm:text-base">{visionText}</p>
+              </div>
+              <div className="border-l-2 border-slate-300 pl-4">
+                <h4 className="text-xl font-extrabold tracking-tight text-slate-900">Mission</h4>
+                <p className="mt-2 text-sm leading-relaxed text-slate-700 sm:text-base">{missionText}</p>
+              </div>
             </div>
-            <div className="border-l-2 border-slate-300 pl-4">
-              <h4 className="text-xl font-extrabold tracking-tight text-slate-900">Mission</h4>
-              <p className="mt-2 text-sm leading-relaxed text-slate-700 sm:text-base">{missionText}</p>
-            </div>
-          </div>
+          ) : null}
         </div>
       </div>
 
@@ -326,7 +345,7 @@ export function PsAboutSection({
               <p className="mt-1 break-all text-xs text-slate-500">
                 {language === 'od' ? 'ଇମେଲ' : 'Email'}: {headmasterEmail}
               </p>
-              {aboutLeaderRole !== 'secretary' ? (
+              {aboutLeaderRole !== 'secretary' && !hideExtendedLeaderBio ? (
                 <div className="mt-3 space-y-2 border-t border-slate-200 pt-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Past Experience</p>
                   <p className="text-xs leading-relaxed text-slate-700">{pastExperience}</p>
@@ -1284,7 +1303,19 @@ function todayKeyLocal(): string {
   return `${y}-${m}-${d}`;
 }
 
-export function PsFacultySection({ faculty, profile }: { faculty: Faculty[]; profile: Record<string, unknown> }) {
+export function PsFacultySection({
+  faculty,
+  profile,
+  sectionTitle = 'Faculty',
+  subjectLabel = 'Subject',
+  showAttendance = true,
+}: {
+  faculty: Faculty[];
+  profile: Record<string, unknown>;
+  sectionTitle?: string;
+  subjectLabel?: string;
+  showAttendance?: boolean;
+}) {
   const list = (faculty.length ? faculty : Array.from({ length: EMPTY_FACULTY_SLOTS }, () => ({} as Faculty))).slice(0, 8);
   const desktopPageSize = 4;
   const desktopTotalPages = Math.max(1, Math.ceil(list.length / desktopPageSize));
@@ -1326,7 +1357,7 @@ export function PsFacultySection({ faculty, profile }: { faculty: Faculty[]; pro
       <div className="flex items-end justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Faculty</h2>
+            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{sectionTitle}</h2>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -1364,8 +1395,13 @@ export function PsFacultySection({ faculty, profile }: { faculty: Faculty[]; pro
               </button>
               <div className="p-4">
                 <h3 className="text-lg font-bold tracking-tight text-slate-900">{displayText(f.name)}</h3>
-                <p className="mt-2 text-sm text-slate-700"><span className="font-semibold">Subject:</span> {displayText(f.subject)}</p>
+                <p className="mt-2 text-sm text-slate-700">
+                  <span className="font-semibold">{subjectLabel}:</span> {displayText(f.subject)}
+                </p>
                 <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Qualification:</span> {displayText(f.qualification)}</p>
+                {asString(f.designation) ? (
+                  <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Designation:</span> {displayText(f.designation)}</p>
+                ) : null}
               </div>
             </article>
           ))}
@@ -1404,8 +1440,13 @@ export function PsFacultySection({ faculty, profile }: { faculty: Faculty[]; pro
                       </button>
                       <div className="p-4">
                         <h3 className="text-lg font-bold tracking-tight text-slate-900">{displayText(f.name)}</h3>
-                        <p className="mt-2 text-sm text-slate-700"><span className="font-semibold">Subject:</span> {displayText(f.subject)}</p>
+                        <p className="mt-2 text-sm text-slate-700">
+                          <span className="font-semibold">{subjectLabel}:</span> {displayText(f.subject)}
+                        </p>
                         <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Qualification:</span> {displayText(f.qualification)}</p>
+                        {asString(f.designation) ? (
+                          <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Designation:</span> {displayText(f.designation)}</p>
+                        ) : null}
                       </div>
                     </article>
                   ))}
@@ -1446,11 +1487,18 @@ export function PsFacultySection({ faculty, profile }: { faculty: Faculty[]; pro
             </div>
             <div className="border-t border-slate-200 p-4">
               <h3 className="text-xl font-bold tracking-tight text-slate-900">{displayText(previewFaculty.faculty.name)}</h3>
-              <p className="mt-2 text-sm text-slate-700"><span className="font-semibold">Subject:</span> {displayText(previewFaculty.faculty.subject)}</p>
-              <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Qualification:</span> {displayText(previewFaculty.faculty.qualification)}</p>
-              <p className="mt-3 inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                Attendance ({today}): {isPresentToday(previewFaculty.index) ? 'Present' : 'Absent'}
+              <p className="mt-2 text-sm text-slate-700">
+                <span className="font-semibold">{subjectLabel}:</span> {displayText(previewFaculty.faculty.subject)}
               </p>
+              <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Qualification:</span> {displayText(previewFaculty.faculty.qualification)}</p>
+              {asString(previewFaculty.faculty.designation) ? (
+                <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Designation:</span> {displayText(previewFaculty.faculty.designation)}</p>
+              ) : null}
+              {showAttendance ? (
+                <p className="mt-3 inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                  Attendance ({today}): {isPresentToday(previewFaculty.index) ? 'Present' : 'Absent'}
+                </p>
+              ) : null}
             </div>
           </div>
         </div>
@@ -1866,6 +1914,8 @@ export function PsIntakeSection({ intakeRows, profile }: { intakeRows: IntakeRow
 export function PsContactSection({ org, profile, language }: { org: Organization; profile: Record<string, unknown>; language: Lang }) {
   const address = getText(profile, 'contact_address', language) || asString(profile.contact_address_od) || org.address || EMPTY;
   const phone = asString(profile.contact_phone) || asString(profile.contact_of_hm) || EMPTY;
+  const emergencyPhone =
+    asString(profile.health_emergency_phone) || asString(profile.emergency_phone) || '';
   const email = asString(profile.contact_email) || EMPTY;
   const officeHours = getText(profile, 'office_hours', language) || EMPTY;
   const hasMap = org.latitude != null && org.longitude != null;
@@ -1895,12 +1945,22 @@ export function PsContactSection({ org, profile, language }: { org: Organization
             <article className="border-b border-slate-200 pb-5">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <Phone className="h-4 w-4 text-indigo-600" />
-                Phone
+                {emergencyPhone ? 'Helpdesk phone' : 'Phone'}
               </div>
               <p className="mt-2 text-base text-slate-800">{phone}</p>
             </article>
 
-            <article className="border-b border-slate-200 pb-5">
+            {emergencyPhone ? (
+              <article className="border-b border-slate-200 pb-5">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <Phone className="h-4 w-4 text-rose-600" />
+                  Emergency phone
+                </div>
+                <p className="mt-2 text-base text-slate-800">{emergencyPhone}</p>
+              </article>
+            ) : null}
+
+            <article className={`border-b border-slate-200 pb-5 ${emergencyPhone ? 'sm:col-span-2' : ''}`}>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <Mail className="h-4 w-4 text-indigo-600" />
                 Email

@@ -41,8 +41,8 @@ export const ARCS_FIELD_LIMITS = {
   jurisdiction_type: 80,
 } as const;
 
-export function CharCount({ value, max }: { value: string; max: number }) {
-  const n = value.length;
+export function CharCount({ value, max }: { value: string | undefined | null; max: number }) {
+  const n = (value ?? '').length;
   return <span className={`tabular-nums ${n > max ? 'text-red-600' : 'text-text-muted'}`}>{n}/{max}</span>;
 }
 

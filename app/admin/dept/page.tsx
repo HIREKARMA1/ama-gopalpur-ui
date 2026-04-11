@@ -34,6 +34,10 @@ import {
   type PsPortfolioOrgFields,
 } from '../../../components/admin/EducationPsPortfolioAdminForm';
 import { ArcsPortfolioAdminForm, ARCS_FIELD_LIMITS, CharCount } from '../../../components/admin/ArcsPortfolioAdminForm';
+import {
+  HealthPortfolioAdminForm,
+  normalizeHealthFacilityCardsForSave,
+} from '../../../components/admin/HealthPortfolioAdminForm';
 
 /** ICDS minister CSV: all attributes for AWC profile (no SL NO; use system-generated org id). */
 const ICDS_CSV_HEADER =
@@ -230,6 +234,41 @@ export default function DepartmentAdminPage() {
     no_of_bed: '', no_of_icu: '', x_ray_availabilaty: '', ct_scan_availability: '', availability_of_pathology_testing: '', description: '',
   });
   const [newHealthOrg, setNewHealthOrg] = useState(emptyHealthOrg());
+  const emptyHealthPortfolioForm = () => ({
+    health_display_name: '',
+    health_hero_tagline: '',
+    health_tagline: '',
+    health_hero_1: '',
+    health_hero_2: '',
+    health_hero_3: '',
+    health_about: '',
+    health_campus_image: '',
+    health_established_year: '',
+    health_facility_type: '',
+    health_location_line: '',
+    health_inst_head_message: '',
+    health_inst_head_name: '',
+    health_inst_head_photo: '',
+    health_inst_head_qualification: '',
+    health_inst_head_experience: '',
+    health_inst_head_contact: '',
+    health_inst_head_email: '',
+    health_key_admin_cards_json: '[]',
+    health_health_facility_cards_json: '[]',
+    health_doctor_cards_json: '[]',
+    health_doctor_attendance_json: '{}',
+    health_ts_nts_staff_rows_json: '[]',
+    health_clinical_staff_rows_json: '[]',
+    health_equipment_rows_json: '[]',
+    health_photo_gallery_json: '[]',
+    health_full_address: '',
+    health_helpdesk_phone: '',
+    health_emergency_phone: '',
+    health_public_email: '',
+    health_office_hours: '',
+    health_contact_email: '',
+  });
+  const [healthPortfolioForm, setHealthPortfolioForm] = useState<Record<string, string>>(emptyHealthPortfolioForm());
 
   const [editingEducationId, setEditingEducationId] = useState<number | null>(null);
   const emptyEducationOrg = () => ({
@@ -2465,10 +2504,13 @@ export default function DepartmentAdminPage() {
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual Health facility entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
-                  Add a single Health facility manually. Fields mirror the CSV columns.
+                  All fields are in the section tabs below: identity and cover image in <span className="font-medium text-text">Hero</span>, location
+                  lines in <span className="font-medium text-text">About</span>, map coordinates in <span className="font-medium text-text">Contact</span>, plus
+                  admins, facilities, doctors, staff, highlights, and gallery. Use <span className="font-medium text-text">Update facility</span>{' '}
+                  once when done. Institution head in About merges with profile records on save.
                 </p>
                 <form
-                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  className="mt-3 space-y-4 text-xs"
                   onSubmit={async (e) => {
                     e.preventDefault();
                     if (!me?.department_id) {
@@ -2513,6 +2555,34 @@ export default function DepartmentAdminPage() {
                         updated = created;
                         setOrgs((prev) => [created, ...prev]);
                       }
+                      const parseHealthGalleryRows = (raw: string | undefined) => {
+                        if (!raw?.trim()) return [];
+                        try {
+                          const parsed = JSON.parse(raw) as unknown;
+                          return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : [];
+                        } catch {
+                          return [];
+                        }
+                      };
+                      const parseHealthFacilityJson = (raw: string | undefined): Record<string, unknown>[] => {
+                        if (!raw?.trim()) return [];
+                        try {
+                          const parsed = JSON.parse(raw) as unknown;
+                          return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : [];
+                        } catch {
+                          return [];
+                        }
+                      };
+                      let healthDoctorAttendance: Record<string, unknown> = {};
+                      try {
+                        const raw = (healthPortfolioForm.health_doctor_attendance_json || '').trim();
+                        if (raw) {
+                          const p = JSON.parse(raw) as unknown;
+                          if (p && typeof p === 'object' && !Array.isArray(p)) healthDoctorAttendance = p as Record<string, unknown>;
+                        }
+                      } catch {
+                        healthDoctorAttendance = {};
+                      }
                       const profileData: Record<string, unknown> = {
                         block_ulb: _s(newHealthOrg.block_ulb),
                         gp_ward: _s(newHealthOrg.gp_ward),
@@ -2522,8 +2592,12 @@ export default function DepartmentAdminPage() {
                         name: newHealthOrg.name.trim(),
                         institution_id: _s(newHealthOrg.institution_id),
                         category: _s(newHealthOrg.category),
-                        inst_head_name: _s(newHealthOrg.inst_head_name),
-                        inst_head_contact: _s(newHealthOrg.inst_head_contact),
+                        inst_head_name: _s(
+                          healthPortfolioForm.health_inst_head_name || newHealthOrg.inst_head_name || '',
+                        ),
+                        inst_head_contact: _s(
+                          healthPortfolioForm.health_inst_head_contact || newHealthOrg.inst_head_contact || '',
+                        ),
                         no_of_ts: _n(newHealthOrg.no_of_ts),
                         no_of_nts: _n(newHealthOrg.no_of_nts),
                         no_of_mo: _n(newHealthOrg.no_of_mo),
@@ -2540,6 +2614,46 @@ export default function DepartmentAdminPage() {
                         ct_scan_availability: _s(newHealthOrg.ct_scan_availability),
                         availability_of_pathology_testing: _s(newHealthOrg.availability_of_pathology_testing),
                         description: _s(newHealthOrg.description),
+                        health_display_name: _s(healthPortfolioForm.health_display_name || ''),
+                        health_hero_tagline: _s(healthPortfolioForm.health_hero_tagline || ''),
+                        health_tagline: _s(healthPortfolioForm.health_tagline || ''),
+                        health_hero_1: _s(healthPortfolioForm.health_hero_1 || ''),
+                        health_hero_2: _s(healthPortfolioForm.health_hero_2 || ''),
+                        health_hero_3: _s(healthPortfolioForm.health_hero_3 || ''),
+                        health_about: _s(healthPortfolioForm.health_about || ''),
+                        health_campus_image: _s(healthPortfolioForm.health_campus_image || ''),
+                        health_established_year: _s(healthPortfolioForm.health_established_year || ''),
+                        health_facility_type: _s(healthPortfolioForm.health_facility_type || ''),
+                        health_location_line: _s(healthPortfolioForm.health_location_line || ''),
+                        health_inst_head_message: _s(healthPortfolioForm.health_inst_head_message || ''),
+                        health_inst_head_name: _s(
+                          healthPortfolioForm.health_inst_head_name || newHealthOrg.inst_head_name || '',
+                        ),
+                        health_inst_head_photo: _s(healthPortfolioForm.health_inst_head_photo || ''),
+                        health_inst_head_qualification: _s(healthPortfolioForm.health_inst_head_qualification || ''),
+                        health_inst_head_experience: _s(healthPortfolioForm.health_inst_head_experience || ''),
+                        health_inst_head_contact: _s(
+                          healthPortfolioForm.health_inst_head_contact || newHealthOrg.inst_head_contact || '',
+                        ),
+                        health_inst_head_email: _s(healthPortfolioForm.health_inst_head_email || ''),
+                        health_key_admin_cards: parseHealthGalleryRows(healthPortfolioForm.health_key_admin_cards_json),
+                        health_health_facility_cards: normalizeHealthFacilityCardsForSave(
+                          parseHealthFacilityJson(healthPortfolioForm.health_health_facility_cards_json),
+                        ),
+                        health_doctor_cards: parseHealthGalleryRows(healthPortfolioForm.health_doctor_cards_json),
+                        health_doctor_attendance: healthDoctorAttendance,
+                        health_ts_nts_staff_rows: parseHealthGalleryRows(healthPortfolioForm.health_ts_nts_staff_rows_json),
+                        health_clinical_staff_rows: parseHealthGalleryRows(healthPortfolioForm.health_clinical_staff_rows_json),
+                        health_equipment_rows: parseHealthGalleryRows(healthPortfolioForm.health_equipment_rows_json),
+                        health_photo_gallery: parseHealthGalleryRows(healthPortfolioForm.health_photo_gallery_json),
+                        health_full_address: _s(healthPortfolioForm.health_full_address || ''),
+                        health_helpdesk_phone: _s(healthPortfolioForm.health_helpdesk_phone || ''),
+                        health_emergency_phone: _s(healthPortfolioForm.health_emergency_phone || ''),
+                        health_public_email: _s(healthPortfolioForm.health_public_email || ''),
+                        health_office_hours: _s(healthPortfolioForm.health_office_hours || ''),
+                        health_contact_email: _s(
+                          healthPortfolioForm.health_public_email || healthPortfolioForm.health_contact_email || '',
+                        ),
                       };
                       await healthApi.putProfile(updated.id, profileData);
                       if (healthImageFile) {
@@ -2548,6 +2662,7 @@ export default function DepartmentAdminPage() {
                         setHealthImageFile(null);
                       }
                       setNewHealthOrg(emptyHealthOrg());
+                      setHealthPortfolioForm(emptyHealthPortfolioForm());
                       setEditingHealthId(null);
                     } catch (err: any) {
                       setError(err.message || 'Failed to save facility');
@@ -2556,124 +2671,57 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  <div className="space-y-1">
-                    <label className="block text-text">Block / ULB</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.block_ulb} onChange={(e) => setNewHealthOrg((s) => ({ ...s, block_ulb: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">GP / Ward</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.gp_ward} onChange={(e) => setNewHealthOrg((s) => ({ ...s, gp_ward: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Village</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.village} onChange={(e) => setNewHealthOrg((s) => ({ ...s, village: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Name</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.name} onChange={(e) => setNewHealthOrg((s) => ({ ...s, name: e.target.value }))} required />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Institution ID</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.institution_id} onChange={(e) => setNewHealthOrg((s) => ({ ...s, institution_id: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Institution ID</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.institution_id} onChange={(e) => setNewHealthOrg((s) => ({ ...s, institution_id: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Latitude</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.latitude} onChange={(e) => setNewHealthOrg((s) => ({ ...s, latitude: e.target.value }))} required />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Longitude</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.longitude} onChange={(e) => setNewHealthOrg((s) => ({ ...s, longitude: e.target.value }))} required />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Category</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.category} onChange={(e) => setNewHealthOrg((s) => ({ ...s, category: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Inst Head Name</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.inst_head_name} onChange={(e) => setNewHealthOrg((s) => ({ ...s, inst_head_name: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Inst Head Contact</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.inst_head_contact} onChange={(e) => setNewHealthOrg((s) => ({ ...s, inst_head_contact: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">No of TS</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.no_of_ts} onChange={(e) => setNewHealthOrg((s) => ({ ...s, no_of_ts: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">No of NTS</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.no_of_nts} onChange={(e) => setNewHealthOrg((s) => ({ ...s, no_of_nts: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">No of MO</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.no_of_mo} onChange={(e) => setNewHealthOrg((s) => ({ ...s, no_of_mo: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">No of Pharmacist</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.no_of_pharmacist} onChange={(e) => setNewHealthOrg((s) => ({ ...s, no_of_pharmacist: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">No of ANM</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.no_of_anm} onChange={(e) => setNewHealthOrg((s) => ({ ...s, no_of_anm: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">No of Health Worker</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.no_of_health_worker} onChange={(e) => setNewHealthOrg((s) => ({ ...s, no_of_health_worker: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">No of Pathology</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.no_of_pathology} onChange={(e) => setNewHealthOrg((s) => ({ ...s, no_of_pathology: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">No of Clerk</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.no_of_clerk} onChange={(e) => setNewHealthOrg((s) => ({ ...s, no_of_clerk: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">No of Sweeper</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.no_of_sweeper} onChange={(e) => setNewHealthOrg((s) => ({ ...s, no_of_sweeper: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">No of NW</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.no_of_nw} onChange={(e) => setNewHealthOrg((s) => ({ ...s, no_of_nw: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">No of Bed</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.no_of_bed} onChange={(e) => setNewHealthOrg((s) => ({ ...s, no_of_bed: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">No of ICU</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.no_of_icu} onChange={(e) => setNewHealthOrg((s) => ({ ...s, no_of_icu: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">X-Ray Availability</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.x_ray_availabilaty} onChange={(e) => setNewHealthOrg((s) => ({ ...s, x_ray_availabilaty: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">CT-Scan Availability</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.ct_scan_availability} onChange={(e) => setNewHealthOrg((s) => ({ ...s, ct_scan_availability: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Availability of Pathology Testing</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.availability_of_pathology_testing} onChange={(e) => setNewHealthOrg((s) => ({ ...s, availability_of_pathology_testing: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1 md:col-span-2">
-                    <label className="block text-text">Description</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newHealthOrg.description} onChange={(e) => setNewHealthOrg((s) => ({ ...s, description: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1 md:col-span-2">
-                    <label className="block text-text">Profile image (optional)</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="w-full text-xs"
-                      onChange={(e) => setHealthImageFile(e.target.files?.[0] ?? null)}
+                  <div className="min-w-0 w-full overflow-visible rounded-lg border border-dashed border-border/80 bg-muted/20 p-3">
+                    <HealthPortfolioAdminForm
+                      organizationId={editingHealthId}
+                      form={healthPortfolioForm}
+                      setForm={setHealthPortfolioForm}
+                      facilityRecord={{
+                        block_ulb: newHealthOrg.block_ulb,
+                        gp_ward: newHealthOrg.gp_ward,
+                        village: newHealthOrg.village,
+                        name: newHealthOrg.name,
+                        institution_id: newHealthOrg.institution_id,
+                        latitude: newHealthOrg.latitude,
+                        longitude: newHealthOrg.longitude,
+                        category: newHealthOrg.category,
+                        inst_head_name: newHealthOrg.inst_head_name,
+                        inst_head_contact: newHealthOrg.inst_head_contact,
+                      }}
+                      onFacilityRecordPatch={(patch) => setNewHealthOrg((s) => ({ ...s, ...patch }))}
+                      profileImageControl={
+                        <div className="space-y-1">
+                          <span className="block text-[11px] text-text">Profile image (optional)</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="w-full text-[11px] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-1 file:text-primary-foreground"
+                            onChange={(e) => setHealthImageFile(e.target.files?.[0] ?? null)}
+                          />
+                        </div>
+                      }
+                      resources={{
+                        no_of_ts: newHealthOrg.no_of_ts,
+                        no_of_nts: newHealthOrg.no_of_nts,
+                        no_of_mo: newHealthOrg.no_of_mo,
+                        no_of_pharmacist: newHealthOrg.no_of_pharmacist,
+                        no_of_anm: newHealthOrg.no_of_anm,
+                        no_of_health_worker: newHealthOrg.no_of_health_worker,
+                        no_of_pathology: newHealthOrg.no_of_pathology,
+                        no_of_clerk: newHealthOrg.no_of_clerk,
+                        no_of_sweeper: newHealthOrg.no_of_sweeper,
+                        no_of_nw: newHealthOrg.no_of_nw,
+                        no_of_bed: newHealthOrg.no_of_bed,
+                        no_of_icu: newHealthOrg.no_of_icu,
+                        x_ray_availabilaty: newHealthOrg.x_ray_availabilaty,
+                        ct_scan_availability: newHealthOrg.ct_scan_availability,
+                        availability_of_pathology_testing: newHealthOrg.availability_of_pathology_testing,
+                        description: newHealthOrg.description,
+                      }}
+                      onResourcesPatch={(patch) => setNewHealthOrg((s) => ({ ...s, ...patch }))}
                     />
                   </div>
-                  <div className="md:col-span-2">
+                  <div>
                     <button type="submit" disabled={creating} className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60">
                       {creating ? 'Saving...' : editingHealthId ? 'Update facility' : 'Save facility'}
                     </button>
@@ -4217,6 +4265,84 @@ export default function DepartmentAdminPage() {
                                     setEditingHealthId(o.id);
                                     const p = await healthApi.getProfile(o.id) as Record<string, unknown> | undefined;
                                     const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
+                                    const gp = p?.health_photo_gallery;
+                                    let health_photo_gallery_json = '[]';
+                                    if (Array.isArray(gp)) {
+                                      health_photo_gallery_json = JSON.stringify(gp);
+                                    } else if (typeof gp === 'string' && gp.trim()) {
+                                      health_photo_gallery_json = gp;
+                                    }
+                                    let health_key_admin_cards_json = '[]';
+                                    const ka = p?.health_key_admin_cards;
+                                    if (Array.isArray(ka)) health_key_admin_cards_json = JSON.stringify(ka);
+                                    let health_health_facility_cards_json = '[]';
+                                    const hf = p?.health_health_facility_cards;
+                                    if (Array.isArray(hf)) {
+                                      health_health_facility_cards_json = JSON.stringify(
+                                        hf.map((item: Record<string, unknown>) => {
+                                          const copy = { ...item } as Record<string, unknown>;
+                                          if (Array.isArray(copy.images)) {
+                                            copy.images_json = JSON.stringify(copy.images);
+                                            delete copy.images;
+                                          }
+                                          return copy;
+                                        }),
+                                      );
+                                    }
+                                    let health_doctor_cards_json = '[]';
+                                    const dc = p?.health_doctor_cards;
+                                    if (Array.isArray(dc)) health_doctor_cards_json = JSON.stringify(dc);
+                                    let health_ts_nts_staff_rows_json = '[]';
+                                    const tr = p?.health_ts_nts_staff_rows;
+                                    if (Array.isArray(tr)) health_ts_nts_staff_rows_json = JSON.stringify(tr);
+                                    let health_clinical_staff_rows_json = '[]';
+                                    const cr = p?.health_clinical_staff_rows;
+                                    if (Array.isArray(cr)) health_clinical_staff_rows_json = JSON.stringify(cr);
+                                    let health_equipment_rows_json = '[]';
+                                    const er = p?.health_equipment_rows;
+                                    if (Array.isArray(er)) health_equipment_rows_json = JSON.stringify(er);
+                                    const da = p?.health_doctor_attendance;
+                                    const health_doctor_attendance_json =
+                                      da != null && typeof da === 'object'
+                                        ? JSON.stringify(da)
+                                        : typeof da === 'string' && da.trim()
+                                          ? da
+                                          : '{}';
+                                    setHealthPortfolioForm({
+                                      ...emptyHealthPortfolioForm(),
+                                      health_display_name: v(p?.health_display_name),
+                                      health_hero_tagline: v(p?.health_hero_tagline),
+                                      health_tagline: v(p?.health_tagline),
+                                      health_hero_1: v(p?.health_hero_1),
+                                      health_hero_2: v(p?.health_hero_2),
+                                      health_hero_3: v(p?.health_hero_3),
+                                      health_about: v(p?.health_about),
+                                      health_campus_image: v(p?.health_campus_image),
+                                      health_established_year: v(p?.health_established_year),
+                                      health_facility_type: v(p?.health_facility_type),
+                                      health_location_line: v(p?.health_location_line),
+                                      health_inst_head_message: v(p?.health_inst_head_message),
+                                      health_inst_head_name: v(p?.health_inst_head_name),
+                                      health_inst_head_photo: v(p?.health_inst_head_photo),
+                                      health_inst_head_qualification: v(p?.health_inst_head_qualification),
+                                      health_inst_head_experience: v(p?.health_inst_head_experience),
+                                      health_inst_head_contact: v(p?.health_inst_head_contact),
+                                      health_inst_head_email: v(p?.health_inst_head_email),
+                                      health_key_admin_cards_json,
+                                      health_health_facility_cards_json,
+                                      health_doctor_cards_json,
+                                      health_doctor_attendance_json,
+                                      health_ts_nts_staff_rows_json,
+                                      health_clinical_staff_rows_json,
+                                      health_equipment_rows_json,
+                                      health_photo_gallery_json,
+                                      health_full_address: v(p?.health_full_address),
+                                      health_helpdesk_phone: v(p?.health_helpdesk_phone),
+                                      health_emergency_phone: v(p?.health_emergency_phone),
+                                      health_public_email: v(p?.health_public_email) || v(p?.health_contact_email),
+                                      health_office_hours: v(p?.health_office_hours),
+                                      health_contact_email: v(p?.health_contact_email),
+                                    });
                                     setNewHealthOrg({
                                       block_ulb: v(p?.block_ulb ?? o.attributes?.ulb_block),
                                       gp_ward: v(p?.gp_ward ?? o.attributes?.gp_name),
@@ -4226,8 +4352,8 @@ export default function DepartmentAdminPage() {
                                       name: v(p?.name ?? o.name),
                                       institution_id: v(p?.institution_id),
                                       category: v(p?.category),
-                                      inst_head_name: v(p?.inst_head_name),
-                                      inst_head_contact: v(p?.inst_head_contact),
+                                      inst_head_name: v(p?.health_inst_head_name ?? p?.inst_head_name),
+                                      inst_head_contact: v(p?.health_inst_head_contact ?? p?.inst_head_contact),
                                       no_of_ts: v(p?.no_of_ts),
                                       no_of_nts: v(p?.no_of_nts),
                                       no_of_mo: v(p?.no_of_mo),
