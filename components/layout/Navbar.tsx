@@ -29,7 +29,7 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 shrink-0 overflow-hidden shadow-lg">
+    <header className="sticky top-0 z-40 shrink-0 overflow-hidden shadow-lg">
       {/* Top government bar */}
       <div className="flex h-8 items-center justify-between bg-neutral-800 px-3 text-[11px] text-neutral-100 sm:px-6 lg:px-10">
         <div className="flex items-center gap-2">

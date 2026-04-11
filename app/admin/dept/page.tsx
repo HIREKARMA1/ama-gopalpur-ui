@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent, type Dispatch, type SetStateAction } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -29,6 +29,11 @@ import { t } from '../../../components/i18n/messages';
 import { Loader } from '../../../components/common/Loader';
 import { DepartmentMapSummaryEditor } from '../../../components/admin/DepartmentMapSummaryEditor';
 import { compressImage } from '../../../lib/imageCompression';
+import {
+  EducationPsPortfolioAdminForm,
+  type PsPortfolioOrgFields,
+} from '../../../components/admin/EducationPsPortfolioAdminForm';
+import { ArcsPortfolioAdminForm, ARCS_FIELD_LIMITS, CharCount } from '../../../components/admin/ArcsPortfolioAdminForm';
 
 /** ICDS minister CSV: all attributes for AWC profile (no SL NO; use system-generated org id). */
 const ICDS_CSV_HEADER =
@@ -237,6 +242,22 @@ export default function DepartmentAdminPage() {
     icc_head_name: '', icc_head_contact: '', play_ground: '', cycle_stand: '',
     drinking_water_tw: '', drinking_water_tap: '', drinking_water_overhead_tap: '', drinking_water_aquaguard: '',
     latitude: '', longitude: '', description: '',
+    language: 'en',
+    school_name_en: '', school_name_od: '', hero_tagline_en: '', hero_tagline_od: '',
+    hero_primary_tagline_en: '', hero_primary_tagline_od: '',
+    hero_slide_1: '', hero_slide_2: '', hero_slide_3: '',
+    about_short_en: '', about_short_od: '', school_type_en: '', school_type_od: '', location_en: '', location_od: '',
+    about_image: '', headmaster_photo: '', headmaster_contact: '', headmaster_email: '',
+    deo_image: '', deo_email: '', beo_image: '', beo_email: '', brcc_image: '', brcc_email: '',
+    crc_image: '', crc_name: '', crc_contact: '', crc_email: '',
+    vision_text_en: '', vision_text_od: '', mission_text_en: '', mission_text_od: '',
+    hm_qualification: '', hm_experience: '', hm_past_experience_en: '', hm_current_experience_en: '', headmaster_message_en: '', headmaster_message_od: '',
+    curriculum_text_en: '', curriculum_text_od: '', academic_calendar_text_en: '', academic_calendar_text_od: '',
+    class_structure_text_en: '', class_structure_text_od: '', subjects_offered_text_en: '', subjects_offered_text_od: '',
+    facilities_list: '', total_students: '', facilities_count: '', years_of_service: '',
+    faculty_cards_json: '', faculty_attendance_json: '', facility_cards_json: '', infrastructure_images_json: '', activity_events_json: '', student_intake_rows_json: '',
+    intake_cards_json: '', mdm_daily_json: '', ptm_meetings_json: '', photo_gallery_json: '',
+    contact_address_en: '', contact_address_od: '', contact_phone: '', contact_email: '', office_hours_en: '', office_hours_od: '',
   });
   const [newEducationOrg, setNewEducationOrg] = useState(emptyEducationOrg());
 
@@ -2088,6 +2109,66 @@ export default function DepartmentAdminPage() {
                         drinking_water_tw: _s(newEducationOrg.drinking_water_tw), drinking_water_tap: _s(newEducationOrg.drinking_water_tap),
                         drinking_water_overhead_tap: _s(newEducationOrg.drinking_water_overhead_tap), drinking_water_aquaguard: _s(newEducationOrg.drinking_water_aquaguard),
                         latitude: lat, longitude: lng, description: _s(newEducationOrg.description),
+                        language: _s(newEducationOrg.language),
+                        school_name_en: _s(newEducationOrg.school_name_en), school_name_od: _s(newEducationOrg.school_name_od),
+                        hero_tagline_en: _s(newEducationOrg.hero_tagline_en), hero_tagline_od: _s(newEducationOrg.hero_tagline_od),
+                        hero_primary_tagline_en: _s(newEducationOrg.hero_primary_tagline_en), hero_primary_tagline_od: _s(newEducationOrg.hero_primary_tagline_od),
+                        hero_slides: (() => {
+                          const slides = [_s(newEducationOrg.hero_slide_1), _s(newEducationOrg.hero_slide_2), _s(newEducationOrg.hero_slide_3)].filter(Boolean) as string[];
+                          return slides.length ? slides : undefined;
+                        })(),
+                        about_short_en: _s(newEducationOrg.about_short_en), about_short_od: _s(newEducationOrg.about_short_od),
+                        about_image: _s(newEducationOrg.about_image),
+                        school_type_en: _s(newEducationOrg.school_type_en), school_type_od: _s(newEducationOrg.school_type_od),
+                        location_en: _s(newEducationOrg.location_en), location_od: _s(newEducationOrg.location_od),
+                        hm_qualification: _s(newEducationOrg.hm_qualification), hm_experience: _s(newEducationOrg.hm_experience),
+                        hm_past_experience_en: _s(newEducationOrg.hm_past_experience_en),
+                        hm_current_experience_en: _s(newEducationOrg.hm_current_experience_en),
+                        headmaster_photo: _s(newEducationOrg.headmaster_photo),
+                        headmaster_contact: _s(newEducationOrg.headmaster_contact),
+                        headmaster_email: _s(newEducationOrg.headmaster_email),
+                        headmaster_message_en: _s(newEducationOrg.headmaster_message_en), headmaster_message_od: _s(newEducationOrg.headmaster_message_od),
+                        vision_text_en: _s(newEducationOrg.vision_text_en), vision_text_od: _s(newEducationOrg.vision_text_od),
+                        mission_text_en: _s(newEducationOrg.mission_text_en), mission_text_od: _s(newEducationOrg.mission_text_od),
+                        deo_image: _s(newEducationOrg.deo_image), deo_email: _s(newEducationOrg.deo_email),
+                        beo_image: _s(newEducationOrg.beo_image), beo_email: _s(newEducationOrg.beo_email),
+                        brcc_image: educationSubDept === 'HS' ? undefined : _s(newEducationOrg.brcc_image),
+                        brcc_email: educationSubDept === 'HS' ? undefined : _s(newEducationOrg.brcc_email),
+                        crc_image: educationSubDept === 'HS' ? undefined : _s(newEducationOrg.crc_image),
+                        crc_name: educationSubDept === 'HS' ? undefined : _s(newEducationOrg.crc_name),
+                        crc_contact: educationSubDept === 'HS' ? undefined : _s(newEducationOrg.crc_contact),
+                        crc_email: educationSubDept === 'HS' ? undefined : _s(newEducationOrg.crc_email),
+                        curriculum_text_en: _s(newEducationOrg.curriculum_text_en), curriculum_text_od: _s(newEducationOrg.curriculum_text_od),
+                        academic_calendar_text_en: _s(newEducationOrg.academic_calendar_text_en), academic_calendar_text_od: _s(newEducationOrg.academic_calendar_text_od),
+                        class_structure_text_en: _s(newEducationOrg.class_structure_text_en), class_structure_text_od: _s(newEducationOrg.class_structure_text_od),
+                        subjects_offered_text_en: _s(newEducationOrg.subjects_offered_text_en), subjects_offered_text_od: _s(newEducationOrg.subjects_offered_text_od),
+                        facilities_list: _s(newEducationOrg.facilities_list),
+                        total_students: _n(newEducationOrg.total_students),
+                        facilities_count: _n(newEducationOrg.facilities_count),
+                        years_of_service: _n(newEducationOrg.years_of_service),
+                        faculty_cards: (() => { try { return newEducationOrg.faculty_cards_json.trim() ? JSON.parse(newEducationOrg.faculty_cards_json) : undefined; } catch { return undefined; } })(),
+                        faculty_attendance: (() => { try { return newEducationOrg.faculty_attendance_json.trim() ? JSON.parse(newEducationOrg.faculty_attendance_json) : undefined; } catch { return undefined; } })(),
+                        facility_cards: (() => { try { return newEducationOrg.facility_cards_json.trim() ? JSON.parse(newEducationOrg.facility_cards_json) : undefined; } catch { return undefined; } })(),
+                        infrastructure_images: (() => { try { return newEducationOrg.infrastructure_images_json.trim() ? JSON.parse(newEducationOrg.infrastructure_images_json) : undefined; } catch { return undefined; } })(),
+                        activity_events: (() => { try { return newEducationOrg.activity_events_json.trim() ? JSON.parse(newEducationOrg.activity_events_json) : undefined; } catch { return undefined; } })(),
+                        student_intake_rows: (() => { try { return newEducationOrg.student_intake_rows_json.trim() ? JSON.parse(newEducationOrg.student_intake_rows_json) : undefined; } catch { return undefined; } })(),
+                        intake_cards: (() => { try { return newEducationOrg.intake_cards_json.trim() ? JSON.parse(newEducationOrg.intake_cards_json) : undefined; } catch { return undefined; } })(),
+                        ...(educationSubDept !== 'HS'
+                          ? {
+                              mdm_daily_records: (() => {
+                                try {
+                                  return newEducationOrg.mdm_daily_json.trim() ? JSON.parse(newEducationOrg.mdm_daily_json) : undefined;
+                                } catch {
+                                  return undefined;
+                                }
+                              })(),
+                            }
+                          : {}),
+                        parent_teacher_meetings: (() => { try { return newEducationOrg.ptm_meetings_json.trim() ? JSON.parse(newEducationOrg.ptm_meetings_json) : undefined; } catch { return undefined; } })(),
+                        photo_gallery: (() => { try { return newEducationOrg.photo_gallery_json.trim() ? JSON.parse(newEducationOrg.photo_gallery_json) : undefined; } catch { return undefined; } })(),
+                        contact_address_en: _s(newEducationOrg.contact_address_en), contact_address_od: _s(newEducationOrg.contact_address_od),
+                        contact_phone: _s(newEducationOrg.contact_phone), contact_email: _s(newEducationOrg.contact_email),
+                        office_hours_en: _s(newEducationOrg.office_hours_en), office_hours_od: _s(newEducationOrg.office_hours_od),
                       };
                       await educationApi.putProfile(updated.id, profileData);
                       if (educationImageFile) {
@@ -2195,6 +2276,24 @@ export default function DepartmentAdminPage() {
                   <div className="space-y-1"><label className="block text-text">Drinking Water (Overhead Tap)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.drinking_water_overhead_tap} onChange={(e) => setNewEducationOrg((s) => ({ ...s, drinking_water_overhead_tap: e.target.value }))} /></div>
                   <div className="space-y-1"><label className="block text-text">Drinking Water (Aquaguard)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.drinking_water_aquaguard} onChange={(e) => setNewEducationOrg((s) => ({ ...s, drinking_water_aquaguard: e.target.value }))} /></div>
                   <div className="space-y-1 md:col-span-2"><label className="block text-text">Description</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.description} onChange={(e) => setNewEducationOrg((s) => ({ ...s, description: e.target.value }))} /></div>
+                  {['PS', 'UPS', 'HS'].includes(educationSubDept) ? (
+                    <EducationPsPortfolioAdminForm
+                      organizationId={editingEducationId}
+                      org={newEducationOrg as PsPortfolioOrgFields}
+                      setOrg={setNewEducationOrg as Dispatch<SetStateAction<PsPortfolioOrgFields>>}
+                      subDepartment={educationSubDept}
+                    />
+                  ) : (
+                    <div className="md:col-span-2 mt-2 rounded-md border border-border bg-background-muted/40 p-3">
+                      <h3 className="text-xs font-semibold text-text">School website extras (JSON)</h3>
+                      <p className="mt-1 text-[11px] text-text-muted">For non–PS sub-departments, edit portfolio JSON fields here if needed.</p>
+                      <div className="mt-3 grid gap-3 md:grid-cols-2">
+                        <div className="space-y-1"><label className="block text-text">Language (en/od)</label><input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newEducationOrg.language} onChange={(e) => setNewEducationOrg((s) => ({ ...s, language: e.target.value }))} /></div>
+                        <div className="space-y-1 md:col-span-2"><label className="block text-text">Faculty Cards JSON</label><textarea rows={3} className="w-full rounded-md border border-border bg-background px-2 py-1.5 font-mono text-xs outline-none focus:border-primary" value={newEducationOrg.faculty_cards_json} onChange={(e) => setNewEducationOrg((s) => ({ ...s, faculty_cards_json: e.target.value }))} /></div>
+                        <div className="space-y-1 md:col-span-2"><label className="block text-text">Photo Gallery JSON</label><textarea rows={3} className="w-full rounded-md border border-border bg-background px-2 py-1.5 font-mono text-xs outline-none focus:border-primary" value={newEducationOrg.photo_gallery_json} onChange={(e) => setNewEducationOrg((s) => ({ ...s, photo_gallery_json: e.target.value }))} /></div>
+                      </div>
+                    </div>
+                  )}
                   <div className="md:col-span-2">
                     <button type="submit" disabled={creating} className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60">
                       {creating ? 'Saving...' : editingEducationId ? 'Update School' : 'Save School'}
@@ -2711,9 +2810,9 @@ export default function DepartmentAdminPage() {
 
             {deptCode === 'ARCS' && (
               <section className="rounded-lg border border-border bg-background p-4">
-                <h2 className="text-sm font-semibold text-text">Manual ARCS (cooperative) entry</h2>
+                <h2 className="text-sm font-semibold text-text">ARCS portfolio entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
-                  Add or update one society manually. Fields match the downloadable CSV template.
+                  Add or update ARCS section-wise data (hero, about, incharge, membership, fertiliser, seed, mini bank loans).
                 </p>
                 <form
                   className="mt-3 grid gap-3 text-xs md:grid-cols-2"
@@ -2723,17 +2822,11 @@ export default function DepartmentAdminPage() {
                       setError('Department is not set for this admin user.');
                       return;
                     }
-                    const headers = splitHeader(ARCS_CSV_HEADER);
-                    const nameKey = snakeFromHeader('SOCIETY NAME');
-                    const latKey = snakeFromHeader('LATITUDE');
-                    const lngKey = snakeFromHeader('LONGITUDE');
-                    const jurKey = snakeFromHeader('JURISDICTION TYPE (RURAL/URBAN/MIXED)');
-                    const blockKey = snakeFromHeader('BLOCK/ULB');
-                    const name = (arcsFormValues[nameKey] || '').trim();
-                    const latStr = arcsFormValues[latKey] || '';
-                    const lngStr = arcsFormValues[lngKey] || '';
+                    const name = (arcsFormValues.arcs_name || arcsFormValues.society_name || '').trim();
+                    const latStr = arcsFormValues.latitude || '';
+                    const lngStr = arcsFormValues.longitude || '';
                     if (!name || !latStr.trim() || !lngStr.trim()) {
-                      setError('Society name, Latitude and Longitude are required.');
+                      setError('ARCS name, Latitude and Longitude are required.');
                       return;
                     }
                     setCreating(true);
@@ -2744,8 +2837,8 @@ export default function DepartmentAdminPage() {
                       if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
                         throw new Error('Latitude and Longitude must be valid numbers.');
                       }
-                      const block = arcsFormValues[blockKey] || '';
-                      const jurRaw = (arcsFormValues[jurKey] || '').trim();
+                      const block = arcsFormValues.block_ulb || '';
+                      const jurRaw = (arcsFormValues.jurisdiction_type || '').trim();
                       const ju = jurRaw.toUpperCase();
                       let jurisdictionBucket = '';
                       if (ju.includes('RURAL') && ju.includes('URBAN')) jurisdictionBucket = 'MIXED';
@@ -2756,7 +2849,7 @@ export default function DepartmentAdminPage() {
                         name,
                         latitude: lat,
                         longitude: lng,
-                        address: (arcsFormValues[snakeFromHeader('FULL ADDRESS')] || '').trim() || undefined,
+                        address: (arcsFormValues.full_address || '').trim() || undefined,
                         attributes: {
                           jurisdiction_type: jurisdictionBucket || null,
                           ulb_block: block.trim() || null,
@@ -2774,16 +2867,40 @@ export default function DepartmentAdminPage() {
                         });
                         setOrgs((prev) => [org, ...prev]);
                       }
-                      const profileData: Record<string, unknown> = {};
-                      headers.forEach((h) => {
-                        const key = snakeFromHeader(h);
-                        const val = arcsFormValues[key];
-                        if (val != null && String(val).trim() !== '') {
-                          profileData[key] = val;
-                        }
-                      });
-                      profileData[latKey] = lat;
-                      profileData[lngKey] = lng;
+                      const parseRows = (raw: string | undefined) => {
+                        if (!raw || !raw.trim()) return undefined;
+                        try { return JSON.parse(raw); } catch { return undefined; }
+                      };
+                      const profileData: Record<string, unknown> = {
+                        block_ulb: arcsFormValues.block_ulb || undefined,
+                        society_name: name,
+                        registration_number: arcsFormValues.registration_number || undefined,
+                        jurisdiction_type_rural_urban_mixed: arcsFormValues.jurisdiction_type || undefined,
+                        full_address: arcsFormValues.full_address || undefined,
+                        latitude: lat,
+                        longitude: lng,
+                        office_phone: arcsFormValues.office_phone || undefined,
+                        office_email: arcsFormValues.office_email || undefined,
+                        secretary_name: arcsFormValues.secretary_name || undefined,
+                        arcs_name: arcsFormValues.arcs_name || undefined,
+                        arcs_tagline: arcsFormValues.arcs_tagline || undefined,
+                        arcs_about: arcsFormValues.arcs_about || undefined,
+                        arcs_about_image: arcsFormValues.arcs_about_image || undefined,
+                        arcs_secretary_image: arcsFormValues.arcs_secretary_image || undefined,
+                        arcs_hero_1: arcsFormValues.arcs_hero_1 || undefined,
+                        arcs_hero_2: arcsFormValues.arcs_hero_2 || undefined,
+                        arcs_hero_3: arcsFormValues.arcs_hero_3 || undefined,
+                        arcs_incharge_cards: parseRows(arcsFormValues.arcs_incharge_cards_json),
+                        arcs_membership_rows: parseRows(arcsFormValues.arcs_membership_rows_json),
+                        arcs_fertiliser_cards: parseRows(arcsFormValues.arcs_fertiliser_cards_json),
+                        arcs_seed_cards: parseRows(arcsFormValues.arcs_seed_cards_json),
+                        arcs_loan_cards: parseRows(arcsFormValues.arcs_loan_cards_json),
+                        arcs_photo_gallery: parseRows(arcsFormValues.arcs_photo_gallery_json),
+                        arcs_office_hours: arcsFormValues.arcs_office_hours || undefined,
+                        arcs_secretary_message: arcsFormValues.arcs_secretary_message || undefined,
+                        arcs_vision: arcsFormValues.arcs_vision || undefined,
+                        arcs_mission: arcsFormValues.arcs_mission || undefined,
+                      };
                       await arcsApi.putProfile(org.id, profileData);
                       if (arcsImageFile) {
                         const compressed = await compressImage(arcsImageFile, { maxSizeMB: 0.5 });
@@ -2800,21 +2917,113 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  {splitHeader(ARCS_CSV_HEADER).map((header) => {
-                    const key = snakeFromHeader(header);
-                    return (
-                      <div key={key} className="space-y-1">
-                        <label className="block text-text">{header}</label>
-                        <input
-                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
-                          value={arcsFormValues[key] ?? ''}
-                          onChange={(e) =>
-                            setArcsFormValues((prev) => ({ ...prev, [key]: e.target.value }))
-                          }
-                        />
-                      </div>
-                    );
-                  })}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">ARCS name</label>
+                      <CharCount value={arcsFormValues.arcs_name ?? ''} max={ARCS_FIELD_LIMITS.arcs_name} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.arcs_name}
+                      value={arcsFormValues.arcs_name ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, arcs_name: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Registration number</label>
+                      <CharCount value={arcsFormValues.registration_number ?? ''} max={ARCS_FIELD_LIMITS.registration_number} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.registration_number}
+                      value={arcsFormValues.registration_number ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, registration_number: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Block/ULB</label>
+                      <CharCount value={arcsFormValues.block_ulb ?? ''} max={ARCS_FIELD_LIMITS.block_ulb} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.block_ulb}
+                      value={arcsFormValues.block_ulb ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, block_ulb: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Jurisdiction</label>
+                      <CharCount value={arcsFormValues.jurisdiction_type ?? ''} max={ARCS_FIELD_LIMITS.jurisdiction_type} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.jurisdiction_type}
+                      value={arcsFormValues.jurisdiction_type ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, jurisdiction_type: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Latitude</label>
+                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.latitude ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, latitude: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-text">Longitude</label>
+                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.longitude ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, longitude: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Full address</label>
+                      <CharCount value={arcsFormValues.full_address ?? ''} max={ARCS_FIELD_LIMITS.full_address} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.full_address}
+                      value={arcsFormValues.full_address ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, full_address: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Office phone</label>
+                      <CharCount value={arcsFormValues.office_phone ?? ''} max={ARCS_FIELD_LIMITS.office_phone} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.office_phone}
+                      value={arcsFormValues.office_phone ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, office_phone: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Office email</label>
+                      <CharCount value={arcsFormValues.office_email ?? ''} max={ARCS_FIELD_LIMITS.office_email} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.office_email}
+                      value={arcsFormValues.office_email ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, office_email: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Secretary name</label>
+                      <CharCount value={arcsFormValues.secretary_name ?? ''} max={ARCS_FIELD_LIMITS.secretary_name} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.secretary_name}
+                      value={arcsFormValues.secretary_name ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, secretary_name: e.target.value }))}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <ArcsPortfolioAdminForm organizationId={editingArcsId} form={arcsFormValues} setForm={setArcsFormValues} />
+                  </div>
                   <div className="md:col-span-2 space-y-1">
                     <label className="block text-text font-medium">Profile image (optional)</label>
                     <input
@@ -3786,16 +3995,33 @@ export default function DepartmentAdminPage() {
                                     const p = (arcsProfiles[o.id] || await arcsApi.getProfile(o.id)) as Record<string, unknown>;
                                     const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
                                     const vals: Record<string, string> = {};
-                                    splitHeader(ARCS_CSV_HEADER).forEach((h) => {
-                                      const k = snakeFromHeader(h);
-                                      vals[k] = v(p[k]);
-                                    });
-                                    const nameKey = snakeFromHeader('SOCIETY NAME');
-                                    const latKey = snakeFromHeader('LATITUDE');
-                                    const lngKey = snakeFromHeader('LONGITUDE');
-                                    if (!vals[nameKey]) vals[nameKey] = o.name;
-                                    if (!vals[latKey]) vals[latKey] = o.latitude != null ? String(o.latitude) : '';
-                                    if (!vals[lngKey]) vals[lngKey] = o.longitude != null ? String(o.longitude) : '';
+                                    vals.arcs_name = v(p.arcs_name ?? p.society_name ?? o.name);
+                                    vals.registration_number = v(p.registration_number);
+                                    vals.block_ulb = v(p.block_ulb);
+                                    vals.jurisdiction_type = v(p.jurisdiction_type_rural_urban_mixed ?? p.jurisdiction_type);
+                                    vals.latitude = v(p.latitude ?? o.latitude);
+                                    vals.longitude = v(p.longitude ?? o.longitude);
+                                    vals.full_address = v(p.full_address ?? o.address);
+                                    vals.office_phone = v(p.office_phone);
+                                    vals.office_email = v(p.office_email);
+                                    vals.secretary_name = v(p.secretary_name);
+                                    vals.arcs_tagline = v(p.arcs_tagline);
+                                    vals.arcs_about = v(p.arcs_about);
+                                    vals.arcs_about_image = v(p.arcs_about_image);
+                                    vals.arcs_secretary_image = v(p.arcs_secretary_image);
+                                    vals.arcs_hero_1 = v(p.arcs_hero_1);
+                                    vals.arcs_hero_2 = v(p.arcs_hero_2);
+                                    vals.arcs_hero_3 = v(p.arcs_hero_3);
+                                    vals.arcs_incharge_cards_json = Array.isArray(p.arcs_incharge_cards) ? JSON.stringify(p.arcs_incharge_cards) : '';
+                                    vals.arcs_membership_rows_json = Array.isArray(p.arcs_membership_rows) ? JSON.stringify(p.arcs_membership_rows) : '';
+                                    vals.arcs_fertiliser_cards_json = Array.isArray(p.arcs_fertiliser_cards) ? JSON.stringify(p.arcs_fertiliser_cards) : '';
+                                    vals.arcs_seed_cards_json = Array.isArray(p.arcs_seed_cards) ? JSON.stringify(p.arcs_seed_cards) : '';
+                                    vals.arcs_loan_cards_json = Array.isArray(p.arcs_loan_cards) ? JSON.stringify(p.arcs_loan_cards) : '';
+                                    vals.arcs_photo_gallery_json = Array.isArray(p.arcs_photo_gallery) ? JSON.stringify(p.arcs_photo_gallery) : '';
+                                    vals.arcs_office_hours = v(p.arcs_office_hours);
+                                    vals.arcs_secretary_message = v(p.arcs_secretary_message);
+                                    vals.arcs_vision = v(p.arcs_vision);
+                                    vals.arcs_mission = v(p.arcs_mission);
                                     setArcsFormValues(vals);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}
@@ -3809,8 +4035,60 @@ export default function DepartmentAdminPage() {
                                   className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
                                   onClick={async () => {
                                     setEditingEducationId(o.id);
-                                    const p = await educationApi.getProfile(o.id) as Record<string, unknown> | undefined;
+                                    const p = (await educationApi.getProfile(o.id)) as Record<string, unknown> | undefined;
                                     const v = (x: unknown) => (x != null && String(x).trim() !== '' ? String(x) : '');
+                                    const heroSlideAt = (i: number): string => {
+                                      const slides = p?.hero_slides;
+                                      if (!Array.isArray(slides) || slides[i] == null) return '';
+                                      const ent = slides[i];
+                                      if (typeof ent === 'string') return v(ent);
+                                      if (ent && typeof ent === 'object' && 'url' in ent) {
+                                        return v((ent as { url: unknown }).url);
+                                      }
+                                      return '';
+                                    };
+                                    const jsonArr = (x: unknown) => (Array.isArray(x) && x.length ? JSON.stringify(x) : '');
+                                    const facultyCardsJson = (() => {
+                                      const arr = p?.faculty_cards;
+                                      if (!Array.isArray(arr) || !arr.length) return '';
+                                      return JSON.stringify(
+                                        arr.map((item: Record<string, unknown>) => ({
+                                          photo: item.photo ?? item.image ?? '',
+                                          name: item.name ?? '',
+                                          subject: item.subject ?? '',
+                                          qualification: item.qualification ?? '',
+                                        })),
+                                      );
+                                    })();
+                                    const galleryJson = (() => {
+                                      const arr = p?.photo_gallery;
+                                      if (!Array.isArray(arr) || !arr.length) return '';
+                                      return JSON.stringify(
+                                        arr.map((item: Record<string, unknown>) => ({
+                                          image: item.image ?? item.url ?? '',
+                                          title: item.title ?? '',
+                                          category: item.category ?? '',
+                                          description: item.description ?? '',
+                                        })),
+                                      );
+                                    })();
+                                    const intakeCardsJson = (() => {
+                                      let arr = p?.intake_cards;
+                                      if (
+                                        (!Array.isArray(arr) || !arr.length) &&
+                                        Array.isArray(p?.student_intake_rows) &&
+                                        p.student_intake_rows.length
+                                      ) {
+                                        arr = (p.student_intake_rows as Record<string, unknown>[]).map((row) => ({
+                                          class_name: row.class_name,
+                                          strength: row.intake ?? row.strength ?? '',
+                                          registered_this_year: row.registered_this_year ?? row.registered_students_this_year ?? '',
+                                          subjects: row.subjects ?? '',
+                                          image: row.image ?? '',
+                                        }));
+                                      }
+                                      return jsonArr(arr);
+                                    })();
                                     setNewEducationOrg({
                                       block_ulb: v(p?.block_ulb ?? o.attributes?.ulb_block),
                                       gp_ward: v(p?.gp_ward ?? o.attributes?.gp_name),
@@ -3841,6 +4119,52 @@ export default function DepartmentAdminPage() {
                                       latitude: o.latitude != null ? String(o.latitude) : '',
                                       longitude: o.longitude != null ? String(o.longitude) : '',
                                       description: v(p?.description),
+                                      language: v(p?.language || 'en'),
+                                      school_name_en: v(p?.school_name_en), school_name_od: v(p?.school_name_od),
+                                      hero_tagline_en: v(p?.hero_tagline_en), hero_tagline_od: v(p?.hero_tagline_od),
+                                      hero_primary_tagline_en: v(p?.hero_primary_tagline_en), hero_primary_tagline_od: v(p?.hero_primary_tagline_od),
+                                      hero_slide_1: heroSlideAt(0),
+                                      hero_slide_2: heroSlideAt(1),
+                                      hero_slide_3: heroSlideAt(2),
+                                      about_short_en: v(p?.about_short_en), about_short_od: v(p?.about_short_od),
+                                      about_image: v(p?.about_image),
+                                      school_type_en: v(p?.school_type_en), school_type_od: v(p?.school_type_od),
+                                      location_en: v(p?.location_en), location_od: v(p?.location_od),
+                                      hm_qualification: v(p?.hm_qualification), hm_experience: v(p?.hm_experience),
+                                      hm_past_experience_en: v(p?.hm_past_experience_en ?? p?.hm_past_experience),
+                                      hm_current_experience_en: v(p?.hm_current_experience_en ?? p?.hm_current_experience),
+                                      headmaster_photo: v(p?.headmaster_photo),
+                                      headmaster_contact: v(p?.headmaster_contact ?? p?.contact_of_hm),
+                                      headmaster_email: v(p?.headmaster_email),
+                                      headmaster_message_en: v(p?.headmaster_message_en), headmaster_message_od: v(p?.headmaster_message_od),
+                                      vision_text_en: v(p?.vision_text_en), vision_text_od: v(p?.vision_text_od),
+                                      mission_text_en: v(p?.mission_text_en), mission_text_od: v(p?.mission_text_od),
+                                      deo_image: v(p?.deo_image), deo_email: v(p?.deo_email),
+                                      beo_image: v(p?.beo_image), beo_email: v(p?.beo_email),
+                                      brcc_image: v(p?.brcc_image), brcc_email: v(p?.brcc_email),
+                                      crc_image: v(p?.crc_image),
+                                      crc_name: v(p?.crc_name ?? p?.crcc_name),
+                                      crc_contact: v(p?.crc_contact ?? p?.crcc_contact),
+                                      crc_email: v(p?.crc_email),
+                                      curriculum_text_en: v(p?.curriculum_text_en), curriculum_text_od: v(p?.curriculum_text_od),
+                                      academic_calendar_text_en: v(p?.academic_calendar_text_en), academic_calendar_text_od: v(p?.academic_calendar_text_od),
+                                      class_structure_text_en: v(p?.class_structure_text_en), class_structure_text_od: v(p?.class_structure_text_od),
+                                      subjects_offered_text_en: v(p?.subjects_offered_text_en), subjects_offered_text_od: v(p?.subjects_offered_text_od),
+                                      facilities_list: v(p?.facilities_list), total_students: v(p?.total_students),
+                                      facilities_count: v(p?.facilities_count), years_of_service: v(p?.years_of_service),
+                                      faculty_cards_json: facultyCardsJson,
+                                      faculty_attendance_json: p?.faculty_attendance && typeof p.faculty_attendance === 'object' ? JSON.stringify(p.faculty_attendance) : '',
+                                      facility_cards_json: jsonArr(p?.facility_cards),
+                                      infrastructure_images_json: p?.infrastructure_images ? JSON.stringify(p.infrastructure_images) : '',
+                                      activity_events_json: p?.activity_events ? JSON.stringify(p.activity_events) : '',
+                                      student_intake_rows_json: p?.student_intake_rows ? JSON.stringify(p.student_intake_rows) : '',
+                                      intake_cards_json: intakeCardsJson,
+                                      mdm_daily_json: jsonArr(p?.mdm_daily_records ?? p?.mdm_daily ?? p?.mid_day_meal_daily),
+                                      ptm_meetings_json: jsonArr(p?.parent_teacher_meetings ?? p?.ptm_meetings ?? p?.parent_teacher_meeting_records),
+                                      photo_gallery_json: galleryJson,
+                                      contact_address_en: v(p?.contact_address_en), contact_address_od: v(p?.contact_address_od),
+                                      contact_phone: v(p?.contact_phone), contact_email: v(p?.contact_email),
+                                      office_hours_en: v(p?.office_hours_en), office_hours_od: v(p?.office_hours_od),
                                     });
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}

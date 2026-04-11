@@ -69,9 +69,8 @@ export function MapLegendRow({
         type="button"
         onClick={onClick}
         title={title}
-        className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${
-          isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
-        }`}
+        className={`flex items-center gap-1 rounded px-1 -mx-1 py-0.5 -my-0.5 transition-colors ${isSelected ? 'ring-1 ring-slate-400 bg-slate-100 font-medium' : 'hover:bg-slate-50'
+          }`}
       >
         {dot}
         {text}
