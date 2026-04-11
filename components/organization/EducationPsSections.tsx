@@ -145,14 +145,36 @@ export function PsHeroSection({ org, profile, language, sliderImages }: { org: O
   );
 }
 
-export function PsAboutSection({ org, profile, language, sliderImages }: { org: Organization; profile: Record<string, unknown>; language: Lang; sliderImages: string[] }) {
+export function PsAboutSection({
+  org,
+  profile,
+  language,
+  sliderImages,
+  aboutLeaderRole = 'headmaster',
+}: {
+  org: Organization;
+  profile: Record<string, unknown>;
+  language: Lang;
+  sliderImages: string[];
+  /** ARCS public site uses secretary labels while keeping the same layout as PS. */
+  aboutLeaderRole?: 'headmaster' | 'secretary';
+}) {
   const [isHeadmasterModalOpen, setIsHeadmasterModalOpen] = useState(false);
   const [isHeadmasterModalClosing, setIsHeadmasterModalClosing] = useState(false);
   const schoolName = getText(profile, 'school_name', language) || org.name || EMPTY;
   const aboutText = getText(profile, 'about_short', language) || asString(profile.description) || EMPTY;
   const headmasterMessage = getText(profile, 'headmaster_message', language) || EMPTY;
   const headmasterName = asString(profile.name_of_hm) || EMPTY;
-  const headmasterTitle = language === 'od' ? 'ପ୍ରଧାନଶିକ୍ଷକ' : 'Headmaster';
+  const headmasterTitle =
+    aboutLeaderRole === 'secretary' ? (language === 'od' ? 'ସଚିବ' : 'Secretary') : language === 'od' ? 'ପ୍ରଧାନଶିକ୍ଷକ' : 'Headmaster';
+  const leaderMessageHeading =
+    aboutLeaderRole === 'secretary'
+      ? language === 'od'
+        ? 'ସଚିବଙ୍କ ବାର୍ତ୍ତା'
+        : "Secretary's message"
+      : language === 'od'
+        ? 'ପ୍ରଧାନଶିକ୍ଷକଙ୍କ ବାର୍ତ୍ତା'
+        : "Headmaster's Message";
   const qualification = asString(profile.hm_qualification) || '—';
   const experience = asString(profile.hm_experience) || '—';
   const pastExperience = getText(profile, 'hm_past_experience', language) || asString(profile.hm_past_experience_en) || EMPTY;
@@ -203,9 +225,7 @@ export function PsAboutSection({ org, profile, language, sliderImages }: { org: 
 
         <div className="space-y-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-              {language === 'od' ? 'ପ୍ରଧାନଶିକ୍ଷକଙ୍କ ବାର୍ତ୍ତା' : "Headmaster's Message"}
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{leaderMessageHeading}</p>
             <p className="mt-3 text-sm leading-relaxed text-slate-700 sm:text-base">"{headmasterMessage}"</p>
           </div>
 
@@ -217,7 +237,7 @@ export function PsAboutSection({ org, profile, language, sliderImages }: { org: 
                 setIsHeadmasterModalOpen(true);
               }}
               className="h-36 w-32 shrink-0 overflow-hidden rounded-md bg-slate-100 sm:h-40 sm:w-36"
-              aria-label="Open headmaster photo"
+              aria-label={aboutLeaderRole === 'secretary' ? 'Open secretary photo' : 'Open headmaster photo'}
             >
               {asString(profile.headmaster_photo) ? (
                 <img src={asString(profile.headmaster_photo)} alt={displayText(headmasterName)} className="h-full w-full object-cover" />
@@ -231,9 +251,11 @@ export function PsAboutSection({ org, profile, language, sliderImages }: { org: 
             <div>
               <p className="text-lg font-bold text-slate-900">{headmasterName}</p>
               <p className="text-sm text-slate-600">{headmasterTitle}</p>
-              <p className="mt-1 text-xs text-slate-500">
-                {language === 'od' ? 'ଯୋଗ୍ୟତା' : 'Qualification'}: {qualification} | {language === 'od' ? 'ଅନୁଭବ' : 'Experience'}: {experience}
-              </p>
+              {aboutLeaderRole !== 'secretary' ? (
+                <p className="mt-1 text-xs text-slate-500">
+                  {language === 'od' ? 'ଯୋଗ୍ୟତା' : 'Qualification'}: {qualification} | {language === 'od' ? 'ଅନୁଭବ' : 'Experience'}: {experience}
+                </p>
+              ) : null}
               <p className="mt-1 text-xs text-slate-500">
                 {language === 'od' ? 'ଯୋଗାଯୋଗ' : 'Contact'}: {headmasterContact}
               </p>
@@ -293,21 +315,25 @@ export function PsAboutSection({ org, profile, language, sliderImages }: { org: 
             <div className="p-4">
               <p className="text-lg font-bold text-slate-900">{headmasterName}</p>
               <p className="text-sm text-slate-600">{headmasterTitle}</p>
-              <p className="mt-1 text-xs text-slate-500">
-                {language === 'od' ? 'ଯୋଗ୍ୟତା' : 'Qualification'}: {qualification} | {language === 'od' ? 'ଅନୁଭବ' : 'Experience'}: {experience}
-              </p>
+              {aboutLeaderRole !== 'secretary' ? (
+                <p className="mt-1 text-xs text-slate-500">
+                  {language === 'od' ? 'ଯୋଗ୍ୟତା' : 'Qualification'}: {qualification} | {language === 'od' ? 'ଅନୁଭବ' : 'Experience'}: {experience}
+                </p>
+              ) : null}
               <p className="mt-1 text-xs text-slate-500">
                 {language === 'od' ? 'ଯୋଗାଯୋଗ' : 'Contact'}: {headmasterContact}
               </p>
               <p className="mt-1 break-all text-xs text-slate-500">
                 {language === 'od' ? 'ଇମେଲ' : 'Email'}: {headmasterEmail}
               </p>
-              <div className="mt-3 space-y-2 border-t border-slate-200 pt-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Past Experience</p>
-                <p className="text-xs leading-relaxed text-slate-700">{pastExperience}</p>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Current Experience</p>
-                <p className="text-xs leading-relaxed text-slate-700">{currentExperience}</p>
-              </div>
+              {aboutLeaderRole !== 'secretary' ? (
+                <div className="mt-3 space-y-2 border-t border-slate-200 pt-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Past Experience</p>
+                  <p className="text-xs leading-relaxed text-slate-700">{pastExperience}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Current Experience</p>
+                  <p className="text-xs leading-relaxed text-slate-700">{currentExperience}</p>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -354,6 +380,66 @@ export function PsAboutSection({ org, profile, language, sliderImages }: { org: 
   );
 }
 
+export type PsPersonCard = {
+  role: string;
+  image: string;
+  name: string;
+  contact: string;
+  email: string;
+};
+
+/** Shared administration-style person grid (PS Administration, ARCS Incharge, etc.). */
+export function PsPersonCardsSection({
+  title,
+  people,
+  gridClassName,
+}: {
+  title: string;
+  people: PsPersonCard[];
+  gridClassName: string;
+}) {
+  return (
+    <section className="py-2 md:py-4">
+      <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{title}</h2>
+
+      <div className={`mt-6 grid gap-4 ${gridClassName}`}>
+        {people.map((admin, idx) => (
+          <article
+            key={`${admin.role}-${idx}-${admin.name}`}
+            className="flex min-h-[370px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white"
+          >
+            <div className="h-[230px] w-full overflow-hidden bg-slate-100">
+              {admin.image ? (
+                <img src={admin.image} alt={admin.name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <div className="text-center">
+                    <Images className="mx-auto h-7 w-7 text-slate-500" />
+                    <p className="mt-2 text-xs font-medium text-slate-600">{EMPTY}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-1 flex-col p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600">{admin.role || EMPTY}</p>
+              <p className="mt-2 text-lg font-bold text-slate-900">{admin.name}</p>
+              <div className="mt-4 space-y-2 text-sm text-slate-700">
+                <p>
+                  <span className="font-semibold">Contact:</span> {admin.contact}
+                </p>
+                <p className="break-all">
+                  <span className="font-semibold">Email:</span> {admin.email}
+                </p>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function PsAdministrationSection({
   profile,
   subDepartment,
@@ -362,7 +448,7 @@ export function PsAdministrationSection({
   subDepartment?: string;
 }) {
   const isHighSchool = (subDepartment || '').toUpperCase() === 'HS';
-  const admins = [
+  const admins: PsPersonCard[] = [
     {
       role: 'DEO',
       image: asString(profile.deo_image),
@@ -398,40 +484,11 @@ export function PsAdministrationSection({
   ];
 
   return (
-    <section className="py-2 md:py-4">
-      <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Administration</h2>
-
-      <div className={`mt-6 grid gap-4 md:grid-cols-2 ${isHighSchool ? 'xl:grid-cols-2' : 'xl:grid-cols-4'}`}>
-        {admins.map((admin) => (
-          <article
-            key={admin.role}
-            className="flex min-h-[370px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white"
-          >
-            <div className="h-[230px] w-full overflow-hidden bg-slate-100">
-              {admin.image ? (
-                <img src={admin.image} alt={admin.name} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <div className="text-center">
-                    <Images className="mx-auto h-7 w-7 text-slate-500" />
-                    <p className="mt-2 text-xs font-medium text-slate-600">{EMPTY}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-1 flex-col p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600">{admin.role}</p>
-              <p className="mt-2 text-lg font-bold text-slate-900">{admin.name}</p>
-              <div className="mt-4 space-y-2 text-sm text-slate-700">
-                <p><span className="font-semibold">Contact:</span> {admin.contact}</p>
-                <p className="break-all"><span className="font-semibold">Email:</span> {admin.email}</p>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
+    <PsPersonCardsSection
+      title="Administration"
+      people={admins}
+      gridClassName={`md:grid-cols-2 ${isHighSchool ? 'xl:grid-cols-2' : 'xl:grid-cols-4'}`}
+    />
   );
 }
 
@@ -545,9 +602,23 @@ function facilityImagesFromCard(card: FacilityCard): { url: string; title: strin
   return legacy ? [{ url: legacy, title: '' }] : [];
 }
 
-export function PsFacilitiesCarouselSection({ profile, facilities }: { profile: Record<string, unknown>; facilities?: FacilityCard[] }) {
-  const fromProps = facilities && facilities.length ? facilities : parseArray<FacilityCard>(profile.facility_cards);
-  const cards = fromProps.length ? fromProps : Array.from({ length: EMPTY_FACILITY_SLOTS }, () => ({}) as FacilityCard);
+export function PsFacilitiesCarouselSection({
+  profile,
+  facilities,
+  sectionTitle = 'Facilities',
+  emptySlotCount,
+}: {
+  profile: Record<string, unknown>;
+  /** When provided (including `[]`), overrides `profile.facility_cards`. */
+  facilities?: FacilityCard[];
+  sectionTitle?: string;
+  /** Placeholder card count when the facilities list is empty (default: 7). */
+  emptySlotCount?: number;
+}) {
+  const fromProfile = parseArray<FacilityCard>(profile.facility_cards);
+  const fromProps = facilities !== undefined ? facilities : fromProfile;
+  const slots = emptySlotCount ?? EMPTY_FACILITY_SLOTS;
+  const cards = fromProps.length ? fromProps : Array.from({ length: slots }, () => ({}) as FacilityCard);
   const desktopPageSize = 3;
   const desktopTotalPages = Math.max(1, Math.ceil(cards.length / desktopPageSize));
   const [currentDesktopPage, setCurrentDesktopPage] = useState(0);
@@ -571,7 +642,7 @@ export function PsFacilitiesCarouselSection({ profile, facilities }: { profile: 
     <section className="py-2 md:py-4">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Facilities</h2>
+          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{sectionTitle}</h2>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={goPrevMobile} className="h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:hidden" aria-label="Previous facility">‹</button>
@@ -927,15 +998,13 @@ export function PsMidDayMealSection({ records }: { records: MdmDailyRecord[] }) 
       </div>
       {previewDay && (
         <div
-          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 ${
-            isPreviewClosing ? 'animate-[psModalFadeOut_180ms_ease-in_forwards]' : 'animate-[psModalFadeIn_220ms_ease-out]'
-          }`}
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 ${isPreviewClosing ? 'animate-[psModalFadeOut_180ms_ease-in_forwards]' : 'animate-[psModalFadeIn_220ms_ease-out]'
+            }`}
           onClick={closePreview}
         >
           <div
-            className={`w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl ${
-              isPreviewClosing ? 'animate-[psModalScaleOut_180ms_ease-in_forwards]' : 'animate-[psModalScaleIn_220ms_ease-out]'
-            }`}
+            className={`w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl ${isPreviewClosing ? 'animate-[psModalScaleOut_180ms_ease-in_forwards]' : 'animate-[psModalScaleIn_220ms_ease-out]'
+              }`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative">
@@ -1135,15 +1204,13 @@ export function PsParentTeacherMeetingSection({ records }: { records: ParentTeac
       </div>
       {previewMeeting && (
         <div
-          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 ${
-            isPreviewClosing ? 'animate-[psModalFadeOut_180ms_ease-in_forwards]' : 'animate-[psModalFadeIn_220ms_ease-out]'
-          }`}
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 ${isPreviewClosing ? 'animate-[psModalFadeOut_180ms_ease-in_forwards]' : 'animate-[psModalFadeIn_220ms_ease-out]'
+            }`}
           onClick={closePreview}
         >
           <div
-            className={`w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl ${
-              isPreviewClosing ? 'animate-[psModalScaleOut_180ms_ease-in_forwards]' : 'animate-[psModalScaleIn_220ms_ease-out]'
-            }`}
+            className={`w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl ${isPreviewClosing ? 'animate-[psModalScaleOut_180ms_ease-in_forwards]' : 'animate-[psModalScaleIn_220ms_ease-out]'
+              }`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative">

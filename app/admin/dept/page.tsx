@@ -33,7 +33,7 @@ import {
   EducationPsPortfolioAdminForm,
   type PsPortfolioOrgFields,
 } from '../../../components/admin/EducationPsPortfolioAdminForm';
-import { ArcsPortfolioAdminForm } from '../../../components/admin/ArcsPortfolioAdminForm';
+import { ArcsPortfolioAdminForm, ARCS_FIELD_LIMITS, CharCount } from '../../../components/admin/ArcsPortfolioAdminForm';
 
 /** ICDS minister CSV: all attributes for AWC profile (no SL NO; use system-generated org id). */
 const ICDS_CSV_HEADER =
@@ -2895,6 +2895,11 @@ export default function DepartmentAdminPage() {
                         arcs_fertiliser_cards: parseRows(arcsFormValues.arcs_fertiliser_cards_json),
                         arcs_seed_cards: parseRows(arcsFormValues.arcs_seed_cards_json),
                         arcs_loan_cards: parseRows(arcsFormValues.arcs_loan_cards_json),
+                        arcs_photo_gallery: parseRows(arcsFormValues.arcs_photo_gallery_json),
+                        arcs_office_hours: arcsFormValues.arcs_office_hours || undefined,
+                        arcs_secretary_message: arcsFormValues.arcs_secretary_message || undefined,
+                        arcs_vision: arcsFormValues.arcs_vision || undefined,
+                        arcs_mission: arcsFormValues.arcs_mission || undefined,
                       };
                       await arcsApi.putProfile(org.id, profileData);
                       if (arcsImageFile) {
@@ -2913,20 +2918,52 @@ export default function DepartmentAdminPage() {
                   }}
                 >
                   <div className="space-y-1">
-                    <label className="block text-text">ARCS name</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.arcs_name ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, arcs_name: e.target.value }))} />
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">ARCS name</label>
+                      <CharCount value={arcsFormValues.arcs_name ?? ''} max={ARCS_FIELD_LIMITS.arcs_name} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.arcs_name}
+                      value={arcsFormValues.arcs_name ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, arcs_name: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-text">Registration number</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.registration_number ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, registration_number: e.target.value }))} />
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Registration number</label>
+                      <CharCount value={arcsFormValues.registration_number ?? ''} max={ARCS_FIELD_LIMITS.registration_number} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.registration_number}
+                      value={arcsFormValues.registration_number ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, registration_number: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-text">Block/ULB</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.block_ulb ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, block_ulb: e.target.value }))} />
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Block/ULB</label>
+                      <CharCount value={arcsFormValues.block_ulb ?? ''} max={ARCS_FIELD_LIMITS.block_ulb} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.block_ulb}
+                      value={arcsFormValues.block_ulb ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, block_ulb: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-text">Jurisdiction</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.jurisdiction_type ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, jurisdiction_type: e.target.value }))} />
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Jurisdiction</label>
+                      <CharCount value={arcsFormValues.jurisdiction_type ?? ''} max={ARCS_FIELD_LIMITS.jurisdiction_type} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.jurisdiction_type}
+                      value={arcsFormValues.jurisdiction_type ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, jurisdiction_type: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-1">
                     <label className="block text-text">Latitude</label>
@@ -2937,20 +2974,52 @@ export default function DepartmentAdminPage() {
                     <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.longitude ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, longitude: e.target.value }))} />
                   </div>
                   <div className="space-y-1 md:col-span-2">
-                    <label className="block text-text">Full address</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.full_address ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, full_address: e.target.value }))} />
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Full address</label>
+                      <CharCount value={arcsFormValues.full_address ?? ''} max={ARCS_FIELD_LIMITS.full_address} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.full_address}
+                      value={arcsFormValues.full_address ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, full_address: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-text">Office phone</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.office_phone ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, office_phone: e.target.value }))} />
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Office phone</label>
+                      <CharCount value={arcsFormValues.office_phone ?? ''} max={ARCS_FIELD_LIMITS.office_phone} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.office_phone}
+                      value={arcsFormValues.office_phone ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, office_phone: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-text">Office email</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.office_email ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, office_email: e.target.value }))} />
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Office email</label>
+                      <CharCount value={arcsFormValues.office_email ?? ''} max={ARCS_FIELD_LIMITS.office_email} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.office_email}
+                      value={arcsFormValues.office_email ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, office_email: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-1 md:col-span-2">
-                    <label className="block text-text">Secretary name</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={arcsFormValues.secretary_name ?? ''} onChange={(e) => setArcsFormValues((p) => ({ ...p, secretary_name: e.target.value }))} />
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-text">Secretary name</label>
+                      <CharCount value={arcsFormValues.secretary_name ?? ''} max={ARCS_FIELD_LIMITS.secretary_name} />
+                    </div>
+                    <input
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                      maxLength={ARCS_FIELD_LIMITS.secretary_name}
+                      value={arcsFormValues.secretary_name ?? ''}
+                      onChange={(e) => setArcsFormValues((p) => ({ ...p, secretary_name: e.target.value }))}
+                    />
                   </div>
                   <div className="md:col-span-2">
                     <ArcsPortfolioAdminForm organizationId={editingArcsId} form={arcsFormValues} setForm={setArcsFormValues} />
@@ -3948,6 +4017,11 @@ export default function DepartmentAdminPage() {
                                     vals.arcs_fertiliser_cards_json = Array.isArray(p.arcs_fertiliser_cards) ? JSON.stringify(p.arcs_fertiliser_cards) : '';
                                     vals.arcs_seed_cards_json = Array.isArray(p.arcs_seed_cards) ? JSON.stringify(p.arcs_seed_cards) : '';
                                     vals.arcs_loan_cards_json = Array.isArray(p.arcs_loan_cards) ? JSON.stringify(p.arcs_loan_cards) : '';
+                                    vals.arcs_photo_gallery_json = Array.isArray(p.arcs_photo_gallery) ? JSON.stringify(p.arcs_photo_gallery) : '';
+                                    vals.arcs_office_hours = v(p.arcs_office_hours);
+                                    vals.arcs_secretary_message = v(p.arcs_secretary_message);
+                                    vals.arcs_vision = v(p.arcs_vision);
+                                    vals.arcs_mission = v(p.arcs_mission);
                                     setArcsFormValues(vals);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}
