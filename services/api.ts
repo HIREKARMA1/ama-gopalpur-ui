@@ -196,6 +196,16 @@ export const organizationsApi = {
       body: form,
     });
   },
+  /** AWC / ICDS portfolio image; stored under Departments/ICDS/{Org}/awc-portfolio/{section}/ */
+  uploadAwcPortfolioAsset: (id: number, file: File, assetType: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('asset_type', assetType);
+    return apiFetch<{ url: string }>(`/api/v1/organizations/${id}/awc-portfolio-asset`, {
+      method: 'POST',
+      body: form,
+    });
+  },
 };
 
 export const authApi = {
@@ -246,6 +256,23 @@ export interface CenterProfile {
   aww_contact_no?: string | null;
   awh_contact_no?: string | null;
   description?: string | null;
+  hero_slides?: unknown;
+  about_image?: string | null;
+  center_message?: string | null;
+  contact_email?: string | null;
+  office_hours?: string | null;
+  cpdo_photo?: string | null;
+  supervisor_photo?: string | null;
+  worker_photo?: string | null;
+  helper_photo?: string | null;
+  cpdo_email?: string | null;
+  supervisor_email?: string | null;
+  worker_email?: string | null;
+  helper_email?: string | null;
+  worker_experience?: string | null;
+  admin_cards?: unknown;
+  facility_cards?: unknown;
+  photo_gallery?: unknown;
   [key: string]: unknown;
 }
 
@@ -259,7 +286,7 @@ export const profileApi = {
     }),
 };
 
-// ----- ICDS: SNP (Supplementary Nutrition Programme) daily stock -----
+// ----- ICDS: SNP, attendance, nutrition, health activity, inspections -----
 export interface SnpDailyStock {
   id: number;
   organization_id: number;
@@ -269,20 +296,60 @@ export interface SnpDailyStock {
   exp_kg?: number | null;
   created_at: string;
 }
+
+export interface IcdsAttendanceRecord {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  child_attendance_count?: number | null;
+  worker_present?: boolean | null;
+  created_at: string;
+}
+
+export interface IcdsNutritionDistribution {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  meal_type?: string | null;
+  count_served?: number | null;
+  created_at: string;
+}
+
+export interface IcdsAwcHealthRecord {
+  id: number;
+  organization_id: number;
+  record_date: string;
+  record_type?: string | null;
+  count?: number | null;
+  notes?: string | null;
+  created_at: string;
+}
+
+export interface IcdsInspectionReport {
+  id: number;
+  organization_id: number;
+  inspection_date: string;
+  repair_required?: boolean | null;
+  utility_notes?: string | null;
+  created_at: string;
+}
+
 const icdsBase = (orgId: number) => `/api/v1/icds/organizations/${orgId}`;
+const icdsDeptQs = (params?: { organization_id?: number; skip?: number; limit?: number }) => {
+  const p = new URLSearchParams();
+  if (params?.organization_id != null) p.set('organization_id', String(params.organization_id));
+  p.set('skip', String(params?.skip ?? 0));
+  p.set('limit', String(params?.limit ?? 500));
+  return p.toString();
+};
+
 export const icdsApi = {
   listSnpDailyStock: (orgId: number, params?: { skip?: number; limit?: number }) =>
     apiFetch<SnpDailyStock[]>(
       `${icdsBase(orgId)}/snp-daily-stock?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 200}`,
     ).catch(() => []),
-  /** List all SNP entries for the current department (admin panel). */
-  listSnpForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) => {
-    const p = new URLSearchParams();
-    if (params?.organization_id != null) p.set('organization_id', String(params.organization_id));
-    p.set('skip', String(params?.skip ?? 0));
-    p.set('limit', String(params?.limit ?? 500));
-    return apiFetch<SnpDailyStock[]>(`/api/v1/icds/snp-daily-stock?${p}`);
-  },
+  listSnpForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) =>
+    apiFetch<SnpDailyStock[]>(`/api/v1/icds/snp-daily-stock?${icdsDeptQs(params)}`),
   createSnpDailyStock: (payload: {
     organization_id: number;
     record_date: string;
@@ -305,6 +372,107 @@ export const icdsApi = {
     const form = new FormData();
     form.append('file', file);
     return apiFetch<{ imported: number; errors: string[] }>('/api/v1/icds/snp-daily-stock/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  listAttendanceForOrg: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<IcdsAttendanceRecord[]>(
+      `${icdsBase(orgId)}/attendance-records?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 200}`,
+    ).catch(() => []),
+  listAttendanceForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) =>
+    apiFetch<IcdsAttendanceRecord[]>(`/api/v1/icds/attendance-records?${icdsDeptQs(params)}`),
+  createAttendanceRecord: (payload: {
+    organization_id: number;
+    record_date: string;
+    child_attendance_count?: number | null;
+    worker_present?: boolean | null;
+  }) =>
+    apiFetch<IcdsAttendanceRecord>('/api/v1/icds/attendance-records', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  bulkAttendanceCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/icds/attendance-records/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  listNutritionForOrg: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<IcdsNutritionDistribution[]>(
+      `${icdsBase(orgId)}/nutrition-distributions?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 200}`,
+    ).catch(() => []),
+  listNutritionForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) =>
+    apiFetch<IcdsNutritionDistribution[]>(`/api/v1/icds/nutrition-distributions?${icdsDeptQs(params)}`),
+  createNutritionDistribution: (payload: {
+    organization_id: number;
+    record_date: string;
+    meal_type?: string | null;
+    count_served?: number | null;
+  }) =>
+    apiFetch<IcdsNutritionDistribution>('/api/v1/icds/nutrition-distributions', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  bulkNutritionCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/icds/nutrition-distributions/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  listAwcHealthForOrg: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<IcdsAwcHealthRecord[]>(
+      `${icdsBase(orgId)}/health-records?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 200}`,
+    ).catch(() => []),
+  listAwcHealthForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) =>
+    apiFetch<IcdsAwcHealthRecord[]>(`/api/v1/icds/health-records?${icdsDeptQs(params)}`),
+  createAwcHealthRecord: (payload: {
+    organization_id: number;
+    record_date: string;
+    record_type?: string | null;
+    count?: number | null;
+    notes?: string | null;
+  }) =>
+    apiFetch<IcdsAwcHealthRecord>('/api/v1/icds/health-records', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  bulkAwcHealthCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/icds/health-records/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+
+  listInspectionForOrg: (orgId: number, params?: { skip?: number; limit?: number }) =>
+    apiFetch<IcdsInspectionReport[]>(
+      `${icdsBase(orgId)}/inspection-reports?skip=${params?.skip ?? 0}&limit=${params?.limit ?? 200}`,
+    ).catch(() => []),
+  listInspectionForDept: (params?: { organization_id?: number; skip?: number; limit?: number }) =>
+    apiFetch<IcdsInspectionReport[]>(`/api/v1/icds/inspection-reports?${icdsDeptQs(params)}`),
+  createInspectionReport: (payload: {
+    organization_id: number;
+    inspection_date: string;
+    repair_required?: boolean | null;
+    utility_notes?: string | null;
+  }) =>
+    apiFetch<IcdsInspectionReport>('/api/v1/icds/inspection-reports', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  bulkInspectionCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/icds/inspection-reports/bulk-csv', {
       method: 'POST',
       body: form,
     });
