@@ -248,6 +248,19 @@ export type MessageKey =
   | 'health.portfolio.totalStaff'
   | 'health.portfolio.mapSubtitle'
   | 'health.portfolio.dailyMonitoringSubtitle'
+  | 'health.portfolio.showingRowsRange'
+  | 'health.portfolio.noDailyDataYet'
+  | 'health.portfolio.chart.staffAttendanceTrend'
+  | 'health.portfolio.chart.opdIpdDaily'
+  | 'health.portfolio.chart.medicineTotalsDaily'
+  | 'health.portfolio.chart.medicineTotalsHint'
+  | 'health.portfolio.chartNoSeries'
+  | 'health.portfolio.tableEmptyAttendance'
+  | 'health.portfolio.tableEmptyMedicine'
+  | 'health.portfolio.tableEmptyPatients'
+  | 'health.portfolio.recordDate'
+  | 'health.portfolio.monitoringLoadErrorTitle'
+  | 'health.portfolio.noDailyDataAfterError'
   | 'awc.portfolio.title'
   | 'awc.portfolio.subtitle'
   | 'awc.portfolio.heroSubtitle'
@@ -2155,6 +2168,58 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'health.portfolio.dailyMonitoringSubtitle': {
     en: 'Daily tracking of medicine inventory, attendance and patient traffic.',
     or: 'ଔଷଧ ଭଣ୍ଡାର, ଉପସ୍ଥିତି ଓ ରୋଗୀ ଚାପର ଦୈନିକ ଅନୁଧ୍ୟାନ।',
+  },
+  'health.portfolio.showingRowsRange': {
+    en: 'Showing {start}–{end} of {total} records',
+    or: 'Showing {start}–{end} of {total} records',
+  },
+  'health.portfolio.noDailyDataYet': {
+    en: 'No daily monitoring records for this facility yet. In dept admin, open Daily Health Monitoring, select this same facility from the list, then add attendance, medicine, patients, or extra data — it will show here for the public.',
+    or: 'No daily monitoring records for this facility yet. In dept admin, open Daily Health Monitoring, select this same facility from the list, then add attendance, medicine, patients, or extra data — it will show here for the public.',
+  },
+  'health.portfolio.monitoringLoadErrorTitle': {
+    en: 'Could not load monitoring data from the server',
+    or: 'Could not load monitoring data from the server',
+  },
+  'health.portfolio.noDailyDataAfterError': {
+    en: 'Fix the issue above (often API URL, network, or server errors), then refresh. If the problem persists, check the browser Network tab for /api/v1/health/organizations/… requests.',
+    or: 'Fix the issue above (often API URL, network, or server errors), then refresh. If the problem persists, check the browser Network tab for /api/v1/health/organizations/… requests.',
+  },
+  'health.portfolio.chart.staffAttendanceTrend': {
+    en: 'Staff present (daily)',
+    or: 'Staff present (daily)',
+  },
+  'health.portfolio.chart.opdIpdDaily': {
+    en: 'OPD vs IPD (daily)',
+    or: 'OPD vs IPD (daily)',
+  },
+  'health.portfolio.chart.medicineTotalsDaily': {
+    en: 'Medicine received vs issued (daily totals)',
+    or: 'Medicine received vs issued (daily totals)',
+  },
+  'health.portfolio.chart.medicineTotalsHint': {
+    en: 'Totals sum all medicine rows recorded for each day.',
+    or: 'Totals sum all medicine rows recorded for each day.',
+  },
+  'health.portfolio.chartNoSeries': {
+    en: 'No data for this chart in the loaded history.',
+    or: 'No data for this chart in the loaded history.',
+  },
+  'health.portfolio.tableEmptyAttendance': {
+    en: 'No attendance rows in the loaded history.',
+    or: 'No attendance rows in the loaded history.',
+  },
+  'health.portfolio.tableEmptyMedicine': {
+    en: 'No medicine stock rows in the loaded history.',
+    or: 'No medicine stock rows in the loaded history.',
+  },
+  'health.portfolio.tableEmptyPatients': {
+    en: 'No patient service rows in the loaded history.',
+    or: 'No patient service rows in the loaded history.',
+  },
+  'health.portfolio.recordDate': {
+    en: 'Date',
+    or: 'ତାରିଖ',
   },
   'awc.portfolio.title': {
     en: 'Anganwadi Centre Dashboard',
