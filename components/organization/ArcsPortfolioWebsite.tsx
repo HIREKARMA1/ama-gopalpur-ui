@@ -375,7 +375,7 @@ function ArcsInchargeSection({ cards }: { cards: Record<string, unknown>[] }) {
             const pageCards = list.slice(pageIdx * desktopPageSize, pageIdx * desktopPageSize + desktopPageSize);
             return (
               <article key={`incharge-p-${pageIdx}`} className="w-full shrink-0">
-                <div className="grid gap-5 md:grid-cols-3">
+              <div className="grid gap-5 md:grid-cols-3">
                   {pageCards.map((admin, idx) => (
                     <div key={`incharge-${pageIdx}-${idx}`} className="flex justify-center">
                       <ArcsInchargeCard admin={admin} />

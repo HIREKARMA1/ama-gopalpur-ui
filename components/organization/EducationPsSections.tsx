@@ -129,7 +129,7 @@ export function PsHeroSection({ org, profile, language, sliderImages }: { org: O
       <ImageSlider
         images={heroSlides}
         altPrefix={asString(org.name) || 'School'}
-        className="min-h-[560px] h-[min(72vh,680px)] sm:min-h-0 sm:h-[580px] lg:h-[600px]"
+        className="min-h-[200px] h-[min(40vh,320px)] sm:min-h-0 sm:h-[520px] md:h-[560px] lg:h-[600px]"
         showArrows={false}
         autoAdvanceMs={4500}
         placeholderCount={3}
@@ -137,7 +137,7 @@ export function PsHeroSection({ org, profile, language, sliderImages }: { org: O
       />
       {/* Fixed readability layer: keeps text clear while background slides */}
       <div className="absolute inset-0 z-10 bg-gradient-to-tr from-slate-700/55 via-slate-500/35 to-slate-400/25" />
-      <div className="absolute inset-0 z-20 flex items-start justify-center pt-16 sm:items-center sm:justify-start sm:pt-0">
+      <div className="absolute inset-0 z-20 flex items-start justify-center pt-8 sm:items-center sm:justify-start sm:pt-0">
         <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-extrabold tracking-tight text-white drop-shadow-md sm:text-5xl">
             {getText(profile, 'school_name', language) || org.name || EMPTY}
@@ -257,7 +257,11 @@ export function PsAboutSection({
               aria-label={aboutLeaderRole === 'secretary' ? 'Open secretary photo' : 'Open headmaster photo'}
             >
               {asString(profile.headmaster_photo) ? (
-                <img src={asString(profile.headmaster_photo)} alt={displayText(headmasterName)} className="h-full w-full object-cover" />
+                <img
+                  src={asString(profile.headmaster_photo)}
+                  alt={displayText(headmasterName)}
+                  className="h-full w-full object-contain object-center"
+                />
               ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-1">
                   <Images className="h-6 w-6 text-slate-500" />
@@ -321,16 +325,22 @@ export function PsAboutSection({
             >
               <X className="h-5 w-5" />
             </button>
-            {asString(profile.headmaster_photo) ? (
-              <img src={asString(profile.headmaster_photo)} alt={headmasterName} className="h-[300px] w-full object-cover sm:h-[360px]" />
-            ) : (
-              <div className="flex h-[300px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 sm:h-[360px]">
-                <div className="text-center">
-                  <Images className="mx-auto h-8 w-8 text-slate-500" />
-                  <p className="mt-2 text-sm font-medium text-slate-600">{EMPTY}</p>
+            <div className="flex max-h-[min(72vh,560px)] min-h-[220px] w-full items-center justify-center bg-slate-100">
+              {asString(profile.headmaster_photo) ? (
+                <img
+                  src={asString(profile.headmaster_photo)}
+                  alt={headmasterName}
+                  className="max-h-[min(72vh,560px)] w-full object-contain object-center"
+                />
+              ) : (
+                <div className="flex min-h-[220px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 py-16">
+                  <div className="text-center">
+                    <Images className="mx-auto h-8 w-8 text-slate-500" />
+                    <p className="mt-2 text-sm font-medium text-slate-600">{EMPTY}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
             <div className="p-4">
               <p className="text-lg font-bold text-slate-900">{headmasterName}</p>
               <p className="text-sm text-slate-600">{headmasterTitle}</p>
@@ -427,9 +437,9 @@ export function PsPersonCardsSection({
             key={`${admin.role}-${idx}-${admin.name}`}
             className="flex min-h-[370px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white"
           >
-            <div className="h-[230px] w-full overflow-hidden bg-slate-100">
+            <div className="flex h-[260px] w-full items-center justify-center overflow-hidden bg-slate-100 sm:h-[280px]">
               {admin.image ? (
-                <img src={admin.image} alt={admin.name} className="h-full w-full object-cover" />
+                <img src={admin.image} alt={admin.name} className="max-h-full max-w-full object-contain object-center" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <div className="text-center">
@@ -539,13 +549,15 @@ export function PsHeadmasterSection({ profile, language }: { profile: Record<str
     <section className="py-2 md:py-4">
       <div className="grid gap-8 md:grid-cols-[360px_1fr] md:items-start">
         <div>
-          <div className="overflow-hidden rounded-md">
+          <div className="overflow-hidden rounded-md bg-slate-100">
             {asString(profile.headmaster_photo) ? (
-              <img
-                src={asString(profile.headmaster_photo)}
-                alt="Headmaster"
-                className="h-[360px] w-full object-cover md:h-[440px]"
-              />
+              <div className="flex max-h-[440px] min-h-[280px] w-full items-center justify-center md:min-h-[320px]">
+                <img
+                  src={asString(profile.headmaster_photo)}
+                  alt="Headmaster"
+                  className="max-h-[440px] w-full object-contain object-center"
+                />
+              </div>
             ) : (
               <div className="flex h-[360px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 md:h-[440px]">
                 <div className="text-center">
@@ -1383,7 +1395,13 @@ export function PsFacultySection({
                 aria-label={`Open ${displayText(f.name)} details`}
               >
                 {asString(f.photo) ? (
-                  <img src={asString(f.photo)} alt={displayText(f.name)} className="h-[280px] w-full object-cover" />
+                  <div className="flex h-[280px] w-full items-center justify-center bg-slate-100">
+                    <img
+                      src={asString(f.photo)}
+                      alt={displayText(f.name)}
+                      className="max-h-full max-w-full object-contain object-center"
+                    />
+                  </div>
                 ) : (
                   <div className="flex h-[280px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
                     <div className="text-center">
@@ -1428,7 +1446,13 @@ export function PsFacultySection({
                         aria-label={`Open ${displayText(f.name)} details`}
                       >
                         {asString(f.photo) ? (
-                          <img src={asString(f.photo)} alt={displayText(f.name)} className="h-[320px] w-full object-cover" />
+                          <div className="flex h-[320px] w-full items-center justify-center bg-slate-100">
+                            <img
+                              src={asString(f.photo)}
+                              alt={displayText(f.name)}
+                              className="max-h-full max-w-full object-contain object-center"
+                            />
+                          </div>
                         ) : (
                           <div className="flex h-[320px] w-full items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
                             <div className="text-center">
@@ -1470,7 +1494,13 @@ export function PsFacultySection({
           >
             <div className="relative">
               {asString(previewFaculty.faculty.photo) ? (
-                <img src={asString(previewFaculty.faculty.photo)} alt={displayText(previewFaculty.faculty.name)} className="h-[320px] w-full object-contain bg-slate-100" />
+                <div className="flex max-h-[min(75vh,600px)] min-h-[200px] w-full items-center justify-center bg-slate-100">
+                  <img
+                    src={asString(previewFaculty.faculty.photo)}
+                    alt={displayText(previewFaculty.faculty.name)}
+                    className="max-h-[min(75vh,600px)] w-full object-contain object-center"
+                  />
+                </div>
               ) : (
                 <div className="flex h-[320px] w-full items-center justify-center bg-slate-100">
                   <p className="text-sm text-slate-500">{EMPTY}</p>
