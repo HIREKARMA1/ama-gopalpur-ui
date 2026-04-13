@@ -129,7 +129,7 @@ export function PsHeroSection({ org, profile, language, sliderImages }: { org: O
       <ImageSlider
         images={heroSlides}
         altPrefix={asString(org.name) || 'School'}
-        className="min-h-[560px] h-[min(72vh,680px)] sm:min-h-0 sm:h-[580px] lg:h-[600px]"
+        className="min-h-[200px] h-[min(40vh,320px)] sm:min-h-0 sm:h-[520px] md:h-[560px] lg:h-[600px]"
         showArrows={false}
         autoAdvanceMs={4500}
         placeholderCount={3}
@@ -137,7 +137,7 @@ export function PsHeroSection({ org, profile, language, sliderImages }: { org: O
       />
       {/* Fixed readability layer: keeps text clear while background slides */}
       <div className="absolute inset-0 z-10 bg-gradient-to-tr from-slate-700/55 via-slate-500/35 to-slate-400/25" />
-      <div className="absolute inset-0 z-20 flex items-start justify-center pt-16 sm:items-center sm:justify-start sm:pt-0">
+      <div className="absolute inset-0 z-20 flex items-start justify-center pt-8 sm:items-center sm:justify-start sm:pt-0">
         <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-extrabold tracking-tight text-white drop-shadow-md sm:text-5xl">
             {getText(profile, 'school_name', language) || org.name || EMPTY}

@@ -38,6 +38,12 @@ import {
   HealthPortfolioAdminForm,
   normalizeHealthFacilityCardsForSave,
 } from '../../../components/admin/HealthPortfolioAdminForm';
+import {
+  AwcPortfolioAdminForm,
+  centerProfileToExtras,
+  emptyAwcProfileExtras,
+  extrasToPartialProfile,
+} from '../../../components/admin/AwcPortfolioAdminForm';
 
 /** ICDS minister CSV: all attributes for AWC profile (no SL NO; use system-generated org id). */
 const ICDS_CSV_HEADER =
@@ -222,6 +228,7 @@ export default function DepartmentAdminPage() {
     awh_contact_no: '',
     description: '',
   });
+  const [awcProfileExtras, setAwcProfileExtras] = useState(emptyAwcProfileExtras());
   const PAGE_SIZE = 25;
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -797,7 +804,7 @@ export default function DepartmentAdminPage() {
         deptCode === 'ICDS' || deptCode === 'AWC_ICDS'
           ? [
             { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
-            { href: '/admin/dept/snp', labelKey: 'super.sidebar.snp' },
+            { href: '/admin/dept/icds-monitoring', labelKey: 'icds.monitoring.title' },
           ]
           : deptCode === 'HEALTH'
             ? [
@@ -909,12 +916,17 @@ export default function DepartmentAdminPage() {
 
             {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS') && (
               <section className="rounded-lg border border-border bg-background p-4">
-                <h2 className="text-sm font-semibold text-text">Manual AWC entry</h2>
+                <h2 className="text-sm font-semibold text-text">Manual AWC centre entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
-                  Add a single ICDS AWC manually. Fields mirror the CSV columns.
+                  All fields are in the section tabs below: identity, three hero images, and cover in <span className="font-medium text-text">Hero &amp; media</span>, about text and
+                  centre image in <span className="font-medium text-text">About &amp; message</span>, address and map coordinates in <span className="font-medium text-text">Location</span>, staff
+                  and contacts in <span className="font-medium text-text">Staff &amp; contacts</span>, programme counts in <span className="font-medium text-text">Programme &amp; data</span>, public carousel in{' '}
+                  <span className="font-medium text-text">Facilities</span>, building / timings in <span className="font-medium text-text">Infrastructure &amp; timings</span>, and admin JSON / gallery in{' '}
+                  <span className="font-medium text-text">Cards &amp; gallery</span>. Use{' '}
+                  <span className="font-medium text-text">Update AWC</span> once when done. Minister CSV fields merge with profile records on save.
                 </p>
                 <form
-                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  className="mt-3 space-y-4 text-xs"
                   onSubmit={async (e) => {
                     e.preventDefault();
                     if (!me?.department_id) {
@@ -980,7 +992,8 @@ export default function DepartmentAdminPage() {
                         description: newOrg.description || undefined,
                         sector: newOrg.sector || undefined,
                       };
-                      await profileApi.putCenterProfile(updated.id, profilePayload);
+                      const extraProfile = extrasToPartialProfile(awcProfileExtras);
+                      await profileApi.putCenterProfile(updated.id, { ...profilePayload, ...extraProfile } as Partial<CenterProfile>);
                       if (icdsImageFile) {
                         const compressed = await compressImage(icdsImageFile, { maxSizeMB: 0.5 });
                         await organizationsApi.uploadCoverImage(updated.id, compressed);
@@ -993,6 +1006,7 @@ export default function DepartmentAdminPage() {
                         supervisor_name: '', supervisor_contact_name: '', aww_name: '', aww_contact_no: '', awh_name: '', awh_contact_no: '', description: '',
                       };
                       setNewOrg(emptyOrg);
+                      setAwcProfileExtras(emptyAwcProfileExtras());
                       setEditingOrgId(null);
                     } catch (err: any) {
                       setError(err.message || 'Failed to save organization');
@@ -1001,96 +1015,27 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  <div className="space-y-1">
-                    <label className="block text-text">ULB / Block Name</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.ulb_block} onChange={(e) => setNewOrg((s) => ({ ...s, ulb_block: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">GP / Ward Name</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.gp_name} onChange={(e) => setNewOrg((s) => ({ ...s, gp_name: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Village</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.ward_village} onChange={(e) => setNewOrg((s) => ({ ...s, ward_village: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Name of AWC</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.awc_name} onChange={(e) => setNewOrg((s) => ({ ...s, awc_name: e.target.value }))} required />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">AWC ID</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.awc_id} onChange={(e) => setNewOrg((s) => ({ ...s, awc_id: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Building status</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.building_status} onChange={(e) => setNewOrg((s) => ({ ...s, building_status: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Latitude</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.latitude} onChange={(e) => setNewOrg((s) => ({ ...s, latitude: e.target.value }))} required />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Longitude</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.longitude} onChange={(e) => setNewOrg((s) => ({ ...s, longitude: e.target.value }))} required />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Student strength</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.student_strength} onChange={(e) => setNewOrg((s) => ({ ...s, student_strength: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">CPDO name</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.cpdo_name} onChange={(e) => setNewOrg((s) => ({ ...s, cpdo_name: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">CPDO contact no</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.cpdo_contact_no} onChange={(e) => setNewOrg((s) => ({ ...s, cpdo_contact_no: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Supervisor name</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.supervisor_name} onChange={(e) => setNewOrg((s) => ({ ...s, supervisor_name: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Supervisor contact</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.supervisor_contact_name} onChange={(e) => setNewOrg((s) => ({ ...s, supervisor_contact_name: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">AWW name</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.aww_name} onChange={(e) => setNewOrg((s) => ({ ...s, aww_name: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">AWW contact no</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.aww_contact_no} onChange={(e) => setNewOrg((s) => ({ ...s, aww_contact_no: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">AWH name</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.awh_name} onChange={(e) => setNewOrg((s) => ({ ...s, awh_name: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">AWH contact no</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.awh_contact_no} onChange={(e) => setNewOrg((s) => ({ ...s, awh_contact_no: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Description</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.description} onChange={(e) => setNewOrg((s) => ({ ...s, description: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Profile image (optional)</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="w-full text-xs"
-                      onChange={(e) => setIcdsImageFile(e.target.files?.[0] ?? null)}
+                  <div className="min-w-0 w-full overflow-visible rounded-lg border border-dashed border-border/80 bg-muted/20 p-3">
+                    <AwcPortfolioAdminForm
+                      organizationId={editingOrgId}
+                      facilityRecord={newOrg}
+                      onFacilityRecordPatch={(patch) => setNewOrg((s) => ({ ...s, ...patch }))}
+                      extras={awcProfileExtras}
+                      onExtrasPatch={(patch) => setAwcProfileExtras((s) => ({ ...s, ...patch }))}
+                      profileImageControl={
+                        <div className="space-y-1">
+                          <span className="block text-[11px] text-text">Profile image (optional)</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="w-full text-[11px] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-1 file:text-primary-foreground"
+                            onChange={(e) => setIcdsImageFile(e.target.files?.[0] ?? null)}
+                          />
+                        </div>
+                      }
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">Sector</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.sector} onChange={(e) => setNewOrg((s) => ({ ...s, sector: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">LGD Code</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newOrg.lgd_code} onChange={(e) => setNewOrg((s) => ({ ...s, lgd_code: e.target.value }))} />
-                  </div>
-                  <div className="md:col-span-2">
+                  <div>
                     <button
                       type="submit"
                       disabled={creating}
@@ -3779,6 +3724,7 @@ export default function DepartmentAdminPage() {
                                         awh_contact_no: String(p?.awh_contact_no ?? ''),
                                         description: String(p?.description ?? ''),
                                       });
+                                      setAwcProfileExtras(centerProfileToExtras(p as Record<string, unknown>));
                                       window.scrollTo({ top: 0, behavior: 'smooth' });
                                     }}
                                   >

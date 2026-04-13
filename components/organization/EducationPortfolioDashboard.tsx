@@ -575,7 +575,11 @@ export function EducationPortfolioDashboard({
     <div className="min-h-screen bg-slate-50/30 text-slate-800 font-sans pb-16">
       {/* Hero */}
       <section className="w-full">
-        <ImageSlider images={images} altPrefix={org.name} className="h-[410px] sm:h-[400px]" />
+        <ImageSlider
+          images={images}
+          altPrefix={org.name}
+          className="min-h-[200px] h-[min(40vh,300px)] sm:min-h-0 sm:h-[400px] md:h-[410px]"
+        />
       </section>
 
       {/* Top Header */}

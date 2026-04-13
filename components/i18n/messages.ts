@@ -232,6 +232,21 @@ export type MessageKey =
   | 'health.monitoring.patients.deliveries'
   | 'health.monitoring.patients.refIn'
   | 'health.monitoring.patients.refOut'
+  | 'icds.monitoring.title'
+  | 'icds.monitoring.tab.attendance'
+  | 'icds.monitoring.tab.snp'
+  | 'icds.monitoring.tab.inspection'
+  | 'icds.monitoring.tab.nutrition'
+  | 'icds.monitoring.attendance.children'
+  | 'icds.monitoring.attendance.worker'
+  | 'icds.monitoring.snp.opening'
+  | 'icds.monitoring.snp.received'
+  | 'icds.monitoring.snp.exp'
+  | 'icds.monitoring.inspection.date'
+  | 'icds.monitoring.inspection.repair'
+  | 'icds.monitoring.inspection.notes'
+  | 'icds.monitoring.nutrition.mealType'
+  | 'icds.monitoring.nutrition.count'
   | 'portfolio.loadingMap'
   | 'portfolio.facilityDetails'
   | 'portfolio.facilityLocation'
@@ -297,6 +312,24 @@ export type MessageKey =
   | 'awc.contact.awhContactNo'
   | 'awc.portfolio.showingDaysRange'
   | 'awc.portfolio.pageOf'
+  | 'awc.portfolio.awwMessageHeading'
+  | 'awc.portfolio.beneficiary03'
+  | 'awc.portfolio.beneficiary36'
+  | 'awc.portfolio.beneficiaryPregnant'
+  | 'awc.portfolio.beneficiaryLactating'
+  | 'awc.portfolio.beneficiaryTotal'
+  | 'awc.portfolio.servicesTableTitle'
+  | 'awc.portfolio.keyHighlightsTitle'
+  | 'awc.portfolio.snpMonitoringTitle'
+  | 'awc.portfolio.chipCentreType'
+  | 'awc.portfolio.chipAwwContact'
+  | 'awc.portfolio.notSpecified'
+  | 'awc.portfolio.chartOpeningClosing'
+  | 'awc.portfolio.chartOpeningClosingHint'
+  | 'awc.portfolio.chartReceivedExpHint'
+  | 'awc.portfolio.snpDaySnapshotTitle'
+  | 'awc.portfolio.snpDaySnapshotHint'
+  | 'awc.portfolio.noSnpRowsForDate'
   | 'water.portfolio.title'
   | 'water.portfolio.subtitle'
   | 'water.portfolio.schemeDetails'
@@ -2105,6 +2138,66 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     en: 'Referrals Out',
     or: 'Referrals Out',
   },
+  'icds.monitoring.title': {
+    en: 'ICDS daily monitoring',
+    or: 'ICDS daily monitoring',
+  },
+  'icds.monitoring.tab.attendance': {
+    en: 'Attendance',
+    or: 'Attendance',
+  },
+  'icds.monitoring.tab.snp': {
+    en: 'SNP stock',
+    or: 'SNP stock',
+  },
+  'icds.monitoring.tab.inspection': {
+    en: 'Inspection',
+    or: 'Inspection',
+  },
+  'icds.monitoring.tab.nutrition': {
+    en: 'Nutrition served',
+    or: 'Nutrition served',
+  },
+  'icds.monitoring.attendance.children': {
+    en: 'Children present',
+    or: 'Children present',
+  },
+  'icds.monitoring.attendance.worker': {
+    en: 'Worker present',
+    or: 'Worker present',
+  },
+  'icds.monitoring.snp.opening': {
+    en: 'Opening balance (kg)',
+    or: 'Opening balance (kg)',
+  },
+  'icds.monitoring.snp.received': {
+    en: 'Received (kg)',
+    or: 'Received (kg)',
+  },
+  'icds.monitoring.snp.exp': {
+    en: 'Expended (kg)',
+    or: 'Expended (kg)',
+  },
+  'icds.monitoring.inspection.date': {
+    en: 'Inspection date',
+    or: 'Inspection date',
+  },
+  'icds.monitoring.inspection.repair': {
+    en: 'Repair required',
+    or: 'Repair required',
+  },
+  'icds.monitoring.inspection.notes': {
+    en: 'Notes',
+    or: 'Notes',
+  },
+  'icds.monitoring.nutrition.mealType': {
+    en: 'Meal type',
+    or: 'Meal type',
+  },
+  'icds.monitoring.nutrition.count': {
+    en: 'Count served',
+    or: 'Count served',
+  },
   'portfolio.loadingMap': {
     en: 'Loading map…',
     or: 'ମାନଚିତ୍ର ଲୋଡ୍ ହେଉଛି…',
@@ -2286,6 +2379,78 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'awc.portfolio.pageOf': {
     en: 'Page {page} of {total}',
     or: 'ପୃଷ୍ଠା {page} / {total}',
+  },
+  'awc.portfolio.awwMessageHeading': {
+    en: "AWW's message",
+    or: "AWW's message",
+  },
+  'awc.portfolio.beneficiary03': {
+    en: 'Children 0-3 years',
+    or: 'Children 0-3 years',
+  },
+  'awc.portfolio.beneficiary36': {
+    en: 'Children 3-6 years',
+    or: 'Children 3-6 years',
+  },
+  'awc.portfolio.beneficiaryPregnant': {
+    en: 'Pregnant women',
+    or: 'Pregnant women',
+  },
+  'awc.portfolio.beneficiaryLactating': {
+    en: 'Lactating mothers',
+    or: 'Lactating mothers',
+  },
+  'awc.portfolio.beneficiaryTotal': {
+    en: 'Total active beneficiaries',
+    or: 'Total active beneficiaries',
+  },
+  'awc.portfolio.servicesTableTitle': {
+    en: 'SNP / Nutrition and health services',
+    or: 'SNP / Nutrition and health services',
+  },
+  'awc.portfolio.keyHighlightsTitle': {
+    en: 'Key highlights',
+    or: 'Key highlights',
+  },
+  'awc.portfolio.snpMonitoringTitle': {
+    en: 'Daily SNP monitoring',
+    or: 'Daily SNP monitoring',
+  },
+  'awc.portfolio.chipCentreType': {
+    en: 'Centre type',
+    or: 'Centre type',
+  },
+  'awc.portfolio.chipAwwContact': {
+    en: 'AWW contact',
+    or: 'AWW contact',
+  },
+  'awc.portfolio.notSpecified': {
+    en: 'Not specified',
+    or: 'Not specified',
+  },
+  'awc.portfolio.chartOpeningClosing': {
+    en: 'Opening vs closing stock',
+    or: 'Opening vs closing stock',
+  },
+  'awc.portfolio.chartOpeningClosingHint': {
+    en: 'Last 15 records (kg)',
+    or: 'Last 15 records (kg)',
+  },
+  'awc.portfolio.chartReceivedExpHint': {
+    en: 'Last 15 records (kg)',
+    or: 'Last 15 records (kg)',
+  },
+  'awc.portfolio.snpDaySnapshotTitle': {
+    en: 'Daily SNP stock snapshot',
+    or: 'Daily SNP stock snapshot',
+  },
+  'awc.portfolio.snpDaySnapshotHint': {
+    en: 'Stock figures for {date}',
+    or: 'Stock figures for {date}',
+  },
+  'awc.portfolio.noSnpRowsForDate': {
+    en: 'No SNP stock data available for this date.',
+    or: 'No SNP stock data available for this date.',
   },
   'water.portfolio.title': {
     en: 'Water Supply Asset Dashboard',
