@@ -23,6 +23,10 @@ import {
   EducationInfrastructure,
   EducationGovtRegistry,
   ElectricityMaster,
+  HealthDailyAttendance,
+  HealthDailyMedicineStock,
+  HealthPatientService,
+  HealthDailyExtraData,
 } from '../../../services/api';
 import { EDUCATION_TYPE_LABELS } from '../../../lib/mapConfig';
 import { Loader } from '../../../components/common/Loader';
@@ -149,6 +153,10 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [awcProfile, setAwcProfile] = useState<CenterProfile | null>(null);
   const [educationProfile, setEducationProfile] = useState<Record<string, unknown>>({});
   const [healthProfile, setHealthProfile] = useState<Record<string, unknown>>({});
+  const [healthDailyAttendance, setHealthDailyAttendance] = useState<HealthDailyAttendance[]>([]);
+  const [healthDailyMedicineStock, setHealthDailyMedicineStock] = useState<HealthDailyMedicineStock[]>([]);
+  const [healthPatientServices, setHealthPatientServices] = useState<HealthPatientService[]>([]);
+  const [healthDailyExtra, setHealthDailyExtra] = useState<HealthDailyExtraData[]>([]);
   const [electricityProfile, setElectricityProfile] = useState<Record<string, unknown>>({});
   const [arcsProfile, setArcsProfile] = useState<Record<string, unknown>>({});
   const [electricityMaster, setElectricityMaster] = useState<ElectricityMaster | null>(null);
@@ -179,6 +187,10 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
     const load = async () => {
       setLoading(true);
       setError(null);
+      setHealthDailyAttendance([]);
+      setHealthDailyMedicineStock([]);
+      setHealthPatientServices([]);
+      setHealthDailyExtra([]);
       try {
         const [orgRes, deptsRes] = await Promise.all([
           organizationsApi.get(id),
@@ -197,10 +209,26 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
         } else if (code === 'HEALTH') {
-          const profile = await healthApi.getProfile(id);
+          const [profile, attendance, medicinePrimary, patients, extra] = await Promise.all([
+            healthApi.getProfile(id),
+            healthApi.listDailyAttendance(id, { limit: 400 }).catch(() => []),
+            healthApi.listDailyMedicineStock(id, { limit: 500 }).catch(() => []),
+            healthApi.listPatientServices(id, { limit: 400 }).catch(() => []),
+            healthApi.listDailyExtraData(id, { limit: 200 }).catch(() => []),
+          ]);
+          const medicine =
+            Array.isArray(medicinePrimary) && medicinePrimary.length > 0
+              ? medicinePrimary
+              : await healthApi
+                  .listDailyMedicineStockForDept({ organization_id: id, limit: 500 })
+                  .catch(() => []);
           setHealthProfile(
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
+          setHealthDailyAttendance(attendance);
+          setHealthDailyMedicineStock(medicine);
+          setHealthPatientServices(patients);
+          setHealthDailyExtra(extra);
         } else if (code === 'ARCS') {
           const prof = await arcsApi.getProfile(id);
           setArcsProfile(prof && typeof prof === 'object' ? (prof as Record<string, unknown>) : {});
@@ -361,6 +389,10 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           org={org}
           healthProfile={healthProfile}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
+          dailyAttendance={healthDailyAttendance}
+          dailyMedicineStock={healthDailyMedicineStock}
+          patientServices={healthPatientServices}
+          dailyExtraData={healthDailyExtra}
         />
       </div>
     );

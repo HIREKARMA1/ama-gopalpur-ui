@@ -1,7 +1,14 @@
 'use client';
 
 import { useMemo, type ReactNode } from 'react';
-import { Organization } from '../../services/api';
+import type {
+  Organization,
+  HealthDailyAttendance,
+  HealthDailyMedicineStock,
+  HealthPatientService,
+  HealthDailyExtraData,
+} from '../../services/api';
+import { HealthPortfolioMonitoringSection } from './HealthPortfolioMonitoring';
 import {
   PsHeroSection,
   PsAboutSection,
@@ -23,7 +30,6 @@ import {
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
 
-/** Portfolio props: optional API payloads are ignored; all content comes from `healthProfile` (dept admin). */
 export interface HealthPortfolioWebsiteProps {
   org: Organization;
   facilityMaster?: unknown;
@@ -31,14 +37,15 @@ export interface HealthPortfolioWebsiteProps {
   healthProfile: Record<string, unknown>;
   staff?: unknown;
   equipment?: unknown;
-  patientServices?: unknown;
   immunisation?: unknown;
   medicines?: unknown;
   schemes?: unknown;
   monthly?: unknown;
-  dailyAttendance?: unknown;
-  dailyMedicineStock?: unknown;
-  dailyExtraData?: unknown;
+  /** Daily monitoring rows (same APIs as dept admin health monitoring). */
+  dailyAttendance?: HealthDailyAttendance[];
+  dailyMedicineStock?: HealthDailyMedicineStock[];
+  patientServices?: HealthPatientService[];
+  dailyExtraData?: HealthDailyExtraData[];
   departmentName?: string | null;
   images?: string[];
 }
@@ -107,6 +114,10 @@ export function HealthPortfolioWebsite({
   org,
   healthProfile,
   departmentName: _departmentName,
+  dailyAttendance = [],
+  dailyMedicineStock = [],
+  patientServices = [],
+  dailyExtraData = [],
 }: HealthPortfolioWebsiteProps) {
   const { language } = useLanguage();
   const lang = language as Lang;
@@ -313,6 +324,13 @@ export function HealthPortfolioWebsite({
             ))}
           </div>
         </section>
+
+        <HealthPortfolioMonitoringSection
+          dailyAttendance={dailyAttendance}
+          dailyMedicineStock={dailyMedicineStock}
+          patientServices={patientServices}
+          dailyExtraData={dailyExtraData}
+        />
 
         <PsGallerySection gallery={galleryItems} />
         <PsContactSection org={org} profile={contactProfile} language={lang} />
