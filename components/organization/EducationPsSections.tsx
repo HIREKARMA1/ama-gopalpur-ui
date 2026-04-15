@@ -129,20 +129,20 @@ export function PsHeroSection({ org, profile, language, sliderImages }: { org: O
       <ImageSlider
         images={heroSlides}
         altPrefix={asString(org.name) || 'School'}
-        className="min-h-[200px] h-[min(40vh,320px)] sm:min-h-0 sm:h-[520px] md:h-[560px] lg:h-[600px]"
+        className="h-[260px] sm:h-[520px] md:h-[560px] lg:h-[600px]"
         showArrows={false}
         autoAdvanceMs={4500}
         placeholderCount={3}
         hidePlaceholderText
       />
       {/* Fixed readability layer: keeps text clear while background slides */}
-      <div className="absolute inset-0 z-10 bg-gradient-to-tr from-slate-700/55 via-slate-500/35 to-slate-400/25" />
+      <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/25 via-black/10 to-transparent" />
       <div className="absolute inset-0 z-20 flex items-start justify-center pt-8 sm:items-center sm:justify-start sm:pt-0">
         <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-extrabold tracking-tight text-white drop-shadow-md sm:text-5xl">
+          <h1 className="hidden max-w-[92vw] text-2xl font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-md sm:[display:-webkit-box] sm:[-webkit-box-orient:vertical] sm:[-webkit-line-clamp:unset] sm:max-w-3xl sm:text-5xl sm:leading-tight sm:overflow-visible">
             {getText(profile, 'school_name', language) || org.name || EMPTY}
           </h1>
-          <p className="mt-3 max-w-2xl text-sm text-slate-100 drop-shadow sm:text-lg">
+          <p className="hidden mt-2 max-w-[92vw] text-xs text-slate-100 drop-shadow sm:[display:-webkit-box] sm:[-webkit-box-orient:vertical] sm:[-webkit-line-clamp:unset] sm:mt-3 sm:max-w-2xl sm:text-lg sm:overflow-visible">
             {primaryTagline}
           </p>
         </div>
