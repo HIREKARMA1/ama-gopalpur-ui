@@ -161,11 +161,11 @@ export default function AgricultureMonitoringPage() {
         };
         const inv = parseRows<AgInventoryRow>(
           (profile as Record<string, unknown>)?.ag_daily_stock_rows ??
-            (profile as Record<string, unknown>)?.ag_daily_stock_rows_json,
+          (profile as Record<string, unknown>)?.ag_daily_stock_rows_json,
         );
         const att = parseRows<AgAttendanceRow>(
           (profile as Record<string, unknown>)?.ag_staff_attendance_rows ??
-            (profile as Record<string, unknown>)?.ag_staff_attendance_rows_json,
+          (profile as Record<string, unknown>)?.ag_staff_attendance_rows_json,
         );
         setInventoryList(inv);
         setAttendanceList(att);
@@ -428,11 +428,10 @@ export default function AgricultureMonitoringPage() {
                 setActiveTab(tab.id);
                 setPage(1);
               }}
-              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
-                activeTab === tab.id
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${activeTab === tab.id
                   ? 'border-emerald-600 text-emerald-600'
                   : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-              }`}
+                }`}
             >
               {tab.label}
             </button>

@@ -114,7 +114,7 @@ const AG_PORTFOLIO_SECTION_ROWS: { id: AgriculturePortfolioSectionId; label: str
   { id: 'about', label: 'About' },
   { id: 'keyAdmins', label: 'Key admin contacts' },
   { id: 'facilities', label: 'Facilities' },
-  { id: 'experts', label: 'Team / experts' },
+  { id: 'experts', label: 'Team' },
   { id: 'staff', label: 'Staff table' },
   { id: 'contact', label: 'Contact' },
   { id: 'resources', label: 'Highlights' },
@@ -273,11 +273,10 @@ export function AgriculturePortfolioAdminForm({
               <button
                 key={s.id}
                 type="button"
-                className={`shrink-0 rounded border px-2 py-1.5 text-left text-[10px] font-medium transition-colors sm:text-center ${
-                  selected
+                className={`shrink-0 rounded border px-2 py-1.5 text-left text-[10px] font-medium transition-colors sm:text-center ${selected
                     ? 'border-primary bg-primary text-primary-foreground'
                     : 'border-border bg-background text-text hover:bg-muted/50'
-                }`}
+                  }`}
                 onClick={() => setActiveSection(s.id)}
               >
                 {s.label}
@@ -422,11 +421,11 @@ export function AgriculturePortfolioAdminForm({
             <div className="space-y-2">
               {(keyAdminRows.length ? keyAdminRows : [{}]).map((row, i, arr) => (
                 <div key={i} className="grid gap-2 rounded border border-border p-2 sm:grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
-                  <input className="rounded border border-border px-2 py-1" placeholder="Role" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.admin_role} value={row.role || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,role:e.target.value}; patch({ ag_key_admin_cards_json: rowsToJson(n) }); }} />
-                  <ImgSlot label="Photo" organizationId={organizationId} assetType="ag_admin_photo" url={row.image || ''} onUrl={(v) => { const n=[...arr]; n[i]={...row,image:v}; patch({ ag_key_admin_cards_json: rowsToJson(n) }); }} />
-                  <input className="rounded border border-border px-2 py-1" placeholder="Name" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.admin_name} value={row.name || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,name:e.target.value}; patch({ ag_key_admin_cards_json: rowsToJson(n) }); }} />
-                  <input className="rounded border border-border px-2 py-1" placeholder="Contact" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.admin_contact} value={row.contact || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,contact:e.target.value}; patch({ ag_key_admin_cards_json: rowsToJson(n) }); }} />
-                  <input className="rounded border border-border px-2 py-1" placeholder="Email" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.admin_email} value={row.email || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,email:e.target.value}; patch({ ag_key_admin_cards_json: rowsToJson(n) }); }} />
+                  <input className="rounded border border-border px-2 py-1" placeholder="Role" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.admin_role} value={row.role || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, role: e.target.value }; patch({ ag_key_admin_cards_json: rowsToJson(n) }); }} />
+                  <ImgSlot label="Photo" organizationId={organizationId} assetType="ag_admin_photo" url={row.image || ''} onUrl={(v) => { const n = [...arr]; n[i] = { ...row, image: v }; patch({ ag_key_admin_cards_json: rowsToJson(n) }); }} />
+                  <input className="rounded border border-border px-2 py-1" placeholder="Name" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.admin_name} value={row.name || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, name: e.target.value }; patch({ ag_key_admin_cards_json: rowsToJson(n) }); }} />
+                  <input className="rounded border border-border px-2 py-1" placeholder="Contact" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.admin_contact} value={row.contact || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, contact: e.target.value }; patch({ ag_key_admin_cards_json: rowsToJson(n) }); }} />
+                  <input className="rounded border border-border px-2 py-1" placeholder="Email" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.admin_email} value={row.email || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, email: e.target.value }; patch({ ag_key_admin_cards_json: rowsToJson(n) }); }} />
                   <button type="button" className="text-[10px] text-red-600" onClick={() => patch({ ag_key_admin_cards_json: rowsToJson(arr.filter((_, j) => j !== i)) })}>Remove</button>
                 </div>
               ))}
@@ -442,10 +441,10 @@ export function AgriculturePortfolioAdminForm({
               {(facilityRows.length ? facilityRows : [{}]).map((row, i, arr) => (
                 <div key={i} className="space-y-2 rounded border border-border p-2">
                   <div className="grid gap-2 sm:grid-cols-[120px_1fr_auto] sm:items-end">
-                    <ImgSlot label="Cover image" organizationId={organizationId} assetType="ag_facility_cover" url={row.image || ''} onUrl={(v) => { const n=[...arr]; n[i]={...row,image:v}; patch({ ag_facility_cards_json: rowsToJson(n) }); }} />
+                    <ImgSlot label="Cover image" organizationId={organizationId} assetType="ag_facility_cover" url={row.image || ''} onUrl={(v) => { const n = [...arr]; n[i] = { ...row, image: v }; patch({ ag_facility_cards_json: rowsToJson(n) }); }} />
                     <div className="grid gap-2 md:grid-cols-2">
-                      <input className="rounded border border-border px-2 py-1" placeholder="Facility title" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.facility_title} value={row.title || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,title:e.target.value}; patch({ ag_facility_cards_json: rowsToJson(n) }); }} />
-                      <textarea rows={2} className="rounded border border-border px-2 py-1 md:col-span-2" placeholder="Facility description" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.facility_description} value={row.description || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,description:e.target.value}; patch({ ag_facility_cards_json: rowsToJson(n) }); }} />
+                      <input className="rounded border border-border px-2 py-1" placeholder="Facility title" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.facility_title} value={row.title || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, title: e.target.value }; patch({ ag_facility_cards_json: rowsToJson(n) }); }} />
+                      <textarea rows={2} className="rounded border border-border px-2 py-1 md:col-span-2" placeholder="Facility description" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.facility_description} value={row.description || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, description: e.target.value }; patch({ ag_facility_cards_json: rowsToJson(n) }); }} />
                     </div>
                     <button type="button" className="text-[10px] text-red-600" onClick={() => patch({ ag_facility_cards_json: rowsToJson(arr.filter((_, j) => j !== i)) })}>Remove</button>
                   </div>
@@ -458,20 +457,20 @@ export function AgriculturePortfolioAdminForm({
 
         {section(
           'experts',
-          <SectionBox id="ag-experts" title="Team / experts">
+          <SectionBox id="ag-experts" title="Team">
             <textarea rows={3} className="mb-3 w-full rounded border border-border px-2 py-1 font-mono text-[10px]" placeholder='{"2026-04-11":{"row_0":true}}' value={f.ag_expert_attendance_json || '{}'} onChange={(e) => patch({ ag_expert_attendance_json: e.target.value })} />
             <div className="space-y-2">
               {(expertRows.length ? expertRows : [{}]).map((row, i, arr) => (
                 <div key={i} className="grid gap-2 rounded border border-border p-2 sm:grid-cols-[100px_repeat(4,minmax(0,1fr))_auto] sm:items-end">
-                  <ImgSlot label="Photo" organizationId={organizationId} assetType="ag_expert_photo" url={row.photo || ''} onUrl={(v) => { const n=[...arr]; n[i]={...row,photo:v}; patch({ ag_expert_cards_json: rowsToJson(n) }); }} />
-                  <input className="rounded border border-border px-2 py-1" placeholder="Name" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.expert_name} value={row.name || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,name:e.target.value}; patch({ ag_expert_cards_json: rowsToJson(n) }); }} />
-                  <input className="rounded border border-border px-2 py-1" placeholder="Department / specialization" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.expert_department} value={row.department || row.specialization || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,department:e.target.value}; patch({ ag_expert_cards_json: rowsToJson(n) }); }} />
-                  <input className="rounded border border-border px-2 py-1" placeholder="Qualification" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.expert_qualification} value={row.qualification || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,qualification:e.target.value}; patch({ ag_expert_cards_json: rowsToJson(n) }); }} />
-                  <input className="rounded border border-border px-2 py-1" placeholder="Designation" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.expert_designation} value={row.designation || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,designation:e.target.value}; patch({ ag_expert_cards_json: rowsToJson(n) }); }} />
+                  <ImgSlot label="Photo" organizationId={organizationId} assetType="ag_expert_photo" url={row.photo || ''} onUrl={(v) => { const n = [...arr]; n[i] = { ...row, photo: v }; patch({ ag_expert_cards_json: rowsToJson(n) }); }} />
+                  <input className="rounded border border-border px-2 py-1" placeholder="Name" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.expert_name} value={row.name || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, name: e.target.value }; patch({ ag_expert_cards_json: rowsToJson(n) }); }} />
+                  <input className="rounded border border-border px-2 py-1" placeholder="Department / specialization" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.expert_department} value={row.department || row.specialization || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, department: e.target.value }; patch({ ag_expert_cards_json: rowsToJson(n) }); }} />
+                  <input className="rounded border border-border px-2 py-1" placeholder="Qualification" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.expert_qualification} value={row.qualification || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, qualification: e.target.value }; patch({ ag_expert_cards_json: rowsToJson(n) }); }} />
+                  <input className="rounded border border-border px-2 py-1" placeholder="Designation" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.expert_designation} value={row.designation || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, designation: e.target.value }; patch({ ag_expert_cards_json: rowsToJson(n) }); }} />
                   <button type="button" className="text-[10px] text-red-600" onClick={() => patch({ ag_expert_cards_json: rowsToJson(arr.filter((_, j) => j !== i)) })}>Remove</button>
                 </div>
               ))}
-              <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => patch({ ag_expert_cards_json: rowsToJson([...expertRows, {}]) })}>+ Add expert</button>
+              <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => patch({ ag_expert_cards_json: rowsToJson([...expertRows, {}]) })}>+ Add team member</button>
             </div>
           </SectionBox>,
         )}
@@ -482,12 +481,12 @@ export function AgriculturePortfolioAdminForm({
             <div className="space-y-2">
               {(staffRows.length ? staffRows : [{}]).map((row, i, arr) => (
                 <div key={i} className="grid gap-2 rounded border border-border p-2 md:grid-cols-6">
-                  <input className="rounded border border-border px-2 py-1" placeholder="Staff name" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.staff_name} value={row.staff_name || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,staff_name:e.target.value}; patch({ ag_staff_rows_json: rowsToJson(n) }); }} />
-                  <input className="rounded border border-border px-2 py-1" placeholder="Category" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.staff_category} value={row.category || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,category:e.target.value}; patch({ ag_staff_rows_json: rowsToJson(n) }); }} />
-                  <input className="rounded border border-border px-2 py-1" placeholder="Role/designation" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.staff_role} value={row.role_designation || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,role_designation:e.target.value}; patch({ ag_staff_rows_json: rowsToJson(n) }); }} />
-                  <input className="rounded border border-border px-2 py-1" placeholder="Department" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.staff_department} value={row.department || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,department:e.target.value}; patch({ ag_staff_rows_json: rowsToJson(n) }); }} />
-                  <input className="rounded border border-border px-2 py-1" placeholder="Contact" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.staff_contact} value={row.contact_number || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,contact_number:e.target.value}; patch({ ag_staff_rows_json: rowsToJson(n) }); }} />
-                  <div className="flex gap-2"><input className="min-w-0 flex-1 rounded border border-border px-2 py-1" placeholder="Email" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.staff_email} value={row.email || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,email:e.target.value}; patch({ ag_staff_rows_json: rowsToJson(n) }); }} /><button type="button" className="shrink-0 text-[10px] text-red-600" onClick={() => patch({ ag_staff_rows_json: rowsToJson(arr.filter((_, j) => j !== i)) })}>✕</button></div>
+                  <input className="rounded border border-border px-2 py-1" placeholder="Staff name" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.staff_name} value={row.staff_name || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, staff_name: e.target.value }; patch({ ag_staff_rows_json: rowsToJson(n) }); }} />
+                  <input className="rounded border border-border px-2 py-1" placeholder="Category" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.staff_category} value={row.category || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, category: e.target.value }; patch({ ag_staff_rows_json: rowsToJson(n) }); }} />
+                  <input className="rounded border border-border px-2 py-1" placeholder="Role/designation" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.staff_role} value={row.role_designation || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, role_designation: e.target.value }; patch({ ag_staff_rows_json: rowsToJson(n) }); }} />
+                  <input className="rounded border border-border px-2 py-1" placeholder="Department" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.staff_department} value={row.department || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, department: e.target.value }; patch({ ag_staff_rows_json: rowsToJson(n) }); }} />
+                  <input className="rounded border border-border px-2 py-1" placeholder="Contact" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.staff_contact} value={row.contact_number || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, contact_number: e.target.value }; patch({ ag_staff_rows_json: rowsToJson(n) }); }} />
+                  <div className="flex gap-2"><input className="min-w-0 flex-1 rounded border border-border px-2 py-1" placeholder="Email" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.staff_email} value={row.email || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, email: e.target.value }; patch({ ag_staff_rows_json: rowsToJson(n) }); }} /><button type="button" className="shrink-0 text-[10px] text-red-600" onClick={() => patch({ ag_staff_rows_json: rowsToJson(arr.filter((_, j) => j !== i)) })}>✕</button></div>
                 </div>
               ))}
               <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => patch({ ag_staff_rows_json: rowsToJson([...staffRows, {}]) })}>+ Add staff row</button>
@@ -528,9 +527,9 @@ export function AgriculturePortfolioAdminForm({
             <div className="space-y-2">
               {(galleryRows.length ? galleryRows : [{ image: '', title: '', description: '' }]).map((row, i, arr) => (
                 <div key={i} className="grid gap-2 rounded border border-border p-2 sm:grid-cols-[minmax(0,140px)_repeat(2,minmax(0,1fr))_auto] sm:items-end">
-                  <ImgSlot label="Image" organizationId={organizationId} assetType="ag_gallery" url={row.image || ''} onUrl={(v) => { const n=[...arr]; n[i]={...row,image:v}; patch({ ag_photo_gallery_json: rowsToJson(n) }); }} />
-                  <div className="space-y-0.5"><CharCount value={row.title || ''} max={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.gallery_title} /><input className="w-full rounded border border-border px-2 py-1" placeholder="Title" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.gallery_title} value={row.title || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,title:e.target.value}; patch({ ag_photo_gallery_json: rowsToJson(n) }); }} /></div>
-                  <div className="space-y-0.5"><CharCount value={row.description || ''} max={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.gallery_description} /><input className="w-full rounded border border-border px-2 py-1" placeholder="Description" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.gallery_description} value={row.description || ''} onChange={(e) => { const n=[...arr]; n[i]={...row,description:e.target.value}; patch({ ag_photo_gallery_json: rowsToJson(n) }); }} /></div>
+                  <ImgSlot label="Image" organizationId={organizationId} assetType="ag_gallery" url={row.image || ''} onUrl={(v) => { const n = [...arr]; n[i] = { ...row, image: v }; patch({ ag_photo_gallery_json: rowsToJson(n) }); }} />
+                  <div className="space-y-0.5"><CharCount value={row.title || ''} max={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.gallery_title} /><input className="w-full rounded border border-border px-2 py-1" placeholder="Title" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.gallery_title} value={row.title || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, title: e.target.value }; patch({ ag_photo_gallery_json: rowsToJson(n) }); }} /></div>
+                  <div className="space-y-0.5"><CharCount value={row.description || ''} max={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.gallery_description} /><input className="w-full rounded border border-border px-2 py-1" placeholder="Description" maxLength={AGRICULTURE_PORTFOLIO_FIELD_LIMITS.gallery_description} value={row.description || ''} onChange={(e) => { const n = [...arr]; n[i] = { ...row, description: e.target.value }; patch({ ag_photo_gallery_json: rowsToJson(n) }); }} /></div>
                   <button type="button" className="text-[10px] text-red-600" onClick={() => patch({ ag_photo_gallery_json: rowsToJson(arr.filter((_, j) => j !== i)) })}>Remove</button>
                 </div>
               ))}
