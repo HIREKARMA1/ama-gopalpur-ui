@@ -250,11 +250,10 @@ function AgriculturePortfolioMonitoringSection({
 
           <div className="flex flex-wrap gap-4">
             <div
-              className={`flex items-center gap-3 rounded-2xl border px-4 py-2 ${
-                expertPresent
+              className={`flex items-center gap-3 rounded-2xl border px-4 py-2 ${expertPresent
                   ? 'border-blue-100 bg-blue-50 text-blue-700'
                   : 'border-slate-200 bg-slate-50 text-slate-500'
-              }`}
+                }`}
             >
               <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 leading-tight">
@@ -589,7 +588,7 @@ export function AgriculturePortfolioWebsite({
         <PsFacultySection
           faculty={experts}
           profile={psProfile}
-          sectionTitle="Team / Experts"
+          sectionTitle="Team"
           subjectLabel="Department / Specialization"
           showAttendance
         />
