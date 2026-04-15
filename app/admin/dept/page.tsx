@@ -39,6 +39,11 @@ import {
   normalizeHealthFacilityCardsForSave,
 } from '../../../components/admin/HealthPortfolioAdminForm';
 import {
+  AGRICULTURE_PORTFOLIO_EMPTY_FORM,
+  AgriculturePortfolioAdminForm,
+  normalizeAgricultureFacilityCardsForSave,
+} from '../../../components/admin/AgriculturePortfolioAdminForm';
+import {
   AwcPortfolioAdminForm,
   centerProfileToExtras,
   emptyAwcProfileExtras,
@@ -376,6 +381,9 @@ export default function DepartmentAdminPage() {
   });
   const [newAgricultureOrg, setNewAgricultureOrg] = useState(emptyAgricultureOrg());
   const [editingAgricultureId, setEditingAgricultureId] = useState<number | null>(null);
+  const [agriculturePortfolioForm, setAgriculturePortfolioForm] = useState<Record<string, string>>(
+    AGRICULTURE_PORTFOLIO_EMPTY_FORM,
+  );
 
   const _n = (s: string) => (s.trim() ? (Number(s) || undefined) : undefined);
   const _s = (s: string) => (s.trim() || undefined);
@@ -1052,10 +1060,10 @@ export default function DepartmentAdminPage() {
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual Agriculture facility entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
-                  Add a single Agriculture facility manually. Fields mirror the Agriculture CSV columns.
+                  All fields are in the section tabs below, matching the public Agriculture page structure.
                 </p>
                 <form
-                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  className="mt-3 space-y-4 text-xs"
                   onSubmit={async (e) => {
                     e.preventDefault();
                     if (!me?.department_id) {
@@ -1149,6 +1157,28 @@ export default function DepartmentAdminPage() {
                         orgId = master.organization_id;
                       }
 
+                      const parseAgRows = (raw: string | undefined) => {
+                        if (!raw?.trim()) return [];
+                        try {
+                          const parsed = JSON.parse(raw) as unknown;
+                          return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : [];
+                        } catch {
+                          return [];
+                        }
+                      };
+                      let agExpertAttendance: Record<string, unknown> = {};
+                      try {
+                        const raw = (agriculturePortfolioForm.ag_expert_attendance_json || '').trim();
+                        if (raw) {
+                          const parsed = JSON.parse(raw) as unknown;
+                          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                            agExpertAttendance = parsed as Record<string, unknown>;
+                          }
+                        }
+                      } catch {
+                        agExpertAttendance = {};
+                      }
+
                       const profilePayload: Record<string, unknown> = {
                         block_ulb: _s(newAgricultureOrg.block_ulb),
                         gp_ward: _s(newAgricultureOrg.gp_ward),
@@ -1195,6 +1225,38 @@ export default function DepartmentAdminPage() {
                         soil_health_cards_issued_last_year: _s(newAgricultureOrg.soil_health_cards_issued_last_year),
                         farmers_served_last_year_approx: _s(newAgricultureOrg.farmers_served_last_year),
                         remarks_description: _s(newAgricultureOrg.remarks),
+                        ag_display_name: _s(agriculturePortfolioForm.ag_display_name || ''),
+                        ag_hero_tagline: _s(agriculturePortfolioForm.ag_hero_tagline || ''),
+                        ag_tagline: _s(agriculturePortfolioForm.ag_tagline || ''),
+                        ag_hero_1: _s(agriculturePortfolioForm.ag_hero_1 || ''),
+                        ag_hero_2: _s(agriculturePortfolioForm.ag_hero_2 || ''),
+                        ag_hero_3: _s(agriculturePortfolioForm.ag_hero_3 || ''),
+                        ag_about: _s(agriculturePortfolioForm.ag_about || ''),
+                        ag_campus_image: _s(agriculturePortfolioForm.ag_campus_image || ''),
+                        ag_established_year: _s(agriculturePortfolioForm.ag_established_year || ''),
+                        ag_facility_type: _s(agriculturePortfolioForm.ag_facility_type || ''),
+                        ag_location_line: _s(agriculturePortfolioForm.ag_location_line || ''),
+                        ag_head_message: _s(agriculturePortfolioForm.ag_head_message || ''),
+                        ag_head_name: _s(agriculturePortfolioForm.ag_head_name || ''),
+                        ag_head_photo: _s(agriculturePortfolioForm.ag_head_photo || ''),
+                        ag_head_qualification: _s(agriculturePortfolioForm.ag_head_qualification || ''),
+                        ag_head_experience: _s(agriculturePortfolioForm.ag_head_experience || ''),
+                        ag_head_contact: _s(agriculturePortfolioForm.ag_head_contact || ''),
+                        ag_head_email: _s(agriculturePortfolioForm.ag_head_email || ''),
+                        ag_key_admin_cards: parseAgRows(agriculturePortfolioForm.ag_key_admin_cards_json),
+                        ag_facility_cards: normalizeAgricultureFacilityCardsForSave(
+                          parseAgRows(agriculturePortfolioForm.ag_facility_cards_json),
+                        ),
+                        ag_expert_cards: parseAgRows(agriculturePortfolioForm.ag_expert_cards_json),
+                        ag_expert_attendance: agExpertAttendance,
+                        ag_staff_rows: parseAgRows(agriculturePortfolioForm.ag_staff_rows_json),
+                        ag_daily_stock_rows: parseAgRows(agriculturePortfolioForm.ag_daily_stock_rows_json),
+                        ag_photo_gallery: parseAgRows(agriculturePortfolioForm.ag_photo_gallery_json),
+                        ag_full_address: _s(agriculturePortfolioForm.ag_full_address || ''),
+                        ag_helpdesk_phone: _s(agriculturePortfolioForm.ag_helpdesk_phone || ''),
+                        ag_emergency_phone: _s(agriculturePortfolioForm.ag_emergency_phone || ''),
+                        ag_public_email: _s(agriculturePortfolioForm.ag_public_email || ''),
+                        ag_office_hours: _s(agriculturePortfolioForm.ag_office_hours || ''),
                       };
 
                       await agricultureApi.putProfile(orgId, profilePayload);
@@ -1222,6 +1284,7 @@ export default function DepartmentAdminPage() {
                       }
 
                       setNewAgricultureOrg(emptyAgricultureOrg());
+                      setAgriculturePortfolioForm(AGRICULTURE_PORTFOLIO_EMPTY_FORM);
                       setEditingAgricultureId(null);
                     } catch (err: any) {
                       setError(err.message || 'Failed to save agriculture facility');
@@ -1230,218 +1293,44 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  {/* Basic location & identity */}
-                  <div className="space-y-1">
-                    <label className="block text-text">BLOCK / ULB</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.block_ulb} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, block_ulb: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">GP / WARD</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.gp_ward} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, gp_ward: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">VILLAGE / LOCALITY</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.village_locality} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, village_locality: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">NAME OF OFFICE/CENTER</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.name} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, name: e.target.value }))} required />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">INSTITUTION TYPE</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.institution_type} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, institution_type: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">INSTITUTION ID</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.institution_id} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, institution_id: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">HOST INSTITUTION / AFFILIATING BODY</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.host_institution} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, host_institution: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">ESTABLISHED YEAR</label>
-                    <input type="number" className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.established_year} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, established_year: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">PIN CODE</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.pin_code} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, pin_code: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">LATITUDE</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.latitude} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, latitude: e.target.value }))} required />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">LONGITUDE</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.longitude} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, longitude: e.target.value }))} required />
-                  </div>
-
-                  {/* Contacts */}
-                  <div className="space-y-1">
-                    <label className="block text-text">IN-CHARGE NAME</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.in_charge_name} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, in_charge_name: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">IN-CHARGE CONTACT</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.in_charge_contact} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, in_charge_contact: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">IN-CHARGE EMAIL</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.in_charge_email} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, in_charge_email: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">OFFICE PHONE</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.office_phone} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, office_phone: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">OFFICE EMAIL</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.office_email} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, office_email: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">WEBSITE</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.website} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, website: e.target.value }))} />
-                  </div>
-
-                  {/* Infrastructure booleans & numbers */}
-                  <div className="space-y-1">
-                    <label className="block text-text">CAMPUS AREA (ACRES)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.campus_area_acres} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, campus_area_acres: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">TRAINING HALL (YES/NO)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.training_hall} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, training_hall: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">TRAINING HALL CAPACITY (SEATS)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.training_hall_capacity} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, training_hall_capacity: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">SOIL TESTING (YES/NO)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.soil_testing} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, soil_testing: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">SOIL SAMPLES TESTED PER YEAR</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.soil_samples_tested_per_year} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, soil_samples_tested_per_year: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">SEED DISTRIBUTION (YES/NO)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.seed_distribution} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, seed_distribution: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">SEED PROCESSING UNIT (YES/NO)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.seed_processing_unit} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, seed_processing_unit: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">SEED STORAGE CAPACITY (MT)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.seed_storage_capacity_mt} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, seed_storage_capacity_mt: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1 md:col-span-2">
-                    <label className="block text-text">DEMO UNITS (COMMA SEPARATED)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.demo_units} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, demo_units: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">DEMO FARM (YES/NO)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.demo_farm} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, demo_farm: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">DEMO FARM AREA (ACRES)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.demo_farm_area_acres} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, demo_farm_area_acres: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">GREENHOUSE/POLYHOUSE (YES/NO)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.greenhouse_polyhouse} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, greenhouse_polyhouse: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">IRRIGATION FACILITY (YES/NO)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.irrigation_facility} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, irrigation_facility: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">MACHINERY/CUSTOM HIRING (YES/NO)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.machinery_custom_hiring} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, machinery_custom_hiring: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">COMPUTER/IT LAB (YES/NO)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.computer_it_lab} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, computer_it_lab: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">LIBRARY (YES/NO)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.library} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, library: e.target.value }))} />
-                  </div>
-
-                  {/* Staffing & performance */}
-                  <div className="space-y-1">
-                    <label className="block text-text">KEY SCHEMES (COMMA SEPARATED)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.key_schemes} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, key_schemes: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">TOTAL STAFF (COUNT)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.total_staff} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, total_staff: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">SCIENTISTS/OFFICERS (COUNT)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.scientists_officers} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, scientists_officers: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">TECHNICAL STAFF (COUNT)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.technical_staff} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, technical_staff: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">EXTENSION WORKERS (COUNT)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.extension_workers} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, extension_workers: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">FARMER TRAINING CAPACITY (PER BATCH)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.farmer_training_capacity_per_batch} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, farmer_training_capacity_per_batch: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">TRAINING PROGRAMMES CONDUCTED LAST YEAR</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.training_programmes_conducted_last_year} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, training_programmes_conducted_last_year: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">ON-FARM TRIALS/FLD LAST YEAR</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.on_farm_trials_last_year} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, on_farm_trials_last_year: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">VILLAGES/GPS COVERED (COUNT)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.villages_covered} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, villages_covered: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">SOIL HEALTH CARDS ISSUED LAST YEAR</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.soil_health_cards_issued_last_year} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, soil_health_cards_issued_last_year: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-text">FARMERS SERVED LAST YEAR (APPROX)</label>
-                    <input className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" value={newAgricultureOrg.farmers_served_last_year} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, farmers_served_last_year: e.target.value }))} />
-                  </div>
-
-                  <div className="space-y-1 md:col-span-2">
-                    <label className="block text-text">REMARKS / DESCRIPTION</label>
-                    <textarea className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" rows={2} value={newAgricultureOrg.remarks} onChange={(e) => setNewAgricultureOrg((s) => ({ ...s, remarks: e.target.value }))} />
-                  </div>
-
-                  <div className="space-y-1 md:col-span-2">
-                    <label className="block text-text">Cover image (optional)</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="w-full text-xs"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setAgricultureImageFile(file);
+                  <div className="min-w-0 w-full overflow-visible rounded-lg border border-dashed border-border/80 bg-muted/20 p-3">
+                    <AgriculturePortfolioAdminForm
+                      organizationId={editingAgricultureId}
+                      form={agriculturePortfolioForm}
+                      setForm={setAgriculturePortfolioForm}
+                      facilityRecord={{
+                        block_ulb: newAgricultureOrg.block_ulb,
+                        gp_ward: newAgricultureOrg.gp_ward,
+                        village_locality: newAgricultureOrg.village_locality,
+                        name: newAgricultureOrg.name,
+                        institution_id: newAgricultureOrg.institution_id,
+                        institution_type: newAgricultureOrg.institution_type,
+                        latitude: newAgricultureOrg.latitude,
+                        longitude: newAgricultureOrg.longitude,
                       }}
+                      onFacilityRecordPatch={(patch) => setNewAgricultureOrg((s) => ({ ...s, ...patch }))}
+                      resources={{
+                        total_staff: newAgricultureOrg.total_staff,
+                        villages_covered: newAgricultureOrg.villages_covered,
+                        farmers_served_last_year: newAgricultureOrg.farmers_served_last_year,
+                      }}
+                      onResourcesPatch={(patch) => setNewAgricultureOrg((s) => ({ ...s, ...patch }))}
+                      profileImageControl={
+                        <div className="space-y-1">
+                          <span className="block text-[11px] text-text">Profile image (optional)</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="w-full text-[11px] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-1 file:text-primary-foreground"
+                            onChange={(e) => setAgricultureImageFile(e.target.files?.[0] ?? null)}
+                          />
+                        </div>
+                      }
                     />
-                    <p className="mt-1 text-[11px] text-text-muted">
-                      JPG/PNG/WebP, up to ~500KB (larger images are auto-compressed before upload).
-                    </p>
                   </div>
-
-                  <div className="md:col-span-2">
-                    <button
-                      type="submit"
-                      disabled={creating}
-                      className="mt-2 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
-                    >
-                      {creating ? 'Saving...' : 'Save facility'}
+                  <div>
+                    <button type="submit" disabled={creating} className="mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60">
+                      {creating ? 'Saving...' : editingAgricultureId ? 'Update facility' : 'Save facility'}
                     </button>
                   </div>
                 </form>
@@ -3815,6 +3704,17 @@ export default function DepartmentAdminPage() {
                                       )) as Record<string, unknown> | null);
                                     const v = (x: unknown) =>
                                       x != null && String(x).trim() !== '' ? String(x) : '';
+                                    const toJson = (x: unknown, fallback: string) => {
+                                      if (typeof x === 'string' && x.trim()) return x;
+                                      if (Array.isArray(x) || (x && typeof x === 'object')) {
+                                        try {
+                                          return JSON.stringify(x);
+                                        } catch {
+                                          return fallback;
+                                        }
+                                      }
+                                      return fallback;
+                                    };
                                     setNewAgricultureOrg((prev) => ({
                                       ...prev,
                                       block_ulb: v(existingProfile?.block_ulb ?? o.attributes?.ulb_block),
@@ -3946,6 +3846,63 @@ export default function DepartmentAdminPage() {
                                         existingProfile?.remarks,
                                       ),
                                     }));
+                                    setAgriculturePortfolioForm({
+                                      ...AGRICULTURE_PORTFOLIO_EMPTY_FORM,
+                                      ag_display_name: v(existingProfile?.ag_display_name),
+                                      ag_hero_tagline: v(existingProfile?.ag_hero_tagline),
+                                      ag_tagline: v(existingProfile?.ag_tagline),
+                                      ag_hero_1: v(existingProfile?.ag_hero_1),
+                                      ag_hero_2: v(existingProfile?.ag_hero_2),
+                                      ag_hero_3: v(existingProfile?.ag_hero_3),
+                                      ag_about: v(existingProfile?.ag_about),
+                                      ag_campus_image: v(existingProfile?.ag_campus_image),
+                                      ag_established_year: v(existingProfile?.ag_established_year),
+                                      ag_facility_type: v(existingProfile?.ag_facility_type),
+                                      ag_location_line: v(existingProfile?.ag_location_line),
+                                      ag_head_message: v(existingProfile?.ag_head_message),
+                                      ag_head_name: v(
+                                        existingProfile?.ag_head_name ?? existingProfile?.in_charge_name,
+                                      ),
+                                      ag_head_photo: v(existingProfile?.ag_head_photo),
+                                      ag_head_qualification: v(
+                                        existingProfile?.ag_head_qualification ?? existingProfile?.qualification,
+                                      ),
+                                      ag_head_experience: v(
+                                        existingProfile?.ag_head_experience ?? existingProfile?.experience,
+                                      ),
+                                      ag_head_contact: v(
+                                        existingProfile?.ag_head_contact ?? existingProfile?.in_charge_contact,
+                                      ),
+                                      ag_head_email: v(
+                                        existingProfile?.ag_head_email ?? existingProfile?.in_charge_email,
+                                      ),
+                                      ag_key_admin_cards_json: toJson(existingProfile?.ag_key_admin_cards, '[]'),
+                                      ag_facility_cards_json: toJson(existingProfile?.ag_facility_cards, '[]'),
+                                      ag_expert_cards_json: toJson(existingProfile?.ag_expert_cards, '[]'),
+                                      ag_expert_attendance_json: toJson(existingProfile?.ag_expert_attendance, '{}'),
+                                      ag_staff_rows_json: toJson(existingProfile?.ag_staff_rows, '[]'),
+                                      ag_daily_stock_rows_json: toJson(existingProfile?.ag_daily_stock_rows, '[]'),
+                                      ag_photo_gallery_json: toJson(existingProfile?.ag_photo_gallery, '[]'),
+                                      ag_full_address: v(
+                                        existingProfile?.ag_full_address ??
+                                          o.address ??
+                                          [existingProfile?.block_ulb, existingProfile?.gp_ward, existingProfile?.village_locality]
+                                            .filter((x) => x != null && String(x).trim() !== '')
+                                            .join(', '),
+                                      ),
+                                      ag_helpdesk_phone: v(
+                                        existingProfile?.ag_helpdesk_phone ?? existingProfile?.office_phone,
+                                      ),
+                                      ag_emergency_phone: v(
+                                        existingProfile?.ag_emergency_phone ?? existingProfile?.in_charge_contact,
+                                      ),
+                                      ag_public_email: v(
+                                        existingProfile?.ag_public_email ?? existingProfile?.office_email,
+                                      ),
+                                      ag_office_hours: v(
+                                        existingProfile?.ag_office_hours ?? existingProfile?.office_hours,
+                                      ),
+                                    });
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}
                                 >

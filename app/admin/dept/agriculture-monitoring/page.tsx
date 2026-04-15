@@ -22,7 +22,23 @@ import { SearchableSelect } from '../../../../components/common/SearchableSelect
 const _n = (s: string) => (s.trim() ? Number(s) || undefined : undefined);
 const ROWS_PER_PAGE = 10;
 
-type DataType = 'daily' | 'monthly';
+type DataType = 'daily' | 'monthly' | 'inventory' | 'attendance';
+
+type AgInventoryRow = {
+  record_date: string;
+  item_name: string;
+  opening?: number | null;
+  received?: number | null;
+  used?: number | null;
+  closing?: number | null;
+};
+
+type AgAttendanceRow = {
+  record_date: string;
+  staff_present_count?: number | null;
+  expert_present?: boolean | null;
+  remarks?: string | null;
+};
 
 export default function AgricultureMonitoringPage() {
   const router = useRouter();
@@ -36,6 +52,8 @@ export default function AgricultureMonitoringPage() {
   const [activeTab, setActiveTab] = useState<DataType>('daily');
   const [dailyList, setDailyList] = useState<AgricultureDailyMetric[]>([]);
   const [monthlyList, setMonthlyList] = useState<AgricultureMonthlyReport[]>([]);
+  const [inventoryList, setInventoryList] = useState<AgInventoryRow[]>([]);
+  const [attendanceList, setAttendanceList] = useState<AgAttendanceRow[]>([]);
 
   const [selectedOrgId, setSelectedOrgId] = useState<number | ''>('');
   const [dateFilter, setDateFilter] = useState('');
@@ -58,6 +76,16 @@ export default function AgricultureMonitoringPage() {
   const [mTotalTrials, setMTotalTrials] = useState('');
   const [mTotalSoilCards, setMTotalSoilCards] = useState('');
   const [mRemarks, setMRemarks] = useState('');
+  const [invDate, setInvDate] = useState('');
+  const [invItem, setInvItem] = useState('');
+  const [invOpening, setInvOpening] = useState('');
+  const [invReceived, setInvReceived] = useState('');
+  const [invUsed, setInvUsed] = useState('');
+  const [invClosing, setInvClosing] = useState('');
+  const [attDate, setAttDate] = useState('');
+  const [attStaffPresent, setAttStaffPresent] = useState('');
+  const [attExpertPresent, setAttExpertPresent] = useState(false);
+  const [attRemarks, setAttRemarks] = useState('');
 
   const isAgriculture = deptCode === 'AGRICULTURE';
 
@@ -107,15 +135,120 @@ export default function AgricultureMonitoringPage() {
           ? await agricultureApi.listDailyMetrics(orgId, { limit: 200 })
           : await agricultureApi.listDailyMetricsForDept({ limit: 500 });
         setDailyList(Array.isArray(data) ? data : []);
-      } else {
+      } else if (activeTab === 'monthly') {
         const data = orgId
           ? await agricultureApi.listMonthlyReports(orgId, { limit: 100 })
           : await agricultureApi.listMonthlyReportsForDept({ limit: 300 });
         setMonthlyList(Array.isArray(data) ? data : []);
+      } else if (activeTab === 'inventory' || activeTab === 'attendance') {
+        if (!orgId) {
+          if (activeTab === 'inventory') setInventoryList([]);
+          else setAttendanceList([]);
+          return;
+        }
+        const profile = await agricultureApi.getProfile(orgId);
+        const parseRows = <T,>(v: unknown): T[] => {
+          if (Array.isArray(v)) return v as T[];
+          if (typeof v === 'string') {
+            try {
+              const p = JSON.parse(v) as unknown;
+              return Array.isArray(p) ? (p as T[]) : [];
+            } catch {
+              return [];
+            }
+          }
+          return [];
+        };
+        const inv = parseRows<AgInventoryRow>(
+          (profile as Record<string, unknown>)?.ag_daily_stock_rows ??
+            (profile as Record<string, unknown>)?.ag_daily_stock_rows_json,
+        );
+        const att = parseRows<AgAttendanceRow>(
+          (profile as Record<string, unknown>)?.ag_staff_attendance_rows ??
+            (profile as Record<string, unknown>)?.ag_staff_attendance_rows_json,
+        );
+        setInventoryList(inv);
+        setAttendanceList(att);
       }
     } catch {
       if (activeTab === 'daily') setDailyList([]);
-      else setMonthlyList([]);
+      else if (activeTab === 'monthly') setMonthlyList([]);
+      else if (activeTab === 'inventory') setInventoryList([]);
+      else setAttendanceList([]);
+    }
+  };
+
+  const handleAddInventory = async (e: FormEvent) => {
+    e.preventDefault();
+    if (selectedOrgId === '' || !invDate || !invItem.trim()) {
+      setError('Select organization, inventory date and item name');
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const orgId = Number(selectedOrgId);
+      const profile = await agricultureApi.getProfile(orgId);
+      const current = Array.isArray((profile as Record<string, unknown>)?.ag_daily_stock_rows)
+        ? ((profile as Record<string, unknown>).ag_daily_stock_rows as AgInventoryRow[])
+        : [];
+      const next = [
+        ...current,
+        {
+          record_date: invDate,
+          item_name: invItem.trim(),
+          opening: _n(invOpening) ?? null,
+          received: _n(invReceived) ?? null,
+          used: _n(invUsed) ?? null,
+          closing: _n(invClosing) ?? null,
+        },
+      ];
+      await agricultureApi.putProfile(orgId, { ag_daily_stock_rows: next });
+      setInvItem('');
+      setInvOpening('');
+      setInvReceived('');
+      setInvUsed('');
+      setInvClosing('');
+      await refreshData();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to add inventory row');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleAddAttendance = async (e: FormEvent) => {
+    e.preventDefault();
+    if (selectedOrgId === '' || !attDate) {
+      setError('Select organization and attendance date');
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const orgId = Number(selectedOrgId);
+      const profile = await agricultureApi.getProfile(orgId);
+      const current = Array.isArray((profile as Record<string, unknown>)?.ag_staff_attendance_rows)
+        ? ((profile as Record<string, unknown>).ag_staff_attendance_rows as AgAttendanceRow[])
+        : [];
+      const next = [
+        ...current,
+        {
+          record_date: attDate,
+          staff_present_count: _n(attStaffPresent) ?? null,
+          expert_present: attExpertPresent,
+          remarks: attRemarks.trim() || null,
+        },
+      ];
+      await agricultureApi.putProfile(orgId, { ag_staff_attendance_rows: next });
+      setAttStaffPresent('');
+      setAttExpertPresent(false);
+      setAttRemarks('');
+      await refreshData();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to add attendance row');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -196,12 +329,22 @@ export default function AgricultureMonitoringPage() {
         (row) => (row.record_date || '').slice(0, 10) === dateFilter,
       );
     }
-    const sorted = [...monthlyList].sort((a, b) => {
-      if (a.year !== b.year) return b.year - a.year;
-      return b.month - a.month;
-    });
-    return sorted;
-  }, [activeTab, dailyList, monthlyList, dateFilter]);
+    if (activeTab === 'monthly') {
+      const sorted = [...monthlyList].sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year;
+        return b.month - a.month;
+      });
+      return sorted;
+    }
+    if (activeTab === 'inventory') {
+      return [...inventoryList].sort((a, b) =>
+        (b.record_date || '').localeCompare(a.record_date || ''),
+      );
+    }
+    return [...attendanceList].sort((a, b) =>
+      (b.record_date || '').localeCompare(a.record_date || ''),
+    );
+  }, [activeTab, dailyList, monthlyList, inventoryList, attendanceList, dateFilter]);
 
   const totalRows = currentList.length;
   const totalPages = Math.max(1, Math.ceil(totalRows / ROWS_PER_PAGE));
@@ -276,6 +419,8 @@ export default function AgricultureMonitoringPage() {
           {[
             { id: 'daily' as const, label: 'Daily metrics' },
             { id: 'monthly' as const, label: 'Monthly reports' },
+            { id: 'inventory' as const, label: 'Inventory' },
+            { id: 'attendance' as const, label: 'Staff attendance' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -398,7 +543,7 @@ export default function AgricultureMonitoringPage() {
                 </button>
               </div>
             </form>
-          ) : (
+          ) : activeTab === 'monthly' ? (
             <form
               onSubmit={handleAddMonthly}
               className="p-4 grid gap-4 text-xs md:grid-cols-2 lg:grid-cols-4"
@@ -492,6 +637,85 @@ export default function AgricultureMonitoringPage() {
                 </button>
               </div>
             </form>
+          ) : activeTab === 'inventory' ? (
+            <form onSubmit={handleAddInventory} className="p-4 grid gap-4 text-xs md:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-1">
+                <label className="font-medium text-slate-700">Organization</label>
+                <SearchableSelect
+                  options={orgs.map((o) => ({ value: o.id, label: o.name }))}
+                  value={selectedOrgId}
+                  onChange={(v) => setSelectedOrgId(v === '' ? '' : Number(v))}
+                  placeholder="Select Organization"
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="font-medium text-slate-700">Record date</label>
+                <input type="date" className="w-full rounded border px-3 py-2" value={invDate} onChange={(e) => setInvDate(e.target.value)} required />
+              </div>
+              <div className="space-y-1">
+                <label className="font-medium text-slate-700">Item name</label>
+                <input type="text" className="w-full rounded border px-3 py-2" value={invItem} onChange={(e) => setInvItem(e.target.value)} required />
+              </div>
+              <div className="space-y-1">
+                <label className="font-medium text-slate-700">Opening</label>
+                <input type="number" className="w-full rounded border px-3 py-2" value={invOpening} onChange={(e) => setInvOpening(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <label className="font-medium text-slate-700">Received</label>
+                <input type="number" className="w-full rounded border px-3 py-2" value={invReceived} onChange={(e) => setInvReceived(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <label className="font-medium text-slate-700">Used</label>
+                <input type="number" className="w-full rounded border px-3 py-2" value={invUsed} onChange={(e) => setInvUsed(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <label className="font-medium text-slate-700">Closing</label>
+                <input type="number" className="w-full rounded border px-3 py-2" value={invClosing} onChange={(e) => setInvClosing(e.target.value)} />
+              </div>
+              <div className="md:col-span-2 lg:col-span-4 flex justify-end">
+                <button type="submit" disabled={submitting} className="rounded bg-emerald-600 px-6 py-2 font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
+                  {submitting ? 'Adding...' : 'Add inventory row'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleAddAttendance} className="p-4 grid gap-4 text-xs md:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-1">
+                <label className="font-medium text-slate-700">Organization</label>
+                <SearchableSelect
+                  options={orgs.map((o) => ({ value: o.id, label: o.name }))}
+                  value={selectedOrgId}
+                  onChange={(v) => setSelectedOrgId(v === '' ? '' : Number(v))}
+                  placeholder="Select Organization"
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="font-medium text-slate-700">Record date</label>
+                <input type="date" className="w-full rounded border px-3 py-2" value={attDate} onChange={(e) => setAttDate(e.target.value)} required />
+              </div>
+              <div className="space-y-1">
+                <label className="font-medium text-slate-700">Staff present count</label>
+                <input type="number" className="w-full rounded border px-3 py-2" value={attStaffPresent} onChange={(e) => setAttStaffPresent(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <label className="font-medium text-slate-700">Expert present</label>
+                <select className="w-full rounded border px-3 py-2" value={attExpertPresent ? 'yes' : 'no'} onChange={(e) => setAttExpertPresent(e.target.value === 'yes')}>
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
+              <div className="space-y-1 lg:col-span-2">
+                <label className="font-medium text-slate-700">Remarks</label>
+                <input type="text" className="w-full rounded border px-3 py-2" value={attRemarks} onChange={(e) => setAttRemarks(e.target.value)} />
+              </div>
+              <div className="md:col-span-2 lg:col-span-4 flex justify-end">
+                <button type="submit" disabled={submitting} className="rounded bg-emerald-600 px-6 py-2 font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
+                  {submitting ? 'Adding...' : 'Add attendance row'}
+                </button>
+              </div>
+            </form>
           )}
         </section>
 
@@ -574,13 +798,29 @@ export default function AgricultureMonitoringPage() {
                       <th className="px-4 py-2 text-right">Villages</th>
                       <th className="px-4 py-2 text-right">Soil cards</th>
                     </>
-                  ) : (
+                  ) : activeTab === 'monthly' ? (
                     <>
                       <th className="px-4 py-2 text-center">Month / Year</th>
                       <th className="px-4 py-2 text-right">Trainings</th>
                       <th className="px-4 py-2 text-right">Farmers</th>
                       <th className="px-4 py-2 text-right">Trials</th>
                       <th className="px-4 py-2 text-right">Soil cards</th>
+                    </>
+                  ) : activeTab === 'inventory' ? (
+                    <>
+                      <th className="px-4 py-2 text-center">Date</th>
+                      <th className="px-4 py-2 text-center">Item</th>
+                      <th className="px-4 py-2 text-right">Opening</th>
+                      <th className="px-4 py-2 text-right">Received</th>
+                      <th className="px-4 py-2 text-right">Used</th>
+                      <th className="px-4 py-2 text-right">Closing</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="px-4 py-2 text-center">Date</th>
+                      <th className="px-4 py-2 text-right">Staff present</th>
+                      <th className="px-4 py-2 text-center">Expert present</th>
+                      <th className="px-4 py-2 text-center">Remarks</th>
                     </>
                   )}
                 </tr>
@@ -657,6 +897,30 @@ export default function AgricultureMonitoringPage() {
                       <td className="px-4 py-2 text-right">
                         {row.total_soil_cards ?? '—'}
                       </td>
+                    </tr>
+                  ))}
+                {activeTab === 'inventory' &&
+                  (paginated as AgInventoryRow[]).map((row, i) => (
+                    <tr key={`${row.record_date}-${row.item_name}-${i}`} className="border-b last:border-0 hover:bg-slate-50">
+                      <td className="px-4 py-2 text-center font-medium text-slate-700">{start + i + 1}</td>
+                      <td className="px-4 py-2 text-center text-slate-700">{selectedOrgId || 'Selected org'}</td>
+                      <td className="px-4 py-2 text-center text-slate-900">{(row.record_date || '').slice(0, 10)}</td>
+                      <td className="px-4 py-2 text-center text-slate-900">{row.item_name || '—'}</td>
+                      <td className="px-4 py-2 text-right">{row.opening ?? '—'}</td>
+                      <td className="px-4 py-2 text-right">{row.received ?? '—'}</td>
+                      <td className="px-4 py-2 text-right">{row.used ?? '—'}</td>
+                      <td className="px-4 py-2 text-right">{row.closing ?? '—'}</td>
+                    </tr>
+                  ))}
+                {activeTab === 'attendance' &&
+                  (paginated as AgAttendanceRow[]).map((row, i) => (
+                    <tr key={`${row.record_date}-${i}`} className="border-b last:border-0 hover:bg-slate-50">
+                      <td className="px-4 py-2 text-center font-medium text-slate-700">{start + i + 1}</td>
+                      <td className="px-4 py-2 text-center text-slate-700">{selectedOrgId || 'Selected org'}</td>
+                      <td className="px-4 py-2 text-center text-slate-900">{(row.record_date || '').slice(0, 10)}</td>
+                      <td className="px-4 py-2 text-right">{row.staff_present_count ?? '—'}</td>
+                      <td className="px-4 py-2 text-center">{row.expert_present ? 'Yes' : 'No'}</td>
+                      <td className="px-4 py-2 text-center">{row.remarks || '—'}</td>
                     </tr>
                   ))}
               </tbody>
