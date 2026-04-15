@@ -155,10 +155,6 @@ function AgriculturePortfolioMonitoringSection({
     }
   }, [metricDates, monitorDate]);
 
-  const expertAttendance = useMemo(
-    () => parseObjectMap(profile.ag_expert_attendance_json || profile.ag_expert_attendance),
-    [profile],
-  );
   const staffAttendanceRows = useMemo(
     () =>
       parseArray<AgStaffAttendanceRow>(profile.ag_staff_attendance_rows).length > 0
@@ -166,12 +162,6 @@ function AgriculturePortfolioMonitoringSection({
         : parseArray<AgStaffAttendanceRow>(profile.ag_staff_attendance_rows_json),
     [profile],
   );
-  const expertPresent = useMemo(() => {
-    const map = expertAttendance[monitorDate] || {};
-    if (Object.values(map).some(Boolean)) return true;
-    const row = staffAttendanceRows.find((r) => dateKey(r.record_date) === monitorDate);
-    return Boolean(row?.expert_present);
-  }, [expertAttendance, staffAttendanceRows, monitorDate]);
 
   const trendRows = useMemo(() => {
     const base = dailyMetrics
@@ -248,23 +238,6 @@ function AgriculturePortfolioMonitoringSection({
             />
           </div>
 
-          <div className="flex flex-wrap gap-4">
-            <div
-              className={`flex items-center gap-3 rounded-2xl border px-4 py-2 ${expertPresent
-                  ? 'border-blue-100 bg-blue-50 text-blue-700'
-                  : 'border-slate-200 bg-slate-50 text-slate-500'
-                }`}
-            >
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 leading-tight">
-                  Expert presence
-                </p>
-                <p className="text-xs font-bold leading-tight">
-                  {expertPresent ? 'Present Today' : 'Not Present'}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
