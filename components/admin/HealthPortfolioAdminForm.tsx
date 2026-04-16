@@ -714,6 +714,17 @@ export function HealthPortfolioAdminForm({
                       patch({ health_key_admin_cards_json: rowsToJson(n) });
                     }}
                   />
+                  <button
+                    type="button"
+                    className="text-[10px] text-red-600"
+                    onClick={() => {
+                      const n = [...keyAdminRows];
+                      n[i] = {};
+                      patch({ health_key_admin_cards_json: rowsToJson(n) });
+                    }}
+                  >
+                    Remove
+                  </button>
                 </div>
               </div>
             );
