@@ -1739,7 +1739,7 @@ export default function DepartmentAdminPage() {
                           }
                           return null;
                         })
-                        .filter((x): x is Record<string, unknown> => Boolean(x));
+                        .filter((x): x is { url: string; title: string; description: string } => Boolean(x));
 
                       const saved = await minorIrrigationApi.putProfile(orgId, profileData);
                       setMinorIrrigationProfiles((prev) => ({

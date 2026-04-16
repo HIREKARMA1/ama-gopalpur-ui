@@ -198,17 +198,17 @@ export function MinorIrrigationPortfolioWebsite({
     const lastMaintenance = profile?.last_maintenance ?? null;
 
     return [
-      { label: t('minor.field.department', lang), val: departmentName, icon: Tag, color: 'violet' },
-      { label: getMinorIrrigationProfileLabel('block_ulb', lang), val: block, icon: MapPin, color: 'emerald' },
-      { label: getMinorIrrigationProfileLabel('gp_ward', lang), val: gp, icon: Home, color: 'amber' },
-      { label: getMinorIrrigationProfileLabel('village_locality', lang), val: village, icon: Home, color: 'sky' },
-      { label: getMinorIrrigationProfileLabel('mip_id', lang), val: mipId, icon: Hash, color: 'slate' },
-      { label: getMinorIrrigationProfileLabel('name_of_m_i_p', lang), val: name, icon: Droplets, color: 'blue' },
-      { label: getMinorIrrigationProfileLabel('category_type', lang), val: type, icon: Tag, color: 'indigo' },
-      { label: getMinorIrrigationProfileLabel('managed_by', lang), val: managedBy, icon: Wrench, color: 'teal' },
-      { label: getMinorIrrigationProfileLabel('condition', lang), val: condition, icon: Activity, color: 'rose' },
-      { label: getMinorIrrigationProfileLabel('functionality', lang), val: functionality, icon: Activity, color: 'pink' },
-      { label: getMinorIrrigationProfileLabel('last_maintenance', lang), val: lastMaintenance, icon: FileText, color: 'slate' },
+      { label: t('minor.field.department', language), val: departmentName, icon: Tag, color: 'violet' },
+      { label: getMinorIrrigationProfileLabel('block_ulb', language), val: block, icon: MapPin, color: 'emerald' },
+      { label: getMinorIrrigationProfileLabel('gp_ward', language), val: gp, icon: Home, color: 'amber' },
+      { label: getMinorIrrigationProfileLabel('village_locality', language), val: village, icon: Home, color: 'sky' },
+      { label: getMinorIrrigationProfileLabel('mip_id', language), val: mipId, icon: Hash, color: 'slate' },
+      { label: getMinorIrrigationProfileLabel('name_of_m_i_p', language), val: name, icon: Droplets, color: 'blue' },
+      { label: getMinorIrrigationProfileLabel('category_type', language), val: type, icon: Tag, color: 'indigo' },
+      { label: getMinorIrrigationProfileLabel('managed_by', language), val: managedBy, icon: Wrench, color: 'teal' },
+      { label: getMinorIrrigationProfileLabel('condition', language), val: condition, icon: Activity, color: 'rose' },
+      { label: getMinorIrrigationProfileLabel('functionality', language), val: functionality, icon: Activity, color: 'pink' },
+      { label: getMinorIrrigationProfileLabel('last_maintenance', language), val: lastMaintenance, icon: FileText, color: 'slate' },
     ] as const;
   }, [profile, org.name, departmentName, lang]);
 
@@ -328,7 +328,7 @@ export function MinorIrrigationPortfolioWebsite({
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">
-                  {getMinorIrrigationProfileLabel(key, lang)}
+                  {getMinorIrrigationProfileLabel(key, language)}
                 </p>
                 <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(value)}</p>
               </div>
@@ -378,9 +378,9 @@ export function MinorIrrigationPortfolioWebsite({
           <h2 className="text-xl font-bold sm:text-2xl">Key highlights</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              [t('minor.stat.catchment', lang), formatVal(catchment)],
-              [t('minor.stat.ayacut', lang), formatVal(ayacut)],
-              [t('minor.stat.storage', lang), formatVal(storage)],
+              [t('minor.stat.catchment', language), formatVal(catchment)],
+              [t('minor.stat.ayacut', language), formatVal(ayacut)],
+              [t('minor.stat.storage', language), formatVal(storage)],
             ].map(([k, v]) => (
               <div key={String(k)} className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{k}</p>
@@ -399,19 +399,19 @@ export function MinorIrrigationPortfolioWebsite({
           <div className="mt-7 space-y-8">
             <div>
               <h3 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
-                {t('minor.tab.technical', lang)}
+                {t('minor.tab.technical', language)}
               </h3>
               <div className="mt-4">{renderGrid(grouped.technical, 'No technical fields found.')}</div>
             </div>
             <div>
               <h3 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
-                {t('minor.tab.operations', lang)}
+                {t('minor.tab.operations', language)}
               </h3>
               <div className="mt-4">{renderGrid(grouped.operations, 'No operations fields found.')}</div>
             </div>
             <div>
               <h3 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
-                {t('minor.tab.finance', lang)}
+                {t('minor.tab.finance', language)}
               </h3>
               <div className="mt-4">{renderGrid(grouped.finance, 'No finance/beneficiary fields found.')}</div>
             </div>
