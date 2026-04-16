@@ -206,6 +206,16 @@ export const organizationsApi = {
       body: form,
     });
   },
+  /** Minor Irrigation portfolio image; stored under Departments/MinorIrrigation/{Org}/minor-portfolio/{section}/ */
+  uploadMinorIrrigationPortfolioAsset: (id: number, file: File, assetType: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('asset_type', assetType);
+    return apiFetch<{ url: string }>(`/api/v1/organizations/${id}/minor-irrigation-portfolio-asset`, {
+      method: 'POST',
+      body: form,
+    });
+  },
   /** AWC / ICDS portfolio image; stored under Departments/ICDS/{Org}/awc-portfolio/{section}/ */
   uploadAwcPortfolioAsset: (id: number, file: File, assetType: string) => {
     const form = new FormData();
