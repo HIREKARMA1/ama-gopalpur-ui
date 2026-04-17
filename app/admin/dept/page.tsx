@@ -214,6 +214,9 @@ export default function DepartmentAdminPage() {
   const [agricultureImageFile, setAgricultureImageFile] = useState<File | null>(null);
   const [waterFormValues, setWaterFormValues] = useState<Record<string, string>>({});
   const [waterImageFile, setWaterImageFile] = useState<File | null>(null);
+  const [waterGalleryRows, setWaterGalleryRows] = useState<
+    Array<{ image: string; title: string; description: string }>
+  >([]);
   const [editingWaterId, setEditingWaterId] = useState<number | null>(null);
   const [newOrg, setNewOrg] = useState({
     ulb_block: '',
@@ -1416,6 +1419,13 @@ export default function DepartmentAdminPage() {
                       profileData[latKey] = lat;
                       profileData[lngKey] = lng;
                       profileData[nameKey] = name;
+                      profileData.watco_photo_gallery = waterGalleryRows
+                        .map((row) => ({
+                          image: String(row.image || '').trim(),
+                          title: String(row.title || '').trim(),
+                          description: String(row.description || '').trim(),
+                        }))
+                        .filter((row) => row.image || row.title || row.description);
                       const saved = await watcoApi.putProfile(orgId, profileData);
                       setWaterProfiles((prev) => ({
                         ...prev,
@@ -1427,6 +1437,7 @@ export default function DepartmentAdminPage() {
                         setWaterImageFile(null);
                       }
                       setWaterFormValues({});
+                      setWaterGalleryRows([]);
                       setEditingWaterId(null);
                     } catch (err: any) {
                       setError(err.message || 'Failed to save water scheme');
@@ -1453,6 +1464,109 @@ export default function DepartmentAdminPage() {
                       </div>
                     );
                   })}
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="block text-text">Photo gallery</label>
+                    {(waterGalleryRows.length
+                      ? waterGalleryRows
+                      : [{ image: '', title: '', description: '' }]
+                    ).map((row, i, arr) => (
+                      <div
+                        key={i}
+                        className="grid gap-2 rounded border border-border p-2 sm:grid-cols-[minmax(0,150px)_repeat(2,minmax(0,1fr))_auto] sm:items-end"
+                      >
+                        <div className="space-y-1">
+                          <span className="block text-[11px] text-text">Image</span>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            disabled={!editingWaterId}
+                            className="w-full text-[11px]"
+                            onChange={async (e) => {
+                              const f = e.target.files?.[0];
+                              const inputEl = e.target as HTMLInputElement;
+                              if (!f) return;
+                              if (!editingWaterId) {
+                                setError('Save scheme first, then click Edit to upload gallery images.');
+                                return;
+                              }
+                              try {
+                                const compressed = await compressImage(f, { maxSizeMB: 1, maxWidth: 1920 });
+                                const uploaded = await organizationsApi.uploadWatcoPortfolioAsset(
+                                  editingWaterId,
+                                  compressed,
+                                  'watco_gallery',
+                                );
+                                setWaterGalleryRows((prev) => {
+                                  const base = prev.length ? [...prev] : [...arr];
+                                  base[i] = { ...base[i], image: uploaded.url };
+                                  return base;
+                                });
+                              } catch (uploadErr: unknown) {
+                                setError(uploadErr instanceof Error ? uploadErr.message : 'Gallery upload failed');
+                              } finally {
+                                inputEl.value = '';
+                              }
+                            }}
+                          />
+                          {row.image ? (
+                            <img
+                              src={row.image}
+                              alt=""
+                              className="h-16 w-16 rounded border border-border object-cover"
+                            />
+                          ) : null}
+                        </div>
+                        <input
+                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                          placeholder="Title"
+                          value={row.title || ''}
+                          onChange={(e) =>
+                            setWaterGalleryRows((prev) => {
+                              const base = prev.length ? [...prev] : [...arr];
+                              base[i] = { ...base[i], title: e.target.value };
+                              return base;
+                            })
+                          }
+                        />
+                        <input
+                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                          placeholder="Description (optional)"
+                          value={row.description || ''}
+                          onChange={(e) =>
+                            setWaterGalleryRows((prev) => {
+                              const base = prev.length ? [...prev] : [...arr];
+                              base[i] = { ...base[i], description: e.target.value };
+                              return base;
+                            })
+                          }
+                        />
+                        <button
+                          type="button"
+                          className="text-[10px] text-red-600"
+                          onClick={() =>
+                            setWaterGalleryRows((prev) => {
+                              const base = prev.length ? [...prev] : [...arr];
+                              return base.filter((_, j) => j !== i);
+                            })
+                          }
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="rounded border border-border px-2 py-1 text-[11px]"
+                      onClick={() =>
+                        setWaterGalleryRows((prev) => [
+                          ...prev,
+                          { image: '', title: '', description: '' },
+                        ])
+                      }
+                    >
+                      + Add gallery item
+                    </button>
+                  </div>
                   <div className="md:col-span-2 space-y-1">
                     <label className="block text-text">Profile Image</label>
                     <input
@@ -4442,6 +4556,45 @@ export default function DepartmentAdminPage() {
                                         vals[key] = v(existingProfile?.[key]);
                                       }
                                     });
+                                    const gp = existingProfile?.watco_photo_gallery;
+                                    if (Array.isArray(gp)) {
+                                      setWaterGalleryRows(
+                                        gp
+                                          .filter(
+                                            (it): it is Record<string, unknown> =>
+                                              it != null && typeof it === 'object' && !Array.isArray(it),
+                                          )
+                                          .map((it) => ({
+                                            image: String(it.image || ''),
+                                            title: String(it.title || ''),
+                                            description: String(it.description || ''),
+                                          })),
+                                      );
+                                    } else if (typeof gp === 'string' && gp.trim()) {
+                                      try {
+                                        const parsed = JSON.parse(gp) as unknown;
+                                        if (Array.isArray(parsed)) {
+                                          setWaterGalleryRows(
+                                            parsed
+                                              .filter(
+                                                (it): it is Record<string, unknown> =>
+                                                  it != null && typeof it === 'object' && !Array.isArray(it),
+                                              )
+                                              .map((it) => ({
+                                                image: String(it.image || ''),
+                                                title: String(it.title || ''),
+                                                description: String(it.description || ''),
+                                              })),
+                                          );
+                                        } else {
+                                          setWaterGalleryRows([]);
+                                        }
+                                      } catch {
+                                        setWaterGalleryRows([]);
+                                      }
+                                    } else {
+                                      setWaterGalleryRows([]);
+                                    }
                                     setWaterFormValues(vals);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}

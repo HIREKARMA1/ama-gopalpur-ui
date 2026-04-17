@@ -45,6 +45,11 @@ import {
 } from 'lucide-react';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
 import { GOPALPUR_BOUNDS } from '../../lib/mapConfig';
+import {
+  PsGallerySection,
+  parseArray,
+  type GalleryItem,
+} from './EducationPsSections';
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
@@ -268,6 +273,7 @@ export function WaterPortfolioDashboard({
   ].filter((tab) => tab.id === 'overview' || categorizedAttributes[tab.id]?.length > 0);
 
   const [detailTab, setDetailTab] = useState<string>('profile');
+  const galleryItems = parseArray<GalleryItem>(waterProfile.watco_photo_gallery);
 
   return (
     <div className="min-h-screen bg-slate-50/30 text-slate-800 font-sans pb-16">
@@ -733,6 +739,10 @@ export function WaterPortfolioDashboard({
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8">
+        <PsGallerySection gallery={galleryItems} />
       </section>
     </div>
   );
