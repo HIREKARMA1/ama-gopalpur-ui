@@ -20,8 +20,8 @@ function safeParseJsonArray<T extends object>(raw: string, fallback: T[]): T[] {
 }
 
 function rowsToJson(rows: Record<string, unknown>[]): string {
-  const cleaned = rows.filter((r) => Object.values(r).some((v) => String(v).trim()));
-  return JSON.stringify(cleaned.length ? cleaned : []);
+  // Keep empty rows so "Add row" actions are immediately visible in the UI.
+  return JSON.stringify(rows);
 }
 
 type FacilityImageRow = { url: string; title: string };
