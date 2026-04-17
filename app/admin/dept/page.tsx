@@ -2732,21 +2732,18 @@ export default function DepartmentAdminPage() {
                       } catch {
                         healthDoctorAttendance = {};
                       }
+                      const _hs = (s: string) => s.trim();
                       const profileData: Record<string, unknown> = {
-                        block_ulb: _s(newHealthOrg.block_ulb),
-                        gp_ward: _s(newHealthOrg.gp_ward),
-                        village: _s(newHealthOrg.village),
+                        block_ulb: _hs(newHealthOrg.block_ulb),
+                        gp_ward: _hs(newHealthOrg.gp_ward),
+                        village: _hs(newHealthOrg.village),
                         latitude: lat,
                         longitude: lng,
                         name: newHealthOrg.name.trim(),
-                        institution_id: _s(newHealthOrg.institution_id),
-                        category: _s(newHealthOrg.category),
-                        inst_head_name: _s(
-                          healthPortfolioForm.health_inst_head_name || newHealthOrg.inst_head_name || '',
-                        ),
-                        inst_head_contact: _s(
-                          healthPortfolioForm.health_inst_head_contact || newHealthOrg.inst_head_contact || '',
-                        ),
+                        institution_id: _hs(newHealthOrg.institution_id),
+                        category: _hs(newHealthOrg.category),
+                        inst_head_name: _hs(healthPortfolioForm.health_inst_head_name || ''),
+                        inst_head_contact: _hs(healthPortfolioForm.health_inst_head_contact || ''),
                         no_of_ts: _n(newHealthOrg.no_of_ts),
                         no_of_nts: _n(newHealthOrg.no_of_nts),
                         no_of_mo: _n(newHealthOrg.no_of_mo),
@@ -2759,32 +2756,28 @@ export default function DepartmentAdminPage() {
                         no_of_nw: _n(newHealthOrg.no_of_nw),
                         no_of_bed: _n(newHealthOrg.no_of_bed),
                         no_of_icu: _n(newHealthOrg.no_of_icu),
-                        x_ray_availabilaty: _s(newHealthOrg.x_ray_availabilaty),
-                        ct_scan_availability: _s(newHealthOrg.ct_scan_availability),
-                        availability_of_pathology_testing: _s(newHealthOrg.availability_of_pathology_testing),
-                        description: _s(newHealthOrg.description),
-                        health_display_name: _s(healthPortfolioForm.health_display_name || ''),
-                        health_hero_tagline: _s(healthPortfolioForm.health_hero_tagline || ''),
-                        health_tagline: _s(healthPortfolioForm.health_tagline || ''),
-                        health_hero_1: _s(healthPortfolioForm.health_hero_1 || ''),
-                        health_hero_2: _s(healthPortfolioForm.health_hero_2 || ''),
-                        health_hero_3: _s(healthPortfolioForm.health_hero_3 || ''),
-                        health_about: _s(healthPortfolioForm.health_about || ''),
-                        health_campus_image: _s(healthPortfolioForm.health_campus_image || ''),
-                        health_established_year: _s(healthPortfolioForm.health_established_year || ''),
-                        health_facility_type: _s(healthPortfolioForm.health_facility_type || ''),
-                        health_location_line: _s(healthPortfolioForm.health_location_line || ''),
-                        health_inst_head_message: _s(healthPortfolioForm.health_inst_head_message || ''),
-                        health_inst_head_name: _s(
-                          healthPortfolioForm.health_inst_head_name || newHealthOrg.inst_head_name || '',
-                        ),
-                        health_inst_head_photo: _s(healthPortfolioForm.health_inst_head_photo || ''),
-                        health_inst_head_qualification: _s(healthPortfolioForm.health_inst_head_qualification || ''),
-                        health_inst_head_experience: _s(healthPortfolioForm.health_inst_head_experience || ''),
-                        health_inst_head_contact: _s(
-                          healthPortfolioForm.health_inst_head_contact || newHealthOrg.inst_head_contact || '',
-                        ),
-                        health_inst_head_email: _s(healthPortfolioForm.health_inst_head_email || ''),
+                        x_ray_availabilaty: _hs(newHealthOrg.x_ray_availabilaty),
+                        ct_scan_availability: _hs(newHealthOrg.ct_scan_availability),
+                        availability_of_pathology_testing: _hs(newHealthOrg.availability_of_pathology_testing),
+                        description: _hs(newHealthOrg.description),
+                        health_display_name: _hs(healthPortfolioForm.health_display_name || ''),
+                        health_hero_tagline: _hs(healthPortfolioForm.health_hero_tagline || ''),
+                        health_tagline: _hs(healthPortfolioForm.health_tagline || ''),
+                        health_hero_1: _hs(healthPortfolioForm.health_hero_1 || ''),
+                        health_hero_2: _hs(healthPortfolioForm.health_hero_2 || ''),
+                        health_hero_3: _hs(healthPortfolioForm.health_hero_3 || ''),
+                        health_about: _hs(healthPortfolioForm.health_about || ''),
+                        health_campus_image: _hs(healthPortfolioForm.health_campus_image || ''),
+                        health_established_year: _hs(healthPortfolioForm.health_established_year || ''),
+                        health_facility_type: _hs(healthPortfolioForm.health_facility_type || ''),
+                        health_location_line: _hs(healthPortfolioForm.health_location_line || ''),
+                        health_inst_head_message: _hs(healthPortfolioForm.health_inst_head_message || ''),
+                        health_inst_head_name: _hs(healthPortfolioForm.health_inst_head_name || ''),
+                        health_inst_head_photo: _hs(healthPortfolioForm.health_inst_head_photo || ''),
+                        health_inst_head_qualification: _hs(healthPortfolioForm.health_inst_head_qualification || ''),
+                        health_inst_head_experience: _hs(healthPortfolioForm.health_inst_head_experience || ''),
+                        health_inst_head_contact: _hs(healthPortfolioForm.health_inst_head_contact || ''),
+                        health_inst_head_email: _hs(healthPortfolioForm.health_inst_head_email || ''),
                         health_key_admin_cards: parseHealthGalleryRows(healthPortfolioForm.health_key_admin_cards_json),
                         health_health_facility_cards: normalizeHealthFacilityCardsForSave(
                           parseHealthFacilityJson(healthPortfolioForm.health_health_facility_cards_json),
@@ -2795,14 +2788,12 @@ export default function DepartmentAdminPage() {
                         health_clinical_staff_rows: parseHealthGalleryRows(healthPortfolioForm.health_clinical_staff_rows_json),
                         health_equipment_rows: parseHealthGalleryRows(healthPortfolioForm.health_equipment_rows_json),
                         health_photo_gallery: parseHealthGalleryRows(healthPortfolioForm.health_photo_gallery_json),
-                        health_full_address: _s(healthPortfolioForm.health_full_address || ''),
-                        health_helpdesk_phone: _s(healthPortfolioForm.health_helpdesk_phone || ''),
-                        health_emergency_phone: _s(healthPortfolioForm.health_emergency_phone || ''),
-                        health_public_email: _s(healthPortfolioForm.health_public_email || ''),
-                        health_office_hours: _s(healthPortfolioForm.health_office_hours || ''),
-                        health_contact_email: _s(
-                          healthPortfolioForm.health_public_email || healthPortfolioForm.health_contact_email || '',
-                        ),
+                        health_full_address: _hs(healthPortfolioForm.health_full_address || ''),
+                        health_helpdesk_phone: _hs(healthPortfolioForm.health_helpdesk_phone || ''),
+                        health_emergency_phone: _hs(healthPortfolioForm.health_emergency_phone || ''),
+                        health_public_email: _hs(healthPortfolioForm.health_public_email || ''),
+                        health_office_hours: _hs(healthPortfolioForm.health_office_hours || ''),
+                        health_contact_email: _hs(healthPortfolioForm.health_contact_email || ''),
                       };
                       await healthApi.putProfile(updated.id, profileData);
                       if (healthImageFile) {
@@ -2825,6 +2816,7 @@ export default function DepartmentAdminPage() {
                       organizationId={editingHealthId}
                       form={healthPortfolioForm}
                       setForm={setHealthPortfolioForm}
+                      onClearProfileImage={() => setHealthImageFile(null)}
                       facilityRecord={{
                         block_ulb: newHealthOrg.block_ulb,
                         gp_ward: newHealthOrg.gp_ward,
