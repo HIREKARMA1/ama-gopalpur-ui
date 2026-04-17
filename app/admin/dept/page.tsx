@@ -39,6 +39,10 @@ import {
   normalizeHealthFacilityCardsForSave,
 } from '../../../components/admin/HealthPortfolioAdminForm';
 import {
+  MinorIrrigationPortfolioAdminForm,
+  MINOR_IRRIGATION_PORTFOLIO_EMPTY_FORM,
+} from '../../../components/admin/MinorIrrigationPortfolioAdminForm';
+import {
   AGRICULTURE_PORTFOLIO_EMPTY_FORM,
   AgriculturePortfolioAdminForm,
   normalizeAgricultureFacilityCardsForSave,
@@ -323,6 +327,7 @@ export default function DepartmentAdminPage() {
   const [arcsImageFile, setArcsImageFile] = useState<File | null>(null);
   const [arcsProfiles, setArcsProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [minorFormValues, setMinorFormValues] = useState<Record<string, string>>({});
+  const [minorPortfolioForm, setMinorPortfolioForm] = useState<Record<string, string>>(MINOR_IRRIGATION_PORTFOLIO_EMPTY_FORM);
   const [editingMinorId, setEditingMinorId] = useState<number | null>(null);
   const [minorIrrigationImageFile, setMinorIrrigationImageFile] = useState<File | null>(null);
   const [irrigationFormValues, setIrrigationFormValues] = useState<Record<string, string>>({});
@@ -1697,6 +1702,44 @@ export default function DepartmentAdminPage() {
                       profileData[latKey] = lat;
                       profileData[lngKey] = lng;
                       profileData[nameKey] = name;
+                      const parseJsonArray = (raw: string | undefined) => {
+                        if (!raw?.trim()) return [];
+                        try {
+                          const parsed = JSON.parse(raw) as unknown;
+                          return Array.isArray(parsed) ? parsed : [];
+                        } catch {
+                          return [];
+                        }
+                      };
+                      // Merge portfolio-style (hero/about/admin/cards/staff/contact) fields.
+                      Object.entries(minorPortfolioForm).forEach(([key, value]) => {
+                        if (value != null && String(value).trim() !== '') {
+                          profileData[key] = value;
+                        }
+                      });
+                      profileData.minor_key_admin_cards = parseJsonArray(minorPortfolioForm.minor_key_admin_cards_json);
+                      profileData.minor_facility_cards = parseJsonArray(minorPortfolioForm.minor_facility_cards_json);
+                      profileData.minor_faculty_cards = parseJsonArray(minorPortfolioForm.minor_faculty_cards_json);
+                      profileData.minor_staff_rows = parseJsonArray(minorPortfolioForm.minor_staff_rows_json);
+                      const galleryRows = parseJsonArray(minorPortfolioForm.gallery_images) as Array<Record<string, unknown> | string>;
+                      profileData.gallery_images = galleryRows
+                        .map((row) => {
+                          if (typeof row === 'string') {
+                            const url = row.trim();
+                            if (!url) return null;
+                            return { url, title: '', description: '' };
+                          }
+                          if (row && typeof row === 'object') {
+                            const rec = row as Record<string, unknown>;
+                            const url = String(rec.url || rec.image || '').trim();
+                            const title = String(rec.title || '').trim();
+                            const description = String(rec.description || '').trim();
+                            if (!url) return null;
+                            return { url, title, description };
+                          }
+                          return null;
+                        })
+                        .filter((x): x is { url: string; title: string; description: string } => Boolean(x));
 
                       const saved = await minorIrrigationApi.putProfile(orgId, profileData);
                       setMinorIrrigationProfiles((prev) => ({
@@ -1712,6 +1755,7 @@ export default function DepartmentAdminPage() {
                       }
 
                       setMinorFormValues({});
+                      setMinorPortfolioForm(MINOR_IRRIGATION_PORTFOLIO_EMPTY_FORM);
                       setEditingMinorId(null);
                     } catch (err: any) {
                       setError(err.message || 'Failed to save minor irrigation entry');
@@ -1759,6 +1803,16 @@ export default function DepartmentAdminPage() {
                     </button>
                   </div>
                 </form>
+                <div className="mt-4">
+                  <MinorIrrigationPortfolioAdminForm
+                    organizationId={editingMinorId}
+                    form={minorPortfolioForm}
+                    setForm={setMinorPortfolioForm}
+                    existingProfile={
+                      editingMinorId != null ? minorIrrigationProfiles[editingMinorId] ?? {} : {}
+                    }
+                  />
+                </div>
               </section>
             )}
 
@@ -3649,6 +3703,45 @@ export default function DepartmentAdminPage() {
                                       vals[lngKey] = String(o.longitude);
 
                                     setMinorFormValues(vals);
+                                    const pv = (x: unknown) => {
+                                      if (x == null) return '';
+                                      if (typeof x === 'string') return x.trim();
+                                      if (typeof x === 'number' || typeof x === 'boolean') return String(x);
+                                      try {
+                                        return JSON.stringify(x);
+                                      } catch {
+                                        return String(x);
+                                      }
+                                    };
+                                    const nextPortfolio: Record<string, string> = {};
+                                    Object.keys(MINOR_IRRIGATION_PORTFOLIO_EMPTY_FORM).forEach((key) => {
+                                      nextPortfolio[key] = pv(existingProfile?.[key]);
+                                    });
+                                    // Fill About tab inputs with the same fallback values used by the public UI.
+                                    nextPortfolio.minor_display_name =
+                                      nextPortfolio.minor_display_name ||
+                                      pv(existingProfile?.name_of_m_i_p) ||
+                                      String(o.name || '').trim();
+                                    nextPortfolio.minor_established_year =
+                                      nextPortfolio.minor_established_year ||
+                                      pv(existingProfile?.minor_established_year) ||
+                                      pv(existingProfile?.established_year) ||
+                                      pv(existingProfile?.year_of_commissioning);
+                                    nextPortfolio.minor_facility_type =
+                                      nextPortfolio.minor_facility_type ||
+                                      pv(existingProfile?.minor_facility_type) ||
+                                      pv(existingProfile?.category_type) ||
+                                      pv(existingProfile?.category);
+                                    const loc = [
+                                      pv(existingProfile?.block_ulb),
+                                      pv(existingProfile?.gp_ward),
+                                      pv(existingProfile?.village_locality),
+                                    ]
+                                      .filter(Boolean)
+                                      .join(', ');
+                                    nextPortfolio.minor_location_line =
+                                      nextPortfolio.minor_location_line || loc;
+                                    setMinorPortfolioForm(nextPortfolio);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}
                                 >
