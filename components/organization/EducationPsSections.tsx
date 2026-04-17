@@ -1646,12 +1646,12 @@ export function PsGallerySection({ gallery }: { gallery: GalleryItem[] }) {
               ${idx % 8 === 6 ? 'col-span-1 row-span-1' : ''}
               ${idx % 8 === 7 ? 'col-span-1 row-span-1' : ''}
             `}
-            aria-label={`Open ${displayText(asString(item.title) || asString(item.category))}`}
+            aria-label={`Open ${displayText(asString(item.title))}`}
           >
             {asString(item.image) ? (
               <img
                 src={asString(item.image)}
-                alt={displayText(asString(item.title) || asString(item.category))}
+                alt={displayText(asString(item.title))}
                 className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
               />
             ) : (
@@ -1679,7 +1679,7 @@ export function PsGallerySection({ gallery }: { gallery: GalleryItem[] }) {
           >
             <div className="relative">
               {asString(preview.image) ? (
-                <img src={asString(preview.image)} alt={displayText(asString(preview.title) || asString(preview.category))} className="max-h-[75vh] w-full object-contain bg-slate-100" />
+                <img src={asString(preview.image)} alt={displayText(asString(preview.title))} className="max-h-[75vh] w-full object-contain bg-slate-100" />
               ) : (
                 <div className="flex h-[420px] w-full items-center justify-center bg-slate-100">
                   <p className="text-sm text-slate-500">{EMPTY}</p>
@@ -1696,11 +1696,8 @@ export function PsGallerySection({ gallery }: { gallery: GalleryItem[] }) {
             </div>
             <div className="border-t border-slate-200 p-4">
               <h3 className="text-xl font-bold tracking-tight text-slate-900">
-                {displayText(asString(preview.title) || asString(preview.category))}
+                {displayText(asString(preview.title))}
               </h3>
-              {asString(preview.category) ? (
-                <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">{displayText(preview.category)}</p>
-              ) : null}
               <p className="mt-2 text-sm leading-relaxed text-slate-600">{displayText(preview.description)}</p>
             </div>
           </div>

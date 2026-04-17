@@ -226,6 +226,16 @@ export const organizationsApi = {
       body: form,
     });
   },
+  /** WATCO/RWSS portfolio image; stored under Departments/WATCO_RWSS/{Org}/watco-portfolio/{section}/ */
+  uploadWatcoPortfolioAsset: (id: number, file: File, assetType: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('asset_type', assetType);
+    return apiFetch<{ url: string }>(`/api/v1/organizations/${id}/watco-portfolio-asset`, {
+      method: 'POST',
+      body: form,
+    });
+  },
 };
 
 export const authApi = {
