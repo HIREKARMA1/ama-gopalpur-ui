@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, FormEvent, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useMemo, useState, FormEvent, type Dispatch, type SetStateAction } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -244,6 +244,8 @@ export default function DepartmentAdminPage() {
   const PAGE_SIZE = 25;
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [educationTableFilterColumn, setEducationTableFilterColumn] = useState<string>('School Name');
+  const [educationTableSearchText, setEducationTableSearchText] = useState<string>('');
 
   const [editingHealthId, setEditingHealthId] = useState<number | null>(null);
   const emptyHealthOrg = () => ({
@@ -400,6 +402,151 @@ export default function DepartmentAdminPage() {
     if (!v) return undefined;
     return v === '1' || v === 'true' || v === 'yes' || v === 'y';
   };
+
+  const educationTableColumns = useMemo(() => {
+    if (deptCode !== 'EDUCATION') return [] as string[];
+    if (isEducationSchoolSubDept(educationSubDept)) {
+      return [
+        'School Name',
+        'ULB / Block',
+        'GP / Ward',
+        'Village',
+        'School ID',
+        'ESST Year',
+        'Category',
+        ...schoolClassFields(educationSubDept).map((fieldKey) => SCHOOL_CLASS_LABELS[fieldKey]),
+        'DEO Name',
+        'DEO Contact',
+        'BEO Name',
+        'BEO Contact',
+        'BRCC Name',
+        'BRCC Contact',
+        'CRCC Name',
+        'CRCC Contact',
+        'HM Name',
+        'HM Contact',
+        'No of TS',
+        'No of NTS',
+        'TGP(PCM)',
+        'TGP(CBZ)',
+        'TGT(Arts)',
+        'Building Status',
+        'No of Rooms',
+        'Smart Class',
+        'Science Lab',
+        'Toilet(M)',
+        'Toilet(F)',
+        'Ramp',
+        'Meeting Hall',
+        'Staff Room',
+        'NCC',
+        'NSS',
+        'JRC',
+        'Eco Club',
+        'Library',
+        'ICC Head',
+        'ICC Contact',
+        'Play Ground',
+        'Cycle Stand',
+        'DW(TW)',
+        'DW(Tap)',
+        'DW(Overhead)',
+        'DW(Aquaguard)',
+        'Latitude',
+        'Longitude',
+      ];
+    }
+    return ['Institution Name', ...getEducationHeadersForSubDept(educationSubDept)];
+  }, [deptCode, educationSubDept]);
+
+  useEffect(() => {
+    if (deptCode !== 'EDUCATION' || !educationTableColumns.length) return;
+    setEducationTableFilterColumn((prev) =>
+      educationTableColumns.includes(prev) ? prev : educationTableColumns[0]!,
+    );
+  }, [deptCode, educationSubDept, educationTableColumns]);
+
+  const organizationsForTable = useMemo(() => {
+    const base =
+      deptCode === 'REVENUE_LAND' ? orgs.filter((o) => o.sub_department === 'TAHASIL_OFFICE') : orgs;
+
+    if (deptCode !== 'EDUCATION') return base;
+    const q = educationTableSearchText.trim().toLowerCase();
+    if (!q) return base;
+
+    const getEducationColumnValue = (o: Organization, column: string): string => {
+      const ep = educationProfiles[o.id];
+      const fallback = (v: unknown) => (v != null && String(v).trim() !== '' ? String(v) : '');
+      if (column === 'School Name' || column === 'Institution Name') return fallback(o.name);
+      if (column === 'Latitude') return o.latitude != null ? o.latitude.toFixed(6) : '';
+      if (column === 'Longitude') return o.longitude != null ? o.longitude.toFixed(6) : '';
+
+      if (isEducationSchoolSubDept(educationSubDept)) {
+        const schoolMap: Record<string, unknown> = {
+          'ULB / Block': ep?.block_ulb ?? o.attributes?.ulb_block,
+          'GP / Ward': ep?.gp_ward ?? o.attributes?.gp_name,
+          Village: ep?.village ?? o.attributes?.ward_village,
+          'School ID': ep?.school_id,
+          'ESST Year': ep?.esst_year,
+          Category: ep?.category,
+          'DEO Name': ep?.deo_name,
+          'DEO Contact': ep?.deo_contact,
+          'BEO Name': ep?.beo_name,
+          'BEO Contact': ep?.beo_contact,
+          'BRCC Name': ep?.brcc_name,
+          'BRCC Contact': ep?.brcc_contact,
+          'CRCC Name': ep?.crcc_name,
+          'CRCC Contact': ep?.crcc_contact,
+          'HM Name': ep?.name_of_hm,
+          'HM Contact': ep?.contact_of_hm,
+          'No of TS': ep?.no_of_ts,
+          'No of NTS': ep?.no_of_nts,
+          'TGP(PCM)': ep?.no_of_tgp_pcm,
+          'TGP(CBZ)': ep?.no_of_tgp_cbz,
+          'TGT(Arts)': ep?.no_of_tgt_arts,
+          'Building Status': ep?.building_status,
+          'No of Rooms': ep?.no_of_rooms,
+          'Smart Class': ep?.no_of_smart_class_rooms,
+          'Science Lab': ep?.science_lab,
+          'Toilet(M)': ep?.toilet_m,
+          'Toilet(F)': ep?.toilet_f,
+          Ramp: ep?.ramp,
+          'Meeting Hall': ep?.meeting_hall,
+          'Staff Room': ep?.staff_common_room,
+          NCC: ep?.ncc,
+          NSS: ep?.nss,
+          JRC: ep?.jrc,
+          'Eco Club': ep?.eco_club,
+          Library: ep?.library,
+          'ICC Head': ep?.icc_head_name,
+          'ICC Contact': ep?.icc_head_contact,
+          'Play Ground': ep?.play_ground,
+          'Cycle Stand': ep?.cycle_stand,
+          'DW(TW)': ep?.drinking_water_tw,
+          'DW(Tap)': ep?.drinking_water_tap,
+          'DW(Overhead)': ep?.drinking_water_overhead_tap,
+          'DW(Aquaguard)': ep?.drinking_water_aquaguard,
+        };
+        const classField = Object.entries(SCHOOL_CLASS_LABELS).find(([, label]) => label === column)?.[0];
+        if (classField) return fallback((ep as Record<string, unknown> | undefined)?.[classField]);
+        return fallback(schoolMap[column]);
+      }
+
+      const key = snakeFromHeader(column);
+      return fallback(ep?.[key]);
+    };
+
+    return base.filter((o) =>
+      getEducationColumnValue(o, educationTableFilterColumn).toLowerCase().includes(q),
+    );
+  }, [
+    deptCode,
+    orgs,
+    educationProfiles,
+    educationSubDept,
+    educationTableFilterColumn,
+    educationTableSearchText,
+  ]);
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -3152,6 +3299,37 @@ export default function DepartmentAdminPage() {
                   ? 'Click a Tahasil row to open its profile and add land parcels under it.'
                   : 'You can see and delete organizations for your department. (Full edit UI will be added on top of this.)'}
               </p>
+              {deptCode === 'EDUCATION' && (
+                <div className="mt-3 grid gap-2 rounded border border-border bg-background-muted/30 p-2 text-xs md:grid-cols-[220px_1fr]">
+                  <div className="space-y-1">
+                    <label className="block text-[11px] text-text-muted">Filter column</label>
+                    <select
+                      value={educationTableFilterColumn}
+                      onChange={(e) => setEducationTableFilterColumn(e.target.value)}
+                      className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
+                    >
+                      {educationTableColumns.map((col) => (
+                        <option key={col} value={col}>
+                          {col}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[11px] text-text-muted">Search value</label>
+                    <input
+                      value={educationTableSearchText}
+                      onChange={(e) => setEducationTableSearchText(e.target.value)}
+                      placeholder={
+                        educationTableFilterColumn
+                          ? `Type value for ${educationTableFilterColumn}`
+                          : 'Type value to search'
+                      }
+                      className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
+                    />
+                  </div>
+                </div>
+              )}
               <div className="mt-3 overflow-x-auto">
                 <table className="min-w-full border-collapse text-xs">
                   <thead>
@@ -3391,7 +3569,7 @@ export default function DepartmentAdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(deptCode === 'REVENUE_LAND' ? orgs.filter((o) => o.sub_department === 'TAHASIL_OFFICE') : orgs).map(
+                    {organizationsForTable.map(
                       (o, idx) => {
                         const prof = orgProfiles[o.id];
                         const hp = healthProfiles[o.id];
@@ -4616,10 +4794,12 @@ export default function DepartmentAdminPage() {
                         );
                       },
                     )}
-                    {!orgs.length && (
+                    {!organizationsForTable.length && (
                       <tr>
                         <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 21 : deptCode === 'HEALTH' ? 27 : deptCode === 'EDUCATION' ? 61 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 2 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 2 : deptCode === 'REVENUE_LAND' ? 12 : 10}>
-                          No organizations yet for your department.
+                          {orgs.length
+                            ? 'No matching rows for current search/filter.'
+                            : 'No organizations yet for your department.'}
                         </td>
                       </tr>
                     )}
