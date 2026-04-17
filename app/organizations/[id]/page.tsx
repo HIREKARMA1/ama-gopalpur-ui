@@ -39,7 +39,7 @@ import { ArcsPortfolioWebsite } from '../../../components/organization/ArcsPortf
 import { WaterPortfolioDashboard } from '../../../components/organization/WaterPortfolioDashboard';
 import { RevenueLandPortfolioDashboard } from '../../../components/organization/RevenueLandPortfolioDashboard';
 import { AgriculturePortfolioDashboard } from '../../../components/organization/AgriculturePortfolioDashboard';
-import { MinorIrrigationPortfolioDashboard } from '../../../components/organization/MinorIrrigationPortfolioDashboard';
+import { MinorIrrigationPortfolioWebsite } from '../../../components/organization/MinorIrrigationPortfolioWebsite';
 import { IrrigationPortfolioDashboard } from '../../../components/organization/IrrigationPortfolioDashboard';
 import type { RevenueGovtLandRow } from '../../../lib/revenueGovtLandTable';
 
@@ -549,7 +549,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
     return (
       <div className="page-container">
         <Navbar />
-        <MinorIrrigationPortfolioDashboard
+        <MinorIrrigationPortfolioWebsite
           org={org}
           profile={minorIrrigationProfile}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
