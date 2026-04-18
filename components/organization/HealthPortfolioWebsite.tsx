@@ -272,9 +272,10 @@ export function HealthPortfolioWebsite({
         <PsFacultySection
           faculty={doctorFaculty}
           profile={psProfile}
-          sectionTitle="Doctors & today attendance"
+          sectionTitle="Doctors"
           subjectLabel="Department / Specialization"
           showAttendance={doctorAttendanceEnabled}
+          emptyStateMessage={t('health.portfolio.noDoctorsAvailable', language)}
         />
 
         <section className="py-2 md:py-4">

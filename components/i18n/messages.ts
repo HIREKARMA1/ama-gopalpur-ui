@@ -273,6 +273,7 @@ export type MessageKey =
   | 'health.portfolio.tableEmptyAttendance'
   | 'health.portfolio.tableEmptyMedicine'
   | 'health.portfolio.tableEmptyPatients'
+  | 'health.portfolio.noDoctorsAvailable'
   | 'health.portfolio.recordDate'
   | 'health.portfolio.monitoringLoadErrorTitle'
   | 'health.portfolio.noDailyDataAfterError'
@@ -2309,6 +2310,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'health.portfolio.tableEmptyPatients': {
     en: 'No patient service rows in the loaded history.',
     or: 'No patient service rows in the loaded history.',
+  },
+  'health.portfolio.noDoctorsAvailable': {
+    en: 'No doctors available.',
+    or: 'କୌଣସି ଡାକ୍ତର ଉପଲବ୍ଧ ନାହାଁନ୍ତି।',
   },
   'health.portfolio.recordDate': {
     en: 'Date',
