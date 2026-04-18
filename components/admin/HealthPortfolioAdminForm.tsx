@@ -19,6 +19,7 @@ export const HEALTH_PORTFOLIO_FIELD_LIMITS = {
   health_location_line: 200,
   health_inst_head_message: 1500,
   health_inst_head_name: 120,
+  health_inst_head_designation: 120,
   health_inst_head_qualification: 200,
   health_inst_head_experience: 200,
   health_inst_head_contact: 20,
@@ -100,6 +101,7 @@ export const HEALTH_PORTFOLIO_EMPTY_FORM: Record<string, string> = {
   health_location_line: '',
   health_inst_head_message: '',
   health_inst_head_name: '',
+  health_inst_head_designation: '',
   health_inst_head_photo: '',
   health_inst_head_qualification: '',
   health_inst_head_experience: '',
@@ -455,11 +457,10 @@ export function HealthPortfolioAdminForm({
                 id={`health-portfolio-tab-${s.id}`}
                 aria-selected={selected}
                 aria-controls="health-portfolio-editor-panel"
-                className={`shrink-0 rounded border px-2 py-1.5 text-left text-[10px] font-medium transition-colors sm:text-center ${
-                  selected
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-background text-text hover:bg-muted/50'
-                }`}
+                className={`shrink-0 rounded border px-2 py-1.5 text-left text-[10px] font-medium transition-colors sm:text-center ${selected
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-background text-text hover:bg-muted/50'
+                  }`}
                 onClick={() => setActiveSection(s.id)}
               >
                 {s.label}
@@ -475,264 +476,265 @@ export function HealthPortfolioAdminForm({
         aria-labelledby={`health-portfolio-tab-${activeSection}`}
         className="min-h-[12rem] min-w-0 space-y-3"
       >
-      <PortfolioSectionPanel sectionId="hero" activeSection={activeSection}>
-        <div className="space-y-3">
-          <SectionBox
-            id="health-portfolio-hero-record"
-            title="Official facility (save record)"
-            onRemoveSection={() => onFacilityRecordPatch({ name: '', institution_id: '', category: '' })}
-          >
-            <div className="grid gap-2 md:grid-cols-2">
-              <p className="md:col-span-2 text-[10px] text-text-muted">
-                Facility name, ID, and category are stored on the organization record (required fields for save).
-              </p>
-              <div className="space-y-0.5">
-                <span className="text-[11px] text-text">Facility name (required for save)</span>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  value={facilityRecord.name}
-                  onChange={(e) => onFacilityRecordPatch({ name: e.target.value })}
-                  placeholder="e.g. CHC, Keluapalli"
-                />
-              </div>
-              <div className="space-y-0.5">
-                <span className="text-[11px] text-text">Institution ID</span>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  value={facilityRecord.institution_id}
-                  onChange={(e) => onFacilityRecordPatch({ institution_id: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5 md:col-span-2">
-                <span className="text-[11px] text-text">Category</span>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  value={facilityRecord.category}
-                  onChange={(e) => onFacilityRecordPatch({ category: e.target.value })}
-                  placeholder="e.g. CHC"
-                />
-              </div>
-            </div>
-          </SectionBox>
-          <SectionBox
-            id="health-portfolio-hero-public"
-            title="Public hero &amp; images"
-            onRemoveSection={() => {
-              patch({
-                health_display_name: '',
-                health_hero_tagline: '',
-                health_tagline: '',
-                health_hero_1: '',
-                health_hero_2: '',
-                health_hero_3: '',
-              });
-              onClearProfileImage?.();
-            }}
-          >
-            <div className="grid gap-2 md:grid-cols-2">
-              <p className="md:col-span-2 text-[10px] text-text-muted">
-                Short display name, taglines, and hero slides shown on the public site. Removing also clears a pending profile image file if
-                you selected one.
-              </p>
-              <div className="space-y-0.5 md:col-span-2">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">Health care center name (short)</span>
-                  <CharCount value={f.health_display_name || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_display_name} />
+        <PortfolioSectionPanel sectionId="hero" activeSection={activeSection}>
+          <div className="space-y-3">
+            <SectionBox
+              id="health-portfolio-hero-record"
+              title="Official facility (save record)"
+              onRemoveSection={() => onFacilityRecordPatch({ name: '', institution_id: '', category: '' })}
+            >
+              <div className="grid gap-2 md:grid-cols-2">
+                <p className="md:col-span-2 text-[10px] text-text-muted">
+                  Facility name, ID, and category are stored on the organization record (required fields for save).
+                </p>
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-text">Facility name (required for save)</span>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    value={facilityRecord.name}
+                    onChange={(e) => onFacilityRecordPatch({ name: e.target.value })}
+                    placeholder="e.g. CHC, Keluapalli"
+                  />
                 </div>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  placeholder="Shown on hero if set; else facility name"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_display_name}
-                  value={f.health_display_name || ''}
-                  onChange={(e) => patch({ health_display_name: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5 md:col-span-2">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">Hero tagline (paragraph)</span>
-                  <CharCount value={f.health_hero_tagline || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_hero_tagline} />
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-text">Institution ID</span>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    value={facilityRecord.institution_id}
+                    onChange={(e) => onFacilityRecordPatch({ institution_id: e.target.value })}
+                  />
                 </div>
-                <textarea
-                  rows={3}
-                  className="w-full rounded border border-border px-2 py-1"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_hero_tagline}
-                  value={f.health_hero_tagline || ''}
-                  onChange={(e) => patch({ health_hero_tagline: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5 md:col-span-2">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">Short tagline (one line, optional fallback under name)</span>
-                  <CharCount value={f.health_tagline || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_tagline} />
+                <div className="space-y-0.5 md:col-span-2">
+                  <span className="text-[11px] text-text">Category</span>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    value={facilityRecord.category}
+                    onChange={(e) => onFacilityRecordPatch({ category: e.target.value })}
+                    placeholder="e.g. CHC"
+                  />
                 </div>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  placeholder="Used if hero tagline is empty"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_tagline}
-                  value={f.health_tagline || ''}
-                  onChange={(e) => patch({ health_tagline: e.target.value })}
-                />
               </div>
-              <ImgSlot label="Hero image 1" organizationId={organizationId} assetType="health_hero_slide" url={f.health_hero_1 || ''} onUrl={(v) => patch({ health_hero_1: v })} />
-              <ImgSlot label="Hero image 2" organizationId={organizationId} assetType="health_hero_slide" url={f.health_hero_2 || ''} onUrl={(v) => patch({ health_hero_2: v })} />
-              <ImgSlot label="Hero image 3" organizationId={organizationId} assetType="health_hero_slide" url={f.health_hero_3 || ''} onUrl={(v) => patch({ health_hero_3: v })} />
-              {profileImageControl ? (
-                <div className="space-y-1 md:col-span-2 border-t border-border pt-2">
-                  {profileImageControl}
-                  {onClearProfileImage ? (
-                    <button
-                      type="button"
-                      className="rounded border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700 hover:bg-red-100"
-                      onClick={onClearProfileImage}
-                    >
-                      Remove selected profile image file
-                    </button>
-                  ) : null}
+            </SectionBox>
+            <SectionBox
+              id="health-portfolio-hero-public"
+              title="Public hero &amp; images"
+              onRemoveSection={() => {
+                patch({
+                  health_display_name: '',
+                  health_hero_tagline: '',
+                  health_tagline: '',
+                  health_hero_1: '',
+                  health_hero_2: '',
+                  health_hero_3: '',
+                });
+                onClearProfileImage?.();
+              }}
+            >
+              <div className="grid gap-2 md:grid-cols-2">
+                <p className="md:col-span-2 text-[10px] text-text-muted">
+                  Short display name, taglines, and hero slides shown on the public site. Removing also clears a pending profile image file if
+                  you selected one.
+                </p>
+                <div className="space-y-0.5 md:col-span-2">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">Health care center name (short)</span>
+                    <CharCount value={f.health_display_name || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_display_name} />
+                  </div>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    placeholder="Shown on hero if set; else facility name"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_display_name}
+                    value={f.health_display_name || ''}
+                    onChange={(e) => patch({ health_display_name: e.target.value })}
+                  />
                 </div>
-              ) : null}
-            </div>
-          </SectionBox>
-        </div>
-      </PortfolioSectionPanel>
+                <div className="space-y-0.5 md:col-span-2">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">Hero tagline (paragraph)</span>
+                    <CharCount value={f.health_hero_tagline || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_hero_tagline} />
+                  </div>
+                  <textarea
+                    rows={3}
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_hero_tagline}
+                    value={f.health_hero_tagline || ''}
+                    onChange={(e) => patch({ health_hero_tagline: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-0.5 md:col-span-2">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">Short tagline (one line, optional fallback under name)</span>
+                    <CharCount value={f.health_tagline || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_tagline} />
+                  </div>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    placeholder="Used if hero tagline is empty"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_tagline}
+                    value={f.health_tagline || ''}
+                    onChange={(e) => patch({ health_tagline: e.target.value })}
+                  />
+                </div>
+                <ImgSlot label="Hero image 1" organizationId={organizationId} assetType="health_hero_slide" url={f.health_hero_1 || ''} onUrl={(v) => patch({ health_hero_1: v })} />
+                <ImgSlot label="Hero image 2" organizationId={organizationId} assetType="health_hero_slide" url={f.health_hero_2 || ''} onUrl={(v) => patch({ health_hero_2: v })} />
+                <ImgSlot label="Hero image 3" organizationId={organizationId} assetType="health_hero_slide" url={f.health_hero_3 || ''} onUrl={(v) => patch({ health_hero_3: v })} />
+                {profileImageControl ? (
+                  <div className="space-y-1 md:col-span-2 border-t border-border pt-2">
+                    {profileImageControl}
+                    {onClearProfileImage ? (
+                      <button
+                        type="button"
+                        className="rounded border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700 hover:bg-red-100"
+                        onClick={onClearProfileImage}
+                      >
+                        Remove selected profile image file
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            </SectionBox>
+          </div>
+        </PortfolioSectionPanel>
 
-      <PortfolioSectionPanel sectionId="about" activeSection={activeSection}>
-        <div className="space-y-3">
-          <SectionBox
-            id="health-portfolio-about-location"
-            title="Location (block / GP / village)"
-            onRemoveSection={() => onFacilityRecordPatch({ block_ulb: '', gp_ward: '', village: '' })}
-          >
-            <div className="grid gap-2 md:grid-cols-2">
-              <p className="md:col-span-2 text-[10px] text-text-muted">
-                Block / GP / village are stored on the organization profile (address and records).
-              </p>
-              <div className="space-y-0.5">
-                <span className="text-[11px] text-text">Block / ULB</span>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  value={facilityRecord.block_ulb}
-                  onChange={(e) => onFacilityRecordPatch({ block_ulb: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5">
-                <span className="text-[11px] text-text">GP / Ward</span>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  value={facilityRecord.gp_ward}
-                  onChange={(e) => onFacilityRecordPatch({ gp_ward: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5 md:col-span-2">
-                <span className="text-[11px] text-text">Village</span>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  value={facilityRecord.village}
-                  onChange={(e) => onFacilityRecordPatch({ village: e.target.value })}
-                />
-              </div>
-            </div>
-          </SectionBox>
-          <SectionBox
-            id="health-portfolio-about-narrative"
-            title={`About ${publicAboutName} — narrative &amp; details`}
-            onRemoveSection={() =>
-              patch({
-                health_about: '',
-                health_campus_image: '',
-                health_established_year: '',
-                health_facility_type: '',
-                health_location_line: '',
-              })
-            }
-          >
-            <div className="grid gap-2 md:grid-cols-2">
-              <div className="space-y-0.5 md:col-span-2">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">About health care center</span>
-                  <CharCount value={f.health_about || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_about} />
+        <PortfolioSectionPanel sectionId="about" activeSection={activeSection}>
+          <div className="space-y-3">
+            <SectionBox
+              id="health-portfolio-about-location"
+              title="Location (block / GP / village)"
+              onRemoveSection={() => onFacilityRecordPatch({ block_ulb: '', gp_ward: '', village: '' })}
+            >
+              <div className="grid gap-2 md:grid-cols-2">
+                <p className="md:col-span-2 text-[10px] text-text-muted">
+                  Block / GP / village are stored on the organization profile (address and records).
+                </p>
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-text">Block / ULB</span>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    value={facilityRecord.block_ulb}
+                    onChange={(e) => onFacilityRecordPatch({ block_ulb: e.target.value })}
+                  />
                 </div>
-                <textarea
-                  rows={5}
-                  className="w-full rounded border border-border px-2 py-1"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_about}
-                  value={f.health_about || ''}
-                  onChange={(e) => patch({ health_about: e.target.value })}
-                />
-              </div>
-              <ImgSlot label="Building / campus image" organizationId={organizationId} assetType="health_campus_image" url={f.health_campus_image || ''} onUrl={(v) => patch({ health_campus_image: v })} />
-              <div className="space-y-0.5">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">Year of establishment</span>
-                  <CharCount value={f.health_established_year || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_established_year} />
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-text">GP / Ward</span>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    value={facilityRecord.gp_ward}
+                    onChange={(e) => onFacilityRecordPatch({ gp_ward: e.target.value })}
+                  />
                 </div>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_established_year}
-                  value={f.health_established_year || ''}
-                  onChange={(e) => patch({ health_established_year: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">Facility type</span>
-                  <CharCount value={f.health_facility_type || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_facility_type} />
+                <div className="space-y-0.5 md:col-span-2">
+                  <span className="text-[11px] text-text">Village</span>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    value={facilityRecord.village}
+                    onChange={(e) => onFacilityRecordPatch({ village: e.target.value })}
+                  />
                 </div>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  placeholder="Health Care Center"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_facility_type}
-                  value={f.health_facility_type || ''}
-                  onChange={(e) => patch({ health_facility_type: e.target.value })}
-                />
               </div>
-              <div className="space-y-0.5 md:col-span-2">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">Location (one line)</span>
-                  <CharCount value={f.health_location_line || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_location_line} />
+            </SectionBox>
+            <SectionBox
+              id="health-portfolio-about-narrative"
+              title={`About ${publicAboutName} — narrative &amp; details`}
+              onRemoveSection={() =>
+                patch({
+                  health_about: '',
+                  health_campus_image: '',
+                  health_established_year: '',
+                  health_facility_type: '',
+                  health_location_line: '',
+                })
+              }
+            >
+              <div className="grid gap-2 md:grid-cols-2">
+                <div className="space-y-0.5 md:col-span-2">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">About health care center</span>
+                    <CharCount value={f.health_about || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_about} />
+                  </div>
+                  <textarea
+                    rows={5}
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_about}
+                    value={f.health_about || ''}
+                    onChange={(e) => patch({ health_about: e.target.value })}
+                  />
                 </div>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_location_line}
-                  value={f.health_location_line || ''}
-                  onChange={(e) => patch({ health_location_line: e.target.value })}
-                />
+                <ImgSlot label="Building / campus image" organizationId={organizationId} assetType="health_campus_image" url={f.health_campus_image || ''} onUrl={(v) => patch({ health_campus_image: v })} />
+                <div className="space-y-0.5">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">Year of establishment</span>
+                    <CharCount value={f.health_established_year || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_established_year} />
+                  </div>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_established_year}
+                    value={f.health_established_year || ''}
+                    onChange={(e) => patch({ health_established_year: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">Facility type</span>
+                    <CharCount value={f.health_facility_type || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_facility_type} />
+                  </div>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    placeholder="Health Care Center"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_facility_type}
+                    value={f.health_facility_type || ''}
+                    onChange={(e) => patch({ health_facility_type: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-0.5 md:col-span-2">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">Location (one line)</span>
+                    <CharCount value={f.health_location_line || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_location_line} />
+                  </div>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_location_line}
+                    value={f.health_location_line || ''}
+                    onChange={(e) => patch({ health_location_line: e.target.value })}
+                  />
+                </div>
               </div>
-            </div>
-          </SectionBox>
-          <SectionBox
-            id="health-portfolio-about-head"
-            title="Institution head"
-            onRemoveSection={() =>
-              patch({
+            </SectionBox>
+            <SectionBox
+              id="health-portfolio-about-head"
+              title="Institution head"
+              onRemoveSection={() =>
+                patch({
                 health_inst_head_message: '',
                 health_inst_head_name: '',
+                health_inst_head_designation: '',
                 health_inst_head_photo: '',
-                health_inst_head_qualification: '',
-                health_inst_head_experience: '',
-                health_inst_head_contact: '',
-                health_inst_head_email: '',
-              })
-            }
-          >
-            <div className="grid gap-2 md:grid-cols-2">
-              <div className="space-y-0.5 md:col-span-2">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">Institution head message</span>
-                  <CharCount value={f.health_inst_head_message || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_message} />
+                  health_inst_head_qualification: '',
+                  health_inst_head_experience: '',
+                  health_inst_head_contact: '',
+                  health_inst_head_email: '',
+                })
+              }
+            >
+              <div className="grid gap-2 md:grid-cols-2">
+                <div className="space-y-0.5 md:col-span-2">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">Institution head message</span>
+                    <CharCount value={f.health_inst_head_message || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_message} />
+                  </div>
+                  <textarea
+                    rows={4}
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_message}
+                    value={f.health_inst_head_message || ''}
+                    onChange={(e) => patch({ health_inst_head_message: e.target.value })}
+                  />
                 </div>
-                <textarea
-                  rows={4}
-                  className="w-full rounded border border-border px-2 py-1"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_message}
-                  value={f.health_inst_head_message || ''}
-                  onChange={(e) => patch({ health_inst_head_message: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">Institution head full name</span>
-                  <CharCount value={f.health_inst_head_name || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_name} />
-                </div>
+                <div className="space-y-0.5">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">Institution head full name</span>
+                    <CharCount value={f.health_inst_head_name || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_name} />
+                  </div>
                 <input
                   className="w-full rounded border border-border px-2 py-1"
                   maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_name}
@@ -740,892 +742,905 @@ export function HealthPortfolioAdminForm({
                   onChange={(e) => patch({ health_inst_head_name: e.target.value })}
                 />
               </div>
+              <div className="space-y-0.5 md:col-span-2">
+                <div className="flex justify-between gap-2">
+                  <span className="text-[11px] text-text">Institution head designation</span>
+                  <CharCount value={f.health_inst_head_designation || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_designation} />
+                </div>
+                <input
+                  className="w-full rounded border border-border px-2 py-1"
+                  placeholder="e.g. Medical Officer"
+                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_designation}
+                  value={f.health_inst_head_designation || ''}
+                  onChange={(e) => patch({ health_inst_head_designation: e.target.value })}
+                />
+              </div>
               <ImgSlot label="Institution head photo" organizationId={organizationId} assetType="health_inst_head_photo" url={f.health_inst_head_photo || ''} onUrl={(v) => patch({ health_inst_head_photo: v })} />
-              <div className="space-y-0.5">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">Qualification</span>
-                  <CharCount value={f.health_inst_head_qualification || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_qualification} />
+                <div className="space-y-0.5">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">Qualification</span>
+                    <CharCount value={f.health_inst_head_qualification || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_qualification} />
+                  </div>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_qualification}
+                    value={f.health_inst_head_qualification || ''}
+                    onChange={(e) => patch({ health_inst_head_qualification: e.target.value })}
+                  />
                 </div>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_qualification}
-                  value={f.health_inst_head_qualification || ''}
-                  onChange={(e) => patch({ health_inst_head_qualification: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">Experience</span>
-                  <CharCount value={f.health_inst_head_experience || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_experience} />
+                <div className="space-y-0.5">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">Experience</span>
+                    <CharCount value={f.health_inst_head_experience || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_experience} />
+                  </div>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_experience}
+                    value={f.health_inst_head_experience || ''}
+                    onChange={(e) => patch({ health_inst_head_experience: e.target.value })}
+                  />
                 </div>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_experience}
-                  value={f.health_inst_head_experience || ''}
-                  onChange={(e) => patch({ health_inst_head_experience: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">Contact</span>
-                  <CharCount value={f.health_inst_head_contact || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_contact} />
+                <div className="space-y-0.5">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">Contact</span>
+                    <CharCount value={f.health_inst_head_contact || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_contact} />
+                  </div>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_contact}
+                    value={f.health_inst_head_contact || ''}
+                    onChange={(e) => patch({ health_inst_head_contact: e.target.value })}
+                  />
                 </div>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_contact}
-                  value={f.health_inst_head_contact || ''}
-                  onChange={(e) => patch({ health_inst_head_contact: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">Email</span>
-                  <CharCount value={f.health_inst_head_email || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_email} />
+                <div className="space-y-0.5">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">Email</span>
+                    <CharCount value={f.health_inst_head_email || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_email} />
+                  </div>
+                  <input
+                    type="email"
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_email}
+                    value={f.health_inst_head_email || ''}
+                    onChange={(e) => patch({ health_inst_head_email: e.target.value })}
+                  />
                 </div>
-                <input
-                  type="email"
-                  className="w-full rounded border border-border px-2 py-1"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_inst_head_email}
-                  value={f.health_inst_head_email || ''}
-                  onChange={(e) => patch({ health_inst_head_email: e.target.value })}
-                />
               </div>
-            </div>
-          </SectionBox>
-        </div>
-      </PortfolioSectionPanel>
+            </SectionBox>
+          </div>
+        </PortfolioSectionPanel>
 
-      <PortfolioSectionPanel sectionId="keyAdmins" activeSection={activeSection}>
-      <SectionBox
-        id="health-portfolio-key-admins"
-        title="Key admin contacts"
-        onRemoveSection={() => patch({ health_key_admin_cards_json: rowsToJson([{}, {}]) })}
-        removeSectionLabel="Remove all contacts"
-      >
-        <p className="mb-2 text-[10px] text-text-muted">
-          First two rows are Matron and Pharmacist in-charge. Use <span className="font-medium">Add admin contact</span> for more roles (set
-          the role label for each).
-        </p>
-        <div className="space-y-3">
-          {KEY_ADMIN_FIXED_LABELS.map((label, i) => {
-            const row = keyAdminRows[i] || {};
-            return (
-              <div
-                key={`fixed-${label}`}
-                className="grid min-w-0 gap-2 overflow-x-auto rounded border border-border p-2 sm:grid-cols-[minmax(0,120px)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] sm:items-end"
-              >
-                <div className="text-[10px] font-semibold text-text-muted">{label}</div>
-                <ImgSlot
-                  label="Photo"
-                  organizationId={organizationId}
-                  assetType="health_key_admin_photo"
-                  url={row.image || ''}
-                  onUrl={(v) => {
-                    const n = [...keyAdminRows];
-                    while (n.length < KEY_ADMIN_FIXED_LABELS.length) n.push({});
-                    n[i] = { ...row, image: v };
-                    patch({ health_key_admin_cards_json: rowsToJson(n) });
-                  }}
-                />
-                <div className="space-y-0.5">
-                  <CharCount value={row.name || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_name} />
-                  <input
-                    className="w-full rounded border border-border px-2 py-1"
-                    placeholder="Name"
-                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_name}
-                    value={row.name || ''}
-                    onChange={(e) => {
-                      const n = [...keyAdminRows];
-                      while (n.length < KEY_ADMIN_FIXED_LABELS.length) n.push({});
-                      n[i] = { ...row, name: e.target.value };
-                      patch({ health_key_admin_cards_json: rowsToJson(n) });
-                    }}
-                  />
-                </div>
-                <div className="space-y-0.5">
-                  <input
-                    className="w-full rounded border border-border px-2 py-1"
-                    placeholder="Contact"
-                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_contact}
-                    value={row.contact || ''}
-                    onChange={(e) => {
-                      const n = [...keyAdminRows];
-                      while (n.length < KEY_ADMIN_FIXED_LABELS.length) n.push({});
-                      n[i] = { ...row, contact: e.target.value };
-                      patch({ health_key_admin_cards_json: rowsToJson(n) });
-                    }}
-                  />
-                </div>
-                <div className="space-y-0.5">
-                  <input
-                    className="w-full rounded border border-border px-2 py-1"
-                    placeholder="Email"
-                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_email}
-                    value={row.email || ''}
-                    onChange={(e) => {
-                      const n = [...keyAdminRows];
-                      while (n.length < KEY_ADMIN_FIXED_LABELS.length) n.push({});
-                      n[i] = { ...row, email: e.target.value };
-                      patch({ health_key_admin_cards_json: rowsToJson(n) });
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="text-[10px] text-red-600"
-                    onClick={() => {
-                      const n = [...keyAdminRows];
-                      n[i] = {};
-                      patch({ health_key_admin_cards_json: rowsToJson(n) });
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-          {keyAdminRows.slice(KEY_ADMIN_FIXED_LABELS.length).map((row, j) => {
-            const i = j + KEY_ADMIN_FIXED_LABELS.length;
-            return (
-              <div
-                key={`extra-${i}-${row.role || ''}-${row.name || ''}`}
-                className="grid min-w-0 gap-2 overflow-x-auto rounded border border-border p-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,120px)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,auto)] sm:items-end"
-              >
-                <div className="space-y-0.5 sm:col-span-1">
-                  <CharCount value={row.role || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_role} />
-                  <input
-                    className="w-full rounded border border-border px-2 py-1"
-                    placeholder="Role / designation"
-                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_role}
-                    value={row.role || ''}
-                    onChange={(e) => {
-                      const n = [...keyAdminRows];
-                      n[i] = { ...row, role: e.target.value };
-                      patch({ health_key_admin_cards_json: rowsToJson(n) });
-                    }}
-                  />
-                </div>
-                <ImgSlot
-                  label="Photo"
-                  organizationId={organizationId}
-                  assetType="health_key_admin_photo"
-                  url={row.image || ''}
-                  onUrl={(v) => {
-                    const n = [...keyAdminRows];
-                    n[i] = { ...row, image: v };
-                    patch({ health_key_admin_cards_json: rowsToJson(n) });
-                  }}
-                />
-                <div className="space-y-0.5">
-                  <CharCount value={row.name || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_name} />
-                  <input
-                    className="w-full rounded border border-border px-2 py-1"
-                    placeholder="Name"
-                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_name}
-                    value={row.name || ''}
-                    onChange={(e) => {
-                      const n = [...keyAdminRows];
-                      n[i] = { ...row, name: e.target.value };
-                      patch({ health_key_admin_cards_json: rowsToJson(n) });
-                    }}
-                  />
-                </div>
-                <div className="space-y-0.5">
-                  <input
-                    className="w-full rounded border border-border px-2 py-1"
-                    placeholder="Contact"
-                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_contact}
-                    value={row.contact || ''}
-                    onChange={(e) => {
-                      const n = [...keyAdminRows];
-                      n[i] = { ...row, contact: e.target.value };
-                      patch({ health_key_admin_cards_json: rowsToJson(n) });
-                    }}
-                  />
-                </div>
-                <div className="space-y-0.5">
-                  <input
-                    className="w-full rounded border border-border px-2 py-1"
-                    placeholder="Email"
-                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_email}
-                    value={row.email || ''}
-                    onChange={(e) => {
-                      const n = [...keyAdminRows];
-                      n[i] = { ...row, email: e.target.value };
-                      patch({ health_key_admin_cards_json: rowsToJson(n) });
-                    }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="shrink-0 self-center text-[10px] text-red-600"
-                  onClick={() => patch({ health_key_admin_cards_json: rowsToJson(keyAdminRows.filter((_, idx) => idx !== i)) })}
-                >
-                  Remove
-                </button>
-              </div>
-            );
-          })}
-          <button
-            type="button"
-            className="rounded border border-border bg-background px-2 py-1 text-[11px] font-medium text-text hover:bg-muted/50"
-            onClick={() => {
-              const n = [...keyAdminRows];
-              while (n.length < KEY_ADMIN_FIXED_LABELS.length) n.push({});
-              n.push({ role: '', name: '', contact: '', email: '' });
-              patch({ health_key_admin_cards_json: rowsToJson(n) });
-            }}
+        <PortfolioSectionPanel sectionId="keyAdmins" activeSection={activeSection}>
+          <SectionBox
+            id="health-portfolio-key-admins"
+            title="Key admin contacts"
+            onRemoveSection={() => patch({ health_key_admin_cards_json: rowsToJson([{}, {}]) })}
+            removeSectionLabel="Remove all contacts"
           >
-            + Add admin contact
-          </button>
-        </div>
-      </SectionBox>
-      </PortfolioSectionPanel>
-
-      <PortfolioSectionPanel sectionId="facilities" activeSection={activeSection}>
-      <SectionBox
-        id="health-portfolio-facilities"
-        title="Facilities"
-        onRemoveSection={() => patch({ health_health_facility_cards_json: '[]' })}
-        removeSectionLabel="Remove all facilities"
-      >
-        <p className="mb-2 text-[10px] text-text-muted">
-          Cover image opens the modal; add extra images as JSON array: [{`{ "url": "...", "title": "..." }`}] per facility (or use uploads
-          and paste URLs).
-        </p>
-        <div className="space-y-3">
-          {(facilityRows.length ? facilityRows : [{}]).map((row, i, arr) => {
-            const r = row as Record<string, string>;
-            const imagesJson =
-              typeof row.images_json === 'string'
-                ? row.images_json
-                : Array.isArray(row.images)
-                  ? JSON.stringify(row.images, null, 0)
-                  : '[]';
-            return (
-              <div key={i} className="space-y-2 rounded border border-border p-2">
-                <div className="grid gap-2 sm:grid-cols-[minmax(0,120px)_1fr] sm:items-end">
-                  <ImgSlot
-                    label="Cover"
-                    organizationId={organizationId}
-                    assetType="health_facility_cover"
-                    url={String(r.image || '')}
-                    onUrl={(v) => {
-                      const n = [...arr];
-                      n[i] = { ...row, image: v };
-                      patch({ health_health_facility_cards_json: rowsToJson(n) });
-                    }}
-                  />
-                  <div className="grid gap-2 md:grid-cols-2">
+            <p className="mb-2 text-[10px] text-text-muted">
+              First two rows are Matron and Pharmacist in-charge. Use <span className="font-medium">Add admin contact</span> for more roles (set
+              the role label for each).
+            </p>
+            <div className="space-y-3">
+              {KEY_ADMIN_FIXED_LABELS.map((label, i) => {
+                const row = keyAdminRows[i] || {};
+                return (
+                  <div
+                    key={`fixed-${label}`}
+                    className="grid min-w-0 gap-2 overflow-x-auto rounded border border-border p-2 sm:grid-cols-[minmax(0,120px)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] sm:items-end"
+                  >
+                    <div className="text-[10px] font-semibold text-text-muted">{label}</div>
+                    <ImgSlot
+                      label="Photo"
+                      organizationId={organizationId}
+                      assetType="health_key_admin_photo"
+                      url={row.image || ''}
+                      onUrl={(v) => {
+                        const n = [...keyAdminRows];
+                        while (n.length < KEY_ADMIN_FIXED_LABELS.length) n.push({});
+                        n[i] = { ...row, image: v };
+                        patch({ health_key_admin_cards_json: rowsToJson(n) });
+                      }}
+                    />
                     <div className="space-y-0.5">
-                      <CharCount value={String(r.title || '')} max={HEALTH_PORTFOLIO_FIELD_LIMITS.facility_title} />
+                      <CharCount value={row.name || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_name} />
                       <input
                         className="w-full rounded border border-border px-2 py-1"
-                        placeholder="Title"
-                        maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.facility_title}
-                        value={String(r.title || '')}
+                        placeholder="Name"
+                        maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_name}
+                        value={row.name || ''}
+                        onChange={(e) => {
+                          const n = [...keyAdminRows];
+                          while (n.length < KEY_ADMIN_FIXED_LABELS.length) n.push({});
+                          n[i] = { ...row, name: e.target.value };
+                          patch({ health_key_admin_cards_json: rowsToJson(n) });
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-0.5">
+                      <input
+                        className="w-full rounded border border-border px-2 py-1"
+                        placeholder="Contact"
+                        maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_contact}
+                        value={row.contact || ''}
+                        onChange={(e) => {
+                          const n = [...keyAdminRows];
+                          while (n.length < KEY_ADMIN_FIXED_LABELS.length) n.push({});
+                          n[i] = { ...row, contact: e.target.value };
+                          patch({ health_key_admin_cards_json: rowsToJson(n) });
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-0.5">
+                      <input
+                        className="w-full rounded border border-border px-2 py-1"
+                        placeholder="Email"
+                        maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_email}
+                        value={row.email || ''}
+                        onChange={(e) => {
+                          const n = [...keyAdminRows];
+                          while (n.length < KEY_ADMIN_FIXED_LABELS.length) n.push({});
+                          n[i] = { ...row, email: e.target.value };
+                          patch({ health_key_admin_cards_json: rowsToJson(n) });
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="text-[10px] text-red-600"
+                        onClick={() => {
+                          const n = [...keyAdminRows];
+                          n[i] = {};
+                          patch({ health_key_admin_cards_json: rowsToJson(n) });
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+              {keyAdminRows.slice(KEY_ADMIN_FIXED_LABELS.length).map((row, j) => {
+                const i = j + KEY_ADMIN_FIXED_LABELS.length;
+                return (
+                  <div
+                    key={`extra-${i}-${row.role || ''}-${row.name || ''}`}
+                    className="grid min-w-0 gap-2 overflow-x-auto rounded border border-border p-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,120px)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,auto)] sm:items-end"
+                  >
+                    <div className="space-y-0.5 sm:col-span-1">
+                      <CharCount value={row.role || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_role} />
+                      <input
+                        className="w-full rounded border border-border px-2 py-1"
+                        placeholder="Role / designation"
+                        maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_role}
+                        value={row.role || ''}
+                        onChange={(e) => {
+                          const n = [...keyAdminRows];
+                          n[i] = { ...row, role: e.target.value };
+                          patch({ health_key_admin_cards_json: rowsToJson(n) });
+                        }}
+                      />
+                    </div>
+                    <ImgSlot
+                      label="Photo"
+                      organizationId={organizationId}
+                      assetType="health_key_admin_photo"
+                      url={row.image || ''}
+                      onUrl={(v) => {
+                        const n = [...keyAdminRows];
+                        n[i] = { ...row, image: v };
+                        patch({ health_key_admin_cards_json: rowsToJson(n) });
+                      }}
+                    />
+                    <div className="space-y-0.5">
+                      <CharCount value={row.name || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_name} />
+                      <input
+                        className="w-full rounded border border-border px-2 py-1"
+                        placeholder="Name"
+                        maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_name}
+                        value={row.name || ''}
+                        onChange={(e) => {
+                          const n = [...keyAdminRows];
+                          n[i] = { ...row, name: e.target.value };
+                          patch({ health_key_admin_cards_json: rowsToJson(n) });
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-0.5">
+                      <input
+                        className="w-full rounded border border-border px-2 py-1"
+                        placeholder="Contact"
+                        maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_contact}
+                        value={row.contact || ''}
+                        onChange={(e) => {
+                          const n = [...keyAdminRows];
+                          n[i] = { ...row, contact: e.target.value };
+                          patch({ health_key_admin_cards_json: rowsToJson(n) });
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-0.5">
+                      <input
+                        className="w-full rounded border border-border px-2 py-1"
+                        placeholder="Email"
+                        maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.admin_email}
+                        value={row.email || ''}
+                        onChange={(e) => {
+                          const n = [...keyAdminRows];
+                          n[i] = { ...row, email: e.target.value };
+                          patch({ health_key_admin_cards_json: rowsToJson(n) });
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="shrink-0 self-center text-[10px] text-red-600"
+                      onClick={() => patch({ health_key_admin_cards_json: rowsToJson(keyAdminRows.filter((_, idx) => idx !== i)) })}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                );
+              })}
+              <button
+                type="button"
+                className="rounded border border-border bg-background px-2 py-1 text-[11px] font-medium text-text hover:bg-muted/50"
+                onClick={() => {
+                  const n = [...keyAdminRows];
+                  while (n.length < KEY_ADMIN_FIXED_LABELS.length) n.push({});
+                  n.push({ role: '', name: '', contact: '', email: '' });
+                  patch({ health_key_admin_cards_json: rowsToJson(n) });
+                }}
+              >
+                + Add admin contact
+              </button>
+            </div>
+          </SectionBox>
+        </PortfolioSectionPanel>
+
+        <PortfolioSectionPanel sectionId="facilities" activeSection={activeSection}>
+          <SectionBox
+            id="health-portfolio-facilities"
+            title="Facilities"
+            onRemoveSection={() => patch({ health_health_facility_cards_json: '[]' })}
+            removeSectionLabel="Remove all facilities"
+          >
+            <p className="mb-2 text-[10px] text-text-muted">
+              Cover image opens the modal; add extra images as JSON array: [{`{ "url": "...", "title": "..." }`}] per facility (or use uploads
+              and paste URLs).
+            </p>
+            <div className="space-y-3">
+              {(facilityRows.length ? facilityRows : [{}]).map((row, i, arr) => {
+                const r = row as Record<string, string>;
+                const imagesJson =
+                  typeof row.images_json === 'string'
+                    ? row.images_json
+                    : Array.isArray(row.images)
+                      ? JSON.stringify(row.images, null, 0)
+                      : '[]';
+                return (
+                  <div key={i} className="space-y-2 rounded border border-border p-2">
+                    <div className="grid gap-2 sm:grid-cols-[minmax(0,120px)_1fr] sm:items-end">
+                      <ImgSlot
+                        label="Cover"
+                        organizationId={organizationId}
+                        assetType="health_facility_cover"
+                        url={String(r.image || '')}
+                        onUrl={(v) => {
+                          const n = [...arr];
+                          n[i] = { ...row, image: v };
+                          patch({ health_health_facility_cards_json: rowsToJson(n) });
+                        }}
+                      />
+                      <div className="grid gap-2 md:grid-cols-2">
+                        <div className="space-y-0.5">
+                          <CharCount value={String(r.title || '')} max={HEALTH_PORTFOLIO_FIELD_LIMITS.facility_title} />
+                          <input
+                            className="w-full rounded border border-border px-2 py-1"
+                            placeholder="Title"
+                            maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.facility_title}
+                            value={String(r.title || '')}
+                            onChange={(e) => {
+                              const n = [...arr];
+                              n[i] = { ...row, title: e.target.value };
+                              patch({ health_health_facility_cards_json: rowsToJson(n) });
+                            }}
+                          />
+                        </div>
+                        <div className="flex flex-wrap items-center justify-end gap-2 self-end">
+                          <button
+                            type="button"
+                            className="text-[10px] text-red-700 underline decoration-red-300 hover:text-red-900"
+                            onClick={() => {
+                              const n = [...arr];
+                              n[i] = { image: '', title: '', description: '', images_json: '[]' };
+                              delete (n[i] as Record<string, unknown>).images;
+                              patch({ health_health_facility_cards_json: rowsToJson(n) });
+                            }}
+                          >
+                            Clear fields
+                          </button>
+                          <button
+                            type="button"
+                            className="text-[10px] text-red-600"
+                            onClick={() => patch({ health_health_facility_cards_json: rowsToJson(arr.filter((_, j) => j !== i)) })}
+                          >
+                            Remove facility
+                          </button>
+                        </div>
+                        <div className="space-y-0.5 md:col-span-2">
+                          <CharCount value={String(r.description || '')} max={HEALTH_PORTFOLIO_FIELD_LIMITS.facility_description} />
+                          <textarea
+                            rows={3}
+                            className="w-full rounded border border-border px-2 py-1"
+                            placeholder="Description"
+                            maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.facility_description}
+                            value={String(r.description || '')}
+                            onChange={(e) => {
+                              const n = [...arr];
+                              n[i] = { ...row, description: e.target.value };
+                              patch({ health_health_facility_cards_json: rowsToJson(n) });
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-0.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[10px] text-text-muted">Gallery images JSON</span>
+                        <button
+                          type="button"
+                          className="rounded border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700 hover:bg-red-100"
+                          onClick={() => {
+                            const n = [...arr];
+                            n[i] = { ...row, images_json: '[]' };
+                            delete (n[i] as Record<string, unknown>).images;
+                            patch({ health_health_facility_cards_json: rowsToJson(n) });
+                          }}
+                        >
+                          Remove gallery images
+                        </button>
+                      </div>
+                      <textarea
+                        rows={2}
+                        className="w-full rounded border border-border px-2 py-1 font-mono text-[10px]"
+                        value={imagesJson}
                         onChange={(e) => {
                           const n = [...arr];
-                          n[i] = { ...row, title: e.target.value };
+                          n[i] = { ...row, images_json: e.target.value };
+                          delete (n[i] as Record<string, unknown>).images;
                           patch({ health_health_facility_cards_json: rowsToJson(n) });
                         }}
                       />
                     </div>
-                    <div className="flex flex-wrap items-center justify-end gap-2 self-end">
+                    <div className="flex flex-wrap gap-2">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png"
+                        disabled={!organizationId}
+                        className="max-w-[200px] text-[10px] file:mr-1 file:rounded file:border-0 file:bg-primary file:px-1 file:py-0.5"
+                        onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          if (!f || !organizationId) return;
+                          const url = await uploadAsset(organizationId, f, 'health_facility_inner');
+                          let list: Record<string, string>[] = [];
+                          try {
+                            list = JSON.parse(imagesJson) as Record<string, string>[];
+                            if (!Array.isArray(list)) list = [];
+                          } catch {
+                            list = [];
+                          }
+                          list.push({ url, title: '' });
+                          const n = [...arr];
+                          n[i] = { ...row, images_json: JSON.stringify(list) };
+                          delete (n[i] as Record<string, unknown>).images;
+                          patch({ health_health_facility_cards_json: rowsToJson(n) });
+                        }}
+                      />
+                      <span className="text-[10px] text-text-muted">Appends one image URL to the JSON array.</span>
+                    </div>
+                  </div>
+                );
+              })}
+              <button
+                type="button"
+                className="rounded border border-border px-2 py-1 text-[11px]"
+                onClick={() => patch({ health_health_facility_cards_json: rowsToJson([...facilityRows, { image: '', title: '', description: '', images_json: '[]' }]) })}
+              >
+                + Add facility
+              </button>
+            </div>
+          </SectionBox>
+        </PortfolioSectionPanel>
+
+        <PortfolioSectionPanel sectionId="doctors" activeSection={activeSection}>
+          <SectionBox id="health-portfolio-doctors" title="Doctors &amp; today attendance">
+            <p className="mb-2 text-[10px] text-text-muted">
+              Attendance uses the same JSON shape as PS faculty: dates as keys, then row_0, row_1, … (boolean). Optional — leave {'{}'} to hide
+              attendance on the public page.
+            </p>
+            <SubsectionBar title="Attendance JSON" onRemove={() => patch({ health_doctor_attendance_json: '{}' })} />
+            <textarea
+              rows={3}
+              className="mb-3 w-full rounded border border-border px-2 py-1 font-mono text-[10px]"
+              placeholder='{"2026-04-11":{"row_0":true}}'
+              value={f.health_doctor_attendance_json || '{}'}
+              onChange={(e) => patch({ health_doctor_attendance_json: e.target.value })}
+            />
+            <SubsectionBar title="Doctor profiles" onRemove={() => patch({ health_doctor_cards_json: '[]' })} removeLabel="Remove all doctors" />
+            <div className="space-y-2">
+              {(doctorRows.length ? doctorRows : [{}]).map((row, i, arr) => (
+                <div
+                  key={i}
+                  className="grid min-w-0 gap-2 overflow-x-auto rounded border border-border p-2 sm:grid-cols-[minmax(0,100px)_repeat(4,minmax(0,1fr))_auto] sm:items-end"
+                >
+                  <ImgSlot
+                    label="Photo"
+                    organizationId={organizationId}
+                    assetType="health_doctor_photo"
+                    url={row.photo || ''}
+                    onUrl={(v) => {
+                      const n = [...arr];
+                      n[i] = { ...row, photo: v };
+                      patch({ health_doctor_cards_json: rowsToJson(n) });
+                    }}
+                  />
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Name"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.doctor_name}
+                    value={row.name || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, name: e.target.value };
+                      patch({ health_doctor_cards_json: rowsToJson(n) });
+                    }}
+                  />
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Dept / Specialization"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.doctor_department}
+                    value={row.department || row.specialization || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, department: e.target.value };
+                      patch({ health_doctor_cards_json: rowsToJson(n) });
+                    }}
+                  />
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Qualification"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.doctor_qualification}
+                    value={row.qualification || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, qualification: e.target.value };
+                      patch({ health_doctor_cards_json: rowsToJson(n) });
+                    }}
+                  />
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Designation"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.doctor_designation}
+                    value={row.designation || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, designation: e.target.value };
+                      patch({ health_doctor_cards_json: rowsToJson(n) });
+                    }}
+                  />
+                  <div className="flex flex-col gap-1">
+                    <button
+                      type="button"
+                      className="text-[10px] text-red-700 underline decoration-red-300 hover:text-red-900"
+                      onClick={() => {
+                        const n = [...arr];
+                        n[i] = {};
+                        patch({ health_doctor_cards_json: rowsToJson(n) });
+                      }}
+                    >
+                      Clear row
+                    </button>
+                    <button type="button" className="text-[10px] text-red-600" onClick={() => patch({ health_doctor_cards_json: rowsToJson(arr.filter((_, j) => j !== i)) })}>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => patch({ health_doctor_cards_json: rowsToJson([...doctorRows, {}]) })}>
+                + Add doctor
+              </button>
+            </div>
+          </SectionBox>
+        </PortfolioSectionPanel>
+
+        <PortfolioSectionPanel sectionId="tsNts" activeSection={activeSection}>
+          <SectionBox
+            id="health-portfolio-ts-nts"
+            title="TS &amp; NTS staff"
+            onRemoveSection={() => patch({ health_ts_nts_staff_rows_json: '[]' })}
+            removeSectionLabel="Remove all staff rows"
+          >
+            <div className="space-y-2">
+              {(tsNtsRows.length ? tsNtsRows : [{}]).map((row, i, arr) => (
+                <div key={i} className="grid min-w-0 gap-2 overflow-x-auto rounded border border-border p-2 md:grid-cols-6">
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Staff name"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.ts_nts_name}
+                    value={row.staff_name || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, staff_name: e.target.value };
+                      patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
+                    }}
+                  />
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="TS / NTS"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.ts_nts_category}
+                    value={row.category || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, category: e.target.value };
+                      patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
+                    }}
+                  />
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Role"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.ts_nts_role}
+                    value={row.role_designation || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, role_designation: e.target.value };
+                      patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
+                    }}
+                  />
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Department"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.ts_nts_department}
+                    value={row.department || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, department: e.target.value };
+                      patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
+                    }}
+                  />
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Contact"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.ts_nts_contact}
+                    value={row.contact_number || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, contact_number: e.target.value };
+                      patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
+                    }}
+                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      className="min-w-0 flex-1 rounded border border-border px-2 py-1"
+                      placeholder="Email"
+                      maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.ts_nts_email}
+                      value={row.email || ''}
+                      onChange={(e) => {
+                        const n = [...arr];
+                        n[i] = { ...row, email: e.target.value };
+                        patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
+                      }}
+                    />
+                    <div className="flex shrink-0 flex-col gap-1">
                       <button
                         type="button"
                         className="text-[10px] text-red-700 underline decoration-red-300 hover:text-red-900"
                         onClick={() => {
                           const n = [...arr];
-                          n[i] = { image: '', title: '', description: '', images_json: '[]' };
-                          delete (n[i] as Record<string, unknown>).images;
-                          patch({ health_health_facility_cards_json: rowsToJson(n) });
+                          n[i] = {};
+                          patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
                         }}
                       >
-                        Clear fields
+                        Clear
                       </button>
-                      <button
-                        type="button"
-                        className="text-[10px] text-red-600"
-                        onClick={() => patch({ health_health_facility_cards_json: rowsToJson(arr.filter((_, j) => j !== i)) })}
-                      >
-                        Remove facility
+                      <button type="button" className="text-[10px] text-red-600" onClick={() => patch({ health_ts_nts_staff_rows_json: rowsToJson(arr.filter((_, j) => j !== i)) })}>
+                        Remove
                       </button>
-                    </div>
-                    <div className="space-y-0.5 md:col-span-2">
-                      <CharCount value={String(r.description || '')} max={HEALTH_PORTFOLIO_FIELD_LIMITS.facility_description} />
-                      <textarea
-                        rows={3}
-                        className="w-full rounded border border-border px-2 py-1"
-                        placeholder="Description"
-                        maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.facility_description}
-                        value={String(r.description || '')}
-                        onChange={(e) => {
-                          const n = [...arr];
-                          n[i] = { ...row, description: e.target.value };
-                          patch({ health_health_facility_cards_json: rowsToJson(n) });
-                        }}
-                      />
                     </div>
                   </div>
                 </div>
+              ))}
+              <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => patch({ health_ts_nts_staff_rows_json: rowsToJson([...tsNtsRows, {}]) })}>
+                + Add staff row
+              </button>
+            </div>
+          </SectionBox>
+        </PortfolioSectionPanel>
+
+        <PortfolioSectionPanel sectionId="contact" activeSection={activeSection}>
+          <div className="space-y-3">
+            <SectionBox
+              id="health-portfolio-contact-map"
+              title="Map coordinates"
+              onRemoveSection={() => onFacilityRecordPatch({ latitude: '', longitude: '' })}
+            >
+              <p className="mb-2 text-[10px] text-text-muted">
+                Coordinates are required for the organization and the public map embed (same pattern as school contact pages).
+              </p>
+              <div className="grid gap-2 md:grid-cols-2">
                 <div className="space-y-0.5">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[10px] text-text-muted">Gallery images JSON</span>
-                    <button
-                      type="button"
-                      className="rounded border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700 hover:bg-red-100"
-                      onClick={() => {
-                        const n = [...arr];
-                        n[i] = { ...row, images_json: '[]' };
-                        delete (n[i] as Record<string, unknown>).images;
-                        patch({ health_health_facility_cards_json: rowsToJson(n) });
-                      }}
-                    >
-                      Remove gallery images
-                    </button>
+                  <span className="text-[11px] text-text">Latitude (required for save)</span>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    value={facilityRecord.latitude}
+                    onChange={(e) => onFacilityRecordPatch({ latitude: e.target.value })}
+                    placeholder="e.g. 19.210478"
+                  />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-text">Longitude (required for save)</span>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    value={facilityRecord.longitude}
+                    onChange={(e) => onFacilityRecordPatch({ longitude: e.target.value })}
+                    placeholder="e.g. 84.809169"
+                  />
+                </div>
+              </div>
+            </SectionBox>
+            <SectionBox
+              id="health-portfolio-contact-public"
+              title="Public contact details"
+              onRemoveSection={() =>
+                patch({
+                  health_full_address: '',
+                  health_helpdesk_phone: '',
+                  health_emergency_phone: '',
+                  health_public_email: '',
+                  health_office_hours: '',
+                  health_contact_email: '',
+                })
+              }
+            >
+              <div className="grid gap-2 md:grid-cols-2">
+                <div className="space-y-0.5 md:col-span-2">
+                  <CharCount value={f.health_full_address || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_full_address} />
+                  <textarea
+                    rows={2}
+                    className="w-full rounded border border-border px-2 py-1"
+                    placeholder="Full address (public)"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_full_address}
+                    value={f.health_full_address || ''}
+                    onChange={(e) => patch({ health_full_address: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-text">Helpdesk phone</span>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_helpdesk_phone}
+                    value={f.health_helpdesk_phone || ''}
+                    onChange={(e) => patch({ health_helpdesk_phone: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-text">Emergency phone</span>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_emergency_phone}
+                    value={f.health_emergency_phone || ''}
+                    onChange={(e) => patch({ health_emergency_phone: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-0.5 md:col-span-2">
+                  <span className="text-[11px] text-text">Public email</span>
+                  <input
+                    type="email"
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_public_email}
+                    value={f.health_public_email || ''}
+                    onChange={(e) => patch({ health_public_email: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-0.5 md:col-span-2">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[11px] text-text">Office hours</span>
+                    <CharCount value={f.health_office_hours || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_office_hours} />
+                  </div>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_office_hours}
+                    value={f.health_office_hours || ''}
+                    onChange={(e) => patch({ health_office_hours: e.target.value })}
+                  />
+                </div>
+              </div>
+            </SectionBox>
+          </div>
+        </PortfolioSectionPanel>
+
+        {resources && onResourcesPatch ? (
+          <PortfolioSectionPanel sectionId="resources" activeSection={activeSection}>
+            <SectionBox
+              id="health-portfolio-resources"
+              title="Highlights &amp; staffing data"
+              onRemoveSection={() => onResourcesPatch?.(EMPTY_HEALTH_RESOURCES_PATCH)}
+              removeSectionLabel="Remove all highlights data"
+            >
+              <p className="mb-2 text-[10px] text-text-muted">
+                These numbers drive the <span className="font-semibold">Key highlights</span> cards on the public site (beds, total staff, ICU).
+                X-Ray / CT / pathology fields are stored on the profile for records only.
+              </p>
+              <p className="mb-3 text-[10px] font-medium text-text">
+                Total staff preview (sum of TS … NW): <span className="tabular-nums">{totalStaffPreview}</span>
+              </p>
+              <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                {RESOURCE_STAFF_COUNT_KEYS.map((key) => (
+                  <div key={key} className="space-y-0.5">
+                    <label className="block text-[10px] text-text-muted">{getHealthProfileLabel(key, 'en')}</label>
+                    <input
+                      type="number"
+                      className="w-full rounded border border-border px-2 py-1"
+                      value={resources[key]}
+                      onChange={(e) => onResourcesPatch({ [key]: e.target.value } as Partial<HealthPortfolioResourcesFields>)}
+                    />
+                  </div>
+                ))}
+                <div className="space-y-0.5">
+                  <label className="block text-[10px] text-text-muted">{getHealthProfileLabel('no_of_bed', 'en')}</label>
+                  <input
+                    type="number"
+                    className="w-full rounded border border-border px-2 py-1"
+                    value={resources.no_of_bed}
+                    onChange={(e) => onResourcesPatch({ no_of_bed: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-0.5">
+                  <label className="block text-[10px] text-text-muted">{getHealthProfileLabel('no_of_icu', 'en')}</label>
+                  <input
+                    type="number"
+                    className="w-full rounded border border-border px-2 py-1"
+                    value={resources.no_of_icu}
+                    onChange={(e) => onResourcesPatch({ no_of_icu: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-0.5 md:col-span-2">
+                  <label className="block text-[10px] text-text-muted">X-Ray availability</label>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    value={resources.x_ray_availabilaty}
+                    onChange={(e) => onResourcesPatch({ x_ray_availabilaty: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-0.5 md:col-span-2">
+                  <label className="block text-[10px] text-text-muted">{getHealthProfileLabel('ct_scan_availability', 'en')}</label>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    value={resources.ct_scan_availability}
+                    onChange={(e) => onResourcesPatch({ ct_scan_availability: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-0.5 md:col-span-2 lg:col-span-3">
+                  <label className="block text-[10px] text-text-muted">{getHealthProfileLabel('availability_of_pathology_testing', 'en')}</label>
+                  <input
+                    className="w-full rounded border border-border px-2 py-1"
+                    value={resources.availability_of_pathology_testing}
+                    onChange={(e) => onResourcesPatch({ availability_of_pathology_testing: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-0.5 md:col-span-2 lg:col-span-3">
+                  <div className="flex justify-between gap-2">
+                    <label className="block text-[10px] text-text-muted">
+                      {getHealthProfileLabel('description', 'en')} (also fills about if “About” is empty on site)
+                    </label>
+                    <CharCount value={resources.description || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.resource_description} />
                   </div>
                   <textarea
                     rows={2}
-                    className="w-full rounded border border-border px-2 py-1 font-mono text-[10px]"
-                    value={imagesJson}
-                    onChange={(e) => {
-                      const n = [...arr];
-                      n[i] = { ...row, images_json: e.target.value };
-                      delete (n[i] as Record<string, unknown>).images;
-                      patch({ health_health_facility_cards_json: rowsToJson(n) });
-                    }}
+                    className="w-full rounded border border-border px-2 py-1"
+                    maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.resource_description}
+                    value={resources.description}
+                    onChange={(e) => onResourcesPatch({ description: e.target.value })}
                   />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png"
-                    disabled={!organizationId}
-                    className="max-w-[200px] text-[10px] file:mr-1 file:rounded file:border-0 file:bg-primary file:px-1 file:py-0.5"
-                    onChange={async (e) => {
-                      const f = e.target.files?.[0];
-                      if (!f || !organizationId) return;
-                      const url = await uploadAsset(organizationId, f, 'health_facility_inner');
-                      let list: Record<string, string>[] = [];
-                      try {
-                        list = JSON.parse(imagesJson) as Record<string, string>[];
-                        if (!Array.isArray(list)) list = [];
-                      } catch {
-                        list = [];
-                      }
-                      list.push({ url, title: '' });
-                      const n = [...arr];
-                      n[i] = { ...row, images_json: JSON.stringify(list) };
-                      delete (n[i] as Record<string, unknown>).images;
-                      patch({ health_health_facility_cards_json: rowsToJson(n) });
-                    }}
-                  />
-                  <span className="text-[10px] text-text-muted">Appends one image URL to the JSON array.</span>
                 </div>
               </div>
-            );
-          })}
-          <button
-            type="button"
-            className="rounded border border-border px-2 py-1 text-[11px]"
-            onClick={() => patch({ health_health_facility_cards_json: rowsToJson([...facilityRows, { image: '', title: '', description: '', images_json: '[]' }]) })}
-          >
-            + Add facility
-          </button>
-        </div>
-      </SectionBox>
-      </PortfolioSectionPanel>
+            </SectionBox>
+          </PortfolioSectionPanel>
+        ) : null}
 
-      <PortfolioSectionPanel sectionId="doctors" activeSection={activeSection}>
-      <SectionBox id="health-portfolio-doctors" title="Doctors &amp; today attendance">
-        <p className="mb-2 text-[10px] text-text-muted">
-          Attendance uses the same JSON shape as PS faculty: dates as keys, then row_0, row_1, … (boolean). Optional — leave {'{}'} to hide
-          attendance on the public page.
-        </p>
-        <SubsectionBar title="Attendance JSON" onRemove={() => patch({ health_doctor_attendance_json: '{}' })} />
-        <textarea
-          rows={3}
-          className="mb-3 w-full rounded border border-border px-2 py-1 font-mono text-[10px]"
-          placeholder='{"2026-04-11":{"row_0":true}}'
-          value={f.health_doctor_attendance_json || '{}'}
-          onChange={(e) => patch({ health_doctor_attendance_json: e.target.value })}
-        />
-        <SubsectionBar title="Doctor profiles" onRemove={() => patch({ health_doctor_cards_json: '[]' })} removeLabel="Remove all doctors" />
-        <div className="space-y-2">
-          {(doctorRows.length ? doctorRows : [{}]).map((row, i, arr) => (
-            <div
-              key={i}
-              className="grid min-w-0 gap-2 overflow-x-auto rounded border border-border p-2 sm:grid-cols-[minmax(0,100px)_repeat(4,minmax(0,1fr))_auto] sm:items-end"
-            >
-              <ImgSlot
-                label="Photo"
-                organizationId={organizationId}
-                assetType="health_doctor_photo"
-                url={row.photo || ''}
-                onUrl={(v) => {
-                  const n = [...arr];
-                  n[i] = { ...row, photo: v };
-                  patch({ health_doctor_cards_json: rowsToJson(n) });
-                }}
-              />
-              <input
-                className="rounded border border-border px-2 py-1"
-                placeholder="Name"
-                maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.doctor_name}
-                value={row.name || ''}
-                onChange={(e) => {
-                  const n = [...arr];
-                  n[i] = { ...row, name: e.target.value };
-                  patch({ health_doctor_cards_json: rowsToJson(n) });
-                }}
-              />
-              <input
-                className="rounded border border-border px-2 py-1"
-                placeholder="Dept / Specialization"
-                maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.doctor_department}
-                value={row.department || row.specialization || ''}
-                onChange={(e) => {
-                  const n = [...arr];
-                  n[i] = { ...row, department: e.target.value };
-                  patch({ health_doctor_cards_json: rowsToJson(n) });
-                }}
-              />
-              <input
-                className="rounded border border-border px-2 py-1"
-                placeholder="Qualification"
-                maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.doctor_qualification}
-                value={row.qualification || ''}
-                onChange={(e) => {
-                  const n = [...arr];
-                  n[i] = { ...row, qualification: e.target.value };
-                  patch({ health_doctor_cards_json: rowsToJson(n) });
-                }}
-              />
-              <input
-                className="rounded border border-border px-2 py-1"
-                placeholder="Designation"
-                maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.doctor_designation}
-                value={row.designation || ''}
-                onChange={(e) => {
-                  const n = [...arr];
-                  n[i] = { ...row, designation: e.target.value };
-                  patch({ health_doctor_cards_json: rowsToJson(n) });
-                }}
-              />
-              <div className="flex flex-col gap-1">
-                <button
-                  type="button"
-                  className="text-[10px] text-red-700 underline decoration-red-300 hover:text-red-900"
-                  onClick={() => {
-                    const n = [...arr];
-                    n[i] = {};
-                    patch({ health_doctor_cards_json: rowsToJson(n) });
-                  }}
+        <PortfolioSectionPanel sectionId="gallery" activeSection={activeSection}>
+          <SectionBox
+            id="health-portfolio-gallery"
+            title="Photo gallery"
+            onRemoveSection={() => patch({ health_photo_gallery_json: '[]' })}
+            removeSectionLabel="Remove all gallery items"
+          >
+            <div className="space-y-2">
+              {(galleryRows.length ? galleryRows : [{ image: '', category: '', title: '', description: '' }]).map((row, i, arr) => (
+                <div
+                  key={i}
+                  className="grid gap-2 rounded border border-border p-2 sm:grid-cols-[minmax(0,140px)_repeat(3,minmax(0,1fr))_auto] sm:items-end"
                 >
-                  Clear row
-                </button>
-                <button type="button" className="text-[10px] text-red-600" onClick={() => patch({ health_doctor_cards_json: rowsToJson(arr.filter((_, j) => j !== i)) })}>
-                  Remove
-                </button>
-              </div>
-            </div>
-          ))}
-          <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => patch({ health_doctor_cards_json: rowsToJson([...doctorRows, {}]) })}>
-            + Add doctor
-          </button>
-        </div>
-      </SectionBox>
-      </PortfolioSectionPanel>
-
-      <PortfolioSectionPanel sectionId="tsNts" activeSection={activeSection}>
-      <SectionBox
-        id="health-portfolio-ts-nts"
-        title="TS &amp; NTS staff"
-        onRemoveSection={() => patch({ health_ts_nts_staff_rows_json: '[]' })}
-        removeSectionLabel="Remove all staff rows"
-      >
-        <div className="space-y-2">
-          {(tsNtsRows.length ? tsNtsRows : [{}]).map((row, i, arr) => (
-            <div key={i} className="grid min-w-0 gap-2 overflow-x-auto rounded border border-border p-2 md:grid-cols-6">
-              <input
-                className="rounded border border-border px-2 py-1"
-                placeholder="Staff name"
-                maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.ts_nts_name}
-                value={row.staff_name || ''}
-                onChange={(e) => {
-                  const n = [...arr];
-                  n[i] = { ...row, staff_name: e.target.value };
-                  patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
-                }}
-              />
-              <input
-                className="rounded border border-border px-2 py-1"
-                placeholder="TS / NTS"
-                maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.ts_nts_category}
-                value={row.category || ''}
-                onChange={(e) => {
-                  const n = [...arr];
-                  n[i] = { ...row, category: e.target.value };
-                  patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
-                }}
-              />
-              <input
-                className="rounded border border-border px-2 py-1"
-                placeholder="Role"
-                maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.ts_nts_role}
-                value={row.role_designation || ''}
-                onChange={(e) => {
-                  const n = [...arr];
-                  n[i] = { ...row, role_designation: e.target.value };
-                  patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
-                }}
-              />
-              <input
-                className="rounded border border-border px-2 py-1"
-                placeholder="Department"
-                maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.ts_nts_department}
-                value={row.department || ''}
-                onChange={(e) => {
-                  const n = [...arr];
-                  n[i] = { ...row, department: e.target.value };
-                  patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
-                }}
-              />
-              <input
-                className="rounded border border-border px-2 py-1"
-                placeholder="Contact"
-                maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.ts_nts_contact}
-                value={row.contact_number || ''}
-                onChange={(e) => {
-                  const n = [...arr];
-                  n[i] = { ...row, contact_number: e.target.value };
-                  patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
-                }}
-              />
-              <div className="flex flex-wrap items-center gap-2">
-                <input
-                  className="min-w-0 flex-1 rounded border border-border px-2 py-1"
-                  placeholder="Email"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.ts_nts_email}
-                  value={row.email || ''}
-                  onChange={(e) => {
-                    const n = [...arr];
-                    n[i] = { ...row, email: e.target.value };
-                    patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
-                  }}
-                />
-                <div className="flex shrink-0 flex-col gap-1">
-                  <button
-                    type="button"
-                    className="text-[10px] text-red-700 underline decoration-red-300 hover:text-red-900"
-                    onClick={() => {
+                  <ImgSlot
+                    label="Image"
+                    organizationId={organizationId}
+                    assetType="health_gallery"
+                    url={row.image || ''}
+                    onUrl={(v) => {
                       const n = [...arr];
-                      n[i] = {};
-                      patch({ health_ts_nts_staff_rows_json: rowsToJson(n) });
+                      n[i] = { ...row, image: v };
+                      patch({ health_photo_gallery_json: rowsToJson(n) });
                     }}
-                  >
-                    Clear
-                  </button>
-                  <button type="button" className="text-[10px] text-red-600" onClick={() => patch({ health_ts_nts_staff_rows_json: rowsToJson(arr.filter((_, j) => j !== i)) })}>
-                    Remove
-                  </button>
+                  />
+                  <div className="min-w-0 space-y-0.5">
+                    <CharCount value={row.category || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.gallery_category} />
+                    <input
+                      className="w-full rounded border border-border px-2 py-1"
+                      placeholder="Category"
+                      maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.gallery_category}
+                      value={row.category || ''}
+                      onChange={(e) => {
+                        const n = [...arr];
+                        n[i] = { ...row, category: e.target.value };
+                        patch({ health_photo_gallery_json: rowsToJson(n) });
+                      }}
+                    />
+                  </div>
+                  <div className="min-w-0 space-y-0.5">
+                    <CharCount value={row.title || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.gallery_title} />
+                    <input
+                      className="w-full rounded border border-border px-2 py-1"
+                      placeholder="Title"
+                      maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.gallery_title}
+                      value={row.title || ''}
+                      onChange={(e) => {
+                        const n = [...arr];
+                        n[i] = { ...row, title: e.target.value };
+                        patch({ health_photo_gallery_json: rowsToJson(n) });
+                      }}
+                    />
+                  </div>
+                  <div className="min-w-0 space-y-0.5">
+                    <CharCount value={row.description || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.gallery_description} />
+                    <input
+                      className="w-full rounded border border-border px-2 py-1"
+                      placeholder="Description (optional)"
+                      maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.gallery_description}
+                      value={row.description || ''}
+                      onChange={(e) => {
+                        const n = [...arr];
+                        n[i] = { ...row, description: e.target.value };
+                        patch({ health_photo_gallery_json: rowsToJson(n) });
+                      }}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <button
+                      type="button"
+                      className="text-[10px] text-red-700 underline decoration-red-300 hover:text-red-900"
+                      onClick={() => {
+                        const n = [...arr];
+                        n[i] = { image: '', category: '', title: '', description: '' };
+                        patch({ health_photo_gallery_json: rowsToJson(n) });
+                      }}
+                    >
+                      Clear row
+                    </button>
+                    <button type="button" className="text-[10px] text-red-600" onClick={() => patch({ health_photo_gallery_json: rowsToJson(arr.filter((_, j) => j !== i)) })}>
+                      Remove
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-          <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => patch({ health_ts_nts_staff_rows_json: rowsToJson([...tsNtsRows, {}]) })}>
-            + Add staff row
-          </button>
-        </div>
-      </SectionBox>
-      </PortfolioSectionPanel>
-
-      <PortfolioSectionPanel sectionId="contact" activeSection={activeSection}>
-        <div className="space-y-3">
-          <SectionBox
-            id="health-portfolio-contact-map"
-            title="Map coordinates"
-            onRemoveSection={() => onFacilityRecordPatch({ latitude: '', longitude: '' })}
-          >
-            <p className="mb-2 text-[10px] text-text-muted">
-              Coordinates are required for the organization and the public map embed (same pattern as school contact pages).
-            </p>
-            <div className="grid gap-2 md:grid-cols-2">
-              <div className="space-y-0.5">
-                <span className="text-[11px] text-text">Latitude (required for save)</span>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  value={facilityRecord.latitude}
-                  onChange={(e) => onFacilityRecordPatch({ latitude: e.target.value })}
-                  placeholder="e.g. 19.210478"
-                />
-              </div>
-              <div className="space-y-0.5">
-                <span className="text-[11px] text-text">Longitude (required for save)</span>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  value={facilityRecord.longitude}
-                  onChange={(e) => onFacilityRecordPatch({ longitude: e.target.value })}
-                  placeholder="e.g. 84.809169"
-                />
-              </div>
+              ))}
+              <button
+                type="button"
+                className="rounded border border-border px-2 py-1 text-[11px]"
+                onClick={() => patch({ health_photo_gallery_json: rowsToJson([...galleryRows, { image: '', category: '', title: '', description: '' }]) })}
+              >
+                + Add gallery item
+              </button>
             </div>
           </SectionBox>
-          <SectionBox
-            id="health-portfolio-contact-public"
-            title="Public contact details"
-            onRemoveSection={() =>
-              patch({
-                health_full_address: '',
-                health_helpdesk_phone: '',
-                health_emergency_phone: '',
-                health_public_email: '',
-                health_office_hours: '',
-                health_contact_email: '',
-              })
-            }
-          >
-            <div className="grid gap-2 md:grid-cols-2">
-              <div className="space-y-0.5 md:col-span-2">
-                <CharCount value={f.health_full_address || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_full_address} />
-                <textarea
-                  rows={2}
-                  className="w-full rounded border border-border px-2 py-1"
-                  placeholder="Full address (public)"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_full_address}
-                  value={f.health_full_address || ''}
-                  onChange={(e) => patch({ health_full_address: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5">
-                <span className="text-[11px] text-text">Helpdesk phone</span>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_helpdesk_phone}
-                  value={f.health_helpdesk_phone || ''}
-                  onChange={(e) => patch({ health_helpdesk_phone: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5">
-                <span className="text-[11px] text-text">Emergency phone</span>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_emergency_phone}
-                  value={f.health_emergency_phone || ''}
-                  onChange={(e) => patch({ health_emergency_phone: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5 md:col-span-2">
-                <span className="text-[11px] text-text">Public email</span>
-                <input
-                  type="email"
-                  className="w-full rounded border border-border px-2 py-1"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_public_email}
-                  value={f.health_public_email || ''}
-                  onChange={(e) => patch({ health_public_email: e.target.value })}
-                />
-              </div>
-              <div className="space-y-0.5 md:col-span-2">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-text">Office hours</span>
-                  <CharCount value={f.health_office_hours || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.health_office_hours} />
-                </div>
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.health_office_hours}
-                  value={f.health_office_hours || ''}
-                  onChange={(e) => patch({ health_office_hours: e.target.value })}
-                />
-              </div>
-            </div>
-          </SectionBox>
-        </div>
-      </PortfolioSectionPanel>
-
-      {resources && onResourcesPatch ? (
-        <PortfolioSectionPanel sectionId="resources" activeSection={activeSection}>
-        <SectionBox
-          id="health-portfolio-resources"
-          title="Highlights &amp; staffing data"
-          onRemoveSection={() => onResourcesPatch?.(EMPTY_HEALTH_RESOURCES_PATCH)}
-          removeSectionLabel="Remove all highlights data"
-        >
-          <p className="mb-2 text-[10px] text-text-muted">
-            These numbers drive the <span className="font-semibold">Key highlights</span> cards on the public site (beds, total staff, ICU).
-            X-Ray / CT / pathology fields are stored on the profile for records only.
-          </p>
-          <p className="mb-3 text-[10px] font-medium text-text">
-            Total staff preview (sum of TS … NW): <span className="tabular-nums">{totalStaffPreview}</span>
-          </p>
-          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-            {RESOURCE_STAFF_COUNT_KEYS.map((key) => (
-              <div key={key} className="space-y-0.5">
-                <label className="block text-[10px] text-text-muted">{getHealthProfileLabel(key, 'en')}</label>
-                <input
-                  type="number"
-                  className="w-full rounded border border-border px-2 py-1"
-                  value={resources[key]}
-                  onChange={(e) => onResourcesPatch({ [key]: e.target.value } as Partial<HealthPortfolioResourcesFields>)}
-                />
-              </div>
-            ))}
-            <div className="space-y-0.5">
-              <label className="block text-[10px] text-text-muted">{getHealthProfileLabel('no_of_bed', 'en')}</label>
-              <input
-                type="number"
-                className="w-full rounded border border-border px-2 py-1"
-                value={resources.no_of_bed}
-                onChange={(e) => onResourcesPatch({ no_of_bed: e.target.value })}
-              />
-            </div>
-            <div className="space-y-0.5">
-              <label className="block text-[10px] text-text-muted">{getHealthProfileLabel('no_of_icu', 'en')}</label>
-              <input
-                type="number"
-                className="w-full rounded border border-border px-2 py-1"
-                value={resources.no_of_icu}
-                onChange={(e) => onResourcesPatch({ no_of_icu: e.target.value })}
-              />
-            </div>
-            <div className="space-y-0.5 md:col-span-2">
-              <label className="block text-[10px] text-text-muted">X-Ray availability</label>
-              <input
-                className="w-full rounded border border-border px-2 py-1"
-                value={resources.x_ray_availabilaty}
-                onChange={(e) => onResourcesPatch({ x_ray_availabilaty: e.target.value })}
-              />
-            </div>
-            <div className="space-y-0.5 md:col-span-2">
-              <label className="block text-[10px] text-text-muted">{getHealthProfileLabel('ct_scan_availability', 'en')}</label>
-              <input
-                className="w-full rounded border border-border px-2 py-1"
-                value={resources.ct_scan_availability}
-                onChange={(e) => onResourcesPatch({ ct_scan_availability: e.target.value })}
-              />
-            </div>
-            <div className="space-y-0.5 md:col-span-2 lg:col-span-3">
-              <label className="block text-[10px] text-text-muted">{getHealthProfileLabel('availability_of_pathology_testing', 'en')}</label>
-              <input
-                className="w-full rounded border border-border px-2 py-1"
-                value={resources.availability_of_pathology_testing}
-                onChange={(e) => onResourcesPatch({ availability_of_pathology_testing: e.target.value })}
-              />
-            </div>
-            <div className="space-y-0.5 md:col-span-2 lg:col-span-3">
-              <div className="flex justify-between gap-2">
-                <label className="block text-[10px] text-text-muted">
-                  {getHealthProfileLabel('description', 'en')} (also fills about if “About” is empty on site)
-                </label>
-                <CharCount value={resources.description || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.resource_description} />
-              </div>
-              <textarea
-                rows={2}
-                className="w-full rounded border border-border px-2 py-1"
-                maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.resource_description}
-                value={resources.description}
-                onChange={(e) => onResourcesPatch({ description: e.target.value })}
-              />
-            </div>
-          </div>
-        </SectionBox>
         </PortfolioSectionPanel>
-      ) : null}
-
-      <PortfolioSectionPanel sectionId="gallery" activeSection={activeSection}>
-      <SectionBox
-        id="health-portfolio-gallery"
-        title="Photo gallery"
-        onRemoveSection={() => patch({ health_photo_gallery_json: '[]' })}
-        removeSectionLabel="Remove all gallery items"
-      >
-        <div className="space-y-2">
-          {(galleryRows.length ? galleryRows : [{ image: '', category: '', title: '', description: '' }]).map((row, i, arr) => (
-            <div
-              key={i}
-              className="grid gap-2 rounded border border-border p-2 sm:grid-cols-[minmax(0,140px)_repeat(3,minmax(0,1fr))_auto] sm:items-end"
-            >
-              <ImgSlot
-                label="Image"
-                organizationId={organizationId}
-                assetType="health_gallery"
-                url={row.image || ''}
-                onUrl={(v) => {
-                  const n = [...arr];
-                  n[i] = { ...row, image: v };
-                  patch({ health_photo_gallery_json: rowsToJson(n) });
-                }}
-              />
-              <div className="min-w-0 space-y-0.5">
-                <CharCount value={row.category || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.gallery_category} />
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  placeholder="Category"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.gallery_category}
-                  value={row.category || ''}
-                  onChange={(e) => {
-                    const n = [...arr];
-                    n[i] = { ...row, category: e.target.value };
-                    patch({ health_photo_gallery_json: rowsToJson(n) });
-                  }}
-                />
-              </div>
-              <div className="min-w-0 space-y-0.5">
-                <CharCount value={row.title || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.gallery_title} />
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  placeholder="Title"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.gallery_title}
-                  value={row.title || ''}
-                  onChange={(e) => {
-                    const n = [...arr];
-                    n[i] = { ...row, title: e.target.value };
-                    patch({ health_photo_gallery_json: rowsToJson(n) });
-                  }}
-                />
-              </div>
-              <div className="min-w-0 space-y-0.5">
-                <CharCount value={row.description || ''} max={HEALTH_PORTFOLIO_FIELD_LIMITS.gallery_description} />
-                <input
-                  className="w-full rounded border border-border px-2 py-1"
-                  placeholder="Description (optional)"
-                  maxLength={HEALTH_PORTFOLIO_FIELD_LIMITS.gallery_description}
-                  value={row.description || ''}
-                  onChange={(e) => {
-                    const n = [...arr];
-                    n[i] = { ...row, description: e.target.value };
-                    patch({ health_photo_gallery_json: rowsToJson(n) });
-                  }}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <button
-                  type="button"
-                  className="text-[10px] text-red-700 underline decoration-red-300 hover:text-red-900"
-                  onClick={() => {
-                    const n = [...arr];
-                    n[i] = { image: '', category: '', title: '', description: '' };
-                    patch({ health_photo_gallery_json: rowsToJson(n) });
-                  }}
-                >
-                  Clear row
-                </button>
-                <button type="button" className="text-[10px] text-red-600" onClick={() => patch({ health_photo_gallery_json: rowsToJson(arr.filter((_, j) => j !== i)) })}>
-                  Remove
-                </button>
-              </div>
-            </div>
-          ))}
-          <button
-            type="button"
-            className="rounded border border-border px-2 py-1 text-[11px]"
-            onClick={() => patch({ health_photo_gallery_json: rowsToJson([...galleryRows, { image: '', category: '', title: '', description: '' }]) })}
-          >
-            + Add gallery item
-          </button>
-        </div>
-      </SectionBox>
-      </PortfolioSectionPanel>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-border bg-muted/20 px-2 py-2">

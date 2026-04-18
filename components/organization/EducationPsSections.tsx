@@ -183,6 +183,7 @@ export function PsAboutSection({
   const headmasterTitle =
     leaderLabels?.title ??
     (aboutLeaderRole === 'secretary' ? (language === 'od' ? 'ସଚିବ' : 'Secretary') : language === 'od' ? 'ପ୍ରଧାନଶିକ୍ଷକ' : 'Headmaster');
+  const headDesignation = asString(profile.hm_designation).trim();
   const leaderMessageHeading =
     leaderLabels?.messageHeading ??
     (aboutLeaderRole === 'secretary'
@@ -271,7 +272,13 @@ export function PsAboutSection({
             </button>
             <div>
               <p className="text-lg font-bold text-slate-900">{headmasterName}</p>
-              <p className="text-sm text-slate-600">{headmasterTitle}</p>
+              {headDesignation ? (
+                <p className="text-sm text-slate-600">
+                  {language === 'od' ? 'ପଦବୀ' : 'Designation'}: {headDesignation}
+                </p>
+              ) : (
+                <p className="text-sm text-slate-600">{headmasterTitle}</p>
+              )}
               {aboutLeaderRole !== 'secretary' ? (
                 <p className="mt-1 text-xs text-slate-500">
                   {language === 'od' ? 'ଯୋଗ୍ୟତା' : 'Qualification'}: {qualification} | {language === 'od' ? 'ଅନୁଭବ' : 'Experience'}: {experience}
@@ -343,7 +350,13 @@ export function PsAboutSection({
             </div>
             <div className="p-4">
               <p className="text-lg font-bold text-slate-900">{headmasterName}</p>
-              <p className="text-sm text-slate-600">{headmasterTitle}</p>
+              {headDesignation ? (
+                <p className="text-sm text-slate-600">
+                  {language === 'od' ? 'ପଦବୀ' : 'Designation'}: {headDesignation}
+                </p>
+              ) : (
+                <p className="text-sm text-slate-600">{headmasterTitle}</p>
+              )}
               {aboutLeaderRole !== 'secretary' ? (
                 <p className="mt-1 text-xs text-slate-500">
                   {language === 'od' ? 'ଯୋଗ୍ୟତା' : 'Qualification'}: {qualification} | {language === 'od' ? 'ଅନୁଭବ' : 'Experience'}: {experience}
@@ -495,21 +508,21 @@ export function PsAdministrationSection({
     ...(isHighSchool
       ? []
       : [
-          {
-            role: 'BRCC',
-            image: asString(profile.brcc_image),
-            name: asString(profile.brcc_name) || EMPTY,
-            contact: asString(profile.brcc_contact) || '—',
-            email: asString(profile.brcc_email) || '—',
-          },
-          {
-            role: 'CRCC',
-            image: asString(profile.crc_image),
-            name: asString(profile.crc_name || profile.crcc_name) || EMPTY,
-            contact: asString(profile.crc_contact || profile.crcc_contact) || '—',
-            email: asString(profile.crc_email) || '—',
-          },
-        ]),
+        {
+          role: 'BRCC',
+          image: asString(profile.brcc_image),
+          name: asString(profile.brcc_name) || EMPTY,
+          contact: asString(profile.brcc_contact) || '—',
+          email: asString(profile.brcc_email) || '—',
+        },
+        {
+          role: 'CRCC',
+          image: asString(profile.crc_image),
+          name: asString(profile.crc_name || profile.crcc_name) || EMPTY,
+          contact: asString(profile.crc_contact || profile.crcc_contact) || '—',
+          email: asString(profile.crc_email) || '—',
+        },
+      ]),
   ];
 
   return (

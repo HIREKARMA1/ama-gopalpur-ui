@@ -155,6 +155,7 @@ export function HealthPortfolioWebsite({
         asString(healthProfile.health_location_line) || locationFallback || asString(healthProfile.full_address) || '',
       headmaster_message_en: asString(healthProfile.health_inst_head_message),
       name_of_hm: asString(healthProfile.health_inst_head_name) || asString(healthProfile.inst_head_name),
+      hm_designation: asString(healthProfile.health_inst_head_designation),
       headmaster_photo: asString(healthProfile.health_inst_head_photo),
       hm_qualification: asString(healthProfile.health_inst_head_qualification),
       hm_experience: asString(healthProfile.health_inst_head_experience),
