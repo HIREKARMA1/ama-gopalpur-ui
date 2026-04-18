@@ -269,6 +269,7 @@ export default function DepartmentAdminPage() {
     health_location_line: '',
     health_inst_head_message: '',
     health_inst_head_name: '',
+    health_inst_head_designation: '',
     health_inst_head_photo: '',
     health_inst_head_qualification: '',
     health_inst_head_experience: '',
@@ -1797,10 +1798,10 @@ export default function DepartmentAdminPage() {
                       const savedOrg = editingRevenueTahasilId
                         ? await organizationsApi.update(editingRevenueTahasilId, orgPayload)
                         : await organizationsApi.create({
-                            department_id: me.department_id,
-                            type: 'OTHER',
-                            ...orgPayload,
-                          });
+                          department_id: me.department_id,
+                          type: 'OTHER',
+                          ...orgPayload,
+                        });
                       const orgId = savedOrg.id;
                       setOrgs((prev) =>
                         editingRevenueTahasilId
@@ -1842,17 +1843,17 @@ export default function DepartmentAdminPage() {
                   {splitHeader(REVENUE_TAHASIL_OFFICE_CSV_HEADER).map((header) => {
                     const key = snakeFromHeader(header);
                     return (
-                    <div key={key} className="space-y-1">
-                      <label className="block text-text">{header}</label>
-                      <input
-                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
-                        value={revenueTahasilFormValues[key] ?? ''}
-                        onChange={(e) =>
-                          setRevenueTahasilFormValues((prev) => ({ ...prev, [key]: e.target.value }))
-                        }
-                      />
-                    </div>
-                  );
+                      <div key={key} className="space-y-1">
+                        <label className="block text-text">{header}</label>
+                        <input
+                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                          value={revenueTahasilFormValues[key] ?? ''}
+                          onChange={(e) =>
+                            setRevenueTahasilFormValues((prev) => ({ ...prev, [key]: e.target.value }))
+                          }
+                        />
+                      </div>
+                    );
                   })}
                   <div className="md:col-span-2 space-y-1">
                     <label className="block text-text font-medium">Profile Image</label>
@@ -2343,14 +2344,14 @@ export default function DepartmentAdminPage() {
                         intake_cards: (() => { try { return newEducationOrg.intake_cards_json.trim() ? JSON.parse(newEducationOrg.intake_cards_json) : undefined; } catch { return undefined; } })(),
                         ...(educationSubDept !== 'HS'
                           ? {
-                              mdm_daily_records: (() => {
-                                try {
-                                  return newEducationOrg.mdm_daily_json.trim() ? JSON.parse(newEducationOrg.mdm_daily_json) : undefined;
-                                } catch {
-                                  return undefined;
-                                }
-                              })(),
-                            }
+                            mdm_daily_records: (() => {
+                              try {
+                                return newEducationOrg.mdm_daily_json.trim() ? JSON.parse(newEducationOrg.mdm_daily_json) : undefined;
+                              } catch {
+                                return undefined;
+                              }
+                            })(),
+                          }
                           : {}),
                         parent_teacher_meetings: (() => { try { return newEducationOrg.ptm_meetings_json.trim() ? JSON.parse(newEducationOrg.ptm_meetings_json) : undefined; } catch { return undefined; } })(),
                         photo_gallery: (() => { try { return newEducationOrg.photo_gallery_json.trim() ? JSON.parse(newEducationOrg.photo_gallery_json) : undefined; } catch { return undefined; } })(),
@@ -2773,6 +2774,7 @@ export default function DepartmentAdminPage() {
                         health_location_line: _hs(healthPortfolioForm.health_location_line || ''),
                         health_inst_head_message: _hs(healthPortfolioForm.health_inst_head_message || ''),
                         health_inst_head_name: _hs(healthPortfolioForm.health_inst_head_name || ''),
+                        health_inst_head_designation: _hs(healthPortfolioForm.health_inst_head_designation || ''),
                         health_inst_head_photo: _hs(healthPortfolioForm.health_inst_head_photo || ''),
                         health_inst_head_qualification: _hs(healthPortfolioForm.health_inst_head_qualification || ''),
                         health_inst_head_experience: _hs(healthPortfolioForm.health_inst_head_experience || ''),
@@ -3249,12 +3251,12 @@ export default function DepartmentAdminPage() {
                       : deptCode === 'ARCS'
                         ? 'Upload ARCS CSV or Excel (.xlsx) template. Societies are keyed by REGISTRATION NUMBER when present, else SOCIETY NAME and coordinates. Excel must use sheet assistant_registrar_cooperative (rows from line 4).'
                         : deptCode === 'WATCO_RWSS'
-                        ? 'Upload WATCO/RWSS water supply CSV. Schemes will be created or updated by STATION NAME, LATITUDE, LONGITUDE.'
-                        : deptCode === 'MINOR_IRRIGATION'
-                          ? 'Upload Minor Irrigation CSV. Projects will be created or updated by NAME OF M.I.P, LATITUDE, LONGITUDE.'
-                          : deptCode === 'REVENUE_LAND'
-                            ? 'Upload Tahasil portfolio CSV. Organizations will be created/updated by TAHSIL_NAME (or OFFICE NAME), LATITUDE, LONGITUDE, and all additional attributes are saved to profile.'
-                            : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
+                          ? 'Upload WATCO/RWSS water supply CSV. Schemes will be created or updated by STATION NAME, LATITUDE, LONGITUDE.'
+                          : deptCode === 'MINOR_IRRIGATION'
+                            ? 'Upload Minor Irrigation CSV. Projects will be created or updated by NAME OF M.I.P, LATITUDE, LONGITUDE.'
+                            : deptCode === 'REVENUE_LAND'
+                              ? 'Upload Tahasil portfolio CSV. Organizations will be created/updated by TAHSIL_NAME (or OFFICE NAME), LATITUDE, LONGITUDE, and all additional attributes are saved to profile.'
+                              : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
               </p>
               <div className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center md:justify-between">
                 <button
@@ -3339,16 +3341,16 @@ export default function DepartmentAdminPage() {
                               : deptCode === 'ARCS'
                                 ? 'Society name'
                                 : deptCode === 'WATCO' || deptCode === 'WATCO_RWSS'
-                                ? 'Station Name'
-                                : deptCode === 'MINOR_IRRIGATION'
-                                  ? 'MIP Name'
-                                  : deptCode === 'IRRIGATION'
-                                    ? 'Work Name'
-                                    : deptCode === 'REVENUE_LAND'
-                                      ? 'Tahasil / parcel name'
-                                      : deptCode === 'AGRICULTURE'
-                                        ? 'Name of Office/Centre'
-                                        : 'AWC Name'}
+                                  ? 'Station Name'
+                                  : deptCode === 'MINOR_IRRIGATION'
+                                    ? 'MIP Name'
+                                    : deptCode === 'IRRIGATION'
+                                      ? 'Work Name'
+                                      : deptCode === 'REVENUE_LAND'
+                                        ? 'Tahasil / parcel name'
+                                        : deptCode === 'AGRICULTURE'
+                                          ? 'Name of Office/Centre'
+                                          : 'AWC Name'}
                       </th>
                       {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY' && deptCode !== 'ARCS' && deptCode !== 'WATCO_RWSS' && deptCode !== 'MINOR_IRRIGATION' && deptCode !== 'IRRIGATION' && deptCode !== 'REVENUE_LAND' && deptCode !== 'AGRICULTURE') && (
                         <>
@@ -4262,10 +4264,10 @@ export default function DepartmentAdminPage() {
                                       ag_photo_gallery_json: toJson(existingProfile?.ag_photo_gallery, '[]'),
                                       ag_full_address: v(
                                         existingProfile?.ag_full_address ??
-                                          o.address ??
-                                          [existingProfile?.block_ulb, existingProfile?.gp_ward, existingProfile?.village_locality]
-                                            .filter((x) => x != null && String(x).trim() !== '')
-                                            .join(', '),
+                                        o.address ??
+                                        [existingProfile?.block_ulb, existingProfile?.gp_ward, existingProfile?.village_locality]
+                                          .filter((x) => x != null && String(x).trim() !== '')
+                                          .join(', '),
                                       ),
                                       ag_helpdesk_phone: v(
                                         existingProfile?.ag_helpdesk_phone ?? existingProfile?.office_phone,
@@ -4603,6 +4605,7 @@ export default function DepartmentAdminPage() {
                                       health_location_line: v(p?.health_location_line),
                                       health_inst_head_message: v(p?.health_inst_head_message),
                                       health_inst_head_name: v(p?.health_inst_head_name),
+                                      health_inst_head_designation: v(p?.health_inst_head_designation),
                                       health_inst_head_photo: v(p?.health_inst_head_photo),
                                       health_inst_head_qualification: v(p?.health_inst_head_qualification),
                                       health_inst_head_experience: v(p?.health_inst_head_experience),
@@ -4659,47 +4662,47 @@ export default function DepartmentAdminPage() {
                               )}
                               {deptCode === 'REVENUE_LAND' && (
                                 <>
-                                <button
-                                  type="button"
-                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    setEditingRevenueTahasilId(o.id);
-                                    const existingProfile =
-                                      revenueProfiles[o.id] ||
-                                      ((await revenueLandApi.getProfile(o.id)) as
-                                        | Record<string, unknown>
-                                        | null);
-                                    const v = (x: unknown) =>
-                                      x != null && String(x).trim() !== '' ? String(x) : '';
-                                    const vals: Record<string, string> = {};
-                                    splitHeader(REVENUE_TAHASIL_OFFICE_CSV_HEADER).forEach((header) => {
-                                      const k = snakeFromHeader(header);
-                                      vals[k] = v(existingProfile?.[k]);
-                                    });
-                                    const tahsilNameKey = snakeFromHeader('TAHSIL_NAME');
-                                    const latKey = snakeFromHeader('LATITUDE');
-                                    const lngKey = snakeFromHeader('LONGITUDE');
-                                    if (!vals[tahsilNameKey]) vals[tahsilNameKey] = o.name;
-                                    if (!vals[latKey]) vals[latKey] = o.latitude != null ? String(o.latitude) : '';
-                                    if (!vals[lngKey]) vals[lngKey] = o.longitude != null ? String(o.longitude) : '';
+                                  <button
+                                    type="button"
+                                    className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      setEditingRevenueTahasilId(o.id);
+                                      const existingProfile =
+                                        revenueProfiles[o.id] ||
+                                        ((await revenueLandApi.getProfile(o.id)) as
+                                          | Record<string, unknown>
+                                          | null);
+                                      const v = (x: unknown) =>
+                                        x != null && String(x).trim() !== '' ? String(x) : '';
+                                      const vals: Record<string, string> = {};
+                                      splitHeader(REVENUE_TAHASIL_OFFICE_CSV_HEADER).forEach((header) => {
+                                        const k = snakeFromHeader(header);
+                                        vals[k] = v(existingProfile?.[k]);
+                                      });
+                                      const tahsilNameKey = snakeFromHeader('TAHSIL_NAME');
+                                      const latKey = snakeFromHeader('LATITUDE');
+                                      const lngKey = snakeFromHeader('LONGITUDE');
+                                      if (!vals[tahsilNameKey]) vals[tahsilNameKey] = o.name;
+                                      if (!vals[latKey]) vals[latKey] = o.latitude != null ? String(o.latitude) : '';
+                                      if (!vals[lngKey]) vals[lngKey] = o.longitude != null ? String(o.longitude) : '';
 
-                                    setRevenueTahasilFormValues(vals);
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                                  }}
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  type="button"
-                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    router.push(`/admin/dept/revenue-land/tahasil/${o.id}`);
-                                  }}
-                                >
-                                  View profile
-                                </button>
+                                      setRevenueTahasilFormValues(vals);
+                                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      router.push(`/admin/dept/revenue-land/tahasil/${o.id}`);
+                                    }}
+                                  >
+                                    View profile
+                                  </button>
                                 </>
                               )}
                               {deptCode === 'WATCO_RWSS' && (
