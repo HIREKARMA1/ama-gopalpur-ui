@@ -1320,6 +1320,16 @@ export function PsParentTeacherMeetingSection({ records }: { records: ParentTeac
 
 const EMPTY_FACULTY_SLOTS = 4;
 
+function facultyRowHasContent(f: Faculty): boolean {
+  return (
+    asString(f.name).trim() !== '' ||
+    asString(f.photo).trim() !== '' ||
+    asString(f.subject).trim() !== '' ||
+    asString(f.qualification).trim() !== '' ||
+    asString(f.designation).trim() !== ''
+  );
+}
+
 function todayKeyLocal(): string {
   const now = new Date();
   const y = now.getFullYear();
@@ -1334,14 +1344,32 @@ export function PsFacultySection({
   sectionTitle = 'Faculty',
   subjectLabel = 'Subject',
   showAttendance = true,
+  emptyStateMessage,
 }: {
   faculty: Faculty[];
   profile: Record<string, unknown>;
   sectionTitle?: string;
   subjectLabel?: string;
   showAttendance?: boolean;
+  /** When set and there are no non-empty faculty rows, show this text instead of placeholder cards. */
+  emptyStateMessage?: string;
 }) {
-  const list = (faculty.length ? faculty : Array.from({ length: EMPTY_FACULTY_SLOTS }, () => ({} as Faculty))).slice(0, 8);
+  const filledFaculty = faculty.filter(facultyRowHasContent);
+  if (emptyStateMessage && filledFaculty.length === 0) {
+    return (
+      <section className="py-2 md:py-4">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{sectionTitle}</h2>
+            </div>
+          </div>
+        </div>
+        <p className="mt-6 text-sm text-slate-600 sm:text-base">{emptyStateMessage}</p>
+      </section>
+    );
+  }
+  const list = (filledFaculty.length ? filledFaculty : Array.from({ length: EMPTY_FACULTY_SLOTS }, () => ({} as Faculty))).slice(0, 8);
   const desktopPageSize = 4;
   const desktopTotalPages = Math.max(1, Math.ceil(list.length / desktopPageSize));
   const [currentDesktopPage, setCurrentDesktopPage] = useState(0);
