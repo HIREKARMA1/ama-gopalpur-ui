@@ -320,7 +320,7 @@ export function MinorIrrigationPortfolioWebsite({
             {(activeRows.length ? activeRows : [['empty', EMPTY] as const]).map(([k, v]) => (
               <div key={k} className="rounded-xl border border-slate-200 bg-white p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
-                  {k === 'department' ? t('minor.field.department', language) : getMinorIrrigationProfileLabel(k, language)}
+                  {k === 'empty' ? '—' : getMinorIrrigationProfileLabel(k, language)}
                 </p>
                 <p className="mt-1 text-sm font-bold text-slate-900">{formatVal(v)}</p>
               </div>
