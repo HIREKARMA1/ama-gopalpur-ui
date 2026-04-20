@@ -185,6 +185,80 @@ function isEducationSchoolSubDept(value: string): value is EducationSchoolSubDep
   return (EDUCATION_SCHOOL_SUB_DEPTS as readonly string[]).includes(value);
 }
 
+/** ICDS AWC org table — labels match thead / row cells in this page. */
+const ICDS_TABLE_FILTER_COLUMNS: string[] = [
+  'AWC Name',
+  'ULB / Block',
+  'GP / Ward',
+  'Village',
+  'AWC ID',
+  'Building status',
+  'Latitude',
+  'Longitude',
+  'Student strength',
+  'CPDO name',
+  'CPDO contact',
+  'Supervisor name',
+  'Supervisor contact',
+  'AWW name',
+  'AWW contact',
+  'AWH name',
+  'AWH contact',
+  'Sector',
+  'LGD Code',
+];
+
+function getIcdsTableColumnValue(
+  o: Organization,
+  prof: CenterProfile | null | undefined,
+  column: string,
+): string {
+  const fb = (v: unknown) => (v != null && String(v).trim() !== '' ? String(v) : '');
+  const profRec = prof as Record<string, unknown> | null | undefined;
+  switch (column) {
+    case 'AWC Name':
+      return fb(o.name);
+    case 'ULB / Block':
+      return fb(o.attributes?.ulb_block ?? prof?.block_name);
+    case 'GP / Ward':
+      return fb(o.attributes?.gp_name ?? prof?.gram_panchayat);
+    case 'Village':
+      return fb(o.attributes?.ward_village ?? prof?.village_ward);
+    case 'AWC ID':
+      return fb(prof?.center_code);
+    case 'Building status':
+      return fb(profRec?.building_type);
+    case 'Latitude':
+      return o.latitude != null ? o.latitude.toFixed(6) : '';
+    case 'Longitude':
+      return o.longitude != null ? o.longitude.toFixed(6) : '';
+    case 'Student strength':
+      return fb(prof?.student_strength);
+    case 'CPDO name':
+      return fb(prof?.cpdo_name);
+    case 'CPDO contact':
+      return fb(prof?.cpdo_contact_no);
+    case 'Supervisor name':
+      return fb(profRec?.supervisor_name);
+    case 'Supervisor contact':
+      return fb(prof?.supervisor_contact_name);
+    case 'AWW name':
+      return fb(prof?.worker_name);
+    case 'AWW contact':
+      return fb(prof?.aww_contact_no);
+    case 'AWH name':
+      return fb(profRec?.helper_name);
+    case 'AWH contact':
+      return fb(prof?.awh_contact_no);
+    case 'Sector':
+      return fb(o.attributes?.sector ?? prof?.sector);
+    case 'LGD Code':
+      return fb(o.attributes?.lgd_code);
+    default:
+      return '';
+  }
+}
+
 export default function DepartmentAdminPage() {
   const router = useRouter();
   const { language } = useLanguage();
@@ -246,6 +320,8 @@ export default function DepartmentAdminPage() {
   const [hasMore, setHasMore] = useState(true);
   const [educationTableFilterColumn, setEducationTableFilterColumn] = useState<string>('School Name');
   const [educationTableSearchText, setEducationTableSearchText] = useState<string>('');
+  const [icdsTableFilterColumn, setIcdsTableFilterColumn] = useState<string>('AWC Name');
+  const [icdsTableSearchText, setIcdsTableSearchText] = useState<string>('');
 
   const [editingHealthId, setEditingHealthId] = useState<number | null>(null);
   const emptyHealthOrg = () => ({
@@ -467,9 +543,30 @@ export default function DepartmentAdminPage() {
     );
   }, [deptCode, educationSubDept, educationTableColumns]);
 
+  const icdsTableColumns = useMemo(() => {
+    if (deptCode !== 'ICDS' && deptCode !== 'AWC_ICDS') return [] as string[];
+    return ICDS_TABLE_FILTER_COLUMNS;
+  }, [deptCode]);
+
+  useEffect(() => {
+    if ((deptCode !== 'ICDS' && deptCode !== 'AWC_ICDS') || !icdsTableColumns.length) return;
+    setIcdsTableFilterColumn((prev) =>
+      icdsTableColumns.includes(prev) ? prev : icdsTableColumns[0]!,
+    );
+  }, [deptCode, icdsTableColumns]);
+
   const organizationsForTable = useMemo(() => {
     const base =
       deptCode === 'REVENUE_LAND' ? orgs.filter((o) => o.sub_department === 'TAHASIL_OFFICE') : orgs;
+
+    if (deptCode === 'ICDS' || deptCode === 'AWC_ICDS') {
+      const q = icdsTableSearchText.trim().toLowerCase();
+      if (!q) return base;
+      return base.filter((o) => {
+        const prof = orgProfiles[o.id];
+        return getIcdsTableColumnValue(o, prof, icdsTableFilterColumn).toLowerCase().includes(q);
+      });
+    }
 
     if (deptCode !== 'EDUCATION') return base;
     const q = educationTableSearchText.trim().toLowerCase();
@@ -547,6 +644,9 @@ export default function DepartmentAdminPage() {
     educationSubDept,
     educationTableFilterColumn,
     educationTableSearchText,
+    orgProfiles,
+    icdsTableFilterColumn,
+    icdsTableSearchText,
   ]);
 
   useEffect(() => {
@@ -3317,6 +3417,37 @@ export default function DepartmentAdminPage() {
                       placeholder={
                         educationTableFilterColumn
                           ? `Type value for ${educationTableFilterColumn}`
+                          : 'Type value to search'
+                      }
+                      className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+              {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS') && (
+                <div className="mt-3 grid gap-2 rounded border border-border bg-background-muted/30 p-2 text-xs md:grid-cols-[220px_1fr]">
+                  <div className="space-y-1">
+                    <label className="block text-[11px] text-text-muted">Filter column</label>
+                    <select
+                      value={icdsTableFilterColumn}
+                      onChange={(e) => setIcdsTableFilterColumn(e.target.value)}
+                      className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
+                    >
+                      {icdsTableColumns.map((col) => (
+                        <option key={col} value={col}>
+                          {col}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[11px] text-text-muted">Search value</label>
+                    <input
+                      value={icdsTableSearchText}
+                      onChange={(e) => setIcdsTableSearchText(e.target.value)}
+                      placeholder={
+                        icdsTableFilterColumn
+                          ? `Type value for ${icdsTableFilterColumn}`
                           : 'Type value to search'
                       }
                       className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
