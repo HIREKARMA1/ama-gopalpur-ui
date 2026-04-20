@@ -74,13 +74,7 @@ const HEALTH_TYPE_KEYS: Record<string, MessageKey> = {
   OTHER: 'map.health.other',
 };
 
-const WATCO_STATION_TYPES = [
-  'MEGA ESR',
-  'EXISTING ESR',
-  'IBPS PUMP HOUSE',
-  'INTAKE WELL',
-  'PRODUCTION WELL',
-] as const;
+const WATCO_LEGEND_TYPES = ['ESR', 'SVS', 'GSR', 'PUMP HOUSE'] as const;
 
 const ROAD_TYPE_LABEL_KEYS: Record<RoadTypeKey, MessageKey> = {
   NH: 'roads.type.nh',
@@ -89,21 +83,29 @@ const ROAD_TYPE_LABEL_KEYS: Record<RoadTypeKey, MessageKey> = {
   OTHER: 'roads.type.other',
 };
 
-const WATCO_TYPE_LABEL_KEYS: Record<(typeof WATCO_STATION_TYPES)[number], MessageKey> = {
-  'MEGA ESR': 'watco.type.megaEsr',
-  'EXISTING ESR': 'watco.type.existingEsr',
-  'IBPS PUMP HOUSE': 'watco.type.ibpsPumpHouse',
-  'INTAKE WELL': 'watco.type.intakeWell',
-  'PRODUCTION WELL': 'watco.type.productionWell',
+const WATCO_MARKER_HEX: Record<(typeof WATCO_LEGEND_TYPES)[number], string> = {
+  ESR: '#0ea5e9',
+  SVS: '#22c55e',
+  GSR: '#6366f1',
+  'PUMP HOUSE': '#f97316',
 };
 
-const WATCO_MARKER_HEX: Record<(typeof WATCO_STATION_TYPES)[number], string> = {
-  'MEGA ESR': '#0ea5e9',
-  'EXISTING ESR': '#22c55e',
-  'IBPS PUMP HOUSE': '#f97316',
-  'INTAKE WELL': '#6366f1',
-  'PRODUCTION WELL': '#e11d48',
+const WATCO_LEGEND_LABEL_KEYS: Record<(typeof WATCO_LEGEND_TYPES)[number], MessageKey> = {
+  ESR: 'watco.legend.esr',
+  SVS: 'watco.legend.svs',
+  GSR: 'watco.legend.gsr',
+  'PUMP HOUSE': 'watco.legend.pumpHouse',
 };
+
+function normalizeWatcoLegendType(raw: string | null | undefined): (typeof WATCO_LEGEND_TYPES)[number] | null {
+  const v = (raw || '').trim().toUpperCase();
+  if (!v) return null;
+  if (v.includes('PUMP')) return 'PUMP HOUSE';
+  if (v.includes('GSR') || v.includes('GLR')) return 'GSR';
+  if (v.includes('SVS')) return 'SVS';
+  if (v.includes('ESR')) return 'ESR';
+  return null;
+}
 
 const EDUCATION_SUB_DEPT_DOT_COLORS: Record<string, string> = {
   PS: '#ea4335',
@@ -550,10 +552,10 @@ export function ConstituencyMap({
   const watcoStationCounts = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'WATCO_RWSS') return {} as Record<string, number>;
     const acc: Record<string, number> = {};
-    for (const t of WATCO_STATION_TYPES) acc[t.toUpperCase()] = 0;
+    for (const t of WATCO_LEGEND_TYPES) acc[t] = 0;
     for (const org of organizationsByBlock) {
-      const st = ((org.attributes?.station_type as string) || '').trim().toUpperCase();
-      if (st && acc[st] !== undefined) acc[st] += 1;
+      const stationType = normalizeWatcoLegendType(org.attributes?.station_type as string);
+      if (stationType) acc[stationType] += 1;
     }
     return acc;
   }, [organizationsByBlock, selectedDepartmentCode]);
@@ -865,9 +867,7 @@ export function ConstituencyMap({
           });
         } else if (code === 'WATCO_RWSS') {
           result = result.filter(
-            (org) =>
-              ((org.attributes?.station_type as string) || '').toUpperCase() ===
-              legendFilterType,
+            (org) => normalizeWatcoLegendType(org.attributes?.station_type as string) === legendFilterType,
           );
         } else {
           result = result.filter((org) => org.type === legendFilterType);
@@ -1597,11 +1597,10 @@ export function ConstituencyMap({
       )}
       {selectedDepartmentCode?.toUpperCase() === 'WATCO_RWSS' && (
         <MapLegendPanel className="md:max-w-[260px]">
-          {WATCO_STATION_TYPES.map((type) => {
-            const value = type.toUpperCase();
+          {WATCO_LEGEND_TYPES.map((type) => {
+            const value = type;
             const isSelected = legendFilterType === value;
-            const labelKey = WATCO_TYPE_LABEL_KEYS[type];
-            const label = labelKey ? t(labelKey, language) : type;
+            const label = t(WATCO_LEGEND_LABEL_KEYS[type], language);
             return (
               <MapLegendRow
                 key={type}
