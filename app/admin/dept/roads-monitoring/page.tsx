@@ -274,10 +274,11 @@ export default function RoadsMonitoringPage() {
   }, [router]);
 
   useEffect(() => {
-    if (!me?.department_id || !isRoads) return;
+    const departmentId = me?.department_id;
+    if (!departmentId || !isRoads) return;
     const loadRoads = async () => {
       try {
-        const list = await organizationsApi.listByDepartment(me.department_id, { skip: 0, limit: 1000 });
+        const list = await organizationsApi.listByDepartment(departmentId, { skip: 0, limit: 1000 });
         setRoads(list);
       } catch {
         setRoads([]);
@@ -334,7 +335,8 @@ export default function RoadsMonitoringPage() {
   };
 
   const createRoadOrganization = async (row: RoadCsvRow) => {
-    if (!me?.department_id) throw new Error('Department not set for this user');
+    const departmentId = me?.department_id;
+    if (!departmentId) throw new Error('Department not set for this user');
 
     const sLat = toNumberOrNull(row.startLat);
     const sLng = toNumberOrNull(row.startLng);
@@ -347,7 +349,7 @@ export default function RoadsMonitoringPage() {
       sLng != null && eLng != null ? Number(((sLng + eLng) / 2).toFixed(6)) : sLng ?? eLng ?? null;
 
     await organizationsApi.create({
-      department_id: me.department_id,
+      department_id: departmentId,
       name: row.roadName,
       type: 'OTHER',
       latitude: centerLat,
@@ -420,7 +422,8 @@ export default function RoadsMonitoringPage() {
     setSuccess(null);
     setBulkStatus('Uploading started...');
     try {
-      if (!me?.department_id) {
+      const departmentId = me?.department_id;
+      if (!departmentId) {
         setError('Department not set for this admin user.');
         setBulkStatus('Upload aborted: department not set.');
         return;
@@ -438,7 +441,7 @@ export default function RoadsMonitoringPage() {
         return;
       }
 
-      const existing = await organizationsApi.listByDepartment(me.department_id, {
+      const existing = await organizationsApi.listByDepartment(departmentId, {
         skip: 0,
         limit: 1000,
       });
@@ -497,7 +500,8 @@ export default function RoadsMonitoringPage() {
   };
 
   const handleImportFromMapJson = async () => {
-    if (!me?.department_id) {
+    const departmentId = me?.department_id;
+    if (!departmentId) {
       setError('Department not set for this admin user.');
       return;
     }
@@ -506,7 +510,7 @@ export default function RoadsMonitoringPage() {
     setError(null);
     setSuccess(null);
     try {
-      const existing = await organizationsApi.listByDepartment(me.department_id, { skip: 0, limit: 1000 });
+      const existing = await organizationsApi.listByDepartment(departmentId, { skip: 0, limit: 1000 });
       const existingKeys = new Set(
         existing.map((org) => {
           const attrs = (org.attributes ?? {}) as Record<string, unknown>;
@@ -562,7 +566,7 @@ export default function RoadsMonitoringPage() {
 
           try {
             await organizationsApi.create({
-              department_id: me.department_id,
+              department_id: departmentId,
               name: roadName,
               type: 'OTHER',
               latitude: centerLat,
