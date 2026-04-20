@@ -555,6 +555,10 @@ export type MessageKey =
   | 'watco.type.ibpsPumpHouse'
   | 'watco.type.intakeWell'
   | 'watco.type.productionWell'
+  | 'watco.legend.esr'
+  | 'watco.legend.svs'
+  | 'watco.legend.gsr'
+  | 'watco.legend.pumpHouse'
   | 'irrigation.category.tank'
   | 'irrigation.category.checkDam'
   | 'irrigation.category.anicut'
@@ -1188,6 +1192,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'watco.type.ibpsPumpHouse': { en: 'IBPS PUMP HOUSE', or: 'IBPS ପମ୍ପ ହାଉସ୍' },
   'watco.type.intakeWell': { en: 'INTAKE WELL', or: 'ଇଣ୍ଟେକ୍ ୱେଲ୍' },
   'watco.type.productionWell': { en: 'PRODUCTION WELL', or: 'ପ୍ରଡକ୍ସନ୍ ୱେଲ୍' },
+  'watco.legend.esr': { en: 'ESR', or: 'ଇ.ଏସ.ଆର୍' },
+  'watco.legend.svs': { en: 'SVS', or: 'ଏସ୍.ଭି.ଏସ୍' },
+  'watco.legend.gsr': { en: 'GSR', or: 'ଜି.ଏସ.ଆର୍' },
+  'watco.legend.pumpHouse': { en: 'PUMP HOUSE', or: 'ପମ୍ପ ହାଉସ୍' },
   'irrigation.category.tank': { en: 'Tank', or: 'ଟ୍ୟାଙ୍କ' },
   'irrigation.category.checkDam': { en: 'Check Dam', or: 'ଚେକ୍ ଡ୍ୟାମ୍' },
   'irrigation.category.anicut': { en: 'Anicut', or: 'ଆନିକଟ୍' },
