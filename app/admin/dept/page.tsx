@@ -581,6 +581,12 @@ export default function DepartmentAdminPage() {
     );
   }, [deptCode]);
 
+  useEffect(() => {
+    if (deptCode === 'ROADS') {
+      router.replace('/admin/dept/roads-monitoring');
+    }
+  }, [deptCode, router]);
+
   const organizationsForTable = useMemo(() => {
     const base =
       deptCode === 'REVENUE_LAND' ? orgs.filter((o) => o.sub_department === 'TAHASIL_OFFICE') : orgs;
@@ -1122,6 +1128,11 @@ export default function DepartmentAdminPage() {
                   { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
                   { href: '/admin/dept/water-monitoring', labelKey: 'water.monitoring.title' },
                 ]
+                : deptCode === 'ROADS'
+                  ? [
+                    { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
+                    { href: '/admin/dept/roads-monitoring', labelKey: 'super.sidebar.dashboard' },
+                  ]
                 : deptCode === 'REVENUE_LAND'
                   ? [
                     { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },

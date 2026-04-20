@@ -20,13 +20,54 @@ import {
   Organization,
 } from '../services/api';
 
-const ROADS_DATA_PATHS = [
-  '/data/roads/kukudakhandi.json',
-  '/data/roads/berhampur_urban.json',
-  '/data/roads/rangailunda.json',
-] as const;
-
 const DRAINAGE_DATA_PATHS = ['/data/drainage/bahana.json', 'data/drainage/bahana.json'] as const;
+
+function parsePathCoordinates(raw: string | null | undefined): [number, number][] {
+  if (!raw || !raw.trim()) return [];
+  return raw
+    .split(';')
+    .map((pair) => pair.trim())
+    .filter(Boolean)
+    .map((pair) => {
+      const [lngStr = '', latStr = ''] = pair.split(/\s+/);
+      const lng = Number(lngStr);
+      const lat = Number(latStr);
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
+      return [lng, lat] as [number, number];
+    })
+    .filter((c): c is [number, number] => Array.isArray(c) && c.length === 2);
+}
+
+function orgToRoadFeature(org: Organization): RoadFeature | null {
+  const attrs = (org.attributes ?? {}) as Record<string, unknown>;
+  const pathCoordinates = parsePathCoordinates(String(attrs.path_coordinates ?? ''));
+  const startLat = Number(attrs.start_lat ?? NaN);
+  const startLng = Number(attrs.start_lng ?? NaN);
+  const endLat = Number(attrs.end_lat ?? NaN);
+  const endLng = Number(attrs.end_lng ?? NaN);
+
+  const fallbackCoords: [number, number][] =
+    Number.isFinite(startLat) &&
+    Number.isFinite(startLng) &&
+    Number.isFinite(endLat) &&
+    Number.isFinite(endLng)
+      ? [[startLng, startLat], [endLng, endLat]]
+      : [];
+
+  const coordinates = pathCoordinates.length >= 2 ? pathCoordinates : fallbackCoords;
+  if (coordinates.length < 2) return null;
+
+  return {
+    type: 'Feature',
+    properties: {
+      name: org.name,
+      roadName: org.name,
+      code: String(attrs.road_code ?? ''),
+      block: String(attrs.block ?? ''),
+    },
+    geometry: { type: 'LineString', coordinates },
+  };
+}
 
 export default function HomePage() {
   const router = useRouter();
@@ -100,16 +141,12 @@ export default function HomePage() {
 
     setLoading(true);
     if (isRoads) {
-      Promise.all(
-        ROADS_DATA_PATHS.map((path) =>
-          fetch(path).then((r) => (r.ok ? r.json() : { type: 'FeatureCollection', features: [] }))
-        )
-      )
-        .then((collections) => {
-          const all: RoadFeature[] = [];
-          collections.forEach((fc) => {
-            if (fc?.features?.length) all.push(...fc.features);
-          });
+      organizationsApi
+        .listByDepartment(dept.id, { limit: 1000 })
+        .then((data) => {
+          const all = data
+            .map((org) => orgToRoadFeature(org))
+            .filter((feature): feature is RoadFeature => feature != null);
           setRoads(all);
           setDrains([]);
           setOrganizations([]);
