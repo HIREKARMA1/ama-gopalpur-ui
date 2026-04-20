@@ -208,6 +208,11 @@ const ICDS_TABLE_FILTER_COLUMNS: string[] = [
   'LGD Code',
 ];
 
+const WATCO_TABLE_FILTER_COLUMNS: string[] = [
+  'Station Name',
+  ...splitHeader(WATCO_CSV_HEADER).filter((h) => h !== 'STATION NAME'),
+];
+
 function getIcdsTableColumnValue(
   o: Organization,
   prof: CenterProfile | null | undefined,
@@ -257,6 +262,17 @@ function getIcdsTableColumnValue(
     default:
       return '';
   }
+}
+
+function getWatcoTableColumnValue(
+  o: Organization,
+  profile: Record<string, unknown> | undefined,
+  column: string,
+): string {
+  if (column === 'Station Name') return o.name ?? '';
+  const key = snakeFromHeader(column);
+  const val = profile?.[key];
+  return val != null && String(val).trim() !== '' ? String(val) : '';
 }
 
 export default function DepartmentAdminPage() {
@@ -322,6 +338,8 @@ export default function DepartmentAdminPage() {
   const [educationTableSearchText, setEducationTableSearchText] = useState<string>('');
   const [icdsTableFilterColumn, setIcdsTableFilterColumn] = useState<string>('AWC Name');
   const [icdsTableSearchText, setIcdsTableSearchText] = useState<string>('');
+  const [watcoTableFilterColumn, setWatcoTableFilterColumn] = useState<string>('Station Name');
+  const [watcoTableSearchText, setWatcoTableSearchText] = useState<string>('');
 
   const [editingHealthId, setEditingHealthId] = useState<number | null>(null);
   const emptyHealthOrg = () => ({
@@ -556,6 +574,13 @@ export default function DepartmentAdminPage() {
     );
   }, [deptCode, icdsTableColumns]);
 
+  useEffect(() => {
+    if (deptCode !== 'WATCO_RWSS' || !WATCO_TABLE_FILTER_COLUMNS.length) return;
+    setWatcoTableFilterColumn((prev) =>
+      WATCO_TABLE_FILTER_COLUMNS.includes(prev) ? prev : WATCO_TABLE_FILTER_COLUMNS[0]!,
+    );
+  }, [deptCode]);
+
   const organizationsForTable = useMemo(() => {
     const base =
       deptCode === 'REVENUE_LAND' ? orgs.filter((o) => o.sub_department === 'TAHASIL_OFFICE') : orgs;
@@ -569,6 +594,14 @@ export default function DepartmentAdminPage() {
       });
     }
 
+    if (deptCode === 'WATCO_RWSS') {
+      const q = watcoTableSearchText.trim().toLowerCase();
+      if (!q) return base;
+      return base.filter((o) => {
+        const wp = waterProfiles[o.id] as Record<string, unknown> | undefined;
+        return getWatcoTableColumnValue(o, wp, watcoTableFilterColumn).toLowerCase().includes(q);
+      });
+    }
     if (deptCode !== 'EDUCATION') return base;
     const q = educationTableSearchText.trim().toLowerCase();
     if (!q) return base;
@@ -646,6 +679,9 @@ export default function DepartmentAdminPage() {
     educationTableFilterColumn,
     educationTableSearchText,
     orgProfiles,
+    waterProfiles,
+    watcoTableFilterColumn,
+    watcoTableSearchText,
     icdsTableFilterColumn,
     icdsTableSearchText,
   ]);
@@ -3510,6 +3546,37 @@ export default function DepartmentAdminPage() {
                       placeholder={
                         icdsTableFilterColumn
                           ? `Type value for ${icdsTableFilterColumn}`
+                          : 'Type value to search'
+                      }
+                      className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+              {deptCode === 'WATCO_RWSS' && (
+                <div className="mt-3 grid gap-2 rounded border border-border bg-background-muted/30 p-2 text-xs md:grid-cols-[220px_1fr]">
+                  <div className="space-y-1">
+                    <label className="block text-[11px] text-text-muted">Filter column</label>
+                    <select
+                      value={watcoTableFilterColumn}
+                      onChange={(e) => setWatcoTableFilterColumn(e.target.value)}
+                      className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
+                    >
+                      {WATCO_TABLE_FILTER_COLUMNS.map((col) => (
+                        <option key={col} value={col}>
+                          {col}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[11px] text-text-muted">Search value</label>
+                    <input
+                      value={watcoTableSearchText}
+                      onChange={(e) => setWatcoTableSearchText(e.target.value)}
+                      placeholder={
+                        watcoTableFilterColumn
+                          ? `Type value for ${watcoTableFilterColumn}`
                           : 'Type value to search'
                       }
                       className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
