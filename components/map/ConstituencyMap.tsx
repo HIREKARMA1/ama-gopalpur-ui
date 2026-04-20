@@ -9,7 +9,7 @@ import {
   Polyline,
   Polygon,
 } from '@react-google-maps/api';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import {
   GOPALPUR_BOUNDS,
   GOPALPUR_CENTER,
@@ -319,6 +319,9 @@ export function ConstituencyMap({
   /** When set, only show drain polylines of this kind (Drainage legend). */
   const [drainKindFilter, setDrainKindFilter] = useState<DrainLineKind | null>(null);
   const [selectedBlockFilter, setSelectedBlockFilter] = useState<string>('ALL');
+  const [isStreetViewOpen, setIsStreetViewOpen] = useState(false);
+  const [streetViewPosition, setStreetViewPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [streetViewMessage, setStreetViewMessage] = useState<string | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const mapWrapRef = useRef<HTMLDivElement>(null);
   /** Restore pan/zoom after remounting the map (polyline legend filters force remount to clear ghost overlays). */
@@ -629,6 +632,23 @@ export function ConstituencyMap({
       }),
     [roads]
   );
+
+  const selectedRoadStreetViewPosition = useMemo(() => {
+    if (!selectedRoad) return null;
+    const coords = selectedRoad.geometry?.coordinates ?? [];
+    if (!coords.length) return null;
+    const mid = coords[Math.floor(coords.length / 2)];
+    if (!mid) return null;
+    const [lng, lat] = mid;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return { lat, lng };
+  }, [selectedRoad]);
+
+  const streetViewEmbedUrl = useMemo(() => {
+    if (!streetViewPosition) return '';
+    const { lat, lng } = streetViewPosition;
+    return `https://www.google.com/maps?q=&layer=c&cbll=${lat},${lng}&cbp=11,0,0,0,0&output=svembed`;
+  }, [streetViewPosition]);
 
   /** Drain path as Google Maps LatLng[] (GeoJSON is [lng, lat]) */
   const drainPaths = useMemo(
@@ -960,6 +980,38 @@ export function ConstituencyMap({
     [mapInstance]
   );
 
+  const openRoadStreetView = useCallback(() => {
+    if (!selectedRoadStreetViewPosition) {
+      setStreetViewMessage('Street View is not available for this road.');
+      return;
+    }
+    setStreetViewMessage(null);
+    setStreetViewPosition(selectedRoadStreetViewPosition);
+    setIsStreetViewOpen(true);
+  }, [selectedRoadStreetViewPosition]);
+
+  useEffect(() => {
+    if (!isStreetViewOpen || !streetViewPosition) return;
+    if (typeof window === 'undefined' || !(window as any).google?.maps) return;
+    const sv = new (window as any).google.maps.StreetViewService();
+    sv.getPanorama(
+      {
+        location: streetViewPosition,
+        radius: 100,
+        source: (window as any).google.maps.StreetViewSource.OUTDOOR,
+      },
+      (data: any, status: any) => {
+        if (status === (window as any).google.maps.StreetViewStatus.OK && data?.location?.latLng) {
+          const latLng = data.location.latLng;
+          setStreetViewPosition({ lat: latLng.lat(), lng: latLng.lng() });
+          setStreetViewMessage(null);
+          return;
+        }
+        setStreetViewMessage('Street View imagery is unavailable near this road.');
+      },
+    );
+  }, [isStreetViewOpen, streetViewPosition]);
+
   if (!apiKey) {
     return (
       <div className="relative flex h-full min-h-[200px] w-full items-center justify-center bg-background-muted">
@@ -1275,6 +1327,10 @@ export function ConstituencyMap({
                       </>
                     ) : undefined
                   }
+                  action={{
+                    label: 'Street View',
+                    onClick: openRoadStreetView,
+                  }}
                 />
               </InfoWindow>
             );
@@ -1370,6 +1426,33 @@ export function ConstituencyMap({
           fullscreenLabelKey="map.controls.fullscreen"
         />
       </div>
+      {isStreetViewOpen && streetViewPosition && (
+        <div className="fixed inset-0 z-[2000] bg-black">
+          <button
+            type="button"
+            onClick={() => setIsStreetViewOpen(false)}
+            className="absolute right-[10px] top-16 z-[2010] flex h-10 w-10 items-center justify-center rounded-sm border border-black/10 bg-[#3a3d40] text-white transition-colors hover:bg-[#2f3133]"
+            aria-label="Close street view"
+            title="Close"
+          >
+            <X size={16} strokeWidth={2.5} />
+          </button>
+          {streetViewMessage ? (
+            <div className="flex h-full items-center justify-center px-4 text-center text-sm text-white">
+              {streetViewMessage}
+            </div>
+          ) : (
+            <iframe
+              title="Road street view"
+              src={streetViewEmbedUrl}
+              className="h-full w-full border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
+          )}
+        </div>
+      )}
       {selectedDepartmentCode?.toUpperCase() === 'EDUCATION' && (
         <MapLegendPanel className="md:max-w-[300px]">
           {Object.keys(EDUCATION_SUB_DEPT_LABELS).map((type) => {
