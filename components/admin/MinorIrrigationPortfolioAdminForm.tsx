@@ -5,6 +5,7 @@ import { compressImage } from '../../lib/imageCompression';
 import { organizationsApi } from '../../services/api';
 
 type MinorIrrigationPortfolioFormFields = Record<string, string>;
+type UploadAssetFn = (id: number, file: File, assetType: string) => Promise<{ url: string }>;
 
 export const MINOR_IRRIGATION_PORTFOLIO_EMPTY_FORM: MinorIrrigationPortfolioFormFields = {
   // Hero / identity
@@ -62,10 +63,15 @@ function rowsToJson(rows: Record<string, unknown>[]): string {
   return JSON.stringify(rows);
 }
 
-async function uploadAsset(orgId: number, file: File, assetType: string): Promise<string> {
+async function uploadAsset(
+  orgId: number,
+  file: File,
+  assetType: string,
+  uploadAssetApi: UploadAssetFn,
+): Promise<string> {
   if (file.size > MAX_UPLOAD_BYTES) throw new Error('Each image should be under 1 MB.');
   const prepared = await compressImage(file, { maxSizeMB: 1, maxWidth: 1920 });
-  const { url } = await organizationsApi.uploadMinorIrrigationPortfolioAsset(orgId, prepared, assetType);
+  const { url } = await uploadAssetApi(orgId, prepared, assetType);
   return url;
 }
 
@@ -73,12 +79,14 @@ function ImgSlot({
   label,
   organizationId,
   assetType,
+  uploadAssetApi,
   url,
   onUrl,
 }: {
   label: string;
   organizationId: number | null;
   assetType: string;
+  uploadAssetApi: UploadAssetFn;
   url: string;
   onUrl: (v: string) => void;
 }) {
@@ -98,13 +106,25 @@ function ImgSlot({
           setBusy(true);
           setErr(null);
           try {
-            onUrl(await uploadAsset(organizationId, f, assetType));
+            onUrl(await uploadAsset(organizationId, f, assetType, uploadAssetApi));
           } catch (ex: unknown) {
-            setErr(ex instanceof Error ? ex.message : 'Upload failed');
+            const msg = ex instanceof Error ? ex.message : 'Upload failed';
+            if (/minor irrigation|irrigation/i.test(msg)) {
+              setErr('Image upload is not enabled for this department. Paste an image URL below.');
+            } else {
+              setErr(msg);
+            }
           } finally {
             setBusy(false);
           }
         }}
+      />
+      <input
+        type="url"
+        className="w-full rounded border border-border px-2 py-1 text-[11px]"
+        placeholder="Or paste image URL"
+        value={url}
+        onChange={(e) => onUrl(e.target.value)}
       />
       {err ? <p className="text-[10px] text-red-600">{err}</p> : null}
       {url ? <img src={url} alt="" className="h-14 w-14 rounded border border-border object-cover" /> : null}
@@ -203,11 +223,13 @@ export function MinorIrrigationPortfolioAdminForm({
   form,
   setForm,
   existingProfile,
+  uploadAssetApi = organizationsApi.uploadMinorIrrigationPortfolioAsset,
 }: {
   organizationId: number | null;
   form: MinorIrrigationPortfolioFormFields;
   setForm: Dispatch<SetStateAction<MinorIrrigationPortfolioFormFields>>;
   existingProfile?: Record<string, unknown>;
+  uploadAssetApi?: UploadAssetFn;
 }) {
   const f = useMemo(() => ({ ...MINOR_IRRIGATION_PORTFOLIO_EMPTY_FORM, ...form }) as MinorIrrigationPortfolioFormFields, [form]);
   const keyAdminRows = useMemo(() => parseRows(f.minor_key_admin_cards_json), [f.minor_key_admin_cards_json]);
@@ -233,6 +255,7 @@ export function MinorIrrigationPortfolioAdminForm({
         { id: 'keyAdmins', label: 'Key admin contacts' },
         { id: 'facilities', label: 'Facilities' },
         { id: 'team', label: 'Team' },
+        { id: 'staff', label: 'TS & NTS staff' },
         { id: 'contact', label: 'Contact' },
         { id: 'gallery', label: 'Gallery' },
       ] as const,
@@ -312,6 +335,7 @@ export function MinorIrrigationPortfolioAdminForm({
                 label="Hero image 1"
                 organizationId={organizationId}
                 assetType="minor_hero_slide"
+                uploadAssetApi={uploadAssetApi}
                 url={f.minor_hero_1}
                 onUrl={(v) => patch({ minor_hero_1: v })}
               />
@@ -319,6 +343,7 @@ export function MinorIrrigationPortfolioAdminForm({
                 label="Hero image 2"
                 organizationId={organizationId}
                 assetType="minor_hero_slide"
+                uploadAssetApi={uploadAssetApi}
                 url={f.minor_hero_2}
                 onUrl={(v) => patch({ minor_hero_2: v })}
               />
@@ -326,6 +351,7 @@ export function MinorIrrigationPortfolioAdminForm({
                 label="Hero image 3"
                 organizationId={organizationId}
                 assetType="minor_hero_slide"
+                uploadAssetApi={uploadAssetApi}
                 url={f.minor_hero_3}
                 onUrl={(v) => patch({ minor_hero_3: v })}
               />
@@ -356,6 +382,7 @@ export function MinorIrrigationPortfolioAdminForm({
                   label="Campus / about image"
                   organizationId={organizationId}
                   assetType="minor_campus_image"
+                  uploadAssetApi={uploadAssetApi}
                   url={f.minor_campus_image}
                   onUrl={(v) => patch({ minor_campus_image: v })}
                 />
@@ -394,6 +421,7 @@ export function MinorIrrigationPortfolioAdminForm({
                   label="Leader photo"
                   organizationId={organizationId}
                   assetType="minor_inst_head_photo"
+                  uploadAssetApi={uploadAssetApi}
                   url={f.minor_inst_head_photo}
                   onUrl={(v) => patch({ minor_inst_head_photo: v })}
                 />
@@ -449,6 +477,7 @@ export function MinorIrrigationPortfolioAdminForm({
                     label="Photo"
                     organizationId={organizationId}
                     assetType="minor_key_admin_photo"
+                    uploadAssetApi={uploadAssetApi}
                     url={row.image || ''}
                     onUrl={(v) => {
                       const n = [...arr];
@@ -526,6 +555,7 @@ export function MinorIrrigationPortfolioAdminForm({
                       label="Cover"
                       organizationId={organizationId}
                       assetType="minor_facility_cover"
+                      uploadAssetApi={uploadAssetApi}
                       url={row.image || ''}
                       onUrl={(v) => {
                         const n = [...arr];
@@ -589,6 +619,7 @@ export function MinorIrrigationPortfolioAdminForm({
                     label="Photo"
                     organizationId={organizationId}
                     assetType="minor_team_photo"
+                    uploadAssetApi={uploadAssetApi}
                     url={row.photo || ''}
                     onUrl={(v) => {
                       const n = [...arr];
@@ -651,6 +682,94 @@ export function MinorIrrigationPortfolioAdminForm({
                 onClick={() => patch({ minor_faculty_cards_json: rowsToJson([...teamRows, {}]) })}
               >
                 + Add team member
+              </button>
+            </div>
+          </SectionBox>
+        </PortfolioSectionPanel>
+
+        <PortfolioSectionPanel sectionId="staff" activeSection={activeSection}>
+          <SectionBox id="minor-portfolio-staff" title="TS & NTS staff">
+            <div className="space-y-2">
+              {(staffRows.length ? staffRows : [{}]).map((row, i, arr) => (
+                <div
+                  key={i}
+                  className="grid min-w-0 gap-2 overflow-x-auto rounded border border-border p-2 sm:grid-cols-[repeat(6,minmax(0,1fr))_auto] sm:items-end"
+                >
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Staff name"
+                    value={row.staff_name || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, staff_name: e.target.value };
+                      patch({ minor_staff_rows_json: rowsToJson(n) });
+                    }}
+                  />
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Category"
+                    value={row.category || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, category: e.target.value };
+                      patch({ minor_staff_rows_json: rowsToJson(n) });
+                    }}
+                  />
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Role / designation"
+                    value={row.role_designation || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, role_designation: e.target.value };
+                      patch({ minor_staff_rows_json: rowsToJson(n) });
+                    }}
+                  />
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Department"
+                    value={row.department || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, department: e.target.value };
+                      patch({ minor_staff_rows_json: rowsToJson(n) });
+                    }}
+                  />
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Contact number"
+                    value={row.contact_number || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, contact_number: e.target.value };
+                      patch({ minor_staff_rows_json: rowsToJson(n) });
+                    }}
+                  />
+                  <input
+                    className="rounded border border-border px-2 py-1"
+                    placeholder="Email"
+                    value={row.email || ''}
+                    onChange={(e) => {
+                      const n = [...arr];
+                      n[i] = { ...row, email: e.target.value };
+                      patch({ minor_staff_rows_json: rowsToJson(n) });
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="text-[10px] text-red-600"
+                    onClick={() => patch({ minor_staff_rows_json: rowsToJson(arr.filter((_, j) => j !== i)) })}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="rounded border border-border px-2 py-1 text-[11px]"
+                onClick={() => patch({ minor_staff_rows_json: rowsToJson([...staffRows, {}]) })}
+              >
+                + Add staff row
               </button>
             </div>
           </SectionBox>
@@ -719,6 +838,7 @@ export function MinorIrrigationPortfolioAdminForm({
                     label="Image"
                     organizationId={organizationId}
                     assetType="minor_gallery"
+                    uploadAssetApi={uploadAssetApi}
                     url={row.url || row.image || ''}
                     onUrl={(v) => {
                       const n = [...arr];

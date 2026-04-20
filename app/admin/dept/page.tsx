@@ -413,6 +413,7 @@ export default function DepartmentAdminPage() {
   const [editingMinorId, setEditingMinorId] = useState<number | null>(null);
   const [minorIrrigationImageFile, setMinorIrrigationImageFile] = useState<File | null>(null);
   const [irrigationFormValues, setIrrigationFormValues] = useState<Record<string, string>>({});
+  const [irrigationPortfolioForm, setIrrigationPortfolioForm] = useState<Record<string, string>>(MINOR_IRRIGATION_PORTFOLIO_EMPTY_FORM);
   const [editingIrrigationId, setEditingIrrigationId] = useState<number | null>(null);
   const [irrigationImageFile, setIrrigationImageFile] = useState<File | null>(null);
   const [revenueTahasilFormValues, setRevenueTahasilFormValues] = useState<Record<string, string>>({});
@@ -2182,10 +2183,12 @@ export default function DepartmentAdminPage() {
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual Irrigation entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
-                  Add a single Irrigation project manually. Fields mirror the key Irrigation CSV columns.
+                  All fields are in the section tabs below (same style as Health): identity and cover image in <span className="font-medium text-text">Hero</span>,
+                  summary in <span className="font-medium text-text">About</span>, contacts, facilities, team, staff, highlights, and gallery. Save with{' '}
+                  <span className="font-medium text-text">Update project</span> when done.
                 </p>
                 <form
-                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  className="mt-3 space-y-4 text-xs"
                   onSubmit={async (e) => {
                     e.preventDefault();
                     if (!me?.department_id) {
@@ -2251,6 +2254,44 @@ export default function DepartmentAdminPage() {
                       profileData[latKey] = lat;
                       profileData[lngKey] = lng;
                       profileData[nameKey] = name;
+                      const parseJsonArray = (raw: string | undefined) => {
+                        if (!raw?.trim()) return [];
+                        try {
+                          const parsed = JSON.parse(raw) as unknown;
+                          return Array.isArray(parsed) ? parsed : [];
+                        } catch {
+                          return [];
+                        }
+                      };
+                      // Reuse same portfolio fields used by Minor Irrigation so public layout stays consistent.
+                      Object.entries(irrigationPortfolioForm).forEach(([key, value]) => {
+                        if (value != null && String(value).trim() !== '') {
+                          profileData[key] = value;
+                        }
+                      });
+                      profileData.minor_key_admin_cards = parseJsonArray(irrigationPortfolioForm.minor_key_admin_cards_json);
+                      profileData.minor_facility_cards = parseJsonArray(irrigationPortfolioForm.minor_facility_cards_json);
+                      profileData.minor_faculty_cards = parseJsonArray(irrigationPortfolioForm.minor_faculty_cards_json);
+                      profileData.minor_staff_rows = parseJsonArray(irrigationPortfolioForm.minor_staff_rows_json);
+                      const galleryRows = parseJsonArray(irrigationPortfolioForm.gallery_images) as Array<Record<string, unknown> | string>;
+                      profileData.gallery_images = galleryRows
+                        .map((row) => {
+                          if (typeof row === 'string') {
+                            const url = row.trim();
+                            if (!url) return null;
+                            return { url, title: '', description: '' };
+                          }
+                          if (row && typeof row === 'object') {
+                            const rec = row as Record<string, unknown>;
+                            const url = String(rec.url || rec.image || '').trim();
+                            const title = String(rec.title || '').trim();
+                            const description = String(rec.description || '').trim();
+                            if (!url) return null;
+                            return { url, title, description };
+                          }
+                          return null;
+                        })
+                        .filter((x): x is { url: string; title: string; description: string } => Boolean(x));
 
                       const { irrigationApi } = await import('../../../services/api');
                       const saved = await irrigationApi.putProfile(orgId, profileData);
@@ -2267,6 +2308,7 @@ export default function DepartmentAdminPage() {
                       }
 
                       setIrrigationFormValues({});
+                      setIrrigationPortfolioForm(MINOR_IRRIGATION_PORTFOLIO_EMPTY_FORM);
                       setEditingIrrigationId(null);
                     } catch (err: any) {
                       setError(err.message || 'Failed to save irrigation entry');
@@ -2275,25 +2317,34 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  {splitHeader(IRRIGATION_CSV_HEADER).map((header) => {
-                    const key = snakeFromHeader(header);
-                    return (
-                      <div key={key} className="space-y-1">
-                        <label className="block text-text">{header}</label>
-                        <input
-                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
-                          value={irrigationFormValues[key] ?? ''}
-                          onChange={(e) =>
-                            setIrrigationFormValues((prev) => ({
-                              ...prev,
-                              [key]: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                    );
-                  })}
-                  <div className="md:col-span-2 space-y-1">
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {[
+                      'WORK NAME',
+                      'BLOCK/ULB',
+                      'GP/WARD',
+                      'VILLAGE/ LOCALITY',
+                      'LATITUDE',
+                      'LONGITUDE',
+                    ].map((header) => {
+                      const key = snakeFromHeader(header);
+                      return (
+                        <div key={key} className="space-y-1">
+                          <label className="block text-text">{header}</label>
+                          <input
+                            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                            value={irrigationFormValues[key] ?? ''}
+                            onChange={(e) =>
+                              setIrrigationFormValues((prev) => ({
+                                ...prev,
+                                [key]: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="space-y-1">
                     <label className="block text-text">Profile Image</label>
                     <input
                       type="file"
@@ -2304,7 +2355,7 @@ export default function DepartmentAdminPage() {
                       }
                     />
                   </div>
-                  <div className="md:col-span-2">
+                  <div>
                     <button
                       type="submit"
                       disabled={creating}
@@ -2314,6 +2365,17 @@ export default function DepartmentAdminPage() {
                     </button>
                   </div>
                 </form>
+                <div className="mt-4">
+                  <MinorIrrigationPortfolioAdminForm
+                    organizationId={editingIrrigationId}
+                    form={irrigationPortfolioForm}
+                    setForm={setIrrigationPortfolioForm}
+                    uploadAssetApi={organizationsApi.uploadIrrigationPortfolioAsset}
+                    existingProfile={
+                      editingIrrigationId != null ? irrigationProfiles[editingIrrigationId] ?? {} : {}
+                    }
+                  />
+                </div>
               </section>
             )}
 
@@ -4195,6 +4257,40 @@ export default function DepartmentAdminPage() {
                                       vals[lngKey] = String(o.longitude);
 
                                     setIrrigationFormValues(vals);
+                                    const pv = (x: unknown) => {
+                                      if (x == null) return '';
+                                      if (typeof x === 'string') return x.trim();
+                                      if (typeof x === 'number' || typeof x === 'boolean') return String(x);
+                                      try {
+                                        return JSON.stringify(x);
+                                      } catch {
+                                        return String(x);
+                                      }
+                                    };
+                                    const nextPortfolio: Record<string, string> = {};
+                                    Object.keys(MINOR_IRRIGATION_PORTFOLIO_EMPTY_FORM).forEach((key) => {
+                                      nextPortfolio[key] = pv(existingProfile?.[key]);
+                                    });
+                                    nextPortfolio.minor_display_name =
+                                      nextPortfolio.minor_display_name ||
+                                      pv(existingProfile?.work_name) ||
+                                      String(o.name || '').trim();
+                                    nextPortfolio.minor_established_year =
+                                      nextPortfolio.minor_established_year ||
+                                      pv(existingProfile?.year_of_commissioning);
+                                    nextPortfolio.minor_facility_type =
+                                      nextPortfolio.minor_facility_type ||
+                                      pv(existingProfile?.category);
+                                    const loc = [
+                                      pv(existingProfile?.block_ulb),
+                                      pv(existingProfile?.gp_ward),
+                                      pv(existingProfile?.['village__locality']),
+                                    ]
+                                      .filter(Boolean)
+                                      .join(', ');
+                                    nextPortfolio.minor_location_line =
+                                      nextPortfolio.minor_location_line || loc;
+                                    setIrrigationPortfolioForm(nextPortfolio);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}
                                 >

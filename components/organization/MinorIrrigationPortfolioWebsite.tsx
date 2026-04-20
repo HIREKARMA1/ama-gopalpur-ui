@@ -1,39 +1,35 @@
 'use client';
 
-import { useMemo } from 'react';
-import type { ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import type { Organization } from '../../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
 import { getMinorIrrigationProfileLabel } from '../../lib/profileLabels';
-import { PsHeroSection, PsAboutSection, PsPersonCardsSection, PsFacilitiesCarouselSection, PsFacultySection, PsGallerySection, PsContactSection, parseArray, asString, displayText, EMPTY } from './EducationPsSections';
-import type { FacilityCard, Faculty, GalleryItem, PsPersonCard, Lang } from './EducationPsSections';
 import {
-  Droplets,
-  MapPin,
-  Hash,
-  Home,
-  Tag,
-  Wrench,
-  FileText,
-  Activity,
-  Gauge,
-  Database,
-  Layers,
-  ArrowLeftRight,
-  Ruler,
-  Settings,
-  CalendarClock,
-  Radar,
-  Trees,
-  IndianRupee,
-  Users,
-} from 'lucide-react';
-
-const SECTION_H2 = 'text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl';
+  PsHeroSection,
+  PsAboutSection,
+  PsPersonCardsSection,
+  PsFacilitiesCarouselSection,
+  PsFacultySection,
+  PsGallerySection,
+  PsContactSection,
+  parseArray,
+  asString,
+  displayText,
+  EMPTY,
+  type FacilityCard,
+  type Faculty,
+  type GalleryItem,
+  type Lang,
+  type PsPersonCard,
+} from './EducationPsSections';
 
 function tableShell(children: ReactNode) {
-  return <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white"><div className="overflow-x-auto">{children}</div></div>;
+  return (
+    <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="overflow-x-auto">{children}</div>
+    </div>
+  );
 }
 
 function formatVal(v: unknown): string {
@@ -44,6 +40,30 @@ function formatVal(v: unknown): string {
 function parseArrayJson<T>(raw: unknown): T[] {
   return parseArray<T>(raw);
 }
+
+const snakeFromHeader = (label: string): string =>
+  label
+    .trim()
+    .replace(/[-\s/]+/g, '_')
+    .replace(/[()]/g, '')
+    .toLowerCase()
+    .replace(/^_+|_+$/g, '');
+
+const KEY_CATCHMENT = snakeFromHeader('CATCHMENT AREA (IN SQ KM.)');
+const KEY_AYACUT = snakeFromHeader('COMMAND AREA / AYACUT (HA.)');
+const KEY_STORAGE = snakeFromHeader('STORAGE CAPACITY (HAM.)');
+const KEY_WATER_SPREAD = snakeFromHeader('WATER SPREAD AREA (HA.)');
+const KEY_CANAL_LEN = snakeFromHeader('CANAL/ DISTRIBUTORY LENGTH (KM)');
+const KEY_DESIGN_DISCHARGE = snakeFromHeader('DESIGN DISCHARGE (CUSECS)');
+const KEY_INFLOW_SOURCE = snakeFromHeader('INFLOW SOURCE (RIVER/RAIN/STREAM/ CANAL)');
+const KEY_YEAR_COMMISSIONING = snakeFromHeader('YEAR OF COMMISSIONING');
+const KEY_PHYSICAL_CONDITION = snakeFromHeader('CURRENT PHYSICAL CONDITION (GOOD/REPAIR NEEDED/CRITICAL)');
+const KEY_FUNCTIONALITY = snakeFromHeader('FUNCTIONALITY STATUS (FUNCTIONAL/PARTIAL/NON-FUNCTIONAL)');
+const KEY_MANAGED_BY = snakeFromHeader('MANAGED BY (PANI PANCHAYAT/DEPT/WUA)');
+const KEY_LAST_MAINTENANCE = snakeFromHeader('LAST MAINTENANCE/DESILTING YEAR');
+const KEY_WATER_AVAILABILITY = snakeFromHeader('WATER AVAILABILITY (MONTHS/YEAR)');
+const KEY_FUNDING_SCHEME = snakeFromHeader('FUNDING SCHEME (MGNREGS/STATE/CENTRAL)');
+const KEY_REMARKS = snakeFromHeader('REMARKS/HISTORICAL BACKGROUND');
 
 export interface MinorIrrigationPortfolioWebsiteProps {
   org: Organization;
@@ -60,6 +80,7 @@ export function MinorIrrigationPortfolioWebsite({
 }: MinorIrrigationPortfolioWebsiteProps) {
   const { language } = useLanguage();
   const lang = language as Lang;
+  const [detailTab, setDetailTab] = useState<'overview' | 'technical' | 'operations' | 'finance'>('overview');
 
   const heroSlides = useMemo(() => {
     const fromForm = [asString(profile.minor_hero_1), asString(profile.minor_hero_2), asString(profile.minor_hero_3)].filter(
@@ -70,36 +91,28 @@ export function MinorIrrigationPortfolioWebsite({
     return (fromForm.length ? fromForm : fallback).slice(0, 3);
   }, [profile.minor_hero_1, profile.minor_hero_2, profile.minor_hero_3, profile.gallery_images, images]);
 
-  const locationFallback = useMemo(() => {
-    return [asString(profile.block_ulb), asString(profile.gp_ward), asString(profile.village_locality)].filter(Boolean).join(', ');
-  }, [profile]);
+  const locationFallback = useMemo(
+    () => [asString(profile.block_ulb), asString(profile.gp_ward), asString(profile.village_locality)].filter(Boolean).join(', '),
+    [profile.block_ulb, profile.gp_ward, profile.village_locality],
+  );
 
-  const psProfile = useMemo(() => {
+  const psProfile = useMemo((): Record<string, unknown> => {
     const tag =
       asString(profile.minor_hero_primary_tagline) ||
       asString(profile.minor_hero_tagline) ||
       asString(profile.category_type) ||
+      asString(profile.category) ||
       (org.type ? org.type.replace(/_/g, ' ') : '');
 
     return {
       ...profile,
-      school_name_en: asString(profile.minor_display_name) || asString(profile.name_of_m_i_p) || org.name || '',
+      school_name_en: asString(profile.minor_display_name) || asString(profile.name_of_m_i_p) || asString(profile.work_name) || org.name || '',
       hero_primary_tagline_en: tag,
-      about_short_en:
-        asString(profile.minor_about_short) ||
-        asString(profile.about_short) ||
-        asString(profile.description) ||
-        asString(profile.remarks) ||
-        '',
+      about_short_en: asString(profile.minor_about_short) || asString(profile.description) || asString(profile.remarks) || '',
       about_image: asString(profile.minor_campus_image),
-      esst_year:
-        asString(profile.minor_established_year) ||
-        asString(profile.established_year) ||
-        asString(profile.year_of_commissioning) ||
-        '',
-      school_type_en: asString(profile.minor_facility_type) || asString(profile.category_type) || 'Minor Irrigation Project',
+      esst_year: asString(profile.minor_established_year) || asString(profile.established_year) || asString(profile.year_of_commissioning) || '',
+      school_type_en: asString(profile.minor_facility_type) || asString(profile.category_type) || asString(profile.category) || 'Irrigation Project',
       location_en: asString(profile.minor_location_line) || locationFallback || asString(profile.location) || '',
-
       headmaster_message_en: asString(profile.minor_inst_head_message),
       name_of_hm: asString(profile.minor_inst_head_name),
       headmaster_photo: asString(profile.minor_inst_head_photo),
@@ -107,8 +120,6 @@ export function MinorIrrigationPortfolioWebsite({
       hm_experience: asString(profile.minor_inst_head_experience),
       headmaster_contact: asString(profile.minor_inst_head_contact),
       headmaster_email: asString(profile.minor_inst_head_email),
-
-      // Ps components expect these keys for contact + optional sections
       vision_text_en: '',
       mission_text_en: '',
       faculty_attendance: {},
@@ -117,33 +128,21 @@ export function MinorIrrigationPortfolioWebsite({
       health_emergency_phone: asString(profile.minor_emergency_phone) || '',
       contact_email: asString(profile.minor_public_email) || asString(profile.minor_contact_email) || EMPTY,
       office_hours_en: asString(profile.minor_office_hours),
-    } as Record<string, unknown>;
+    };
   }, [profile, org.name, org.type, org.address, locationFallback]);
 
-  const KEY_ADMIN_FIXED_LABELS = ['Project in-charge', 'Engineer / Technical officer'] as const;
   const keyAdminPeople: PsPersonCard[] = useMemo(() => {
-    const rows = parseArrayJson<Record<string, string>>(
-      (profile.minor_key_admin_cards ?? profile.minor_key_admin_cards_json) as unknown,
-    );
-    const mapped: PsPersonCard[] = rows.map((r, i) => ({
-      role: String(r.role || '').trim() || (i < KEY_ADMIN_FIXED_LABELS.length ? KEY_ADMIN_FIXED_LABELS[i] : 'Key contact'),
+    const rows = parseArrayJson<Record<string, string>>((profile.minor_key_admin_cards ?? profile.minor_key_admin_cards_json) as unknown);
+    const defaults = ['Project in-charge', 'Engineer / Technical officer'] as const;
+    const cards = rows.map((r, i) => ({
+      role: String(r.role || '').trim() || (i < defaults.length ? defaults[i] : 'Key contact'),
       image: asString(r.image),
       name: asString(r.name) || EMPTY,
       contact: asString(r.contact) || '—',
       email: asString(r.email) || '—',
     }));
-
-    // If admin hasn't filled cards yet, show a visually consistent empty grid.
-    if (mapped.length === 0) {
-      return Array.from({ length: 4 }, (_, i) => ({
-        role: i < KEY_ADMIN_FIXED_LABELS.length ? KEY_ADMIN_FIXED_LABELS[i] : 'Key contact',
-        image: '',
-        name: EMPTY,
-        contact: '—',
-        email: '—',
-      }));
-    }
-    return mapped;
+    if (cards.length === 0) return [{ role: defaults[0], image: '', name: EMPTY, contact: '—', email: '—' }, { role: defaults[1], image: '', name: EMPTY, contact: '—', email: '—' }];
+    return cards;
   }, [profile.minor_key_admin_cards, profile.minor_key_admin_cards_json]);
 
   const facilityCards: FacilityCard[] = useMemo(
@@ -154,190 +153,69 @@ export function MinorIrrigationPortfolioWebsite({
     () => parseArrayJson<Faculty>((profile.minor_faculty_cards ?? profile.minor_faculty_cards_json) as unknown),
     [profile.minor_faculty_cards, profile.minor_faculty_cards_json],
   );
+  const staffRows = useMemo(
+    () => parseArrayJson<Record<string, string>>((profile.minor_staff_rows ?? profile.minor_staff_rows_json) as unknown),
+    [profile.minor_staff_rows, profile.minor_staff_rows_json],
+  );
 
   const galleryItems: GalleryItem[] = useMemo(() => {
     const raw = parseArrayJson<unknown>(profile.gallery_images);
-    const normalized: GalleryItem[] = raw
+    return raw
       .map((it) => {
         if (typeof it === 'string') {
-          const url = it.trim();
-          if (!url) return null;
-          return { image: url, category: '', title: '', description: '' };
+          const image = it.trim();
+          return image ? { image, category: '', title: '', description: '' } : null;
         }
-        if (it && typeof it === 'object') {
-          const rec = it as Record<string, unknown>;
-          const url = asString(rec.url ?? rec.image);
-          if (!url) return null;
-          return {
-            image: url,
-            category: asString(rec.category),
-            title: asString(rec.title),
-            description: asString(rec.description),
-          };
-        }
-        return null;
+        if (!it || typeof it !== 'object') return null;
+        const rec = it as Record<string, unknown>;
+        const image = asString(rec.url ?? rec.image);
+        return image
+          ? { image, category: asString(rec.category), title: asString(rec.title), description: asString(rec.description) }
+          : null;
       })
       .filter(Boolean) as GalleryItem[];
-    return normalized;
   }, [profile.gallery_images]);
 
-  const catchment = profile?.catchment_area_sq_km ?? profile?.catchment_area ?? null;
-  const ayacut = profile?.total_ayacut_acres ?? profile?.total_ayacut ?? null;
-  const storage = profile?.storage_capacity_mcum ?? profile?.storage_capacity ?? null;
-
-  const highlightItems = useMemo(() => {
-    const block = profile?.block_ulb ?? profile?.block ?? null;
-    const gp = profile?.gp_ward ?? profile?.gp ?? null;
-    const village = profile?.village_locality ?? profile?.village ?? null;
-    const mipId = profile?.mip_id ?? null;
-    const name = profile?.name_of_m_i_p ?? org.name;
-    const type = profile?.category_type ?? profile?.category ?? profile?.type ?? profile?.categorytype ?? null;
-    const managedBy = profile?.managed_by ?? null;
-    const condition = profile?.condition ?? null;
-    const functionality = profile?.functionality ?? null;
-    const lastMaintenance = profile?.last_maintenance ?? null;
-
-    return [
-      { label: t('minor.field.department', language), val: departmentName, icon: Tag, color: 'violet' },
-      { label: getMinorIrrigationProfileLabel('block_ulb', language), val: block, icon: MapPin, color: 'emerald' },
-      { label: getMinorIrrigationProfileLabel('gp_ward', language), val: gp, icon: Home, color: 'amber' },
-      { label: getMinorIrrigationProfileLabel('village_locality', language), val: village, icon: Home, color: 'sky' },
-      { label: getMinorIrrigationProfileLabel('mip_id', language), val: mipId, icon: Hash, color: 'slate' },
-      { label: getMinorIrrigationProfileLabel('name_of_m_i_p', language), val: name, icon: Droplets, color: 'blue' },
-      { label: getMinorIrrigationProfileLabel('category_type', language), val: type, icon: Tag, color: 'indigo' },
-      { label: getMinorIrrigationProfileLabel('managed_by', language), val: managedBy, icon: Wrench, color: 'teal' },
-      { label: getMinorIrrigationProfileLabel('condition', language), val: condition, icon: Activity, color: 'rose' },
-      { label: getMinorIrrigationProfileLabel('functionality', language), val: functionality, icon: Activity, color: 'pink' },
-      { label: getMinorIrrigationProfileLabel('last_maintenance', language), val: lastMaintenance, icon: FileText, color: 'slate' },
-    ] as const;
-  }, [profile, org.name, departmentName, lang]);
-
-  const grouped = useMemo(() => {
-    const entries = Object.entries(profile || {}).filter(([_, v]) => v != null && String(v).trim() !== '');
-    const byKey = new Map(entries);
-
-    const keys = (list: string[]) => list.filter((k) => byKey.has(k)).map((k) => [k, byKey.get(k)] as const);
-    const consumed = new Set<string>();
-    const take = (list: string[]) => {
-      const out = keys(list);
-      out.forEach(([k]) => consumed.add(k));
-      return out;
-    };
-
-    const TECH_KEYS = [
-      'category_type',
-      'spillway_type',
-      'spillway_width_ft',
-      'no_of_sluices',
-      'sluice_type',
-      'storage_capacity_mcum',
-      'mwl_ft',
-      'frl_ft',
-      'tbl_ft',
-      'location_precision_meter',
-      'catchment_area_sq_km',
-      'command_area_kharif_acres',
-      'command_area_rabi_acres',
-      'total_ayacut_acres',
-    ];
-    const OPS_KEYS = [
-      'condition',
-      'functionality',
-      'managed_by',
-      'last_maintenance',
-      'sensors_installed',
-      'last_geotagged_date',
-      'forest_clearance_y_n',
-      'remarks',
-    ];
-    const FIN_KEYS = ['beneficiary_farmers_count', 'beneficiary_sc_st_count', 'sanctioned_amt_lakhs', 'expenditure_lakhs'];
-
-    const OVERVIEW_KEYS = ['block_ulb', 'gp_ward', 'village_locality', 'mip_id', 'name_of_m_i_p', 'category_type'];
-
-    const overview = take(OVERVIEW_KEYS);
-    const technical = take(TECH_KEYS);
-    const operations = take(OPS_KEYS);
-    const finance = take(FIN_KEYS);
-
-    return { overview, technical, operations, finance };
-  }, [profile]);
-
-  const renderGrid = (entries: readonly (readonly [string, unknown])[], emptyText: string) => {
-    if (!entries || entries.length === 0) return <p className="text-sm text-slate-500">{emptyText}</p>;
-
-    const COLOR_MAP = {
-      blue: 'bg-blue-50 text-blue-600 border-blue-100',
-      emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-      green: 'bg-green-50 text-green-600 border-green-100',
-      amber: 'bg-amber-50 text-amber-600 border-amber-100',
-      violet: 'bg-violet-50 text-violet-600 border-violet-100',
-      slate: 'bg-slate-100 text-slate-600 border-slate-200',
-      teal: 'bg-teal-50 text-teal-600 border-teal-100',
-      rose: 'bg-rose-50 text-rose-600 border-rose-100',
-      pink: 'bg-pink-50 text-pink-600 border-pink-100',
-      indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
-      sky: 'bg-sky-50 text-sky-600 border-sky-100',
-    } as const;
-
-    const iconConfig: Record<string, { icon: any; color: keyof typeof COLOR_MAP }> = {
-      storage_capacity_mcum: { icon: Database, color: 'indigo' },
-      mwl_ft: { icon: Layers, color: 'blue' },
-      frl_ft: { icon: Layers, color: 'violet' },
-      tbl_ft: { icon: Layers, color: 'slate' },
-      spillway_type: { icon: Settings, color: 'amber' },
-      spillway_width_ft: { icon: Ruler, color: 'amber' },
-      no_of_sluices: { icon: Hash, color: 'slate' },
-      sluice_type: { icon: Settings, color: 'teal' },
-      catchment_area_sq_km: { icon: Droplets, color: 'sky' },
-      command_area_kharif_acres: { icon: ArrowLeftRight, color: 'emerald' },
-      command_area_rabi_acres: { icon: ArrowLeftRight, color: 'green' },
-      total_ayacut_acres: { icon: Gauge, color: 'emerald' },
-      location_precision_meter: { icon: Radar, color: 'slate' },
-      category_type: { icon: Tag, color: 'indigo' },
-
-      // Operations
-      condition: { icon: Activity, color: 'rose' },
-      functionality: { icon: Activity, color: 'pink' },
-      managed_by: { icon: Wrench, color: 'teal' },
-      last_maintenance: { icon: CalendarClock, color: 'slate' },
-      sensors_installed: { icon: Radar, color: 'indigo' },
-      last_geotagged_date: { icon: CalendarClock, color: 'violet' },
-      forest_clearance_y_n: { icon: Trees, color: 'emerald' },
-      remarks: { icon: FileText, color: 'slate' },
-
-      // Finance
-      beneficiary_farmers_count: { icon: Users, color: 'emerald' },
-      beneficiary_sc_st_count: { icon: Users, color: 'amber' },
-      sanctioned_amt_lakhs: { icon: IndianRupee, color: 'indigo' },
-      expenditure_lakhs: { icon: IndianRupee, color: 'rose' },
-    };
-
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {entries.map(([key, value]) => {
-          const item = iconConfig[key] || { icon: FileText, color: 'slate' as const };
-          const Icon = item.icon;
-          const cls = COLOR_MAP[item.color] ?? COLOR_MAP.slate;
-
-          return (
-            <div key={key} className="flex gap-4 items-center">
-              <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border">
-                <div className={cls}>
-                  <Icon size={20} strokeWidth={2} />
-                </div>
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">
-                  {getMinorIrrigationProfileLabel(key, language)}
-                </p>
-                <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(value)}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
+  const rec = profile as Record<string, unknown>;
+  const catchment = rec.catchment_area_sq_km ?? rec.catchment_area ?? rec['catchment_area_in_sq_km.'];
+  const ayacut = rec.total_ayacut_acres ?? rec.total_ayacut ?? rec['command_area_ayacut_ha.'];
+  const storage = rec.storage_capacity_mcum ?? rec.storage_capacity ?? rec['storage_capacity_ham.'];
+  const getFirst = (...keys: string[]) => {
+    for (const key of keys) {
+      const val = rec[key];
+      if (val != null && String(val).trim() !== '') return val;
+    }
+    return null;
   };
+  const detailData = useMemo(
+    () => ({
+      overview: [
+        ['type_of_irrigation_flowliftsolar', getFirst('type_of_irrigation_flowliftsolar', 'type_of_irrigation')],
+        ['managed_by', getFirst('managed_by', KEY_MANAGED_BY)],
+        ['current_physical_condition', getFirst('condition', 'current_physical_condition', KEY_PHYSICAL_CONDITION)],
+        ['functionality_status', getFirst('functionality', 'functionality_status', KEY_FUNCTIONALITY)],
+        ['year_of_commissioning', getFirst('year_of_commissioning', KEY_YEAR_COMMISSIONING)],
+      ] as const,
+      technical: [
+        ['water_spread_area_ha', getFirst('water_spread_area_ha', KEY_WATER_SPREAD)],
+        ['canal_distributory_length_km', getFirst('canal_distributory_length_km', KEY_CANAL_LEN)],
+        ['design_discharge_cusecs', getFirst('design_discharge_cusecs', KEY_DESIGN_DISCHARGE)],
+        ['inflow_source', getFirst('inflow_source', KEY_INFLOW_SOURCE)],
+      ] as const,
+      operations: [
+        ['last_maintenance', getFirst('last_maintenance', KEY_LAST_MAINTENANCE)],
+        ['water_availability_months_year', getFirst('water_availability_months_year', KEY_WATER_AVAILABILITY)],
+      ] as const,
+      finance: [
+        ['beneficiary_farmers_count', getFirst('beneficiary_farmers_count')],
+        ['beneficiary_households', getFirst('beneficiary_households', 'beneficiary_sc_st_count')],
+        ['funding_scheme', getFirst('funding_scheme', KEY_FUNDING_SCHEME)],
+        ['remarks', getFirst('remarks', KEY_REMARKS)],
+      ] as const,
+    }),
+    [rec],
+  );
+  const activeRows = detailData[detailTab].filter(([, v]) => v != null && String(v).trim() !== '');
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 via-slate-50 to-white text-slate-800">
@@ -374,6 +252,36 @@ export function MinorIrrigationPortfolioWebsite({
           showAttendance={false}
         />
 
+        <section className="py-2 md:py-4">
+          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">TS & NTS staff</h2>
+          {tableShell(
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Staff name</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Category</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Role / Designation</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Department</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Contact</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(staffRows.length ? staffRows : [{} as Record<string, string>]).map((row, idx) => (
+                  <tr key={idx} className="border-t border-slate-100">
+                    <td className="px-4 py-3 font-medium text-slate-900">{displayText(row.staff_name)}</td>
+                    <td className="px-4 py-3 text-slate-700">{displayText(row.category)}</td>
+                    <td className="px-4 py-3 text-slate-700">{displayText(row.role_designation)}</td>
+                    <td className="px-4 py-3 text-slate-700">{displayText(row.department)}</td>
+                    <td className="px-4 py-3 text-slate-700">{displayText(row.contact_number)}</td>
+                    <td className="px-4 py-3 text-slate-600">{displayText(row.email)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>,
+          )}
+        </section>
+
         <section className="rounded-[28px] border border-slate-200/70 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-md md:p-7">
           <h2 className="text-xl font-bold sm:text-2xl">Key highlights</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -390,31 +298,33 @@ export function MinorIrrigationPortfolioWebsite({
           </div>
         </section>
 
-        <section className="rounded-[28px] border border-indigo-200/80 bg-gradient-to-br from-indigo-50/80 via-white to-sky-50/50 p-5 shadow-md md:p-7">
-          <h2 className={SECTION_H2}>Project details</h2>
-          <p className="mt-2 max-w-3xl text-sm text-slate-600">
-            Technical, operations, and finance information in a cleaner sectioned layout.
-          </p>
-
-          <div className="mt-7 space-y-8">
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
-                {t('minor.tab.technical', language)}
-              </h3>
-              <div className="mt-4">{renderGrid(grouped.technical, 'No technical fields found.')}</div>
+        <section className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 shadow-sm md:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">Project details</h2>
+            <div className="flex flex-wrap items-center gap-1 rounded-full border border-slate-200 bg-white p-1">
+              {(['overview', 'technical', 'operations', 'finance'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setDetailTab(tab)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                    detailTab === tab ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {t(`minor.tab.${tab}`, language)}
+                </button>
+              ))}
             </div>
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
-                {t('minor.tab.operations', language)}
-              </h3>
-              <div className="mt-4">{renderGrid(grouped.operations, 'No operations fields found.')}</div>
-            </div>
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#64748b]">
-                {t('minor.tab.finance', language)}
-              </h3>
-              <div className="mt-4">{renderGrid(grouped.finance, 'No finance/beneficiary fields found.')}</div>
-            </div>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {(activeRows.length ? activeRows : [['empty', EMPTY] as const]).map(([k, v]) => (
+              <div key={k} className="rounded-xl border border-slate-200 bg-white p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                  {k === 'empty' ? '—' : getMinorIrrigationProfileLabel(k, language)}
+                </p>
+                <p className="mt-1 text-sm font-bold text-slate-900">{formatVal(v)}</p>
+              </div>
+            ))}
           </div>
         </section>
 
