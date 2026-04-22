@@ -285,6 +285,10 @@ export default function RoadsMonitoringPage() {
   const [roads, setRoads] = useState<Organization[]>([]);
   const [page, setPage] = useState(1);
   const [editingRoadId, setEditingRoadId] = useState<number | null>(null);
+  const [searchText, setSearchText] = useState('');
+  const [blockFilter, setBlockFilter] = useState('');
+  const [sectorFilter, setSectorFilter] = useState('');
+  const [conditionFilter, setConditionFilter] = useState('');
 
   const [block, setBlock] = useState('');
   const [roadName, setRoadName] = useState('');
@@ -388,11 +392,35 @@ export default function RoadsMonitoringPage() {
       });
   }, [roads]);
 
-  const totalRows = tableRows.length;
+  const filteredRows = useMemo(() => {
+    const q = searchText.trim().toLowerCase();
+    return tableRows.filter((row) => {
+      if (blockFilter && row.block !== blockFilter) return false;
+      if (sectorFilter && row.roadSector !== sectorFilter) return false;
+      if (conditionFilter && row.conditionRating !== conditionFilter) return false;
+      if (!q) return true;
+      const hay = [
+        row.name,
+        row.block,
+        row.roadCode,
+        row.roadSector,
+        row.pointAName,
+        row.pointBName,
+        row.owningAgency,
+        row.surfaceType,
+        row.conditionRating,
+      ]
+        .join(' ')
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }, [tableRows, searchText, blockFilter, sectorFilter, conditionFilter]);
+
+  const totalRows = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
   const pageClamped = Math.min(Math.max(1, page), totalPages);
   const start = (pageClamped - 1) * PAGE_SIZE;
-  const paginated = tableRows.slice(start, start + PAGE_SIZE);
+  const paginated = filteredRows.slice(start, start + PAGE_SIZE);
 
   const resetForm = () => {
     setBlock('');
@@ -1011,10 +1039,76 @@ export default function RoadsMonitoringPage() {
         </section>
 
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b bg-slate-50 px-4 py-3">
+          <div className="border-b bg-slate-50 px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-2">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-800">
               Road Records
             </h3>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search road / code / place / agency"
+                className="rounded border px-2 py-1 min-w-[220px]"
+              />
+              <select
+                value={blockFilter}
+                onChange={(e) => {
+                  setBlockFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="rounded border px-2 py-1"
+              >
+                <option value="">All Blocks</option>
+                {[...new Set(tableRows.map((r) => r.block).filter(Boolean))].map((v) => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </select>
+              <select
+                value={sectorFilter}
+                onChange={(e) => {
+                  setSectorFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="rounded border px-2 py-1"
+              >
+                <option value="">All Sectors</option>
+                {[...new Set(tableRows.map((r) => r.roadSector).filter(Boolean))].map((v) => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </select>
+              <select
+                value={conditionFilter}
+                onChange={(e) => {
+                  setConditionFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="rounded border px-2 py-1"
+              >
+                <option value="">All Conditions</option>
+                {[...new Set(tableRows.map((r) => r.conditionRating).filter(Boolean))].map((v) => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </select>
+              {(searchText || blockFilter || sectorFilter || conditionFilter) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchText('');
+                    setBlockFilter('');
+                    setSectorFilter('');
+                    setConditionFilter('');
+                    setPage(1);
+                  }}
+                  className="text-blue-600 hover:underline"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-xs">
