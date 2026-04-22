@@ -64,6 +64,17 @@ function orgToRoadFeature(org: Organization): RoadFeature | null {
       roadName: org.name,
       code: String(attrs.road_code ?? ''),
       block: String(attrs.block ?? ''),
+      roadSector: String(attrs.road_sector ?? ''),
+      lengthKm: Number.isFinite(Number(attrs.length_km)) ? Number(attrs.length_km) : null,
+      yearOfConstruction: Number.isFinite(Number(attrs.year_of_construction))
+        ? Number(attrs.year_of_construction)
+        : null,
+      pointAName: String(attrs.point_a_name ?? ''),
+      pointBName: String(attrs.point_b_name ?? ''),
+      startLat: Number.isFinite(startLat) ? startLat : null,
+      startLng: Number.isFinite(startLng) ? startLng : null,
+      endLat: Number.isFinite(endLat) ? endLat : null,
+      endLng: Number.isFinite(endLng) ? endLng : null,
     },
     geometry: { type: 'LineString', coordinates },
   };
