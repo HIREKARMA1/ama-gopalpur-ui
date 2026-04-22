@@ -9,7 +9,7 @@ import {
   Polyline,
   Polygon,
 } from '@react-google-maps/api';
-import { Search, X } from 'lucide-react';
+import { Info, Search, X } from 'lucide-react';
 import {
   GOPALPUR_BOUNDS,
   GOPALPUR_CENTER,
@@ -245,7 +245,30 @@ export interface MapOrganization {
 /** Road segment from GeoJSON (point A to B path) for Roads department map */
 export interface RoadFeature {
   type: 'Feature';
-  properties: { name?: string; roadName?: string; code?: string; block?: string };
+  properties: {
+    name?: string;
+    roadName?: string;
+    code?: string;
+    block?: string;
+    roadSector?: string;
+    lengthKm?: number | null;
+    yearOfConstruction?: number | null;
+    pointAName?: string;
+    pointBName?: string;
+    startLat?: number | null;
+    startLng?: number | null;
+    endLat?: number | null;
+    endLng?: number | null;
+    carriagewayWidthM?: string | number | null;
+    surfaceType?: string | null;
+    conditionRating?: string | null;
+    lastMaintenanceDate?: string | null;
+    owningAgency?: string | null;
+    trafficClass?: string | null;
+    drainageStatus?: string | null;
+    safetyFeatures?: string | null;
+    issues?: string | null;
+  };
   geometry: { type: 'LineString'; coordinates: [number, number][] };
 }
 
@@ -274,6 +297,20 @@ interface ConstituencyMapProps {
 }
 
 const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
+
+function haversineKm(a: [number, number], b: [number, number]): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const [lng1, lat1] = a;
+  const [lng2, lat2] = b;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const rLat1 = toRad(lat1);
+  const rLat2 = toRad(lat2);
+  const h =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(rLat1) * Math.cos(rLat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
 
 /**
  * Build a clean circular marker icon (no letters).
@@ -322,6 +359,7 @@ export function ConstituencyMap({
   const [drainKindFilter, setDrainKindFilter] = useState<DrainLineKind | null>(null);
   const [selectedBlockFilter, setSelectedBlockFilter] = useState<string>('ALL');
   const [isStreetViewOpen, setIsStreetViewOpen] = useState(false);
+  const [isStreetInfoOpen, setIsStreetInfoOpen] = useState(false);
   const [streetViewPosition, setStreetViewPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [streetViewMessage, setStreetViewMessage] = useState<string | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -646,6 +684,66 @@ export function ConstituencyMap({
     return { lat, lng };
   }, [selectedRoad]);
 
+  const selectedRoadStreetInfo = useMemo(() => {
+    if (!selectedRoad) return null;
+    const props = selectedRoad.properties ?? {};
+    const coords = selectedRoad.geometry?.coordinates ?? [];
+    const name = String(props.name ?? props.roadName ?? 'Road');
+    const code = String(props.code ?? '');
+    const block = String(props.block ?? '');
+    const sector = String(props.roadSector ?? '');
+    const year =
+      typeof props.yearOfConstruction === 'number' && Number.isFinite(props.yearOfConstruction)
+        ? String(props.yearOfConstruction)
+        : '';
+    const pointAName = String(props.pointAName ?? '').trim();
+    const pointBName = String(props.pointBName ?? '').trim();
+    const inferredPair = (() => {
+      const match = name.match(/^\s*(.+?)\s+to\s+(.+?)\s*$/i);
+      if (!match) return null;
+      return { a: match[1].trim(), b: match[2].trim() };
+    })();
+    const start = coords[0];
+    const end = coords.length ? coords[coords.length - 1] : undefined;
+    const pointA =
+      pointAName ||
+      inferredPair?.a ||
+      (start ? `${start[1].toFixed(5)}, ${start[0].toFixed(5)}` : 'Requested from Road Dept');
+    const pointB =
+      pointBName ||
+      inferredPair?.b ||
+      (end ? `${end[1].toFixed(5)}, ${end[0].toFixed(5)}` : 'Requested from Road Dept');
+
+    const providedLength =
+      typeof props.lengthKm === 'number' && Number.isFinite(props.lengthKm) ? props.lengthKm : null;
+    const computedLength =
+      coords.length > 1
+        ? coords.slice(1).reduce((sum, c, i) => sum + haversineKm(coords[i], c), 0)
+        : null;
+    const lengthKm = providedLength ?? computedLength;
+
+    return {
+      name,
+      code,
+      block,
+      sector,
+      year,
+      pointA,
+      pointB,
+      lengthKm: lengthKm != null ? lengthKm.toFixed(2) : 'N/A',
+      pointsCount: coords.length,
+      carriagewayWidthM: String(props.carriagewayWidthM ?? '').trim(),
+      surfaceType: String(props.surfaceType ?? '').trim(),
+      conditionRating: String(props.conditionRating ?? '').trim(),
+      lastMaintenanceDate: String(props.lastMaintenanceDate ?? '').trim(),
+      owningAgency: String(props.owningAgency ?? '').trim(),
+      trafficClass: String(props.trafficClass ?? '').trim(),
+      drainageStatus: String(props.drainageStatus ?? '').trim(),
+      safetyFeatures: String(props.safetyFeatures ?? '').trim(),
+      issues: String(props.issues ?? '').trim(),
+    };
+  }, [selectedRoad]);
+
   const streetViewEmbedUrl = useMemo(() => {
     if (!streetViewPosition) return '';
     const { lat, lng } = streetViewPosition;
@@ -959,6 +1057,28 @@ export function ConstituencyMap({
     [filteredOrgs, orgsWithLocation, searchTerm]
   );
 
+  const filteredRoads = useMemo(() => {
+    if (!isRoadsDept) return [] as RoadFeature[];
+    const term = searchTerm.trim().toLowerCase();
+    return roads.filter((road) => {
+      const name = String(road.properties?.name ?? road.properties?.roadName ?? '').toLowerCase();
+      const code = String(road.properties?.code ?? '').toLowerCase();
+      const block = String(road.properties?.block ?? '').toLowerCase();
+      const roadType = getRoadType(
+        String(road.properties?.name ?? road.properties?.roadName ?? ''),
+        String(road.properties?.code ?? ''),
+      );
+      if (roadLegendFilterType != null && roadType !== roadLegendFilterType) return false;
+      if (!term) return true;
+      return (
+        name.includes(term) ||
+        code.includes(term) ||
+        block.includes(term) ||
+        roadType.toLowerCase().includes(term)
+      );
+    });
+  }, [isRoadsDept, roads, searchTerm, roadLegendFilterType]);
+
   const focusOrganization = useCallback(
     (org: MapOrganization & { latitude: number; longitude: number }) => {
       if (!mapInstance) return;
@@ -980,6 +1100,30 @@ export function ConstituencyMap({
     [mapInstance]
   );
 
+  const focusRoad = useCallback(
+    (road: RoadFeature) => {
+      if (!mapInstance) return;
+      const coords = road.geometry?.coordinates ?? [];
+      if (!coords.length) return;
+      const mid = coords[Math.floor(coords.length / 2)] ?? coords[0];
+      if (!mid) return;
+      const [lng, lat] = mid;
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      mapInstance.panTo({ lat, lng });
+      if (
+        typeof mapInstance.getZoom === 'function' &&
+        typeof mapInstance.setZoom === 'function'
+      ) {
+        const currentZoom = mapInstance.getZoom() ?? DEFAULT_ZOOM;
+        if (currentZoom < 14) mapInstance.setZoom(14);
+      }
+      setSelectedRoad(road);
+      setSelectedDrain(null);
+      setInfoWindowOrg(null);
+    },
+    [mapInstance]
+  );
+
   const openRoadStreetView = useCallback(() => {
     if (!selectedRoadStreetViewPosition) {
       setStreetViewMessage('Street View is not available for this road.');
@@ -988,6 +1132,7 @@ export function ConstituencyMap({
     setStreetViewMessage(null);
     setStreetViewPosition(selectedRoadStreetViewPosition);
     setIsStreetViewOpen(true);
+    setIsStreetInfoOpen(false);
   }, [selectedRoadStreetViewPosition]);
 
   useEffect(() => {
@@ -1050,6 +1195,18 @@ export function ConstituencyMap({
     const term = searchTerm.trim().toLowerCase();
     if (!term) return;
 
+    if (isRoadsDept) {
+      const exactRoad = filteredRoads.find(
+        (r) => String(r.properties?.name ?? r.properties?.roadName ?? '').toLowerCase() === term
+      );
+      const roadToSelect = exactRoad || (filteredRoads.length === 1 ? filteredRoads[0] : null);
+      if (roadToSelect) {
+        focusRoad(roadToSelect);
+        setShowSearchDropdown(false);
+      }
+      return;
+    }
+
     // Only auto-select if there is exactly one match OR an exact name match
     const exactMatch = filteredOrgs.find((org) => (org.name || '').toLowerCase() === term);
     const resultToSelect = exactMatch || (filteredOrgs.length === 1 ? filteredOrgs[0] : null);
@@ -1065,7 +1222,7 @@ export function ConstituencyMap({
     !!selectedDepartmentCode ||
     zoom >= 13 ||
     !!infoWindowOrg ||
-    (searchTerm.trim() !== '' && filteredOrgs.length > 0);
+    (searchTerm.trim() !== '' && (filteredOrgs.length > 0 || filteredRoads.length > 0));
 
   return (
     <div className="relative h-full w-full min-h-[400px] overflow-hidden flex flex-col">
@@ -1117,12 +1274,40 @@ export function ConstituencyMap({
               </button>
               {showSearchDropdown && (
                 <div className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg z-30 text-sm">
-                  {searchSuggestions.length === 0 && (
+                  {isRoadsDept && filteredRoads.length === 0 && (
                     <div className="px-3 py-3 text-xs text-slate-500">
                       {t('map.search.noResults', language)}
                     </div>
                   )}
-                  {searchSuggestions.map((org) => (
+                  {!isRoadsDept && searchSuggestions.length === 0 && (
+                    <div className="px-3 py-3 text-xs text-slate-500">
+                      {t('map.search.noResults', language)}
+                    </div>
+                  )}
+                  {isRoadsDept && filteredRoads.map((road, idx) => {
+                    const name = String(road.properties?.name ?? road.properties?.roadName ?? 'Road');
+                    const code = String(road.properties?.code ?? '');
+                    const block = String(road.properties?.block ?? '');
+                    return (
+                      <button
+                        key={`road-search-${idx}-${name}-${code}`}
+                        type="button"
+                        onClick={() => {
+                          focusRoad(road);
+                          setShowSearchDropdown(false);
+                        }}
+                        className="w-full px-3 py-2 text-left hover:bg-slate-50"
+                      >
+                        <div className="font-medium text-slate-900 truncate">{name}</div>
+                        {(code || block) && (
+                          <div className="mt-0.5 text-[11px] text-slate-500 truncate">
+                            {[code, block].filter(Boolean).join(' · ')}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                  {!isRoadsDept && searchSuggestions.map((org) => (
                     <button
                       key={org.id}
                       type="button"
@@ -1437,19 +1622,66 @@ export function ConstituencyMap({
           >
             <X size={16} strokeWidth={2.5} />
           </button>
+          {selectedRoadStreetInfo && (
+            <button
+              type="button"
+              onClick={() => setIsStreetInfoOpen(true)}
+              className="absolute left-0 top-20 z-[2010] flex h-10 w-10 items-center justify-center rounded-r-md border border-white/20 bg-black/65 text-white transition-colors hover:bg-black/75"
+              aria-label="Open road information"
+              title="Road information"
+            >
+              <Info size={16} strokeWidth={2.4} />
+            </button>
+          )}
           {streetViewMessage ? (
             <div className="flex h-full items-center justify-center px-4 text-center text-sm text-white">
               {streetViewMessage}
             </div>
           ) : (
-            <iframe
-              title="Road street view"
-              src={streetViewEmbedUrl}
-              className="h-full w-full border-0"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              allowFullScreen
-            />
+            <>
+              <iframe
+                title="Road street view"
+                src={streetViewEmbedUrl}
+                className="h-full w-full border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+              {selectedRoadStreetInfo && isStreetInfoOpen && (
+                <div className="absolute left-0 top-20 z-[2020] w-[min(360px,calc(100vw-0.5rem))] max-h-[calc(100vh-7.5rem)] overflow-y-auto rounded-r-md border border-white/15 bg-black/70 p-3 text-white shadow-lg backdrop-blur-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-sm font-semibold">{selectedRoadStreetInfo.name}</h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsStreetInfoOpen(false)}
+                      className="flex h-7 w-7 items-center justify-center rounded border border-white/20 bg-white/10 text-white hover:bg-white/20"
+                      aria-label="Close road information"
+                      title="Close"
+                    >
+                      <X size={14} strokeWidth={2.5} />
+                    </button>
+                  </div>
+                  <div className="mt-2 space-y-1 text-[11px] leading-4 text-white/90">
+                    <p><span className="font-semibold">Starting point:</span> {selectedRoadStreetInfo.pointA}</p>
+                    <p><span className="font-semibold">Ending point:</span> {selectedRoadStreetInfo.pointB}</p>
+                    <p><span className="font-semibold">Total distance:</span> {selectedRoadStreetInfo.lengthKm} km</p>
+                    <p><span className="font-semibold">Type of road:</span> {selectedRoadStreetInfo.sector || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Year of construction:</span> {selectedRoadStreetInfo.year || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Road code:</span> {selectedRoadStreetInfo.code || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Block:</span> {selectedRoadStreetInfo.block || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Carriageway width:</span> {selectedRoadStreetInfo.carriagewayWidthM || 'Requested from Road Dept'}{selectedRoadStreetInfo.carriagewayWidthM ? ' m' : ''}</p>
+                    <p><span className="font-semibold">Surface type:</span> {selectedRoadStreetInfo.surfaceType || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Condition rating:</span> {selectedRoadStreetInfo.conditionRating || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Last maintenance:</span> {selectedRoadStreetInfo.lastMaintenanceDate || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Owning agency:</span> {selectedRoadStreetInfo.owningAgency || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Traffic class:</span> {selectedRoadStreetInfo.trafficClass || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Drainage status:</span> {selectedRoadStreetInfo.drainageStatus || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Safety features:</span> {selectedRoadStreetInfo.safetyFeatures || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Issues observed:</span> {selectedRoadStreetInfo.issues || 'Requested from Road Dept'}</p>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
