@@ -1678,7 +1678,6 @@ export function ConstituencyMap({
                     <p><span className="font-semibold">Drainage status:</span> {selectedRoadStreetInfo.drainageStatus || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Safety features:</span> {selectedRoadStreetInfo.safetyFeatures || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Issues observed:</span> {selectedRoadStreetInfo.issues || 'Requested from Road Dept'}</p>
-                    <p><span className="font-semibold">Path points:</span> {selectedRoadStreetInfo.pointsCount}</p>
                   </div>
                 </div>
               )}
