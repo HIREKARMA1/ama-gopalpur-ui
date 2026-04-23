@@ -7,6 +7,7 @@ import {
   type Lang,
 } from '../organization/EducationPsSections';
 import { useLanguage } from '../i18n/LanguageContext';
+import { t, type MessageKey } from '../i18n/messages';
 import { Navbar } from '../layout/Navbar';
 
 type Props = {
@@ -18,6 +19,15 @@ type Props = {
 export function DepartmentSummaryPage({ department, organizationCount, organizations }: Props) {
   const { language } = useLanguage();
   const lang = language as Lang;
+  const tr = (key: MessageKey, vars?: Record<string, string | number>) => {
+    let text = t(key, language);
+    if (vars) {
+      for (const [k, v] of Object.entries(vars)) {
+        text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
+      }
+    }
+    return text;
+  };
   const summary = department.department_summary;
   const stats = summary?.key_statistics ?? [];
   const list = (items?: string[]) => (items ?? []).filter(Boolean).slice(0, 12);
@@ -170,13 +180,13 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           hideVisionMission
           hideExtendedLeaderBio
           leaderLabels={{
-            title: lang === 'od' ? 'ବିଭାଗୀୟ ନେତୃତ୍ୱ' : 'Department Leadership',
-            messageHeading: lang === 'od' ? 'ମନ୍ତ୍ରୀଙ୍କ ବାର୍ତ୍ତା' : "Minister's message",
+            title: tr('dept.summary.leader.title'),
+            messageHeading: tr('dept.summary.leader.messageHeading'),
           }}
         />
 
         <section>
-          <h2 className="text-xl font-bold sm:text-2xl">Department summary</h2>
+          <h2 className="text-xl font-bold sm:text-2xl">{tr('dept.summary.section.summary')}</h2>
           <div className="mt-4 space-y-4 text-sm leading-relaxed text-slate-700 md:text-base">
             {summaryParagraphs.map((para, idx) => (
               <p key={`summary-para-${idx}`}>{para}</p>
@@ -185,7 +195,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         </section>
 
         <section>
-          <h2 className="text-xl font-bold sm:text-2xl">Department highlights</h2>
+          <h2 className="text-xl font-bold sm:text-2xl">{tr('dept.summary.section.highlights')}</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {highlightCards.length ? (
               highlightCards.map((item, idx) => (
@@ -207,13 +217,13 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                 </a>
               ))
             ) : (
-              <p className="text-sm text-slate-600">No highlight data available.</p>
+              <p className="text-sm text-slate-600">{tr('dept.summary.empty.highlights')}</p>
             )}
           </div>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold sm:text-2xl">Department organization listing</h2>
+          <h2 className="text-xl font-bold sm:text-2xl">{tr('dept.summary.section.organizationListing')}</h2>
           <div className="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 md:grid-cols-3">
             <input
               value={searchTerm}
@@ -221,7 +231,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="Search organization, category, address"
+              placeholder={tr('dept.summary.search.placeholder')}
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
             />
             <select
@@ -232,7 +242,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
               }}
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             >
-              <option value="ALL">All categories</option>
+              <option value="ALL">{tr('dept.summary.search.allCategories')}</option>
               {categoryOptions.map((opt) => (
                 <option key={`cat-${opt}`} value={opt}>
                   {opt}
@@ -246,24 +256,24 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                      Sl No
+                      {tr('dept.summary.table.slNo')}
                     </th>
                     <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
                       <button type="button" onClick={() => onSort('name')} className="inline-flex items-center gap-1 hover:text-slate-700">
-                        Organization <SortIcon active={sortKey === 'name'} direction={sortDir} />
+                        {tr('dept.summary.table.organization')} <SortIcon active={sortKey === 'name'} direction={sortDir} />
                       </button>
                     </th>
                     <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
                       <button type="button" onClick={() => onSort('category')} className="inline-flex items-center gap-1 hover:text-slate-700">
-                        Sub-department / Category <SortIcon active={sortKey === 'category'} direction={sortDir} />
+                        {tr('dept.summary.table.subDepartmentCategory')} <SortIcon active={sortKey === 'category'} direction={sortDir} />
                       </button>
                     </th>
                     <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
                       <button type="button" onClick={() => onSort('address')} className="inline-flex items-center gap-1 hover:text-slate-700">
-                        Address <SortIcon active={sortKey === 'address'} direction={sortDir} />
+                        {tr('dept.summary.table.address')} <SortIcon active={sortKey === 'address'} direction={sortDir} />
                       </button>
                     </th>
-                    <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">Portfolio</th>
+                    <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">{tr('dept.summary.table.portfolio')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -285,7 +295,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                             href={`/organizations/${org.id}`}
                             className="inline-flex items-center text-base font-semibold text-slate-500 hover:text-slate-800"
                             aria-label={`Open portfolio for ${org.name}`}
-                            title="Open portfolio"
+                            title={tr('dept.summary.table.openPortfolio')}
                           >
                             <CiShare1 className="text-lg" />
                           </a>
@@ -295,7 +305,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                   ) : (
                     <tr>
                       <td className="px-4 py-3 text-slate-600" colSpan={5}>
-                        No organizations found.
+                        {tr('dept.summary.empty.organizations')}
                       </td>
                     </tr>
                   )}
@@ -305,8 +315,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           </div>
           <div className="mt-3 flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
             <p>
-              Showing {(safeCurrentPage - 1) * pageSize + (pagedOrganizations.length ? 1 : 0)}-
-              {(safeCurrentPage - 1) * pageSize + pagedOrganizations.length} of {sortedOrganizations.length}
+              {tr('dept.summary.pagination.showing', {
+                start: (safeCurrentPage - 1) * pageSize + (pagedOrganizations.length ? 1 : 0),
+                end: (safeCurrentPage - 1) * pageSize + pagedOrganizations.length,
+                total: sortedOrganizations.length,
+              })}
             </p>
             <div className="flex items-center gap-2">
               <button
@@ -315,7 +328,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 className="rounded border border-slate-300 px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Previous
+                {tr('dept.summary.pagination.previous')}
               </button>
               <div className="flex items-center gap-1">
                 {pageButtons.map((p) => (
@@ -339,7 +352,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 className="rounded border border-slate-300 px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Next
+                {tr('dept.summary.pagination.next')}
               </button>
             </div>
           </div>
