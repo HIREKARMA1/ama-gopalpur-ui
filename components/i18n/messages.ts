@@ -626,7 +626,25 @@ export type MessageKey =
   | 'agriculture.type.serviceCenter'
   | 'agriculture.type.extensionCenter'
   | 'agriculture.type.agrilFarmersEmpowerment'
-  | 'agriculture.type.odishaStateSeedCorporation';
+  | 'agriculture.type.odishaStateSeedCorporation'
+  | 'dept.summary.leader.title'
+  | 'dept.summary.leader.messageHeading'
+  | 'dept.summary.section.summary'
+  | 'dept.summary.section.highlights'
+  | 'dept.summary.section.organizationListing'
+  | 'dept.summary.empty.highlights'
+  | 'dept.summary.empty.organizations'
+  | 'dept.summary.search.placeholder'
+  | 'dept.summary.search.allCategories'
+  | 'dept.summary.table.slNo'
+  | 'dept.summary.table.organization'
+  | 'dept.summary.table.subDepartmentCategory'
+  | 'dept.summary.table.address'
+  | 'dept.summary.table.portfolio'
+  | 'dept.summary.table.openPortfolio'
+  | 'dept.summary.pagination.showing'
+  | 'dept.summary.pagination.previous'
+  | 'dept.summary.pagination.next';
 
 const messages: Record<MessageKey, { en: string; or: string }> = {
   'govBar.title': {
@@ -1326,6 +1344,78 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'agriculture.type.odishaStateSeedCorporation': {
     en: 'Odisha State Seed Corporation',
     or: 'ଓଡ଼ିଶା ରାଜ୍ୟ ବିହନ ନିଗମ',
+  },
+  'dept.summary.leader.title': {
+    en: 'Department Leadership',
+    or: 'ବିଭାଗୀୟ ନେତୃତ୍ୱ',
+  },
+  'dept.summary.leader.messageHeading': {
+    en: "Minister's message",
+    or: 'ମନ୍ତ୍ରୀଙ୍କ ବାର୍ତ୍ତା',
+  },
+  'dept.summary.section.summary': {
+    en: 'Department summary',
+    or: 'ବିଭାଗ ସାରାଂଶ',
+  },
+  'dept.summary.section.highlights': {
+    en: 'Department highlights',
+    or: 'ବିଭାଗୀୟ ବିଶେଷତା',
+  },
+  'dept.summary.section.organizationListing': {
+    en: 'Department organization listing',
+    or: 'ବିଭାଗୀୟ ସଂସ୍ଥା ତାଲିକା',
+  },
+  'dept.summary.empty.highlights': {
+    en: 'No highlight data available.',
+    or: 'କୌଣସି ହାଇଲାଇଟ୍ ତଥ୍ୟ ଉପଲବ୍ଧ ନାହିଁ।',
+  },
+  'dept.summary.empty.organizations': {
+    en: 'No organizations found.',
+    or: 'କୌଣସି ସଂସ୍ଥା ମିଳିଲା ନାହିଁ।',
+  },
+  'dept.summary.search.placeholder': {
+    en: 'Search organization, category, address',
+    or: 'ସଂସ୍ଥା, ଶ୍ରେଣୀ, ଠିକଣା ସନ୍ଧାନ କରନ୍ତୁ',
+  },
+  'dept.summary.search.allCategories': {
+    en: 'All categories',
+    or: 'ସମସ୍ତ ଶ୍ରେଣୀ',
+  },
+  'dept.summary.table.slNo': {
+    en: 'Sl No',
+    or: 'କ୍ରମିକ ସଂଖ୍ୟା',
+  },
+  'dept.summary.table.organization': {
+    en: 'Organization',
+    or: 'ସଂସ୍ଥା',
+  },
+  'dept.summary.table.subDepartmentCategory': {
+    en: 'Sub-department / Category',
+    or: 'ଉପ-ବିଭାଗ / ଶ୍ରେଣୀ',
+  },
+  'dept.summary.table.address': {
+    en: 'Address',
+    or: 'ଠିକଣା',
+  },
+  'dept.summary.table.portfolio': {
+    en: 'Portfolio',
+    or: 'ପୋର୍ଟଫୋଲିଓ',
+  },
+  'dept.summary.table.openPortfolio': {
+    en: 'Open portfolio',
+    or: 'ପୋର୍ଟଫୋଲିଓ ଖୋଲନ୍ତୁ',
+  },
+  'dept.summary.pagination.showing': {
+    en: 'Showing {start}-{end} of {total}',
+    or: '{total} ମଧ୍ୟରୁ {start}-{end} ଦେଖାଯାଉଛି',
+  },
+  'dept.summary.pagination.previous': {
+    en: 'Previous',
+    or: 'ପୂର୍ବବର୍ତ୍ତୀ',
+  },
+  'dept.summary.pagination.next': {
+    en: 'Next',
+    or: 'ପରବର୍ତ୍ତୀ',
   },
   'login.email': {
     en: 'Email',
