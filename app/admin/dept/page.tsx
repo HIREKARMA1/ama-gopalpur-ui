@@ -28,6 +28,7 @@ import { useLanguage } from '../../../components/i18n/LanguageContext';
 import { t } from '../../../components/i18n/messages';
 import { Loader } from '../../../components/common/Loader';
 import { DepartmentSummaryManagementSection } from '../../../components/admin/DepartmentSummaryManagementSection';
+import { RoadsDataEntryForm } from '../../../components/admin/RoadsDataEntryForm';
 import { compressImage } from '../../../lib/imageCompression';
 import {
   EducationPsPortfolioAdminForm,
@@ -580,12 +581,6 @@ export default function DepartmentAdminPage() {
       WATCO_TABLE_FILTER_COLUMNS.includes(prev) ? prev : WATCO_TABLE_FILTER_COLUMNS[0]!,
     );
   }, [deptCode]);
-
-  useEffect(() => {
-    if (deptCode === 'ROADS') {
-      router.replace('/admin/dept/roads-monitoring');
-    }
-  }, [deptCode, router]);
 
   const organizationsForTable = useMemo(() => {
     const base =
@@ -1213,6 +1208,15 @@ export default function DepartmentAdminPage() {
                 </div>
               </section>
             )}
+
+            {deptCode === 'ROADS' && me?.department_id ? (
+              <RoadsDataEntryForm
+                departmentId={me.department_id}
+                onCreated={(created) => {
+                  setOrgs((prev) => [created, ...prev]);
+                }}
+              />
+            ) : null}
 
             {(deptCode === 'ICDS' || deptCode === 'AWC_ICDS') && (
               <section className="rounded-lg border border-border bg-background p-4">
