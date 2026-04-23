@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Shell } from '../components/layout/Shell';
 import { ConstituencyMap } from '../components/map/ConstituencyMap';
@@ -89,7 +89,7 @@ function orgToRoadFeature(org: Organization): RoadFeature | null {
   };
 }
 
-export default function HomePage() {
+function HomePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -373,6 +373,14 @@ export default function HomePage() {
         </div>
       </section>
     </Shell>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={null}>
+      <HomePageContent />
+    </Suspense>
   );
 }
 
