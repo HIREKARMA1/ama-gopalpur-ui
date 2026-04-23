@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import Link from 'next/link';
 import type { MessageKey } from '../i18n/messages';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
@@ -11,6 +12,7 @@ export function MapDepartmentSummaryDialog({
   onClose,
   anchorRef,
   departmentTitle,
+  departmentId,
   mapSummary,
   titleKey,
   emptyKey,
@@ -20,6 +22,7 @@ export function MapDepartmentSummaryDialog({
   onClose: () => void;
   anchorRef: React.RefObject<HTMLButtonElement | null>;
   departmentTitle: string;
+  departmentId?: number | null;
   mapSummary?: string | null;
   titleKey: MessageKey;
   emptyKey: MessageKey;
@@ -117,10 +120,18 @@ export function MapDepartmentSummaryDialog({
       <p className="mt-0.5 text-xs font-medium text-slate-600">{departmentTitle}</p>
       <div
         className="mt-3 overflow-y-auto text-xs leading-relaxed text-slate-700 whitespace-pre-wrap"
-        style={{ maxHeight: Math.min(220, box.maxHeight - 84) }}
+        style={{ maxHeight: Math.min(180, box.maxHeight - 84) }}
       >
         {body}
       </div>
+      {departmentId ? (
+        <Link
+          href={`/departments/${departmentId}/summary`}
+          className="mt-3 inline-flex items-center rounded-md border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-100"
+        >
+          View full department summary
+        </Link>
+      ) : null}
     </div>,
     portalTarget,
   );

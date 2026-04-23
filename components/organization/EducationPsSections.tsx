@@ -160,6 +160,11 @@ export function PsAboutSection({
   hideVisionMission = false,
   leaderLabels,
   hideExtendedLeaderBio = false,
+  aboutTitleOverride,
+  hideAboutMeta = false,
+  hideAboutText = false,
+  hideLeaderMeta = false,
+  hideDesignationLabel = false,
 }: {
   org: Organization;
   profile: Record<string, unknown>;
@@ -173,6 +178,16 @@ export function PsAboutSection({
   leaderLabels?: { title: string; messageHeading: string };
   /** When true, Past/Current experience block in the leader modal is omitted. */
   hideExtendedLeaderBio?: boolean;
+  /** Optional custom heading text for the About section. */
+  aboutTitleOverride?: string;
+  /** Hide Established/Type/Location meta block below about image. */
+  hideAboutMeta?: boolean;
+  /** Hide the about description paragraph below heading. */
+  hideAboutText?: boolean;
+  /** Hide Qualification/Experience/Contact/Email lines for leader card and modal. */
+  hideLeaderMeta?: boolean;
+  /** Show designation text without the "Designation:" prefix. */
+  hideDesignationLabel?: boolean;
 }) {
   const [isHeadmasterModalOpen, setIsHeadmasterModalOpen] = useState(false);
   const [isHeadmasterModalClosing, setIsHeadmasterModalClosing] = useState(false);
@@ -213,11 +228,13 @@ export function PsAboutSection({
   return (
     <section id="about" className="py-2 md:py-4">
       <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-        {language === 'od' ? 'ବିଦ୍ୟାଳୟ ସମ୍ପର୍କରେ' : `About ${schoolName}`}
+        {aboutTitleOverride || (language === 'od' ? 'ବିଦ୍ୟାଳୟ ସମ୍ପର୍କରେ' : `About ${schoolName}`)}
       </h2>
-      <p className="mt-4 max-w-6xl text-sm leading-relaxed text-slate-600 sm:text-base">
-        {aboutText}
-      </p>
+      {!hideAboutText ? (
+        <p className="mt-4 max-w-6xl text-sm leading-relaxed text-slate-600 sm:text-base">
+          {aboutText}
+        </p>
+      ) : null}
 
       <div className="mt-6 grid gap-7 lg:grid-cols-[1.05fr_1fr] lg:items-start">
         <div>
@@ -234,11 +251,13 @@ export function PsAboutSection({
             )}
           </div>
 
-          <div className="mt-5 grid gap-2 border-l-2 border-slate-300 pl-4 text-sm sm:text-base">
-            <p className="text-slate-800"><span className="font-semibold">Established:</span> {asString(profile.esst_year) || '—'}</p>
-            <p className="text-slate-800"><span className="font-semibold">Type:</span> {getText(profile, 'school_type', language) || asString(profile.category) || '—'}</p>
-            <p className="text-slate-800"><span className="font-semibold">Location:</span> {getText(profile, 'location', language) || org.address || '—'}</p>
-          </div>
+          {!hideAboutMeta ? (
+            <div className="mt-5 grid gap-2 border-l-2 border-slate-300 pl-4 text-sm sm:text-base">
+              <p className="text-slate-800"><span className="font-semibold">Established:</span> {asString(profile.esst_year) || '—'}</p>
+              <p className="text-slate-800"><span className="font-semibold">Type:</span> {getText(profile, 'school_type', language) || asString(profile.category) || '—'}</p>
+              <p className="text-slate-800"><span className="font-semibold">Location:</span> {getText(profile, 'location', language) || org.address || '—'}</p>
+            </div>
+          ) : null}
         </div>
 
         <div className="space-y-6">
@@ -274,22 +293,28 @@ export function PsAboutSection({
               <p className="text-lg font-bold text-slate-900">{headmasterName}</p>
               {headDesignation ? (
                 <p className="text-sm text-slate-600">
-                  {language === 'od' ? 'ପଦବୀ' : 'Designation'}: {headDesignation}
+                  {hideDesignationLabel
+                    ? headDesignation
+                    : `${language === 'od' ? 'ପଦବୀ' : 'Designation'}: ${headDesignation}`}
                 </p>
               ) : (
                 <p className="text-sm text-slate-600">{headmasterTitle}</p>
               )}
-              {aboutLeaderRole !== 'secretary' ? (
+              {!hideLeaderMeta && aboutLeaderRole !== 'secretary' ? (
                 <p className="mt-1 text-xs text-slate-500">
                   {language === 'od' ? 'ଯୋଗ୍ୟତା' : 'Qualification'}: {qualification} | {language === 'od' ? 'ଅନୁଭବ' : 'Experience'}: {experience}
                 </p>
               ) : null}
-              <p className="mt-1 text-xs text-slate-500">
-                {language === 'od' ? 'ଯୋଗାଯୋଗ' : 'Contact'}: {headmasterContact}
-              </p>
-              <p className="mt-1 break-all text-xs text-slate-500">
-                {language === 'od' ? 'ଇମେଲ' : 'Email'}: {headmasterEmail}
-              </p>
+              {!hideLeaderMeta ? (
+                <>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {language === 'od' ? 'ଯୋଗାଯୋଗ' : 'Contact'}: {headmasterContact}
+                  </p>
+                  <p className="mt-1 break-all text-xs text-slate-500">
+                    {language === 'od' ? 'ଇମେଲ' : 'Email'}: {headmasterEmail}
+                  </p>
+                </>
+              ) : null}
             </div>
           </div>
 
@@ -352,22 +377,28 @@ export function PsAboutSection({
               <p className="text-lg font-bold text-slate-900">{headmasterName}</p>
               {headDesignation ? (
                 <p className="text-sm text-slate-600">
-                  {language === 'od' ? 'ପଦବୀ' : 'Designation'}: {headDesignation}
+                  {hideDesignationLabel
+                    ? headDesignation
+                    : `${language === 'od' ? 'ପଦବୀ' : 'Designation'}: ${headDesignation}`}
                 </p>
               ) : (
                 <p className="text-sm text-slate-600">{headmasterTitle}</p>
               )}
-              {aboutLeaderRole !== 'secretary' ? (
+              {!hideLeaderMeta && aboutLeaderRole !== 'secretary' ? (
                 <p className="mt-1 text-xs text-slate-500">
                   {language === 'od' ? 'ଯୋଗ୍ୟତା' : 'Qualification'}: {qualification} | {language === 'od' ? 'ଅନୁଭବ' : 'Experience'}: {experience}
                 </p>
               ) : null}
-              <p className="mt-1 text-xs text-slate-500">
-                {language === 'od' ? 'ଯୋଗାଯୋଗ' : 'Contact'}: {headmasterContact}
-              </p>
-              <p className="mt-1 break-all text-xs text-slate-500">
-                {language === 'od' ? 'ଇମେଲ' : 'Email'}: {headmasterEmail}
-              </p>
+              {!hideLeaderMeta ? (
+                <>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {language === 'od' ? 'ଯୋଗାଯୋଗ' : 'Contact'}: {headmasterContact}
+                  </p>
+                  <p className="mt-1 break-all text-xs text-slate-500">
+                    {language === 'od' ? 'ଇମେଲ' : 'Email'}: {headmasterEmail}
+                  </p>
+                </>
+              ) : null}
               {aboutLeaderRole !== 'secretary' && !hideExtendedLeaderBio ? (
                 <div className="mt-3 space-y-2 border-t border-slate-200 pt-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Past Experience</p>

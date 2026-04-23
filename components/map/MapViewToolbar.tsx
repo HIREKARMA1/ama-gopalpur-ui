@@ -12,6 +12,7 @@ type MapTypeId = 'roadmap' | 'satellite';
 export function MapViewToolbar({
   mapInstance,
   mapContainerRef,
+  departmentId,
   departmentTitle,
   mapSummary,
   /** When false, map/satellite/fullscreen still show; info button is hidden. */
@@ -26,6 +27,7 @@ export function MapViewToolbar({
 }: {
   mapInstance: any;
   mapContainerRef: React.RefObject<HTMLDivElement | null>;
+  departmentId?: number | null;
   departmentTitle: string;
   mapSummary?: string | null;
   showDepartmentInfo: boolean;
@@ -103,6 +105,7 @@ export function MapViewToolbar({
             onClose={() => setInfoOpen(false)}
             anchorRef={infoButtonRef}
             departmentTitle={departmentTitle}
+            departmentId={departmentId}
             mapSummary={mapSummary}
             titleKey={dialogTitleKey}
             emptyKey={dialogEmptyKey}
@@ -114,20 +117,18 @@ export function MapViewToolbar({
         <button
           type="button"
           onClick={() => setMapType('roadmap')}
-          className={`px-3 py-1.5 text-xs font-medium ${
-            mapType === 'roadmap' ? 'bg-slate-200 text-slate-900' : 'bg-white text-slate-600 hover:bg-slate-50'
-          }`}
+          className={`px-3 py-1.5 text-xs font-medium ${mapType === 'roadmap' ? 'bg-slate-200 text-slate-900' : 'bg-white text-slate-600 hover:bg-slate-50'
+            }`}
         >
           {t(mapLabelKey, language)}
         </button>
         <button
           type="button"
           onClick={() => setMapType('satellite')}
-          className={`border-l border-slate-200 px-3 py-1.5 text-xs font-medium ${
-            mapType === 'satellite'
+          className={`border-l border-slate-200 px-3 py-1.5 text-xs font-medium ${mapType === 'satellite'
               ? 'bg-slate-200 text-slate-900'
               : 'bg-white text-slate-600 hover:bg-slate-50'
-          }`}
+            }`}
         >
           {t(satelliteLabelKey, language)}
         </button>

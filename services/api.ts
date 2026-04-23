@@ -68,6 +68,33 @@ export interface Department {
   description?: string | null;
   /** Public summary for constituency map (i) dialog; max length enforced server-side */
   map_summary?: string | null;
+  /** Rich content used by department summary page. */
+  department_summary?: DepartmentSummaryContent | null;
+}
+
+export interface DepartmentSummaryStat {
+  label: string;
+  value: string;
+  note?: string | null;
+}
+
+export interface DepartmentSummaryHighlightCard {
+  title: string;
+  value: string;
+  description?: string | null;
+  image?: string | null;
+}
+
+export interface DepartmentSummaryContent {
+  about_image?: string | null;
+  headline?: string | null;
+  overview?: string | null;
+  minister_message?: string | null;
+  key_functions?: string[];
+  recent_achievements?: string[];
+  strategic_priorities?: string[];
+  key_statistics?: DepartmentSummaryStat[];
+  highlight_cards?: DepartmentSummaryHighlightCard[];
 }
 
 export interface User {
@@ -101,11 +128,28 @@ export interface Organization {
 
 export const departmentsApi = {
   list: () => apiFetch<Department[]>('/api/v1/departments/'),
+  get: (departmentId: number) => apiFetch<Department>(`/api/v1/departments/${departmentId}`),
   updateMapSummary: (departmentId: number, payload: { map_summary: string | null }) =>
     apiFetch<Department>(`/api/v1/departments/${departmentId}/map-summary`, {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),
+  updateSummary: (
+    departmentId: number,
+    payload: { department_summary: DepartmentSummaryContent | null },
+  ) =>
+    apiFetch<Department>(`/api/v1/departments/${departmentId}/summary`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  uploadSummaryAboutImage: (departmentId: number, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ url: string }>(`/api/v1/departments/${departmentId}/summary-about-image`, {
+      method: 'POST',
+      body: form,
+    });
+  },
 };
 
 export const organizationsApi = {
