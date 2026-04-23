@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Shell } from '../components/layout/Shell';
 import { ConstituencyMap } from '../components/map/ConstituencyMap';
 import type { RoadFeature, DrainFeature } from '../components/map/ConstituencyMap';
@@ -48,9 +48,9 @@ function orgToRoadFeature(org: Organization): RoadFeature | null {
 
   const fallbackCoords: [number, number][] =
     Number.isFinite(startLat) &&
-    Number.isFinite(startLng) &&
-    Number.isFinite(endLat) &&
-    Number.isFinite(endLng)
+      Number.isFinite(startLng) &&
+      Number.isFinite(endLat) &&
+      Number.isFinite(endLng)
       ? [[startLng, startLat], [endLng, endLat]]
       : [];
 
@@ -89,8 +89,9 @@ function orgToRoadFeature(org: Organization): RoadFeature | null {
   };
 }
 
-export default function HomePage() {
+function HomePageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDept, setSelectedDept] = useState<Department | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -99,6 +100,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [countByDepartmentId, setCountByDepartmentId] = useState<Record<number, number>>({});
   const { language } = useLanguage();
+  const requestedDeptCode = (searchParams.get('dept') || '').trim().toUpperCase();
+  const requestedLegend = normalizeLegendParam(searchParams.get('legend'));
 
   useEffect(() => {
     departmentsApi
@@ -120,6 +123,7 @@ export default function HomePage() {
       window.sessionStorage.removeItem('ama_gopalpur_skip_restore');
       return;
     }
+    if (requestedDeptCode) return;
 
     // If user comes back using browser back/forward, don't re-trigger the
     // last-selected department redirect (it can trap the user in the same route).
@@ -136,7 +140,16 @@ export default function HomePage() {
     const match = departments.find((d) => (d.code || '').toUpperCase() === stored.toUpperCase());
     if (match) handleSelectDepartment(match);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [departments]);
+  }, [departments, requestedDeptCode]);
+
+  useEffect(() => {
+    if (!requestedDeptCode || departments.length === 0) return;
+    const match = departments.find((d) => (d.code || '').toUpperCase() === requestedDeptCode);
+    if (!match) return;
+    if (selectedDept?.id === match.id) return;
+    handleSelectDepartment(match);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedDeptCode, departments, selectedDept?.id]);
 
   const handleSelectDepartment = (dept: Department) => {
     setSelectedDept(dept);
@@ -344,7 +357,11 @@ export default function HomePage() {
         <div className="relative flex-1 min-h-0 rounded-tl-lg bg-slate-100 shadow-inner px-4 pt-4 pb-20 sm:p-6 lg:p-8">
           <div className="h-full w-full rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden ring-1 ring-slate-200/50">
             <ConstituencyMap
+              selectedDepartmentId={selectedDept?.id}
               selectedDepartmentCode={selectedDept?.code}
+              initialLegendFilterType={
+                selectedDept?.code?.toUpperCase() === requestedDeptCode ? requestedLegend : null
+              }
               mapDepartmentLabel={selectedDept ? getDepartmentLabel(selectedDept, language) : ''}
               mapSummary={selectedDept?.map_summary ?? null}
               organizations={organizations}
@@ -357,4 +374,18 @@ export default function HomePage() {
       </section>
     </Shell>
   );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={null}>
+      <HomePageContent />
+    </Suspense>
+  );
+}
+
+function normalizeLegendParam(raw: string | null): string | null {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  return value.replace(/\s+/g, '_').toUpperCase();
 }

@@ -280,8 +280,11 @@ export interface DrainFeature {
 }
 
 interface ConstituencyMapProps {
+  selectedDepartmentId?: number;
   /** Department code (e.g. 'EDUCATION', 'ROADS') */
   selectedDepartmentCode?: string;
+  /** Optional legend type to auto-apply when a department is selected. */
+  initialLegendFilterType?: string | null;
   /** Localized label for map summary dialog (sidebar name) */
   mapDepartmentLabel?: string;
   /** Public map summary from API (department admin) */
@@ -335,7 +338,9 @@ function createCircleMarkerSvgIcon(fillColor: string): string {
 }
 
 export function ConstituencyMap({
+  selectedDepartmentId,
   selectedDepartmentCode,
+  initialLegendFilterType = null,
   mapDepartmentLabel = '',
   mapSummary = null,
   organizations = [],
@@ -364,6 +369,7 @@ export function ConstituencyMap({
   const [streetViewMessage, setStreetViewMessage] = useState<string | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const mapWrapRef = useRef<HTMLDivElement>(null);
+  const lastAppliedInitialLegendRef = useRef<string>('');
   /** Restore pan/zoom after remounting the map (polyline legend filters force remount to clear ghost overlays). */
   const mapCameraPreserveRef = useRef<{ center: { lat: number; lng: number }; zoom: number } | null>(
     null,
@@ -662,6 +668,16 @@ export function ConstituencyMap({
     setSelectedDrain(null);
     mapCameraPreserveRef.current = null;
   }, [selectedDepartmentCode]);
+
+  useEffect(() => {
+    if (!selectedDepartmentCode || !initialLegendFilterType) return;
+    const applyKey = `${selectedDepartmentCode.toUpperCase()}::${initialLegendFilterType}`;
+    if (lastAppliedInitialLegendRef.current === applyKey && legendFilterType === initialLegendFilterType) {
+      return;
+    }
+    setLegendFilterType(initialLegendFilterType);
+    lastAppliedInitialLegendRef.current = applyKey;
+  }, [selectedDepartmentCode, initialLegendFilterType, legendFilterType]);
 
   /** Road path as Google Maps LatLng[] (GeoJSON is [lng, lat]) */
   const roadPaths = useMemo(
@@ -1599,6 +1615,7 @@ export function ConstituencyMap({
         <MapViewToolbar
           mapInstance={mapInstance}
           mapContainerRef={mapWrapRef}
+          departmentId={selectedDepartmentId}
           departmentTitle={mapDepartmentLabel}
           mapSummary={mapSummary}
           showDepartmentInfo={!!selectedDepartmentCode}
