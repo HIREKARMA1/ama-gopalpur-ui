@@ -129,7 +129,7 @@ export function MapDepartmentSummaryDialog({
           href={`/departments/${departmentId}/summary`}
           className="mt-3 inline-flex items-center rounded-md border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-100"
         >
-          View full department summary
+          {language === 'or' ? 'ସମ୍ପୂର୍ଣ୍ଣ ବିଭାଗ ସାରାଂଶ ଦେଖନ୍ତୁ' : 'View full department summary'}
         </Link>
       ) : null}
     </div>,

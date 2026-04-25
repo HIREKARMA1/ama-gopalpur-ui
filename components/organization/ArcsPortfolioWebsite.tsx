@@ -13,6 +13,7 @@ import {
   EMPTY,
 } from './EducationPsSections';
 import { Images, X } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const asText = (v: unknown) => (v == null || String(v).trim() === '' ? EMPTY : String(v));
 
@@ -85,18 +86,21 @@ function ArcsAboutSection({
   org,
   profile,
   sliderImages,
+  language,
 }: {
   org: Organization;
   profile: Record<string, unknown>;
   sliderImages: string[];
+  language: 'en' | 'or';
 }) {
+  const tr = (en: string, or: string) => (language === 'or' ? or : en);
   const [isSecretaryModalOpen, setIsSecretaryModalOpen] = useState(false);
   const [isSecretaryModalClosing, setIsSecretaryModalClosing] = useState(false);
   const societyName = asString(profile.arcs_name) || org.name || EMPTY;
   const aboutText = asString(profile.arcs_about) || EMPTY;
   const secretaryMessage = asString(profile.arcs_secretary_message) || EMPTY;
   const secretaryName = asString(profile.secretary_name) || EMPTY;
-  const secretaryTitle = 'Secretary';
+  const secretaryTitle = tr('Secretary', 'ସଚିବ');
   const aboutImage = asString(profile.arcs_about_image) || sliderImages[0] || '';
   const visionText = asString(profile.arcs_vision) || EMPTY;
   const missionText = asString(profile.arcs_mission) || EMPTY;
@@ -112,7 +116,9 @@ function ArcsAboutSection({
 
   return (
     <section id="about" className="py-2 md:py-4">
-      <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">About {societyName}</h2>
+      <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+        {tr(`About ${societyName}`, `${societyName} ବିଷୟରେ`)}
+      </h2>
       <p className="mt-4 max-w-6xl text-sm leading-relaxed text-slate-600 sm:text-base">{aboutText}</p>
 
       <div className="mt-6 grid gap-7 lg:grid-cols-[1.05fr_1fr] lg:items-start">
@@ -132,24 +138,26 @@ function ArcsAboutSection({
 
           <div className="mt-5 grid gap-2 border-l-2 border-slate-300 pl-4 text-sm sm:text-base">
             <p className="text-slate-800">
-              <span className="font-semibold">Registration:</span> {asString(profile.registration_number) || '—'}
+              <span className="font-semibold">{tr('Registration:', 'ପଞ୍ଜୀକରଣ:')}</span> {asString(profile.registration_number) || '—'}
             </p>
             <p className="text-slate-800">
-              <span className="font-semibold">Block/ULB:</span> {asString(profile.block_ulb) || '—'}
+              <span className="font-semibold">{tr('Block/ULB:', 'ବ୍ଲକ୍/ULB:')}</span> {asString(profile.block_ulb) || '—'}
             </p>
             <p className="text-slate-800">
-              <span className="font-semibold">Jurisdiction:</span>{' '}
+              <span className="font-semibold">{tr('Jurisdiction:', 'କ୍ଷେତ୍ରାଧିକାର:')}</span>{' '}
               {asString(profile.jurisdiction_type_rural_urban_mixed) || '—'}
             </p>
             <p className="text-slate-800">
-              <span className="font-semibold">Location:</span> {asString(profile.full_address) || org.address || '—'}
+              <span className="font-semibold">{tr('Location:', 'ଅବସ୍ଥାନ:')}</span> {asString(profile.full_address) || org.address || '—'}
             </p>
           </div>
         </div>
 
         <div className="space-y-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Secretary&apos;s message</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              {tr("Secretary's message", 'ସଚିବଙ୍କ ବାର୍ତ୍ତା')}
+            </p>
             <p className="mt-3 text-sm leading-relaxed text-slate-700 sm:text-base">&quot;{secretaryMessage}&quot;</p>
           </div>
 
@@ -161,7 +169,7 @@ function ArcsAboutSection({
                 setIsSecretaryModalOpen(true);
               }}
               className="h-36 w-32 shrink-0 overflow-hidden rounded-md bg-slate-100 sm:h-40 sm:w-36"
-              aria-label="Open secretary photo"
+              aria-label={tr('Open secretary photo', 'ସଚିବଙ୍କ ଛବି ଖୋଲନ୍ତୁ')}
             >
               {asString(profile.arcs_secretary_image) ? (
                 <img src={asString(profile.arcs_secretary_image)} alt={displayText(secretaryName)} className="h-full w-full object-cover" />
@@ -176,21 +184,21 @@ function ArcsAboutSection({
               <p className="text-lg font-bold text-slate-900">{secretaryName}</p>
               <p className="text-sm text-slate-600">{secretaryTitle}</p>
               <p className="mt-1 text-xs text-slate-500">
-                <span className="font-semibold">Contact:</span> {officePhone}
+                <span className="font-semibold">{tr('Contact:', 'ଯୋଗାଯୋଗ:')}</span> {officePhone}
               </p>
               <p className="mt-1 break-all text-xs text-slate-500">
-                <span className="font-semibold">Email:</span> {officeEmail}
+                <span className="font-semibold">{tr('Email:', 'ଇମେଲ୍:')}</span> {officeEmail}
               </p>
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="border-l-2 border-slate-300 pl-4">
-              <h4 className="text-xl font-extrabold tracking-tight text-slate-900">Vision</h4>
+              <h4 className="text-xl font-extrabold tracking-tight text-slate-900">{tr('Vision', 'ଭିଜନ୍')}</h4>
               <p className="mt-2 text-sm leading-relaxed text-slate-700 sm:text-base">{visionText}</p>
             </div>
             <div className="border-l-2 border-slate-300 pl-4">
-              <h4 className="text-xl font-extrabold tracking-tight text-slate-900">Mission</h4>
+              <h4 className="text-xl font-extrabold tracking-tight text-slate-900">{tr('Mission', 'ମିଶନ୍')}</h4>
               <p className="mt-2 text-sm leading-relaxed text-slate-700 sm:text-base">{missionText}</p>
             </div>
           </div>
@@ -217,7 +225,7 @@ function ArcsAboutSection({
               type="button"
               onClick={closeSecretaryModal}
               className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-sm transition hover:bg-white hover:text-slate-900"
-              aria-label="Close modal"
+              aria-label={tr('Close modal', 'ମୋଡାଲ୍ ବନ୍ଦ କରନ୍ତୁ')}
             >
               <X className="h-5 w-5" />
             </button>
@@ -235,10 +243,10 @@ function ArcsAboutSection({
               <p className="text-lg font-bold text-slate-900">{secretaryName}</p>
               <p className="text-sm text-slate-600">{secretaryTitle}</p>
               <p className="mt-1 text-xs text-slate-500">
-                <span className="font-semibold">Contact:</span> {officePhone}
+                <span className="font-semibold">{tr('Contact:', 'ଯୋଗାଯୋଗ:')}</span> {officePhone}
               </p>
               <p className="mt-1 break-all text-xs text-slate-500">
-                <span className="font-semibold">Email:</span> {officeEmail}
+                <span className="font-semibold">{tr('Email:', 'ଇମେଲ୍:')}</span> {officeEmail}
               </p>
             </div>
           </div>
@@ -323,7 +331,8 @@ function ArcsInchargeCard({ admin }: { admin: Record<string, unknown> }) {
   );
 }
 
-function ArcsInchargeSection({ cards }: { cards: Record<string, unknown>[] }) {
+function ArcsInchargeSection({ cards, language }: { cards: Record<string, unknown>[]; language: 'en' | 'or' }) {
+  const tr = (en: string, or: string) => (language === 'or' ? or : en);
   const list = cards.length ? cards : Array.from({ length: EMPTY_INCHARGE_SLOTS }, () => ({} as Record<string, unknown>));
   const desktopPageSize = 3;
   const desktopTotalPages = Math.max(1, Math.ceil(list.length / desktopPageSize));
@@ -339,7 +348,7 @@ function ArcsInchargeSection({ cards }: { cards: Record<string, unknown>[] }) {
     <section className="py-2 md:py-4">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Incharge details</h2>
+          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{tr('Incharge details', 'ଇଂଚାର୍ଜ ବିବରଣୀ')}</h2>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={goPrevMobile} className="h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:hidden" aria-label="Previous incharge">
@@ -391,17 +400,18 @@ function ArcsInchargeSection({ cards }: { cards: Record<string, unknown>[] }) {
   );
 }
 
-function ArcsMembershipSection({ rows }: { rows: Record<string, unknown>[] }) {
+function ArcsMembershipSection({ rows, language }: { rows: Record<string, unknown>[]; language: 'en' | 'or' }) {
+  const tr = (en: string, or: string) => (language === 'or' ? or : en);
   const list = rows.length ? rows : [{ category: '', count: '' }];
   return (
     <section className="py-2 md:py-4">
-      <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Membership</h2>
+      <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{tr('Membership', 'ସଦସ୍ୟତା')}</h2>
       <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <table className="min-w-full text-sm">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold text-slate-900">Category</th>
-              <th className="px-4 py-3 text-left font-semibold text-slate-900">Count</th>
+              <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Category', 'ଶ୍ରେଣୀ')}</th>
+              <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Count', 'ସଂଖ୍ୟା')}</th>
             </tr>
           </thead>
           <tbody>
@@ -737,6 +747,9 @@ function StockPreviewModal({
 }
 
 export function ArcsPortfolioWebsite({ org, profile, images = [] }: ArcsPortfolioWebsiteProps) {
+  const { language } = useLanguage();
+  const langForPs = language === 'or' ? 'od' : 'en';
+  const tr = (en: string, or: string) => (language === 'or' ? or : en);
   const sliderImages = useMemo(
     () => {
       const hero = [profile.arcs_hero_1, profile.arcs_hero_2, profile.arcs_hero_3].map((x) => String(x || '').trim()).filter(Boolean);
@@ -797,14 +810,14 @@ export function ArcsPortfolioWebsite({ org, profile, images = [] }: ArcsPortfoli
       <ArcsHeroSection org={org} profile={profile} sliderImages={sliderImages} />
 
       <main className="mx-auto max-w-[1280px] space-y-10 px-4 py-8 sm:px-6 lg:px-8">
-        <ArcsAboutSection org={org} profile={profile} sliderImages={sliderImages} />
-        <ArcsInchargeSection cards={inchargeCards} />
-        <ArcsMembershipSection rows={membership} />
-        <ArcsStockCarouselSection title="Fertiliser section" cards={fertilisers} onCardClick={openStockPreview} />
-        <ArcsStockCarouselSection title="Seed section" cards={seeds} onCardClick={openStockPreview} />
+        <ArcsAboutSection org={org} profile={profile} sliderImages={sliderImages} language={language} />
+        <ArcsInchargeSection cards={inchargeCards} language={language} />
+        <ArcsMembershipSection rows={membership} language={language} />
+        <ArcsStockCarouselSection title={tr('Fertiliser section', 'ସର ଅଂଶ')} cards={fertilisers} onCardClick={openStockPreview} />
+        <ArcsStockCarouselSection title={tr('Seed section', 'ବୀଜ ଅଂଶ')} cards={seeds} onCardClick={openStockPreview} />
         <ArcsLoansCarouselSection cards={loans} onSelect={(c) => { setIsLoanPreviewClosing(false); setLoanPreview(c); }} />
         <PsGallerySection gallery={galleryItems} />
-        <PsContactSection org={org} profile={contactProfile} language="en" />
+        <PsContactSection org={org} profile={contactProfile} language={langForPs} />
       </main>
 
       {stockPreview && <StockPreviewModal card={stockPreview} closing={isStockPreviewClosing} onClose={closeStockPreview} />}
@@ -839,11 +852,11 @@ export function ArcsPortfolioWebsite({ org, profile, images = [] }: ArcsPortfoli
                 <table className="min-w-full text-sm">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-3 py-2 text-left font-semibold">Farmer</th>
-                      <th className="px-3 py-2 text-left font-semibold">Date</th>
-                      <th className="px-3 py-2 text-left font-semibold">Amount</th>
-                      <th className="px-3 py-2 text-left font-semibold">Interest</th>
-                      <th className="px-3 py-2 text-left font-semibold">Year</th>
+                      <th className="px-3 py-2 text-left font-semibold">{tr('Farmer', 'କୃଷକ')}</th>
+                      <th className="px-3 py-2 text-left font-semibold">{tr('Date', 'ତାରିଖ')}</th>
+                      <th className="px-3 py-2 text-left font-semibold">{tr('Amount', 'ରାଶି')}</th>
+                      <th className="px-3 py-2 text-left font-semibold">{tr('Interest', 'ସୁଧ')}</th>
+                      <th className="px-3 py-2 text-left font-semibold">{tr('Year', 'ବର୍ଷ')}</th>
                     </tr>
                   </thead>
                   <tbody>

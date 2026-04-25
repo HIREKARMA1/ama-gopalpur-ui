@@ -79,6 +79,7 @@ export function MinorIrrigationPortfolioWebsite({
   images = [],
 }: MinorIrrigationPortfolioWebsiteProps) {
   const { language } = useLanguage();
+  const tr = (en: string, or: string) => (language === 'or' ? or : en);
   const lang = language as Lang;
   const [detailTab, setDetailTab] = useState<'overview' | 'technical' | 'operations' | 'finance'>('overview');
 
@@ -111,7 +112,11 @@ export function MinorIrrigationPortfolioWebsite({
       about_short_en: asString(profile.minor_about_short) || asString(profile.description) || asString(profile.remarks) || '',
       about_image: asString(profile.minor_campus_image),
       esst_year: asString(profile.minor_established_year) || asString(profile.established_year) || asString(profile.year_of_commissioning) || '',
-      school_type_en: asString(profile.minor_facility_type) || asString(profile.category_type) || asString(profile.category) || 'Irrigation Project',
+      school_type_en:
+        asString(profile.minor_facility_type) ||
+        asString(profile.category_type) ||
+        asString(profile.category) ||
+        tr('Irrigation Project', 'ସେଚନ ପ୍ରକଳ୍ପ'),
       location_en: asString(profile.minor_location_line) || locationFallback || asString(profile.location) || '',
       headmaster_message_en: asString(profile.minor_inst_head_message),
       name_of_hm: asString(profile.minor_inst_head_name),
@@ -133,9 +138,9 @@ export function MinorIrrigationPortfolioWebsite({
 
   const keyAdminPeople: PsPersonCard[] = useMemo(() => {
     const rows = parseArrayJson<Record<string, string>>((profile.minor_key_admin_cards ?? profile.minor_key_admin_cards_json) as unknown);
-    const defaults = ['Project in-charge', 'Engineer / Technical officer'] as const;
+    const defaults = [tr('Project in-charge', 'ପ୍ରକଳ୍ପ ଇଂଚାର୍ଜ'), tr('Engineer / Technical officer', 'ଇଞ୍ଜିନିୟର / ପ୍ରାୟୋଗିକ ଅଧିକାରୀ')] as const;
     const cards = rows.map((r, i) => ({
-      role: String(r.role || '').trim() || (i < defaults.length ? defaults[i] : 'Key contact'),
+      role: String(r.role || '').trim() || (i < defaults.length ? defaults[i] : tr('Key contact', 'ମୁଖ୍ୟ ଯୋଗାଯୋଗ')),
       image: asString(r.image),
       name: asString(r.name) || EMPTY,
       contact: asString(r.contact) || '—',
@@ -235,35 +240,39 @@ export function MinorIrrigationPortfolioWebsite({
           }}
         />
 
-        <PsPersonCardsSection title="Key admin contacts" people={keyAdminPeople} gridClassName="md:grid-cols-2 xl:grid-cols-4" />
+        <PsPersonCardsSection
+          title={tr('Key admin contacts', 'ମୁଖ୍ୟ ପ୍ରଶାସନିକ ଯୋଗାଯୋଗ')}
+          people={keyAdminPeople}
+          gridClassName="md:grid-cols-2 xl:grid-cols-4"
+        />
 
         <PsFacilitiesCarouselSection
           profile={psProfile}
           facilities={facilityCards}
-          sectionTitle="Facilities"
+          sectionTitle={tr('Facilities', 'ସୁବିଧା')}
           emptySlotCount={facilityCards.length ? undefined : 7}
         />
 
         <PsFacultySection
           faculty={teamCards}
           profile={psProfile}
-          sectionTitle="Engineers & operations team"
-          subjectLabel="Department / Specialization"
+          sectionTitle={tr('Engineers & operations team', 'ଇଞ୍ଜିନିୟର ଓ ପରିଚାଳନା ଟିମ୍')}
+          subjectLabel={tr('Department / Specialization', 'ବିଭାଗ / ବିଶେଷତା')}
           showAttendance={false}
         />
 
         <section className="py-2 md:py-4">
-          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">TS & NTS staff</h2>
+          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{tr('TS & NTS staff', 'TS ଏବଂ NTS କର୍ମଚାରୀ')}</h2>
           {tableShell(
             <table className="min-w-full text-sm">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Staff name</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Category</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Role / Designation</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Department</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Contact</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Email</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Staff name', 'କର୍ମଚାରୀ ନାମ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Category', 'ଶ୍ରେଣୀ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Role / Designation', 'ଭୂମିକା / ପଦବୀ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Department', 'ବିଭାଗ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Contact', 'ଯୋଗାଯୋଗ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Email', 'ଇମେଲ୍')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -283,7 +292,7 @@ export function MinorIrrigationPortfolioWebsite({
         </section>
 
         <section className="rounded-[28px] border border-slate-200/70 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-md md:p-7">
-          <h2 className="text-xl font-bold sm:text-2xl">Key highlights</h2>
+          <h2 className="text-xl font-bold sm:text-2xl">{tr('Key highlights', 'ମୁଖ୍ୟ ହାଇଲାଇଟ୍')}</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
               [t('minor.stat.catchment', language), formatVal(catchment)],
@@ -300,7 +309,7 @@ export function MinorIrrigationPortfolioWebsite({
 
         <section className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 shadow-sm md:p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">Project details</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">{tr('Project details', 'ପ୍ରକଳ୍ପ ବିବରଣୀ')}</h2>
             <div className="flex flex-wrap items-center gap-1 rounded-full border border-slate-200 bg-white p-1">
               {(['overview', 'technical', 'operations', 'finance'] as const).map((tab) => (
                 <button

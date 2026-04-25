@@ -18,6 +18,7 @@ type Props = {
 
 export function DepartmentSummaryPage({ department, organizationCount, organizations }: Props) {
   const { language } = useLanguage();
+  const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
   const lang = language as Lang;
   const tr = (key: MessageKey, vars?: Record<string, string | number>) => {
     let text = t(key, language);
@@ -48,19 +49,22 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
 
   const profile: Record<string, unknown> = {
     school_name_en: department.name,
-    hero_primary_tagline_en: summary?.headline || `${department.name} Department`,
+    hero_primary_tagline_en: summary?.headline || `${department.name} ${trStatic('Department', 'ବିଭାଗ')}`,
     about_short_en: summary?.overview || '—',
     about_image: summary?.about_image || '',
     headmaster_message_en: summary?.minister_message || '—',
     name_of_hm: 'Shri Bibhuti Bhusan Jena',
-    hm_designation: 'Minister of Commerce, Transport, Steel & Mine, Government of Odisha',
+    hm_designation:
+      language === 'or'
+        ? 'ବାଣିଜ୍ୟ, ପରିବହନ, ଇସ୍ପାତ ଓ ଖଣି ମନ୍ତ୍ରୀ, ଓଡ଼ିଶା ସରକାର'
+        : 'Minister of Commerce, Transport, Steel & Mine, Government of Odisha',
     headmaster_photo: 'https://ama-gopalpur.s3.ap-south-1.amazonaws.com/Bibhuti_Bhusan_Jena.png',
     esst_year: '',
-    school_type_en: 'Government Department',
-    location_en: 'Gopalpur Constituency',
+    school_type_en: trStatic('Government Department', 'ସରକାରୀ ବିଭାଗ'),
+    location_en: trStatic('Gopalpur Constituency', 'ଗୋପାଳପୁର ନିର୍ବାଚନ ମଣ୍ଡଳୀ'),
     vision_text_en: '',
     mission_text_en: '',
-    contact_address_en: 'Gopalpur Constituency, Odisha',
+    contact_address_en: trStatic('Gopalpur Constituency, Odisha', 'ଗୋପାଳପୁର ନିର୍ବାଚନ ମଣ୍ଡଳୀ, ଓଡ଼ିଶା'),
     contact_phone: '',
     contact_email: '',
     office_hours_en: '',
