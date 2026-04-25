@@ -164,7 +164,11 @@ export function MapViewToolbar({
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md ring-1 ring-slate-200/70 hover:opacity-95"
-            aria-label={mobileOpen ? 'Close map controls' : 'Open map controls'}
+            aria-label={
+              mobileOpen
+                ? (language === 'or' ? 'ମାନଚିତ୍ର ନିୟନ୍ତ୍ରଣ ବନ୍ଦ କରନ୍ତୁ' : 'Close map controls')
+                : (language === 'or' ? 'ମାନଚିତ୍ର ନିୟନ୍ତ୍ରଣ ଖୋଲନ୍ତୁ' : 'Open map controls')
+            }
             aria-expanded={mobileOpen}
           >
             {mobileOpen ? <ChevronUp size={18} /> : <SlidersHorizontal size={18} />}

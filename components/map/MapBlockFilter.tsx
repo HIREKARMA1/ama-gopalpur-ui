@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export interface MapBlockOption {
   value: string;
@@ -19,6 +20,7 @@ export function MapBlockFilter({
   onChange: (value: string) => void;
   disabled?: boolean;
 }) {
+  const { language } = useLanguage();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const selectedLabel = useMemo(
@@ -42,7 +44,9 @@ export function MapBlockFilter({
       ref={wrapRef}
       className="pointer-events-auto relative flex items-center gap-2 rounded-sm bg-white/95 px-2 py-1.5 shadow-sm ring-1 ring-slate-200"
     >
-      <label className="text-xs font-medium text-slate-600">Block</label>
+      <label className="text-xs font-medium text-slate-600">
+        {language === 'or' ? 'ବ୍ଲକ' : 'Block'}
+      </label>
       <button
         type="button"
         disabled={disabled}

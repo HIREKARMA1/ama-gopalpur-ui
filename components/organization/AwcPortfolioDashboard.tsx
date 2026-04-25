@@ -109,6 +109,7 @@ export function AwcPortfolioDashboard({
   snpDailyStock = [],
 }: AwcPortfolioDashboardProps) {
   const { language } = useLanguage();
+  const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
   const lang = language as Lang;
   const profile = (awcProfile ?? {}) as Record<string, unknown>;
 
@@ -142,7 +143,7 @@ export function AwcPortfolioDashboard({
     const tag =
       pick(profile, 'awc_tagline', 'hero_tagline', 'hero_primary_tagline_en') ||
       pick(profile, 'center_type') ||
-      'Anganwadi Centre';
+      trStatic('Anganwadi Centre', 'ଆଙ୍ଗନୱାଡି କେନ୍ଦ୍ର');
     return {
       ...profile,
       school_name_en: pick(profile, 'name_of_awc') || org.name || '',
@@ -150,7 +151,7 @@ export function AwcPortfolioDashboard({
       about_short_en: pick(profile, 'about_awc', 'description'),
       about_image: pick(profile, 'awc_campus_image', 'campus_image', 'about_image') || heroSlides[0] || '',
       esst_year: pick(profile, 'establishment_year'),
-      school_type_en: pick(profile, 'center_type') || 'Anganwadi Centre',
+      school_type_en: pick(profile, 'center_type') || trStatic('Anganwadi Centre', 'ଆଙ୍ଗନୱାଡି କେନ୍ଦ୍ର'),
       location_en: pick(profile, 'full_address') || locationFallback || org.address || '',
 
       name_of_hm: pick(profile, 'worker_name', 'aww_full_name'),
@@ -159,7 +160,7 @@ export function AwcPortfolioDashboard({
       hm_experience:
         pick(profile, 'worker_experience', 'aww_experience') ||
         (profile.worker_experience_years != null && String(profile.worker_experience_years).trim() !== ''
-          ? `${profile.worker_experience_years} years`
+          ? `${profile.worker_experience_years} ${trStatic('years', 'ବର୍ଷ')}`
           : ''),
       headmaster_contact: pick(profile, 'aww_contact_no', 'contact_number'),
       headmaster_email: pick(profile, 'worker_email', 'aww_email', 'contact_email'),
@@ -189,7 +190,7 @@ export function AwcPortfolioDashboard({
     const cardsFromProfile = parseArray<Record<string, unknown>>(profile.admin_cards);
     if (cardsFromProfile.length) {
       return cardsFromProfile.map((p) => ({
-        role: asString(p.role) || 'Key contact',
+        role: asString(p.role) || trStatic('Key contact', 'ମୁଖ୍ୟ ଯୋଗାଯୋଗ'),
         image: asString(p.image),
         name: asString(p.name) || EMPTY,
         contact: asString(p.contact) || EMPTY,
@@ -199,7 +200,7 @@ export function AwcPortfolioDashboard({
     const rows = parseArray<Record<string, string>>(
       profile.awc_key_admin_cards as unknown,
     ).map((r) => ({
-      role: asString(r.role) || 'Key contact',
+      role: asString(r.role) || trStatic('Key contact', 'ମୁଖ୍ୟ ଯୋଗାଯୋଗ'),
       image: asString(r.image),
       name: asString(r.name) || EMPTY,
       contact: asString(r.contact) || EMPTY,
@@ -208,14 +209,14 @@ export function AwcPortfolioDashboard({
     if (rows.length) return rows;
     return [
       {
-        role: 'CDPO',
+        role: trStatic('CDPO', 'ସିଡିପିଓ'),
         image: pick(profile, 'cdpo_photo', 'cpdo_photo'),
         name: pick(profile, 'cdpo_name', 'cpdo_name') || EMPTY,
         contact: pick(profile, 'cpdo_contact_no') || EMPTY,
         email: pick(profile, 'cdpo_email', 'cpdo_email') || EMPTY,
       },
       {
-        role: 'Supervisor',
+        role: trStatic('Supervisor', 'ସୁପରଭାଇଜର'),
         image: pick(profile, 'supervisor_photo'),
         name: pick(profile, 'supervisor_name') || EMPTY,
         contact: pick(profile, 'supervisor_contact_name') || EMPTY,
@@ -261,10 +262,26 @@ export function AwcPortfolioDashboard({
     const rows = parseArray<Record<string, string>>(profile.awc_service_cards as unknown);
     if (rows.length) return rows;
     return [
-      { service_title: 'Supplementary Nutrition', description: 'Nutrition support to beneficiaries.', schedule: 'Daily' },
-      { service_title: 'Take Home Ration (THR)', description: 'Ration for eligible groups.', schedule: 'Weekly' },
-      { service_title: 'Immunization Day', description: 'Vaccination session support.', schedule: 'Monthly' },
-      { service_title: 'VHSND', description: 'Village health and nutrition day.', schedule: 'Monthly' },
+      {
+        service_title: trStatic('Supplementary Nutrition', 'ଅନୁପୂରକ ପୋଷଣ'),
+        description: trStatic('Nutrition support to beneficiaries.', 'ଲାଭାର୍ଥୀଙ୍କ ପାଇଁ ପୋଷଣ ସହାୟତା।'),
+        schedule: trStatic('Daily', 'ଦୈନିକ'),
+      },
+      {
+        service_title: trStatic('Take Home Ration (THR)', 'ଘରକୁ ନେବା ରାସନ (THR)'),
+        description: trStatic('Ration for eligible groups.', 'ଯୋଗ୍ୟ ଗୋଷ୍ଠୀ ପାଇଁ ରାସନ।'),
+        schedule: trStatic('Weekly', 'ସାପ୍ତାହିକ'),
+      },
+      {
+        service_title: trStatic('Immunization Day', 'ଟୀକାକରଣ ଦିବସ'),
+        description: trStatic('Vaccination session support.', 'ଟୀକାକରଣ ସେସନ ସହାୟତା।'),
+        schedule: trStatic('Monthly', 'ମାସିକ'),
+      },
+      {
+        service_title: 'VHSND',
+        description: trStatic('Village health and nutrition day.', 'ଗ୍ରାମ ସ୍ୱାସ୍ଥ୍ୟ ଓ ପୋଷଣ ଦିବସ।'),
+        schedule: trStatic('Monthly', 'ମାସିକ'),
+      },
     ];
   }, [profile]);
 
@@ -348,7 +365,7 @@ export function AwcPortfolioDashboard({
         />
 
         <PsPersonCardsSection
-          title="Key admin contacts"
+          title={trStatic('Key admin contacts', 'ମୁଖ୍ୟ ପ୍ରଶାସନିକ ଯୋଗାଯୋଗ')}
           people={adminPeople}
           gridClassName="md:grid-cols-2 xl:grid-cols-4"
         />
@@ -356,15 +373,15 @@ export function AwcPortfolioDashboard({
         <PsFacilitiesCarouselSection
           profile={psProfile}
           facilities={facilityCards}
-          sectionTitle="Facilities"
+          sectionTitle={trStatic('Facilities', 'ସୁବିଧା')}
           emptySlotCount={facilityCards.length ? undefined : 7}
         />
 
         <PsFacultySection
           faculty={helperFaculty}
           profile={psProfile}
-          sectionTitle="Anganwadi Helper (AWH)"
-          subjectLabel="Role"
+          sectionTitle={trStatic('Anganwadi Helper (AWH)', 'ଆଙ୍ଗନୱାଡି ସହାୟିକା (AWH)')}
+          subjectLabel={trStatic('Role', 'ଭୂମିକା')}
           showAttendance={false}
         />
 
@@ -374,9 +391,9 @@ export function AwcPortfolioDashboard({
             <table className="min-w-full text-sm">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Service</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Description</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Schedule</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{trStatic('Service', 'ସେବା')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{trStatic('Description', 'ବିବରଣୀ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{trStatic('Schedule', 'ସମୟସୂଚୀ')}</th>
                 </tr>
               </thead>
               <tbody>

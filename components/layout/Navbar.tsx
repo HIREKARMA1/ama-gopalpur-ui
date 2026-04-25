@@ -33,8 +33,8 @@ export function Navbar() {
       {/* Top government bar */}
       <div className="flex h-8 items-center justify-between bg-neutral-800 px-3 text-[11px] text-neutral-100 sm:px-6 lg:px-10">
         <div className="flex items-center gap-2">
-          <span className="font-medium tracking-wide">Government of Odisha</span>
-          <span className="hidden text-neutral-300 sm:inline">ଓଡ଼ିଶା ସରକାର</span>
+          <span className="font-medium tracking-wide">{t('govBar.title', language)}</span>
+          <span className="hidden text-neutral-300 sm:inline">{t('govBar.subtitle', language)}</span>
         </div>
         <button
           type="button"
