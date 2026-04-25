@@ -47,8 +47,6 @@ export const MINOR_IRRIGATION_PORTFOLIO_EMPTY_FORM: MinorIrrigationPortfolioForm
   gallery_images: '[]',
 };
 
-const MAX_UPLOAD_BYTES = 1024 * 1024;
-
 function parseRows(raw: string): Record<string, string>[] {
   if (!raw.trim()) return [];
   try {
@@ -69,7 +67,6 @@ async function uploadAsset(
   assetType: string,
   uploadAssetApi: UploadAssetFn,
 ): Promise<string> {
-  if (file.size > MAX_UPLOAD_BYTES) throw new Error('Each image should be under 1 MB.');
   const prepared = await compressImage(file, { maxSizeMB: 1, maxWidth: 1920 });
   const { url } = await uploadAssetApi(orgId, prepared, assetType);
   return url;

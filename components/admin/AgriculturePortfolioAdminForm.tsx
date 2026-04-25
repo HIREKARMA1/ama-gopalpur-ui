@@ -7,8 +7,6 @@ import { CharCount } from './ArcsPortfolioAdminForm';
 
 type AgriculturePortfolioFormFields = Record<string, string>;
 
-const MAX_UPLOAD_BYTES = 1024 * 1024;
-
 export const AGRICULTURE_PORTFOLIO_FIELD_LIMITS = {
   ag_display_name: 120,
   ag_hero_tagline: 280,
@@ -155,7 +153,6 @@ export function normalizeAgricultureFacilityCardsForSave(
 }
 
 async function uploadAsset(orgId: number, file: File, assetType: string): Promise<string> {
-  if (file.size > MAX_UPLOAD_BYTES) throw new Error('Each image should be under 1 MB.');
   const prepared = await compressImage(file, { maxSizeMB: 1, maxWidth: 1920 });
   const { url } = await organizationsApi.uploadAgriculturePortfolioAsset(orgId, prepared, assetType);
   return url;

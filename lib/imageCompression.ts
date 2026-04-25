@@ -37,18 +37,31 @@ export async function compressImage(file: File, options: { maxSizeMB: number; ma
 
                 ctx.drawImage(img, 0, 0, width, height);
 
-                // Iteratively reduce quality until under maxSize or quality limit
-                let quality = 0.9;
-                const tryCompress = (q: number) => {
+                // Iteratively reduce quality, then dimensions, until under max size.
+                const tryCompress = (q: number, scale: number) => {
+                    const outWidth = Math.max(320, Math.floor(width * scale));
+                    const outHeight = Math.max(240, Math.floor(height * scale));
+                    canvas.width = outWidth;
+                    canvas.height = outHeight;
+                    ctx.drawImage(img, 0, 0, outWidth, outHeight);
                     canvas.toBlob(
                         (blob) => {
                             if (!blob) {
                                 return reject(new Error('Canvas toBlob failed'));
                             }
-                            if (blob.size <= maxSizeBytes || q <= 0.1) {
+                            if (blob.size <= maxSizeBytes) {
                                 resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+                                return;
+                            }
+                            if (q > 0.5) {
+                                tryCompress(q - 0.1, scale);
+                                return;
+                            }
+                            if (scale > 0.5) {
+                                tryCompress(0.85, scale - 0.1);
                             } else {
-                                tryCompress(q - 0.1);
+                                // Return best-effort compression result even if still above target.
+                                resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
                             }
                         },
                         'image/jpeg',
@@ -56,7 +69,7 @@ export async function compressImage(file: File, options: { maxSizeMB: number; ma
                     );
                 };
 
-                tryCompress(quality);
+                tryCompress(0.9, 1);
             };
             img.onerror = (err) => reject(err);
         };
