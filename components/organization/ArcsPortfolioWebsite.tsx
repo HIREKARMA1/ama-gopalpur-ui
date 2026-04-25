@@ -748,6 +748,7 @@ function StockPreviewModal({
 
 export function ArcsPortfolioWebsite({ org, profile, images = [] }: ArcsPortfolioWebsiteProps) {
   const { language } = useLanguage();
+  const langForPs = language === 'or' ? 'od' : 'en';
   const tr = (en: string, or: string) => (language === 'or' ? or : en);
   const sliderImages = useMemo(
     () => {
@@ -816,7 +817,7 @@ export function ArcsPortfolioWebsite({ org, profile, images = [] }: ArcsPortfoli
         <ArcsStockCarouselSection title={tr('Seed section', 'ବୀଜ ଅଂଶ')} cards={seeds} onCardClick={openStockPreview} />
         <ArcsLoansCarouselSection cards={loans} onSelect={(c) => { setIsLoanPreviewClosing(false); setLoanPreview(c); }} />
         <PsGallerySection gallery={galleryItems} />
-        <PsContactSection org={org} profile={contactProfile} language={language} />
+        <PsContactSection org={org} profile={contactProfile} language={langForPs} />
       </main>
 
       {stockPreview && <StockPreviewModal card={stockPreview} closing={isStockPreviewClosing} onClose={closeStockPreview} />}
