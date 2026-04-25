@@ -464,10 +464,7 @@ function jsonTextareaClass() {
   return `${textInputClass()} min-h-[7rem] font-mono text-[10px] leading-relaxed`;
 }
 
-const MAX_AWC_UPLOAD_BYTES = 1024 * 1024;
-
 async function uploadAwcAssetPrepared(orgId: number, file: File, assetType: string): Promise<string> {
-  if (file.size > MAX_AWC_UPLOAD_BYTES) throw new Error('Each image should be under 1 MB.');
   const prepared = await compressImage(file, { maxSizeMB: 1, maxWidth: 1920 });
   const { url } = await organizationsApi.uploadAwcPortfolioAsset(orgId, prepared, assetType);
   return url;
