@@ -6,8 +6,6 @@ import { organizationsApi } from '../../services/api';
 
 type ArcsFormFields = Record<string, string>;
 
-const MAX_UPLOAD_BYTES = 1024 * 1024; // 1 MB
-
 /** Limits aligned with public portfolio line-clamps / layout. */
 export const ARCS_FIELD_LIMITS = {
   arcs_name: 100,
@@ -62,7 +60,6 @@ function rowsToJson(rows: Record<string, unknown>[]): string {
 }
 
 async function uploadAsset(orgId: number, file: File, assetType: string): Promise<string> {
-  if (file.size > MAX_UPLOAD_BYTES) throw new Error('Each image should be under 1 MB.');
   const prepared = await compressImage(file, { maxSizeMB: 1, maxWidth: 1920 });
   const { url } = await organizationsApi.uploadArcsPortfolioAsset(orgId, prepared, assetType);
   return url;

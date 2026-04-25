@@ -7,8 +7,6 @@ import { organizationsApi } from '../../services/api';
 /** Education school form slice used for PS portfolio (all string fields). */
 export type PsPortfolioOrgFields = Record<string, string>;
 
-const MAX_UPLOAD_BYTES = 1024 * 1024; // 1 MB
-
 function safeParseJsonArray<T extends object>(raw: string, fallback: T[]): T[] {
   if (!raw.trim()) return fallback;
   try {
@@ -56,9 +54,6 @@ function getTodayKey(): string {
 }
 
 async function uploadAsset(orgId: number, file: File, assetType: string): Promise<string> {
-  if (file.size > MAX_UPLOAD_BYTES) {
-    throw new Error('Each image should be under 1 MB.');
-  }
   const prepared = await compressImage(file, { maxSizeMB: 1, maxWidth: 1920 });
   const { url } = await organizationsApi.uploadPsPortfolioAsset(orgId, prepared, assetType);
   return url;
@@ -205,7 +200,7 @@ export function EducationPsPortfolioAdminForm({
       <div>
         <h3 className="text-xs font-semibold text-text">School portfolio website (section-wise)</h3>
         <p className="mt-1 text-[11px] leading-relaxed text-text-muted">
-          Instructions: Fill all sections in English. Use file upload for images; keep each file under 1 MB (JPEG or PNG). For lists
+          Instructions: Fill all sections in English. Use file upload for images; larger files are auto-compressed before upload (JPEG or PNG). For lists
           (facilities, faculty, gallery, etc.), add only the rows you need.
         </p>
       </div>
