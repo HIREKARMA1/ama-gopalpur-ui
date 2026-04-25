@@ -11,6 +11,7 @@ import {
   getDepartmentLabel,
 } from '../components/departments/DepartmentSidebar';
 import { useLanguage } from '../components/i18n/LanguageContext';
+import { t } from '../components/i18n/messages';
 import {
   departmentsApi,
   organizationsApi,
@@ -301,7 +302,7 @@ function HomePageContent() {
           departments={departments}
           selectedId={selectedDept?.id ?? null}
           countByDepartmentId={countByDepartmentId}
-          countLabel="Total"
+          countLabel={t('sidebar.total', language)}
           onSelect={handleSelectDepartment}
         />
       }
@@ -324,7 +325,7 @@ function HomePageContent() {
                           ? 'bg-slate-100 text-orange-600 shadow-sm ring-1 ring-slate-200'
                           : 'text-slate-500 hover:bg-slate-50'
                           }`}
-                        aria-label={dept.name}
+                        aria-label={getDepartmentLabel(dept, language)}
                       >
                         <Icon className="h-6 w-6" />
                       </button>
@@ -336,7 +337,11 @@ function HomePageContent() {
                 type="button"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="flex h-11 w-11 min-w-11 shrink-0 aspect-square items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-50"
-                aria-label={sidebarOpen ? 'Close departments' : 'Open departments'}
+                aria-label={
+                  sidebarOpen
+                    ? (language === 'or' ? 'ବିଭାଗ ବନ୍ଦ କରନ୍ତୁ' : 'Close departments')
+                    : (language === 'or' ? 'ବିଭାଗ ଖୋଲନ୍ତୁ' : 'Open departments')
+                }
               >
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -351,7 +356,7 @@ function HomePageContent() {
         {loading && (
           <div className="absolute left-4 top-4 z-[1] flex items-center gap-2 rounded-lg bg-white/95 px-4 py-2.5 text-sm font-medium text-slate-700 shadow-md backdrop-blur-sm">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
-            Loading…
+            {t('sidebar.loading', language)}
           </div>
         )}
         <div className="relative flex-1 min-h-0 rounded-tl-lg bg-slate-100 shadow-inner px-4 pt-4 pb-20 sm:p-6 lg:p-8">

@@ -130,6 +130,8 @@ function AgriculturePortfolioMonitoringSection({
   profile: Record<string, unknown>;
   dailyMetrics: AgricultureDailyMetricExtended[];
 }) {
+  const { language } = useLanguage();
+  const tr = (en: string, or: string) => (language === 'or' ? or : en);
   const [monitorDate, setMonitorDate] = useState(new Date().toISOString().slice(0, 10));
 
   const metricDates = useMemo(
@@ -219,16 +221,19 @@ function AgriculturePortfolioMonitoringSection({
 
   return (
     <section className="rounded-[28px] border border-indigo-200/80 bg-gradient-to-br from-indigo-50/80 via-white to-sky-50/50 p-5 shadow-md md:p-7">
-      <h2 className={SECTION_H2}>Daily Monitoring</h2>
+      <h2 className={SECTION_H2}>{tr('Daily Monitoring', 'ଦୈନିକ ନିରୀକ୍ଷଣ')}</h2>
       <p className="mt-2 max-w-3xl text-sm text-slate-600">
-        Date-wise operations summary with attendance, outreach, and inventory view.
+        {tr(
+          'Date-wise operations summary with attendance, outreach, and inventory view.',
+          'ତାରିଖ ଅନୁସାରେ ଉପସ୍ଥିତି, ସେବା ପହଞ୍ଚ ଓ ଭଣ୍ଡାର ସାରାଂଶ।',
+        )}
       </p>
 
       <div className="mt-8 space-y-10">
         <div className="flex flex-col items-start justify-between gap-6 border-b border-slate-200 pb-6 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-1">
             <label className="text-[10px] font-bold uppercase tracking-widest text-[#64748b]">
-              Select monitoring date
+              {tr('Select monitoring date', 'ନିରୀକ୍ଷଣ ତାରିଖ ବାଛନ୍ତୁ')}
             </label>
             <input
               type="date"
@@ -243,8 +248,8 @@ function AgriculturePortfolioMonitoringSection({
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <div className="flex h-[350px] flex-col rounded-2xl border border-slate-100 bg-white/50 p-6">
             <div className="mb-4">
-              <h3 className="text-sm font-bold text-[#0f172a]">Daily Service Trends</h3>
-              <p className="text-[11px] text-[#64748b]">Trainings and farmers served (last 15 records)</p>
+              <h3 className="text-sm font-bold text-[#0f172a]">{tr('Daily Service Trends', 'ଦୈନିକ ସେବା ପ୍ରବଣତା')}</h3>
+              <p className="text-[11px] text-[#64748b]">{tr('Trainings and farmers served (last 15 records)', 'ପ୍ରଶିକ୍ଷଣ ଓ ସେବା ପ୍ରାପ୍ତ କୃଷକ (ଶେଷ 15 ରେକର୍ଡ)')}</p>
             </div>
             <div className="min-h-0 flex-1">
               {trendRows.length > 0 ? (
@@ -269,7 +274,7 @@ function AgriculturePortfolioMonitoringSection({
                 </ResponsiveContainer>
               ) : (
                 <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">
-                  No trend data available.
+                  {tr('No trend data available.', 'କୌଣସି ପ୍ରବଣତା ତଥ୍ୟ ନାହିଁ।')}
                 </div>
               )}
             </div>
@@ -277,8 +282,8 @@ function AgriculturePortfolioMonitoringSection({
 
           <div className="flex h-[350px] flex-col rounded-2xl border border-slate-100 bg-white/50 p-6">
             <div className="mb-4">
-              <h3 className="text-sm font-bold text-[#0f172a]">Attendance Trends</h3>
-              <p className="text-[11px] text-[#64748b]">Staff present count (last 15 records)</p>
+              <h3 className="text-sm font-bold text-[#0f172a]">{tr('Attendance Trends', 'ଉପସ୍ଥିତି ପ୍ରବଣତା')}</h3>
+              <p className="text-[11px] text-[#64748b]">{tr('Staff present count (last 15 records)', 'ଉପସ୍ଥିତ କର୍ମଚାରୀ (ଶେଷ 15 ରେକର୍ଡ)')}</p>
             </div>
             <div className="min-h-0 flex-1">
               {trendRows.length > 0 ? (
@@ -306,7 +311,7 @@ function AgriculturePortfolioMonitoringSection({
                 </ResponsiveContainer>
               ) : (
                 <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">
-                  No attendance data available.
+                  {tr('No attendance data available.', 'କୌଣସି ଉପସ୍ଥିତି ତଥ୍ୟ ନାହିଁ।')}
                 </div>
               )}
             </div>
@@ -316,25 +321,25 @@ function AgriculturePortfolioMonitoringSection({
         <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white/40">
           <div className="flex items-center justify-between border-b border-slate-100 bg-white/50 p-5">
             <div>
-              <h3 className="text-sm font-bold text-[#0f172a]">Daily Service Numbers</h3>
-              <p className="text-[11px] text-[#64748b]">Records for {monitorDate}</p>
+              <h3 className="text-sm font-bold text-[#0f172a]">{tr('Daily Service Numbers', 'ଦୈନିକ ସେବା ସଂଖ୍ୟା')}</h3>
+              <p className="text-[11px] text-[#64748b]">{tr('Records for', 'ରେକର୍ଡ:')} {monitorDate}</p>
             </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="bg-slate-50/50">
-                  <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Date</th>
-                  <th className="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Trainings</th>
-                  <th className="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Farmers served</th>
-                  <th className="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Trials</th>
+                  <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">{tr('Date', 'ତାରିଖ')}</th>
+                  <th className="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">{tr('Trainings', 'ପ୍ରଶିକ୍ଷଣ')}</th>
+                  <th className="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">{tr('Farmers served', 'ସେବା ପ୍ରାପ୍ତ କୃଷକ')}</th>
+                  <th className="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">{tr('Trials', 'ପରୀକ୍ଷା')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {dayMetrics.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="bg-white/20 px-6 py-10 text-center italic text-slate-400">
-                      No daily records available for this date.
+                      {tr('No daily records available for this date.', 'ଏହି ତାରିଖ ପାଇଁ କୌଣସି ଦୈନିକ ରେକର୍ଡ ନାହିଁ।')}
                     </td>
                   </tr>
                 ) : (
@@ -355,26 +360,26 @@ function AgriculturePortfolioMonitoringSection({
         <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white/40">
           <div className="flex items-center justify-between border-b border-slate-100 bg-white/50 p-5">
             <div>
-              <h3 className="text-sm font-bold text-[#0f172a]">Daily Stock / Inventory</h3>
-              <p className="text-[11px] text-[#64748b]">Inventory level for {stockDate}</p>
+              <h3 className="text-sm font-bold text-[#0f172a]">{tr('Daily Stock / Inventory', 'ଦୈନିକ ଷ୍ଟକ୍ / ଭଣ୍ଡାର')}</h3>
+              <p className="text-[11px] text-[#64748b]">{tr('Inventory level for', 'ଷ୍ଟକ୍ ସ୍ତର:')} {stockDate}</p>
             </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="bg-slate-50/50">
-                  <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Item name</th>
-                  <th className="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Opening</th>
-                  <th className="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Received</th>
-                  <th className="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Used</th>
-                  <th className="px-6 py-3 text-right text-[10px] font-bold uppercase tracking-widest text-slate-500">Closing</th>
+                  <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">{tr('Item name', 'ବସ୍ତୁ ନାମ')}</th>
+                  <th className="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">{tr('Opening', 'ଆରମ୍ଭ')}</th>
+                  <th className="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">{tr('Received', 'ପ୍ରାପ୍ତ')}</th>
+                  <th className="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">{tr('Used', 'ବ୍ୟବହୃତ')}</th>
+                  <th className="px-6 py-3 text-right text-[10px] font-bold uppercase tracking-widest text-slate-500">{tr('Closing', 'ଶେଷ')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {shownStocks.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="bg-white/20 px-6 py-10 text-center italic text-slate-400">
-                      No stock rows available for this date.
+                      {tr('No stock rows available for this date.', 'ଏହି ତାରିଖ ପାଇଁ କୌଣସି ଷ୍ଟକ୍ ତଥ୍ୟ ନାହିଁ।')}
                     </td>
                   </tr>
                 ) : (
@@ -406,6 +411,7 @@ export function AgriculturePortfolioWebsite({
   monthlyReports = [],
 }: AgriculturePortfolioWebsiteProps) {
   const { language } = useLanguage();
+  const tr = (en: string, or: string) => (language === 'or' ? or : en);
   const lang = language as Lang;
 
   const heroSlides = useMemo(() => {
@@ -428,7 +434,7 @@ export function AgriculturePortfolioWebsite({
         asString(profile.ag_hero_tagline) ||
         asString(profile.ag_tagline) ||
         asString(profile.institution_type) ||
-        'Agriculture center',
+        tr('Agriculture center', 'କୃଷି କେନ୍ଦ୍ର'),
       about_short_en: asString(profile.ag_about) || asString(profile.remarks) || '',
       about_image: asString(profile.ag_campus_image),
       esst_year: asString(profile.established_year),
@@ -452,7 +458,7 @@ export function AgriculturePortfolioWebsite({
     if (rows.length === 0) {
       return [
         {
-          role: 'Officer in charge',
+          role: tr('Officer in charge', 'ଦାୟିତ୍ୱରତ ଅଧିକାରୀ'),
           image: asString(profile.ag_head_photo),
           name: asString(profile.in_charge_name) || EMPTY,
           contact: asString(profile.in_charge_contact) || EMPTY,
@@ -461,7 +467,7 @@ export function AgriculturePortfolioWebsite({
       ];
     }
     return rows.map((r) => ({
-      role: asString(r.role) || 'Key contact',
+      role: asString(r.role) || tr('Key contact', 'ମୁଖ୍ୟ ଯୋଗାଯୋଗ'),
       image: asString(r.image),
       name: asString(r.name) || EMPTY,
       contact: asString(r.contact) || EMPTY,
@@ -499,10 +505,10 @@ export function AgriculturePortfolioWebsite({
 
   const highlights = useMemo(
     () => [
-      ['Total staff', asString(profile.total_staff_count ?? profile.total_staff) || '0'],
-      ['Villages covered', asString(profile.villages_gps_covered_count ?? profile.villages_covered) || '0'],
+      [tr('Total staff', 'ମୋଟ କର୍ମଚାରୀ'), asString(profile.total_staff_count ?? profile.total_staff) || '0'],
+      [tr('Villages covered', 'ଆବର୍ତ୍ତିତ ଗ୍ରାମ'), asString(profile.villages_gps_covered_count ?? profile.villages_covered) || '0'],
       [
-        'Farmers served',
+        tr('Farmers served', 'ସେବା ପ୍ରାପ୍ତ କୃଷକ'),
         asString(profile.farmers_served_last_year_approx ?? profile.farmers_served_last_year) || '0',
       ],
     ],
@@ -544,40 +550,40 @@ export function AgriculturePortfolioWebsite({
           hideVisionMission
           hideExtendedLeaderBio
           leaderLabels={{
-            title: 'Institution Head',
-            messageHeading: "Institution head's message",
+            title: tr('Institution Head', 'ପ୍ରତିଷ୍ଠାନ ମୁଖ୍ୟ'),
+            messageHeading: tr("Institution head's message", 'ପ୍ରତିଷ୍ଠାନ ମୁଖ୍ୟଙ୍କ ବାର୍ତ୍ତା'),
           }}
         />
 
-        <PsPersonCardsSection title="Key admin contacts" people={keyContacts} gridClassName="md:grid-cols-2 xl:grid-cols-4" />
+        <PsPersonCardsSection title={tr('Key admin contacts', 'ମୁଖ୍ୟ ପ୍ରଶାସନିକ ଯୋଗାଯୋଗ')} people={keyContacts} gridClassName="md:grid-cols-2 xl:grid-cols-4" />
 
         <PsFacilitiesCarouselSection
           profile={psProfile}
           facilities={facilities}
-          sectionTitle="Facilities"
+          sectionTitle={tr('Facilities', 'ସୁବିଧା')}
           emptySlotCount={facilities.length ? undefined : 7}
         />
 
         <PsFacultySection
           faculty={experts}
           profile={psProfile}
-          sectionTitle="Team"
-          subjectLabel="Department / Specialization"
+          sectionTitle={tr('Team', 'ଟିମ୍')}
+          subjectLabel={tr('Department / Specialization', 'ବିଭାଗ / ବିଶେଷତା')}
           showAttendance
         />
 
         <section className="py-2 md:py-4">
-          <h2 className={SECTION_H2}>Staff Table</h2>
+          <h2 className={SECTION_H2}>{tr('Staff Table', 'କର୍ମଚାରୀ ତାଲିକା')}</h2>
           {tableShell(
             <table className="min-w-full text-sm">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Staff name</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Category</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Role / Designation</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Department</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Contact</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Email</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Staff name', 'କର୍ମଚାରୀ ନାମ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Category', 'ଶ୍ରେଣୀ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Role / Designation', 'ଭୂମିକା / ପଦବୀ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Department', 'ବିଭାଗ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Contact', 'ଯୋଗାଯୋଗ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Email', 'ଇମେଲ୍')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -597,7 +603,7 @@ export function AgriculturePortfolioWebsite({
         </section>
 
         <section className="rounded-[28px] border border-slate-200/70 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-md md:p-7">
-          <h2 className="text-xl font-bold sm:text-2xl">Key highlights</h2>
+          <h2 className="text-xl font-bold sm:text-2xl">{tr('Key highlights', 'ମୁଖ୍ୟ ହାଇଲାଇଟ୍')}</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {highlights.map(([k, v]) => (
               <div key={k} className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm">
@@ -614,17 +620,17 @@ export function AgriculturePortfolioWebsite({
         />
 
         <section className="rounded-[28px] border border-slate-200/70 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-md md:p-7">
-          <h2 className="text-xl font-bold sm:text-2xl">Monthly summary</h2>
+          <h2 className="text-xl font-bold sm:text-2xl">{tr('Monthly summary', 'ମାସିକ ସାରାଂଶ')}</h2>
           {tableShell(
             <table className="min-w-full text-sm">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Month</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Trainings</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Farmers served</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Trials</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Soil cards</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Remarks</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Month', 'ମାସ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Trainings', 'ପ୍ରଶିକ୍ଷଣ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Farmers served', 'ସେବା ପ୍ରାପ୍ତ କୃଷକ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Trials', 'ପରୀକ୍ଷା')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Soil cards', 'ମାଟି କାର୍ଡ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{tr('Remarks', 'ଟୀକା')}</th>
                 </tr>
               </thead>
               <tbody>

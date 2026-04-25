@@ -120,6 +120,7 @@ export function HealthPortfolioWebsite({
   dailyExtraData = [],
 }: HealthPortfolioWebsiteProps) {
   const { language } = useLanguage();
+  const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
   const lang = language as Lang;
 
   const heroSlides = useMemo(() => {
@@ -257,7 +258,7 @@ export function HealthPortfolioWebsite({
         />
 
         <PsPersonCardsSection
-          title="Key admin contacts"
+          title={trStatic('Key admin contacts', 'ମୁଖ୍ୟ ପ୍ରଶାସନିକ ଯୋଗାଯୋଗ')}
           people={keyAdminPeople}
           gridClassName="md:grid-cols-2 xl:grid-cols-4"
         />
@@ -265,31 +266,31 @@ export function HealthPortfolioWebsite({
         <PsFacilitiesCarouselSection
           profile={psProfile}
           facilities={facilityCards}
-          sectionTitle="Facilities"
+          sectionTitle={trStatic('Facilities', 'ସୁବିଧା')}
           emptySlotCount={facilityCards.length ? undefined : 7}
         />
 
         <PsFacultySection
           faculty={doctorFaculty}
           profile={psProfile}
-          sectionTitle="Doctors"
-          subjectLabel="Department / Specialization"
+          sectionTitle={trStatic('Doctors', 'ଡାକ୍ତରମାନେ')}
+          subjectLabel={trStatic('Department / Specialization', 'ବିଭାଗ / ବିଶେଷତା')}
           showAttendance={doctorAttendanceEnabled}
           emptyStateMessage={t('health.portfolio.noDoctorsAvailable', language)}
         />
 
         <section className="py-2 md:py-4">
-          <h2 className={SECTION_H2}>TS & NTS staff</h2>
+          <h2 className={SECTION_H2}>{trStatic('TS & NTS staff', 'TS ଏବଂ NTS କର୍ମଚାରୀ')}</h2>
           {tableShell(
             <table className="min-w-full text-sm">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Staff name</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Category</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Role / Designation</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Department</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Contact</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Email</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{trStatic('Staff name', 'କର୍ମଚାରୀ ନାମ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{trStatic('Category', 'ଶ୍ରେଣୀ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{trStatic('Role / Designation', 'ଭୂମିକା / ପଦବୀ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{trStatic('Department', 'ବିଭାଗ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{trStatic('Contact', 'ଯୋଗାଯୋଗ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900">{trStatic('Email', 'ଇମେଲ୍')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -309,7 +310,7 @@ export function HealthPortfolioWebsite({
         </section>
 
         <section className="rounded-[28px] border border-slate-200/70 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-md md:p-7">
-          <h2 className="text-xl font-bold sm:text-2xl">Key highlights</h2>
+          <h2 className="text-xl font-bold sm:text-2xl">{trStatic('Key highlights', 'ମୁଖ୍ୟ ହାଇଲାଇଟ୍')}</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
               [t('health.stat.beds', language), formatVal(beds as string | number | null | undefined)],

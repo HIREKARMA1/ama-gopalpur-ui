@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Clock, GraduationCap, Images, Mail, MapPin, Phone, School, Star, Users, X } from 'lucide-react';
 import { Organization } from '../../services/api';
 import { ImageSlider } from './ImageSlider';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export type Faculty = {
   name?: string;
@@ -520,6 +521,8 @@ export function PsAdministrationSection({
   profile: Record<string, unknown>;
   subDepartment?: string;
 }) {
+  const { language } = useLanguage();
+  const tr = (en: string, or: string) => (language === 'or' ? or : en);
   const isHighSchool = (subDepartment || '').toUpperCase() === 'HS';
   const admins: PsPersonCard[] = [
     {
@@ -558,7 +561,7 @@ export function PsAdministrationSection({
 
   return (
     <PsPersonCardsSection
-      title="Administration"
+      title={tr('Administration', 'ପ୍ରଶାସନ')}
       people={admins}
       gridClassName={`md:grid-cols-2 ${isHighSchool ? 'xl:grid-cols-2' : 'xl:grid-cols-4'}`}
     />
@@ -566,17 +569,19 @@ export function PsAdministrationSection({
 }
 
 export function PsHighlightsSection({ profile }: { profile: Record<string, unknown> }) {
+  const { language } = useLanguage();
+  const tr = (en: string, or: string) => (language === 'or' ? or : en);
   return (
     <section className="rounded-[28px] border border-slate-200/70 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-md md:p-7">
-      <h2 className="text-xl font-bold sm:text-2xl">Key Highlights</h2>
+      <h2 className="text-xl font-bold sm:text-2xl">{tr('Key Highlights', 'ମୁଖ୍ୟ ହାଇଲାଇଟ୍')}</h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          ['Total Students', stat(profile, 'total_students')],
-          ['Total Teachers', stat(profile, 'no_of_ts')],
-          ['Classrooms', stat(profile, 'no_of_rooms')],
-          ['Facilities', stat(profile, 'facilities_count')],
-          ['Digital Classrooms', stat(profile, 'no_of_smart_class_rooms')],
-          ['Years of Service', stat(profile, 'years_of_service')],
+          [tr('Total Students', 'ମୋଟ ଛାତ୍ରଛାତ୍ରୀ'), stat(profile, 'total_students')],
+          [tr('Total Teachers', 'ମୋଟ ଶିକ୍ଷକ'), stat(profile, 'no_of_ts')],
+          [tr('Classrooms', 'ଶ୍ରେଣୀକକ୍ଷ'), stat(profile, 'no_of_rooms')],
+          [tr('Facilities', 'ସୁବିଧା'), stat(profile, 'facilities_count')],
+          [tr('Digital Classrooms', 'ଡିଜିଟାଲ କ୍ଲାସ୍ରୁମ'), stat(profile, 'no_of_smart_class_rooms')],
+          [tr('Years of Service', 'ସେବା ବର୍ଷ'), stat(profile, 'years_of_service')],
         ].map(([k, v]) => (
           <div key={k} className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{k}</p>
@@ -589,6 +594,7 @@ export function PsHighlightsSection({ profile }: { profile: Record<string, unkno
 }
 
 export function PsHeadmasterSection({ profile, language }: { profile: Record<string, unknown>; language: Lang }) {
+  const tr = (en: string, or: string) => (language === 'od' ? or : en);
   return (
     <section className="py-2 md:py-4">
       <div className="grid gap-8 md:grid-cols-[360px_1fr] md:items-start">
@@ -598,7 +604,7 @@ export function PsHeadmasterSection({ profile, language }: { profile: Record<str
               <div className="flex max-h-[440px] min-h-[280px] w-full items-center justify-center md:min-h-[320px]">
                 <img
                   src={asString(profile.headmaster_photo)}
-                  alt="Headmaster"
+                  alt={tr('Headmaster', 'ପ୍ରଧାନଶିକ୍ଷକ')}
                   className="max-h-[440px] w-full object-contain object-center"
                 />
               </div>
@@ -613,15 +619,15 @@ export function PsHeadmasterSection({ profile, language }: { profile: Record<str
           </div>
           <div className="mt-3 border-l-2 border-slate-300 pl-3">
             <p className="text-lg font-bold text-slate-900">{asString(profile.name_of_hm) || '—'}</p>
-            <p className="text-sm text-slate-500">Headmaster</p>
+            <p className="text-sm text-slate-500">{tr('Headmaster', 'ପ୍ରଧାନଶିକ୍ଷକ')}</p>
           </div>
         </div>
 
         <div className="pt-1">
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">Headmaster Profile</h2>
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">{tr('Headmaster Profile', 'ପ୍ରଧାନଶିକ୍ଷକ ପ୍ରୋଫାଇଲ୍')}</h2>
           <div className="mt-5 grid gap-y-2 text-sm sm:text-base">
-            <p className="text-slate-800"><span className="font-semibold">Qualification:</span> {asString(profile.hm_qualification) || '—'}</p>
-            <p className="text-slate-800"><span className="font-semibold">Experience:</span> {asString(profile.hm_experience) || '—'}</p>
+            <p className="text-slate-800"><span className="font-semibold">{tr('Qualification:', 'ଯୋଗ୍ୟତା:')}</span> {asString(profile.hm_qualification) || '—'}</p>
+            <p className="text-slate-800"><span className="font-semibold">{tr('Experience:', 'ଅନୁଭବ:')}</span> {asString(profile.hm_experience) || '—'}</p>
           </div>
 
           <div className="mt-7 border-l-4 border-indigo-600 pl-5">
@@ -636,16 +642,17 @@ export function PsHeadmasterSection({ profile, language }: { profile: Record<str
 }
 
 export function PsAcademicSection({ profile, language }: { profile: Record<string, unknown>; language: Lang }) {
+  const tr = (en: string, or: string) => (language === 'od' ? or : en);
   return (
     <section className="py-2 md:py-4">
-      <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Academic</h2>
+      <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{tr('Academic', 'ଶିକ୍ଷାଗତ')}</h2>
       <div className="mt-4 space-y-3">
         {(
           [
-            ['curriculum_text', 'Curriculum'],
-            ['academic_calendar_text', 'Academic calendar'],
-            ['class_structure_text', 'Class structure'],
-            ['subjects_offered_text', 'Subjects offered'],
+            ['curriculum_text', tr('Curriculum', 'ପାଠ୍ୟକ୍ରମ')],
+            ['academic_calendar_text', tr('Academic calendar', 'ଶିକ୍ଷା ବାର୍ଷିକ କାର୍ଯ୍ୟସୂଚୀ')],
+            ['class_structure_text', tr('Class structure', 'ଶ୍ରେଣୀ ଗଠନ')],
+            ['subjects_offered_text', tr('Subjects offered', 'ପଢ଼ାଯାଉଥିବା ବିଷୟ')],
           ] as const
         ).map(([key, label], idx) => (
           <div key={key} className="flex gap-3 border-b border-slate-200 pb-3">
@@ -2011,6 +2018,7 @@ export function PsIntakeSection({ intakeRows, profile }: { intakeRows: IntakeRow
 }
 
 export function PsContactSection({ org, profile, language }: { org: Organization; profile: Record<string, unknown>; language: Lang }) {
+  const tr = (en: string, or: string) => (language === 'od' ? or : en);
   const address = getText(profile, 'contact_address', language) || asString(profile.contact_address_od) || org.address || EMPTY;
   const phone = asString(profile.contact_phone) || asString(profile.contact_of_hm) || EMPTY;
   const emergencyPhone =
@@ -2026,7 +2034,7 @@ export function PsContactSection({ org, profile, language }: { org: Organization
     <section className="py-3 md:py-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Contact</h2>
+          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{tr('Contact', 'ଯୋଗାଯୋଗ')}</h2>
         </div>
       </div>
 
@@ -2035,7 +2043,7 @@ export function PsContactSection({ org, profile, language }: { org: Organization
           <article className="border-b border-slate-200 pb-5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
               <MapPin className="h-4 w-4 text-indigo-600" />
-              Address
+              {tr('Address', 'ଠିକଣା')}
             </div>
             <p className="mt-2 text-base leading-relaxed text-slate-800">{address}</p>
           </article>
@@ -2044,7 +2052,7 @@ export function PsContactSection({ org, profile, language }: { org: Organization
             <article className="border-b border-slate-200 pb-5">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <Phone className="h-4 w-4 text-indigo-600" />
-                {emergencyPhone ? 'Helpdesk phone' : 'Phone'}
+                {emergencyPhone ? tr('Helpdesk phone', 'ହେଲ୍ପଡେସ୍କ ଫୋନ୍') : tr('Phone', 'ଫୋନ୍')}
               </div>
               <p className="mt-2 text-base text-slate-800">{phone}</p>
             </article>
@@ -2053,7 +2061,7 @@ export function PsContactSection({ org, profile, language }: { org: Organization
               <article className="border-b border-slate-200 pb-5">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <Phone className="h-4 w-4 text-rose-600" />
-                  Emergency phone
+                  {tr('Emergency phone', 'ଜରୁରୀ ଫୋନ୍')}
                 </div>
                 <p className="mt-2 text-base text-slate-800">{emergencyPhone}</p>
               </article>
@@ -2062,7 +2070,7 @@ export function PsContactSection({ org, profile, language }: { org: Organization
             <article className={`border-b border-slate-200 pb-5 ${emergencyPhone ? 'sm:col-span-2' : ''}`}>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <Mail className="h-4 w-4 text-indigo-600" />
-                Email
+                {tr('Email', 'ଇମେଲ୍')}
               </div>
               <p className="mt-2 break-all text-base text-slate-800">{email}</p>
             </article>
@@ -2071,7 +2079,7 @@ export function PsContactSection({ org, profile, language }: { org: Organization
           <article className="border-b border-slate-200 pb-5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
               <Clock className="h-4 w-4 text-indigo-600" />
-              Office Hours
+              {tr('Office Hours', 'କାର୍ଯ୍ୟାଳୟ ସମୟ')}
             </div>
             <p className="mt-2 text-base text-slate-800">{officeHours}</p>
           </article>
@@ -2080,12 +2088,12 @@ export function PsContactSection({ org, profile, language }: { org: Organization
         <article>
           <div className="flex items-center gap-2 pb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <MapPin className="h-4 w-4" />
-            Location Map
+            {tr('Location Map', 'ଅବସ୍ଥାନ ମାନଚିତ୍ର')}
           </div>
           <div className="h-[320px] overflow-hidden rounded-2xl">
             {hasMap ? (
               <iframe
-                title="School map"
+                title={tr('School map', 'ବିଦ୍ୟାଳୟ ମାନଚିତ୍ର')}
                 src={mapSrc}
                 className="h-full w-full"
                 loading="lazy"
