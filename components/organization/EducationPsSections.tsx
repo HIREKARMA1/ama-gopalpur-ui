@@ -164,6 +164,7 @@ export function PsAboutSection({
   aboutTitleOverride,
   hideAboutMeta = false,
   hideAboutText = false,
+  hideAboutImage = false,
   hideLeaderMeta = false,
   hideDesignationLabel = false,
 }: {
@@ -185,6 +186,8 @@ export function PsAboutSection({
   hideAboutMeta?: boolean;
   /** Hide the about description paragraph below heading. */
   hideAboutText?: boolean;
+  /** Hide the about image area (left column). */
+  hideAboutImage?: boolean;
   /** Hide Qualification/Experience/Contact/Email lines for leader card and modal. */
   hideLeaderMeta?: boolean;
   /** Show designation text without the "Designation:" prefix. */
@@ -218,6 +221,10 @@ export function PsAboutSection({
   const aboutImage = asString(profile.about_image) || sliderImages[0] || '';
   const visionText = getText(profile, 'vision_text', language) || EMPTY;
   const missionText = getText(profile, 'mission_text', language) || EMPTY;
+  const showAboutImage = !hideAboutImage;
+  const gridClass = showAboutImage
+    ? 'mt-6 grid gap-7 lg:grid-cols-[1.05fr_1fr] lg:items-start'
+    : 'mt-6 grid gap-5 lg:grid-cols-1';
   const closeHeadmasterModal = () => {
     setIsHeadmasterModalClosing(true);
     window.setTimeout(() => {
@@ -237,8 +244,9 @@ export function PsAboutSection({
         </p>
       ) : null}
 
-      <div className="mt-6 grid gap-7 lg:grid-cols-[1.05fr_1fr] lg:items-start">
-        <div>
+      <div className={gridClass}>
+        {showAboutImage ? (
+          <div>
           <div className="overflow-hidden rounded-xl">
             {aboutImage ? (
               <img src={aboutImage} alt="School campus" className="h-[300px] w-full object-cover sm:h-[360px] md:h-[420px]" />
@@ -259,9 +267,10 @@ export function PsAboutSection({
               <p className="text-slate-800"><span className="font-semibold">Location:</span> {getText(profile, 'location', language) || org.address || '—'}</p>
             </div>
           ) : null}
-        </div>
+          </div>
+        ) : null}
 
-        <div className="space-y-6">
+        <div className={`space-y-6 ${showAboutImage ? '' : 'rounded-2xl border border-slate-200/80 bg-white/60 p-6'}`}>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{leaderMessageHeading}</p>
             <p className="mt-3 text-sm leading-relaxed text-slate-700 sm:text-base">"{headmasterMessage}"</p>
