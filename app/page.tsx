@@ -66,6 +66,8 @@ function orgToRoadFeature(org: Organization): RoadFeature | null {
       code: String(attrs.road_code ?? ''),
       block: String(attrs.block ?? ''),
       roadSector: String(attrs.road_sector ?? ''),
+      nameOfDivision: String(attrs.name_of_division ?? attrs.division_name ?? attrs.division ?? ''),
+      scheme: String(attrs.scheme ?? attrs.scheme_name ?? ''),
       lengthKm: Number.isFinite(Number(attrs.length_km)) ? Number(attrs.length_km) : null,
       yearOfConstruction: Number.isFinite(Number(attrs.year_of_construction))
         ? Number(attrs.year_of_construction)
@@ -77,10 +79,7 @@ function orgToRoadFeature(org: Organization): RoadFeature | null {
       endLat: Number.isFinite(endLat) ? endLat : null,
       endLng: Number.isFinite(endLng) ? endLng : null,
       carriagewayWidthM: String(attrs.carriageway_width_m ?? ''),
-      surfaceType: String(attrs.surface_type ?? ''),
-      conditionRating: String(attrs.condition_rating ?? ''),
       lastMaintenanceDate: String(attrs.last_maintenance_date ?? ''),
-      owningAgency: String(attrs.owning_agency ?? ''),
       trafficClass: String(attrs.traffic_class ?? ''),
       drainageStatus: String(attrs.drainage_status ?? ''),
       safetyFeatures: String(attrs.safety_features ?? ''),

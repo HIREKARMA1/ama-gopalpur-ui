@@ -101,6 +101,8 @@ const IRRIGATION_CSV_HEADER =
 
 const AGRICULTURE_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID,HOST INSTITUTION/AFFILIATING BODY,ESTABLISHED YEAR,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,CAMPUS AREA (ACRES),TRAINING HALL (YES/NO),TRAINING HALL CAPACITY (SEATS),SOIL TESTING (YES/NO),SOIL SAMPLES TESTED PER YEAR,SEED DISTRIBUTION (YES/NO),SEED PROCESSING UNIT (YES/NO),SEED STORAGE CAPACITY (MT),DEMO UNITS (COMMA SEPARATED),DEMO FARM (YES/NO),DEMO FARM AREA (ACRES),GREENHOUSE/POLYHOUSE (YES/NO),IRRIGATION FACILITY (YES/NO),MACHINERY/CUSTOM HIRING (YES/NO),COMPUTER/IT LAB (YES/NO),LIBRARY (YES/NO),KEY SCHEMES (COMMA SEPARATED),TOTAL STAFF (COUNT),SCIENTISTS/OFFICERS (COUNT),TECHNICAL STAFF (COUNT),EXTENSION WORKERS (COUNT),FARMER TRAINING CAPACITY (PER BATCH),TRAINING PROGRAMMES CONDUCTED LAST YEAR,ON-FARM TRIALS/FLD LAST YEAR,VILLAGES/GPS COVERED (COUNT),SOIL HEALTH CARDS ISSUED LAST YEAR,FARMERS SERVED LAST YEAR (APPROX),REMARKS/DESCRIPTION\n';
+const ROADS_CSV_HEADER =
+  'block,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,CARRIAGEWAY WIDTH (M),LAST MAINTENANCE DATE,TRAFFIC CLASS,DRAINAGE STATUS,SAFETY FEATURES,ISSUES OBSERVED\n';
 
 const splitHeader = (header: string): string[] =>
   header.trim().replace(/\n$/, '').split(',').map((h) => h.trim());
@@ -341,6 +343,14 @@ export default function DepartmentAdminPage() {
   const [icdsTableSearchText, setIcdsTableSearchText] = useState<string>('');
   const [watcoTableFilterColumn, setWatcoTableFilterColumn] = useState<string>('Station Name');
   const [watcoTableSearchText, setWatcoTableSearchText] = useState<string>('');
+  const [roadsTableFilterColumn, setRoadsTableFilterColumn] = useState<string>('Road Name');
+  const [roadsTableSearchText, setRoadsTableSearchText] = useState<string>('');
+  const [roadsSortColumn, setRoadsSortColumn] = useState<string>('Road Name');
+  const [roadsSortDirection, setRoadsSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [selectedOrgIds, setSelectedOrgIds] = useState<Set<number>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [allSearchOrgs, setAllSearchOrgs] = useState<Organization[] | null>(null);
+  const [searchingAllOrgs, setSearchingAllOrgs] = useState(false);
 
   const [editingHealthId, setEditingHealthId] = useState<number | null>(null);
   const emptyHealthOrg = () => ({
@@ -582,9 +592,59 @@ export default function DepartmentAdminPage() {
     );
   }, [deptCode]);
 
+  const roadsTableColumns = useMemo(() => {
+    if (deptCode !== 'ROADS') return [] as string[];
+    return [
+      'Road Name',
+      'Block',
+      'Road Code',
+      'Road Sector',
+      'Name of Division',
+      'Scheme',
+      'Length (KM)',
+      'Start Lat',
+      'Start Lng',
+      'End Lat',
+      'End Lng',
+      'Point A',
+      'Point B',
+    ];
+  }, [deptCode]);
+
+  useEffect(() => {
+    if (deptCode !== 'ROADS' || !roadsTableColumns.length) return;
+    setRoadsTableFilterColumn((prev) =>
+      roadsTableColumns.includes(prev) ? prev : roadsTableColumns[0]!,
+    );
+    setRoadsSortColumn((prev) => (roadsTableColumns.includes(prev) ? prev : roadsTableColumns[0]!));
+    setRoadsSortDirection('asc');
+  }, [deptCode, roadsTableColumns]);
+
+  const getRoadTableColumnValue = (o: Organization, column: string): string => {
+    const fallback = (v: unknown) => (v != null && String(v).trim() !== '' ? String(v) : '');
+    const attrs = (o.attributes ?? {}) as Record<string, unknown>;
+    if (column === 'Road Name') return fallback(o.name);
+    const map: Record<string, unknown> = {
+      Block: attrs.block,
+      'Road Code': attrs.road_code,
+      'Road Sector': attrs.road_sector,
+      'Name of Division': attrs.name_of_division,
+      Scheme: attrs.scheme,
+      'Length (KM)': attrs.length_km,
+      'Start Lat': attrs.start_lat,
+      'Start Lng': attrs.start_lng,
+      'End Lat': attrs.end_lat,
+      'End Lng': attrs.end_lng,
+      'Point A': attrs.point_a_name,
+      'Point B': attrs.point_b_name,
+    };
+    return fallback(map[column]);
+  };
+
   const organizationsForTable = useMemo(() => {
+    const source = allSearchOrgs ?? orgs;
     const base =
-      deptCode === 'REVENUE_LAND' ? orgs.filter((o) => o.sub_department === 'TAHASIL_OFFICE') : orgs;
+      deptCode === 'REVENUE_LAND' ? source.filter((o) => o.sub_department === 'TAHASIL_OFFICE') : source;
 
     if (deptCode === 'ICDS' || deptCode === 'AWC_ICDS') {
       const q = icdsTableSearchText.trim().toLowerCase();
@@ -601,6 +661,33 @@ export default function DepartmentAdminPage() {
       return base.filter((o) => {
         const wp = waterProfiles[o.id] as Record<string, unknown> | undefined;
         return getWatcoTableColumnValue(o, wp, watcoTableFilterColumn).toLowerCase().includes(q);
+      });
+    }
+    if (deptCode === 'ROADS') {
+      const q = roadsTableSearchText.trim().toLowerCase();
+      const filtered = !q
+        ? base
+        : base.filter((o) =>
+          getRoadTableColumnValue(o, roadsTableFilterColumn).toLowerCase().includes(q),
+        );
+      const numericColumns = new Set(['Length (KM)', 'Start Lat', 'Start Lng', 'End Lat', 'End Lng']);
+      return [...filtered].sort((a, b) => {
+        const av = getRoadTableColumnValue(a, roadsSortColumn).trim();
+        const bv = getRoadTableColumnValue(b, roadsSortColumn).trim();
+        let cmp = 0;
+        if (numericColumns.has(roadsSortColumn)) {
+          const an = Number(av);
+          const bn = Number(bv);
+          const aValid = Number.isFinite(an);
+          const bValid = Number.isFinite(bn);
+          if (aValid && bValid) cmp = an - bn;
+          else if (aValid) cmp = 1;
+          else if (bValid) cmp = -1;
+          else cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+        } else {
+          cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+        }
+        return roadsSortDirection === 'asc' ? cmp : -cmp;
       });
     }
     if (deptCode !== 'EDUCATION') return base;
@@ -675,6 +762,7 @@ export default function DepartmentAdminPage() {
   }, [
     deptCode,
     orgs,
+    allSearchOrgs,
     educationProfiles,
     educationSubDept,
     educationTableFilterColumn,
@@ -683,9 +771,73 @@ export default function DepartmentAdminPage() {
     waterProfiles,
     watcoTableFilterColumn,
     watcoTableSearchText,
+    roadsTableFilterColumn,
+    roadsTableSearchText,
+    roadsSortColumn,
+    roadsSortDirection,
     icdsTableFilterColumn,
     icdsTableSearchText,
   ]);
+
+  const activeTableSearchText = useMemo(() => {
+    if (deptCode === 'EDUCATION') return educationTableSearchText;
+    if (deptCode === 'ICDS' || deptCode === 'AWC_ICDS') return icdsTableSearchText;
+    if (deptCode === 'WATCO_RWSS') return watcoTableSearchText;
+    if (deptCode === 'ROADS') return roadsTableSearchText;
+    return '';
+  }, [deptCode, educationTableSearchText, icdsTableSearchText, watcoTableSearchText, roadsTableSearchText]);
+
+  useEffect(() => {
+    const query = activeTableSearchText.trim();
+    if (!query) {
+      setAllSearchOrgs(null);
+      setSearchingAllOrgs(false);
+      return;
+    }
+    if (!me?.department_id) return;
+
+    const subDepartment =
+      deptCode === 'EDUCATION'
+        ? educationSubDept
+        : deptCode === 'REVENUE_LAND'
+          ? 'TAHASIL_OFFICE'
+          : null;
+
+    let cancelled = false;
+    (async () => {
+      setSearchingAllOrgs(true);
+      try {
+        const all: Organization[] = [];
+        let skip = 0;
+        const pageSize = 200;
+        while (true) {
+          const batch = await organizationsApi.listByDepartment(me.department_id!, {
+            skip,
+            limit: pageSize,
+            sub_department: subDepartment,
+          });
+          if (cancelled) return;
+          all.push(...batch);
+          if (batch.length < pageSize) break;
+          skip += pageSize;
+        }
+        if (!cancelled) setAllSearchOrgs(all);
+      } catch {
+        if (!cancelled) setAllSearchOrgs(null);
+      } finally {
+        if (!cancelled) setSearchingAllOrgs(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTableSearchText, me?.department_id, deptCode, educationSubDept]);
+
+  const isGlobalSearchActive = activeTableSearchText.trim().length > 0;
+
+  useEffect(() => {
+    setSelectedOrgIds(new Set());
+  }, [deptCode, page, orgs, educationSubDept, organizationsForTable.length]);
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -923,6 +1075,114 @@ export default function DepartmentAdminPage() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (!selectedOrgIds.size) return;
+    if (!window.confirm(`Delete ${selectedOrgIds.size} selected organization(s)?`)) return;
+    setBulkDeleting(true);
+    setError(null);
+    try {
+      const ids = Array.from(selectedOrgIds);
+      const results = await Promise.allSettled(ids.map((id) => organizationsApi.delete(id)));
+      const deletedIds: number[] = [];
+      let failed = 0;
+      results.forEach((result, idx) => {
+        if (result.status === 'fulfilled') {
+          deletedIds.push(ids[idx]!);
+        } else {
+          failed += 1;
+        }
+      });
+      if (deletedIds.length) {
+        setOrgs((prev) => prev.filter((o) => !deletedIds.includes(o.id)));
+      }
+      setSelectedOrgIds(new Set());
+      if (failed) {
+        setError(`Deleted ${deletedIds.length} organization(s); ${failed} failed.`);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to bulk delete organizations');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  const escapeCsvCell = (value: unknown): string => {
+    const text = value == null ? '' : String(value);
+    if (/[",\r\n]/.test(text)) {
+      return `"${text.replace(/"/g, '""')}"`;
+    }
+    return text;
+  };
+
+  const handleExportTableCsv = () => {
+    if (!organizationsForTable.length) {
+      setError('No rows available to export.');
+      return;
+    }
+    const stringify = (value: unknown) => (value != null && String(value).trim() !== '' ? String(value) : '');
+    const rows: string[][] = [];
+    let headers: string[] = [];
+
+    if (deptCode === 'ROADS') {
+      headers = [
+        'Road Name',
+        'Block',
+        'Road Code',
+        'Road Sector',
+        'Name of Division',
+        'Scheme',
+        'Length (KM)',
+        'Start Lat',
+        'Start Lng',
+        'End Lat',
+        'End Lng',
+        'Point A',
+        'Point B',
+      ];
+      organizationsForTable.forEach((o) => {
+        rows.push([
+          stringify(o.name),
+          stringify(o.attributes?.block),
+          stringify(o.attributes?.road_code),
+          stringify(o.attributes?.road_sector),
+          stringify(o.attributes?.name_of_division),
+          stringify(o.attributes?.scheme),
+          stringify(o.attributes?.length_km),
+          stringify(o.attributes?.start_lat),
+          stringify(o.attributes?.start_lng),
+          stringify(o.attributes?.end_lat),
+          stringify(o.attributes?.end_lng),
+          stringify(o.attributes?.point_a_name),
+          stringify(o.attributes?.point_b_name),
+        ]);
+      });
+    } else {
+      headers = ['Organization Name', 'Latitude', 'Longitude'];
+      organizationsForTable.forEach((o) => {
+        rows.push([
+          stringify(o.name),
+          o.latitude != null ? o.latitude.toFixed(6) : '',
+          o.longitude != null ? o.longitude.toFixed(6) : '',
+        ]);
+      });
+    }
+
+    const csvLines = [
+      headers.map(escapeCsvCell).join(','),
+      ...rows.map((r) => r.map(escapeCsvCell).join(',')),
+    ];
+    const blob = new Blob([`${csvLines.join('\n')}\n`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const deptKey = (deptCode || 'department').toLowerCase();
+    link.href = url;
+    link.download = `${deptKey}_table_export.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleUpload = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
@@ -993,6 +1253,211 @@ export default function DepartmentAdminPage() {
         const result = await agricultureApi.bulkCsv(file);
         if (result.errors?.length) {
           setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
+        }
+      } else if (deptCode === 'ROADS') {
+        const parseCsvLine = (line: string): string[] => {
+          const out: string[] = [];
+          let cell = '';
+          let inQuotes = false;
+          for (let i = 0; i < line.length; i += 1) {
+            const ch = line[i];
+            if (ch === '"') {
+              const next = i + 1 < line.length ? line[i + 1] : '';
+              if (inQuotes && next === '"') {
+                cell += '"';
+                i += 1;
+              } else {
+                inQuotes = !inQuotes;
+              }
+            } else if (ch === ',' && !inQuotes) {
+              out.push(cell.trim());
+              cell = '';
+            } else {
+              cell += ch;
+            }
+          }
+          out.push(cell.trim());
+          return out;
+        };
+        const normalizeHeader = (value: string): string =>
+          value
+            .replace(/^\uFEFF/, '')
+            .trim()
+            .toLowerCase()
+            .replace(/[()]/g, '')
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+        const toNumberOrNull = (value: string): number | null => {
+          const s = value.trim();
+          if (!s) return null;
+          const n = Number(s);
+          return Number.isFinite(n) ? n : null;
+        };
+        const parseStartEndFromPathCoordinates = (value: string): {
+          startLat: string;
+          startLng: string;
+          endLat: string;
+          endLng: string;
+        } | null => {
+          const s = value.trim();
+          if (!s) return null;
+          const nums = (s.match(/-?\d+(?:\.\d+)?/g) || []).map((n) => Number(n));
+          if (nums.length < 4) return null;
+          const startLng = nums[0];
+          const startLat = nums[1];
+          const endLng = nums[nums.length - 2];
+          const endLat = nums[nums.length - 1];
+          if (![startLat, startLng, endLat, endLng].every((n) => Number.isFinite(n))) return null;
+          return { startLat: String(startLat), startLng: String(startLng), endLat: String(endLat), endLng: String(endLng) };
+        };
+
+        const text = await file.text();
+        const lines = text
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0);
+        if (!lines.length) {
+          setError('CSV is empty');
+          return;
+        }
+        const headers = parseCsvLine(lines[0]).map(normalizeHeader);
+        const idx = (...aliases: string[]) => {
+          for (const a of aliases) {
+            const pos = headers.indexOf(normalizeHeader(a));
+            if (pos >= 0) return pos;
+          }
+          return -1;
+        };
+        const indexes = {
+          block: idx('block', 'ulb_block'),
+          roadName: idx('road name', 'road_name', 'name of road', 'name'),
+          roadCode: idx('road code', 'road_code', 'code'),
+          roadSector: idx('road sector(nh/sh/pwd/rd/ps/gp)', 'road sector'),
+          nameOfDivision: idx('name of division', 'name_of_division', 'division name', 'division'),
+          scheme: idx('scheme', 'scheme_name'),
+          lengthKm: idx('length(in km)', 'length in km', 'length_km', 'length'),
+          pathCoordinates: idx('path coordinates', 'path_coordinates', 'coordinates'),
+          startLat: idx('start_lat', 'start lat', 'start latitude', 'start_latitude'),
+          startLng: idx('start_lng', 'start lng', 'start longitude', 'start_longitude'),
+          endLat: idx('end_lat', 'end lat', 'end latitude', 'end_latitude'),
+          endLng: idx('end_lng', 'end lng', 'end longitude', 'end_longitude'),
+          pointAName: idx('point a name', 'point_a_name', 'start_point_name', 'starting_point_name'),
+          pointBName: idx('point b name', 'point_b_name', 'end_point_name', 'ending_point_name'),
+          yearOfConstruction: idx('year of construction', 'year_of_construction', 'construction_year'),
+          carriagewayWidthM: idx('carriageway width m', 'carriageway_width_m', 'road_width_m'),
+          lastMaintenanceDate: idx('last maintenance date', 'last_maintenance_date'),
+          trafficClass: idx('traffic class', 'traffic_class'),
+          drainageStatus: idx('drainage status', 'drainage_status'),
+          safetyFeatures: idx('safety features', 'safety_features'),
+          issues: idx('issues observed', 'issues', 'issues_observed'),
+        };
+        if (indexes.roadName < 0) {
+          setError(`Missing required column ROAD NAME. Found headers: ${parseCsvLine(lines[0]).join(', ')}`);
+          return;
+        }
+        if (!me?.department_id) {
+          setError('Department not set for this admin user.');
+          return;
+        }
+
+        const existing = await organizationsApi.listByDepartment(me.department_id, { skip: 0, limit: 1000 });
+        const existingKeys = new Set(
+          existing.map((org) => {
+            const attrs = (org.attributes ?? {}) as Record<string, unknown>;
+            const code = String(attrs.road_code ?? '').trim().toUpperCase();
+            const name = String(org.name ?? '').trim().toUpperCase();
+            return `${name}__${code}`;
+          }),
+        );
+
+        const get = (cols: string[], position: number) => (position >= 0 && position < cols.length ? cols[position] : '');
+        let imported = 0;
+        let skippedDuplicates = 0;
+        const errors: string[] = [];
+        for (let i = 1; i < lines.length; i += 1) {
+          const cols = parseCsvLine(lines[i]);
+          const roadName = get(cols, indexes.roadName);
+          if (!roadName) {
+            errors.push(`Row ${i + 1}: ROAD NAME is required`);
+            continue;
+          }
+          let startLat = get(cols, indexes.startLat);
+          let startLng = get(cols, indexes.startLng);
+          let endLat = get(cols, indexes.endLat);
+          let endLng = get(cols, indexes.endLng);
+          const pathCoordinates = get(cols, indexes.pathCoordinates);
+          if ((!startLat || !startLng || !endLat || !endLng) && pathCoordinates) {
+            const derived = parseStartEndFromPathCoordinates(pathCoordinates);
+            if (derived) {
+              startLat = startLat || derived.startLat;
+              startLng = startLng || derived.startLng;
+              endLat = endLat || derived.endLat;
+              endLng = endLng || derived.endLng;
+            }
+          }
+          if (!startLat || !startLng || !endLat || !endLng) {
+            errors.push(`Row ${i + 1}: provide start/end coordinates, or a valid PATH COORDINATES value.`);
+            continue;
+          }
+
+          const roadCode = get(cols, indexes.roadCode);
+          const dedupeKey = `${roadName.trim().toUpperCase()}__${roadCode.trim().toUpperCase()}`;
+          if (existingKeys.has(dedupeKey)) {
+            skippedDuplicates += 1;
+            continue;
+          }
+
+          const sLat = toNumberOrNull(startLat);
+          const sLng = toNumberOrNull(startLng);
+          const eLat = toNumberOrNull(endLat);
+          const eLng = toNumberOrNull(endLng);
+          const centerLat =
+            sLat != null && eLat != null ? Number(((sLat + eLat) / 2).toFixed(6)) : sLat ?? eLat ?? null;
+          const centerLng =
+            sLng != null && eLng != null ? Number(((sLng + eLng) / 2).toFixed(6)) : sLng ?? eLng ?? null;
+          try {
+            await organizationsApi.create({
+              department_id: me.department_id,
+              name: roadName,
+              type: 'OTHER',
+              latitude: centerLat,
+              longitude: centerLng,
+              address: get(cols, indexes.block) || undefined,
+              description: get(cols, indexes.roadSector)
+                ? `Road sector: ${get(cols, indexes.roadSector)}`
+                : undefined,
+              attributes: {
+                block: get(cols, indexes.block) || null,
+                road_code: roadCode || null,
+                road_sector: get(cols, indexes.roadSector) || null,
+                name_of_division: get(cols, indexes.nameOfDivision) || null,
+                scheme: get(cols, indexes.scheme) || null,
+                length_km: get(cols, indexes.lengthKm) || null,
+                path_coordinates: pathCoordinates || null,
+                start_lat: startLat || null,
+                start_lng: startLng || null,
+                end_lat: endLat || null,
+                end_lng: endLng || null,
+                point_a_name: get(cols, indexes.pointAName) || null,
+                point_b_name: get(cols, indexes.pointBName) || null,
+                year_of_construction: get(cols, indexes.yearOfConstruction) || null,
+                carriageway_width_m: get(cols, indexes.carriagewayWidthM) || null,
+                last_maintenance_date: get(cols, indexes.lastMaintenanceDate) || null,
+                traffic_class: get(cols, indexes.trafficClass) || null,
+                drainage_status: get(cols, indexes.drainageStatus) || null,
+                safety_features: get(cols, indexes.safetyFeatures) || null,
+                issues: get(cols, indexes.issues) || null,
+                updated_at: new Date().toISOString(),
+              },
+            });
+            imported += 1;
+            existingKeys.add(dedupeKey);
+          } catch (err: any) {
+            errors.push(`Row ${i + 1}: ${err?.message || 'failed to import'}`);
+          }
+        }
+        if (errors.length) {
+          setError(`Imported ${imported}; skipped duplicates ${skippedDuplicates}; errors: ${errors.slice(0, 3).join('; ')}`);
         }
       } else {
         // ICDS / AWC: bulk upload center profiles (minister CSV) for existing organizations
@@ -1079,6 +1544,9 @@ export default function DepartmentAdminPage() {
     } else if (deptCode === 'AGRICULTURE') {
       csvContent = AGRICULTURE_CSV_HEADER;
       filename = 'agriculture_template.csv';
+    } else if (deptCode === 'ROADS') {
+      csvContent = ROADS_CSV_HEADER;
+      filename = 'roads_template.csv';
     } else {
       csvContent = ICDS_CSV_HEADER + 'RANGEILUNDA,BADAKUSASTHALLI,BADAGUMULA,BADA GUMULLA-I,,,19.270275,84.781087,,,,,,,,,,KAMALAPUR,412630\n';
       filename = 'icds_awc_template.csv';
@@ -1093,6 +1561,10 @@ export default function DepartmentAdminPage() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
+  const selectableOrgIds = organizationsForTable.map((o) => o.id);
+  const allVisibleSelected =
+    selectableOrgIds.length > 0 && selectableOrgIds.every((id) => selectedOrgIds.has(id));
 
   if (!me && !loading) return null;
 
@@ -1126,7 +1598,6 @@ export default function DepartmentAdminPage() {
                 : deptCode === 'ROADS'
                   ? [
                     { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
-                    { href: '/admin/dept/roads-monitoring', labelKey: 'super.sidebar.dashboard' },
                   ]
                 : deptCode === 'REVENUE_LAND'
                   ? [
@@ -3457,6 +3928,8 @@ export default function DepartmentAdminPage() {
                             ? 'Upload Minor Irrigation CSV. Projects will be created or updated by NAME OF M.I.P, LATITUDE, LONGITUDE.'
                             : deptCode === 'REVENUE_LAND'
                               ? 'Upload Tahasil portfolio CSV. Organizations will be created/updated by TAHSIL_NAME (or OFFICE NAME), LATITUDE, LONGITUDE, and all additional attributes are saved to profile.'
+                              : deptCode === 'ROADS'
+                                ? 'Upload Roads CSV. Organizations will be created from ROAD NAME plus start/end coordinates (or PATH COORDINATES).'
                               : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
               </p>
               <div className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center md:justify-between">
@@ -3587,35 +4060,131 @@ export default function DepartmentAdminPage() {
                   </div>
                 </div>
               )}
+              {deptCode === 'ROADS' && (
+                <div className="mt-3 grid gap-2 rounded border border-border bg-background-muted/30 p-2 text-xs md:grid-cols-[220px_1fr]">
+                  <div className="space-y-1">
+                    <label className="block text-[11px] text-text-muted">Filter column</label>
+                    <select
+                      value={roadsTableFilterColumn}
+                      onChange={(e) => setRoadsTableFilterColumn(e.target.value)}
+                      className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
+                    >
+                      {roadsTableColumns.map((col) => (
+                        <option key={col} value={col}>
+                          {col}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[11px] text-text-muted">Search value</label>
+                    <input
+                      value={roadsTableSearchText}
+                      onChange={(e) => setRoadsTableSearchText(e.target.value)}
+                      placeholder={
+                        roadsTableFilterColumn
+                          ? `Type value for ${roadsTableFilterColumn}`
+                          : 'Type value to search'
+                      }
+                      className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+              {deptCode !== 'REVENUE_LAND' && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleExportTableCsv}
+                    className="rounded border border-border px-2 py-1 text-[11px] text-text hover:bg-gray-50"
+                  >
+                    Export CSV
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (allVisibleSelected) {
+                        setSelectedOrgIds(new Set());
+                        return;
+                      }
+                      setSelectedOrgIds(new Set(selectableOrgIds));
+                    }}
+                    className="rounded border border-border px-2 py-1 text-[11px] text-text hover:bg-gray-50"
+                  >
+                    {allVisibleSelected ? 'Unselect all' : 'Select all'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBulkDelete}
+                    disabled={!selectedOrgIds.size || bulkDeleting}
+                    className="rounded border border-red-500 px-2 py-1 text-[11px] text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {bulkDeleting ? 'Deleting...' : `Delete selected (${selectedOrgIds.size})`}
+                  </button>
+                </div>
+              )}
               <div className="mt-3 overflow-x-auto">
                 <table className="min-w-full border-collapse text-xs">
                   <thead>
                     <tr className="border-b border-border bg-background-muted">
+                      {deptCode !== 'REVENUE_LAND' && (
+                        <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={allVisibleSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedOrgIds(new Set(selectableOrgIds));
+                              } else {
+                                setSelectedOrgIds(new Set());
+                              }
+                            }}
+                          />
+                        </th>
+                      )}
                       <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Sl. No.</th>
                       <th className="px-2 py-1 text-left font-medium text-text">
-                        {deptCode === 'EDUCATION'
-                          ? isEducationSchoolSubDept(educationSubDept)
-                            ? 'School Name'
-                            : 'Institution Name'
-                          : deptCode === 'HEALTH'
-                            ? 'Facility Name'
-                            : deptCode === 'ELECTRICITY'
-                              ? 'Office Name'
-                              : deptCode === 'ARCS'
-                                ? 'Society name'
-                                : deptCode === 'WATCO' || deptCode === 'WATCO_RWSS'
-                                  ? 'Station Name'
-                                  : deptCode === 'MINOR_IRRIGATION'
-                                    ? 'MIP Name'
-                                    : deptCode === 'IRRIGATION'
-                                      ? 'Work Name'
-                                      : deptCode === 'REVENUE_LAND'
-                                        ? 'Tahasil / parcel name'
-                                        : deptCode === 'AGRICULTURE'
-                                          ? 'Name of Office/Centre'
-                                          : 'AWC Name'}
+                        {deptCode === 'ROADS' ? (
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 hover:text-orange-700"
+                            onClick={() => {
+                              if (roadsSortColumn === 'Road Name') {
+                                setRoadsSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+                              } else {
+                                setRoadsSortColumn('Road Name');
+                                setRoadsSortDirection('asc');
+                              }
+                            }}
+                          >
+                            <span>Road Name</span>
+                            <span className="text-[10px]">{roadsSortColumn === 'Road Name' ? (roadsSortDirection === 'asc' ? '▲' : '▼') : '↕'}</span>
+                          </button>
+                        ) : (
+                          deptCode === 'EDUCATION'
+                            ? isEducationSchoolSubDept(educationSubDept)
+                              ? 'School Name'
+                              : 'Institution Name'
+                            : deptCode === 'HEALTH'
+                              ? 'Facility Name'
+                              : deptCode === 'ELECTRICITY'
+                                ? 'Office Name'
+                                : deptCode === 'ARCS'
+                                  ? 'Society name'
+                                  : deptCode === 'WATCO' || deptCode === 'WATCO_RWSS'
+                                    ? 'Station Name'
+                                    : deptCode === 'MINOR_IRRIGATION'
+                                      ? 'MIP Name'
+                                      : deptCode === 'IRRIGATION'
+                                        ? 'Work Name'
+                                        : deptCode === 'REVENUE_LAND'
+                                          ? 'Tahasil / parcel name'
+                                          : deptCode === 'AGRICULTURE'
+                                            ? 'Name of Office/Centre'
+                                            : 'AWC Name'
+                        )}
                       </th>
-                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY' && deptCode !== 'ARCS' && deptCode !== 'WATCO_RWSS' && deptCode !== 'MINOR_IRRIGATION' && deptCode !== 'IRRIGATION' && deptCode !== 'REVENUE_LAND' && deptCode !== 'AGRICULTURE') && (
+                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY' && deptCode !== 'ARCS' && deptCode !== 'WATCO_RWSS' && deptCode !== 'MINOR_IRRIGATION' && deptCode !== 'IRRIGATION' && deptCode !== 'REVENUE_LAND' && deptCode !== 'AGRICULTURE' && deptCode !== 'ROADS') && (
                         <>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
@@ -3635,6 +4204,29 @@ export default function DepartmentAdminPage() {
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">AWH contact</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">Sector</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">LGD Code</th>
+                        </>
+                      )}
+                      {deptCode === 'ROADS' && (
+                        <>
+                          {roadsTableColumns.filter((col) => col !== 'Road Name').map((col) => (
+                            <th key={col} className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-1 hover:text-orange-700"
+                                onClick={() => {
+                                  if (roadsSortColumn === col) {
+                                    setRoadsSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+                                  } else {
+                                    setRoadsSortColumn(col);
+                                    setRoadsSortDirection('asc');
+                                  }
+                                }}
+                              >
+                                <span>{col}</span>
+                                <span className="text-[10px]">{roadsSortColumn === col ? (roadsSortDirection === 'asc' ? '▲' : '▼') : '↕'}</span>
+                              </button>
+                            </th>
+                          ))}
                         </>
                       )}
                       {deptCode === 'WATCO_RWSS' && (
@@ -3847,7 +4439,24 @@ export default function DepartmentAdminPage() {
                               router.push(`/admin/dept/revenue-land/tahasil/${o.id}`);
                             }}
                           >
-                            <td className="px-2 py-1 text-text-muted">{page * PAGE_SIZE + idx + 1}</td>
+                            {deptCode !== 'REVENUE_LAND' && (
+                              <td className="px-2 py-1 text-text-muted" onClick={(e) => e.stopPropagation()}>
+                                <input
+                                  type="checkbox"
+                                  checked={selectedOrgIds.has(o.id)}
+                                  onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    setSelectedOrgIds((prev) => {
+                                      const next = new Set(prev);
+                                      if (checked) next.add(o.id);
+                                      else next.delete(o.id);
+                                      return next;
+                                    });
+                                  }}
+                                />
+                              </td>
+                            )}
+                            <td className="px-2 py-1 text-text-muted">{isGlobalSearchActive ? idx + 1 : page * PAGE_SIZE + idx + 1}</td>
                             <td className="px-2 py-1">
                               {deptCode === 'REVENUE_LAND' ? (
                                 <>
@@ -3865,7 +4474,7 @@ export default function DepartmentAdminPage() {
                                 o.name
                               )}
                             </td>
-                            {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'WATCO_RWSS' && deptCode !== 'ELECTRICITY' && deptCode !== 'ARCS' && deptCode !== 'MINOR_IRRIGATION' && deptCode !== 'IRRIGATION' && deptCode !== 'REVENUE_LAND' && deptCode !== 'AGRICULTURE') && (
+                            {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'WATCO_RWSS' && deptCode !== 'ELECTRICITY' && deptCode !== 'ARCS' && deptCode !== 'MINOR_IRRIGATION' && deptCode !== 'IRRIGATION' && deptCode !== 'REVENUE_LAND' && deptCode !== 'AGRICULTURE' && deptCode !== 'ROADS') && (
                               <>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ulb_block ?? prof?.block_name)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_name ?? prof?.gram_panchayat)}</td>
@@ -3885,6 +4494,22 @@ export default function DepartmentAdminPage() {
                                 <td className="px-2 py-1 text-text-muted">{_(prof?.awh_contact_no)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.sector ?? prof?.sector)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.lgd_code)}</td>
+                              </>
+                            )}
+                            {deptCode === 'ROADS' && (
+                              <>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.block)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.road_code)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.road_sector)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.name_of_division)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.scheme)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.length_km)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.start_lat)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.start_lng)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.end_lat)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.end_lng)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.point_a_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.point_b_name)}</td>
                               </>
                             )}
                             {deptCode === 'WATCO_RWSS' && (
@@ -5088,7 +5713,7 @@ export default function DepartmentAdminPage() {
                     )}
                     {!organizationsForTable.length && (
                       <tr>
-                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 21 : deptCode === 'HEALTH' ? 27 : deptCode === 'EDUCATION' ? 61 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 2 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 2 : deptCode === 'REVENUE_LAND' ? 12 : 10}>
+                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 22 : deptCode === 'HEALTH' ? 28 : deptCode === 'EDUCATION' ? 62 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 3 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 3 : deptCode === 'REVENUE_LAND' ? 12 : deptCode === 'ROADS' ? 16 : 11}>
                           {orgs.length
                             ? 'No matching rows for current search/filter.'
                             : 'No organizations yet for your department.'}
@@ -5098,14 +5723,20 @@ export default function DepartmentAdminPage() {
                   </tbody>
                 </table>
                 <div className="mt-3 flex items-center justify-between text-xs text-text-muted">
-                  <span>Page {page + 1}</span>
+                  <span>
+                    {isGlobalSearchActive
+                      ? searchingAllOrgs
+                        ? 'Searching across all records...'
+                        : `Showing global search results (${organizationsForTable.length})`
+                      : `Page ${page + 1}`}
+                  </span>
                   <div className="space-x-2">
                     <button
                       type="button"
-                      disabled={page === 0 || !me?.department_id}
+                      disabled={isGlobalSearchActive || page === 0 || !me?.department_id}
                       className="rounded border border-border px-2 py-1 text-[11px] hover:bg-gray-50 disabled:opacity-50"
                       onClick={async () => {
-                        if (!me?.department_id || page === 0) return;
+                        if (!me?.department_id || isGlobalSearchActive || page === 0) return;
                         const newPage = page - 1;
                         const list = await organizationsApi.listByDepartment(me.department_id, {
                           skip: newPage * PAGE_SIZE,
@@ -5126,10 +5757,10 @@ export default function DepartmentAdminPage() {
                     </button>
                     <button
                       type="button"
-                      disabled={!hasMore || !me?.department_id}
+                      disabled={isGlobalSearchActive || !hasMore || !me?.department_id}
                       className="rounded border border-border px-2 py-1 text-[11px] hover:bg-gray-50 disabled:opacity-50"
                       onClick={async () => {
-                        if (!me?.department_id || !hasMore) return;
+                        if (!me?.department_id || isGlobalSearchActive || !hasMore) return;
                         const newPage = page + 1;
                         const list = await organizationsApi.listByDepartment(me.department_id, {
                           skip: newPage * PAGE_SIZE,

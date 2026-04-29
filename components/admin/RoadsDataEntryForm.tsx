@@ -17,6 +17,8 @@ export function RoadsDataEntryForm({ departmentId, onCreated }: Props) {
   const [roadName, setRoadName] = useState('');
   const [roadCode, setRoadCode] = useState('');
   const [roadSector, setRoadSector] = useState('');
+  const [nameOfDivision, setNameOfDivision] = useState('');
+  const [scheme, setScheme] = useState('');
   const [block, setBlock] = useState('');
   const [startLat, setStartLat] = useState('');
   const [startLng, setStartLng] = useState('');
@@ -31,6 +33,8 @@ export function RoadsDataEntryForm({ departmentId, onCreated }: Props) {
     setRoadName('');
     setRoadCode('');
     setRoadSector('');
+    setNameOfDivision('');
+    setScheme('');
     setBlock('');
     setStartLat('');
     setStartLng('');
@@ -78,6 +82,8 @@ export function RoadsDataEntryForm({ departmentId, onCreated }: Props) {
           block: block.trim() || null,
           road_code: roadCode.trim() || null,
           road_sector: roadSector.trim() || null,
+          name_of_division: nameOfDivision.trim() || null,
+          scheme: scheme.trim() || null,
           path_coordinates: pathCoordinates.trim() || null,
           start_lat: startLat.trim(),
           start_lng: startLng.trim(),
@@ -106,6 +112,8 @@ export function RoadsDataEntryForm({ departmentId, onCreated }: Props) {
         <input className="rounded border border-border px-3 py-2" placeholder="Road name *" value={roadName} onChange={(e) => setRoadName(e.target.value)} />
         <input className="rounded border border-border px-3 py-2" placeholder="Road code" value={roadCode} onChange={(e) => setRoadCode(e.target.value)} />
         <input className="rounded border border-border px-3 py-2" placeholder="Road sector (NH/SH/PWD/RD/PS/GP)" value={roadSector} onChange={(e) => setRoadSector(e.target.value)} />
+        <input className="rounded border border-border px-3 py-2" placeholder="Name of division" value={nameOfDivision} onChange={(e) => setNameOfDivision(e.target.value)} />
+        <input className="rounded border border-border px-3 py-2" placeholder="Scheme" value={scheme} onChange={(e) => setScheme(e.target.value)} />
         <input className="rounded border border-border px-3 py-2" placeholder="Block" value={block} onChange={(e) => setBlock(e.target.value)} />
         <input className="rounded border border-border px-3 py-2" placeholder="Start latitude *" value={startLat} onChange={(e) => setStartLat(e.target.value)} />
         <input className="rounded border border-border px-3 py-2" placeholder="Start longitude *" value={startLng} onChange={(e) => setStartLng(e.target.value)} />
