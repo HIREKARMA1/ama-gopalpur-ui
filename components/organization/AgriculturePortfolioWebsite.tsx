@@ -607,6 +607,7 @@ export function AgriculturePortfolioWebsite({
         <DepartmentHighlightsSection
           sectionTitle={tr('Key highlights', 'ମୁଖ୍ୟ ହାଇଲାଇଟ୍')}
           emptyText={tr('No highlights found', 'ହାଇଲାଇଟ୍ ମିଳିଲା ନାହିଁ')}
+          infoText={tr('Click any node to view matching organizations.', 'ଯେକୌଣସି ନୋଡ୍‌କୁ ଦବାନ୍ତୁ ଏବଂ ସମ୍ବନ୍ଧିତ ସଂଗଠନ ଦେଖନ୍ତୁ।')}
           departmentName={_departmentName || org.name}
           departmentCode="AGRICULTURE"
           highlightCards={highlights.map(([title, count, legendKey]) => ({

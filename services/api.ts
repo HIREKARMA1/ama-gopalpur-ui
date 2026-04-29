@@ -87,9 +87,14 @@ export interface DepartmentSummaryHighlightCard {
 
 export interface DepartmentSummaryContent {
   about_image?: string | null;
+  department_name_od?: string | null;
+  minister_name?: string | null;
+  minister_name_od?: string | null;
   headline?: string | null;
   overview?: string | null;
+  overview_od?: string | null;
   minister_message?: string | null;
+  minister_message_od?: string | null;
   key_functions?: string[];
   recent_achievements?: string[];
   strategic_priorities?: string[];
