@@ -48,11 +48,13 @@ export function HighlightsCyclicDiagram({
   centerLabel,
   makeHref,
   emptyText,
+  infoText = 'Click any node to view matching organizations.',
 }: {
   items: HighlightItem[];
   centerLabel: string;
   makeHref: (item: HighlightItem) => string;
   emptyText: ReactNode;
+  infoText?: string;
 }) {
   const hasEnough = items.length >= 2;
   if (!items.length) return <>{emptyText}</>;
@@ -131,7 +133,7 @@ export function HighlightsCyclicDiagram({
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-slate-700">{centerLabel}</p>
-          <p className="mt-1 text-xs text-slate-500">Click any node to view matching organizations.</p>
+          <p className="mt-1 text-xs text-slate-500">{infoText}</p>
         </div>
       </div>
 

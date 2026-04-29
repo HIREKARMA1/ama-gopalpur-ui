@@ -9,12 +9,14 @@ type HighlightCard = {
 export function DepartmentHighlightsSection({
   sectionTitle,
   emptyText,
+  infoText,
   departmentName,
   departmentCode,
   highlightCards,
 }: {
   sectionTitle: string;
   emptyText: string;
+  infoText: string;
   departmentName: string;
   departmentCode: string;
   highlightCards: HighlightCard[];
@@ -26,6 +28,7 @@ export function DepartmentHighlightsSection({
         <HighlightsCyclicDiagram
           items={highlightCards}
           centerLabel={departmentName}
+          infoText={infoText}
           emptyText={<p className="text-sm text-slate-600">{emptyText}</p>}
           makeHref={(item) =>
             `/?dept=${encodeURIComponent(departmentCode || '')}&legend=${encodeURIComponent(item.legendKey)}`

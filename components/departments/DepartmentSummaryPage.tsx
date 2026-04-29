@@ -10,6 +10,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { t, type MessageKey } from '../i18n/messages';
 import { Navbar } from '../layout/Navbar';
 import { DepartmentHighlightsSection } from './DepartmentHighlightsSection';
+import { getDepartmentLabel } from './DepartmentSidebar';
 
 type Props = {
   department: Department;
@@ -20,6 +21,12 @@ type Props = {
 export function DepartmentSummaryPage({ department, organizationCount, organizations }: Props) {
   const { language } = useLanguage();
   const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
+  const localizedSummaryText = (en?: string | null, od?: string | null) => {
+    const enText = (en || '').trim();
+    const odText = (od || '').trim();
+    if (language === 'or') return odText || enText;
+    return enText || odText;
+  };
   const lang = language as Lang;
   const tr = (key: MessageKey, vars?: Record<string, string | number>) => {
     let text = t(key, language);
@@ -31,13 +38,26 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     return text;
   };
   const summary = department.department_summary;
+  const sidebarLocalizedDepartmentName = getDepartmentLabel(department, language);
+  const localizedDepartmentName =
+    localizedSummaryText(
+      sidebarLocalizedDepartmentName,
+      summary?.department_name_od,
+    ) || sidebarLocalizedDepartmentName;
+  const overviewText =
+    localizedSummaryText(summary?.overview, summary?.overview_od) || '—';
+  const ministerMessageText =
+    localizedSummaryText(summary?.minister_message, summary?.minister_message_od) || '—';
+  const ministerNameText =
+    localizedSummaryText(summary?.minister_name || 'Shri Bibhuti Bhusan Jena', summary?.minister_name_od) ||
+    'Shri Bibhuti Bhusan Jena';
   const stats = summary?.key_statistics ?? [];
   const list = (items?: string[]) => (items ?? []).filter(Boolean).slice(0, 12);
 
   const virtualOrg: Organization = {
     id: department.id,
     department_id: department.id,
-    name: department.name,
+    name: localizedDepartmentName,
     type: 'OTHER',
     description: department.description ?? null,
     latitude: null,
@@ -49,12 +69,12 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   };
 
   const profile: Record<string, unknown> = {
-    school_name_en: department.name,
-    hero_primary_tagline_en: summary?.headline || `${department.name} ${trStatic('Department', 'ବିଭାଗ')}`,
-    about_short_en: summary?.overview || '—',
+    school_name_en: localizedDepartmentName,
+    hero_primary_tagline_en: summary?.headline || `${localizedDepartmentName} ${trStatic('Department', 'ବିଭାଗ')}`,
+    about_short_en: overviewText,
     about_image: summary?.about_image || '',
-    headmaster_message_en: summary?.minister_message || '—',
-    name_of_hm: 'Shri Bibhuti Bhusan Jena',
+    headmaster_message_en: ministerMessageText,
+    name_of_hm: ministerNameText,
     hm_designation:
       language === 'or'
         ? 'ବାଣିଜ୍ୟ, ପରିବହନ, ଇସ୍ପାତ ଓ ଖଣି ମନ୍ତ୍ରୀ, ଓଡ଼ିଶା ସରକାର'
@@ -163,7 +183,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     setSortDir('asc');
   };
   const summaryParagraphs = toParagraphs(
-    (summary?.overview as string) ||
+    overviewText ||
     '—',
   );
 
@@ -177,7 +197,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           profile={profile}
           language={lang}
           sliderImages={[]}
-          aboutTitleOverride={`${department.name} Department`}
+          aboutTitleOverride={localizedDepartmentName}
           hideAboutMeta
           hideAboutText
           hideAboutImage
@@ -203,7 +223,8 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         <DepartmentHighlightsSection
           sectionTitle={tr('dept.summary.section.highlights')}
           emptyText={tr('dept.summary.empty.highlights')}
-          departmentName={department.name}
+          infoText={trStatic('Click any node to view matching organizations.', 'ଯେକୌଣସି ନୋଡ୍‌କୁ ଦବାନ୍ତୁ ଏବଂ ସମ୍ବନ୍ଧିତ ସଂଗଠନ ଦେଖନ୍ତୁ।')}
+          departmentName={localizedDepartmentName}
           departmentCode={department.code || ''}
           highlightCards={highlightCards}
         />
