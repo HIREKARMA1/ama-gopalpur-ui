@@ -607,7 +607,7 @@ export function AgriculturePortfolioWebsite({
         <DepartmentHighlightsSection
           sectionTitle={tr('Key highlights', 'ମୁଖ୍ୟ ହାଇଲାଇଟ୍')}
           emptyText={tr('No highlights found', 'ହାଇଲାଇଟ୍ ମିଳିଲା ନାହିଁ')}
-          departmentName={departmentName || org.name}
+          departmentName={_departmentName || org.name}
           departmentCode="AGRICULTURE"
           highlightCards={highlights.map(([title, count, legendKey]) => ({
             title: String(title),
