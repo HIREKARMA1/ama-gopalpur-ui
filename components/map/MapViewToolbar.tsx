@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronUp, SlidersHorizontal } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import type { MessageKey } from '../i18n/messages';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
-import { MapDepartmentSummaryDialog } from './MapDepartmentSummaryDialog';
 
 type MapTypeId = 'roadmap' | 'satellite';
 
@@ -13,14 +13,9 @@ export function MapViewToolbar({
   mapInstance,
   mapContainerRef,
   departmentId,
-  departmentTitle,
-  mapSummary,
   /** When false, map/satellite/fullscreen still show; info button is hidden. */
   showDepartmentInfo,
   infoButtonLabelKey,
-  dialogTitleKey,
-  dialogEmptyKey,
-  dialogCloseKey,
   mapLabelKey,
   satelliteLabelKey,
   fullscreenLabelKey,
@@ -28,20 +23,15 @@ export function MapViewToolbar({
   mapInstance: any;
   mapContainerRef: React.RefObject<HTMLDivElement | null>;
   departmentId?: number | null;
-  departmentTitle: string;
-  mapSummary?: string | null;
   showDepartmentInfo: boolean;
   infoButtonLabelKey: MessageKey;
-  dialogTitleKey: MessageKey;
-  dialogEmptyKey: MessageKey;
-  dialogCloseKey: MessageKey;
   mapLabelKey: MessageKey;
   satelliteLabelKey: MessageKey;
   fullscreenLabelKey: MessageKey;
 }) {
   const { language } = useLanguage();
+  const router = useRouter();
   const [mapType, setMapType] = useState<MapTypeId>('roadmap');
-  const [infoOpen, setInfoOpen] = useState(false);
   const [fs, setFs] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const infoButtonRef = useRef<HTMLButtonElement>(null);
@@ -92,25 +82,17 @@ export function MapViewToolbar({
           <button
             ref={infoButtonRef}
             type="button"
-            onClick={() => setInfoOpen((open) => !open)}
+            onClick={() => {
+              if (!departmentId) return;
+              router.push(`/departments/${departmentId}/summary`);
+            }}
             className="flex h-9 w-9 items-center justify-center rounded-md bg-orange-500 text-sm font-bold text-white shadow-md ring-1 ring-orange-800/50 hover:bg-orange-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
             title={t(infoButtonLabelKey, language)}
             aria-label={t(infoButtonLabelKey, language)}
-            aria-expanded={infoOpen}
+            disabled={!departmentId}
           >
             i
           </button>
-          <MapDepartmentSummaryDialog
-            open={infoOpen}
-            onClose={() => setInfoOpen(false)}
-            anchorRef={infoButtonRef}
-            departmentTitle={departmentTitle}
-            departmentId={departmentId}
-            mapSummary={mapSummary}
-            titleKey={dialogTitleKey}
-            emptyKey={dialogEmptyKey}
-            closeKey={dialogCloseKey}
-          />
         </div>
       )}
       <div className="flex overflow-hidden rounded-md border border-slate-200">
