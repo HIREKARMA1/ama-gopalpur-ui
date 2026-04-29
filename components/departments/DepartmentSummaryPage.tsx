@@ -9,6 +9,7 @@ import {
 import { useLanguage } from '../i18n/LanguageContext';
 import { t, type MessageKey } from '../i18n/messages';
 import { Navbar } from '../layout/Navbar';
+import { DepartmentHighlightsSection } from './DepartmentHighlightsSection';
 
 type Props = {
   department: Department;
@@ -79,12 +80,12 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         legendKey: normalizeLegendParam(c.title || ''),
       }))
       .filter((c) => c.title && c.count),
-    ...legendRows.slice(0, 12).map((row) => ({
+    ...legendRows.map((row) => ({
       title: row.label,
       count: String(row.count),
       legendKey: normalizeLegendParam(row.rawLabel),
     })),
-  ].slice(0, 16);
+  ];
   const topOrganizations = [...organizations].sort((a, b) => a.name.localeCompare(b.name));
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
@@ -179,6 +180,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           aboutTitleOverride={`${department.name} Department`}
           hideAboutMeta
           hideAboutText
+          hideAboutImage
           hideLeaderMeta
           hideDesignationLabel
           hideVisionMission
@@ -198,33 +200,13 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           </div>
         </section>
 
-        <section>
-          <h2 className="text-xl font-bold sm:text-2xl">{tr('dept.summary.section.highlights')}</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {highlightCards.length ? (
-              highlightCards.map((item, idx) => (
-                <a
-                  key={`highlight-${item.title}-${idx}`}
-                  href={`/?dept=${encodeURIComponent(department.code || '')}&legend=${encodeURIComponent(item.legendKey)}`}
-                  className={`block rounded-xl border p-4 shadow-sm ${
-                    idx % 4 === 0
-                      ? 'border-blue-100 bg-blue-50/60'
-                      : idx % 4 === 1
-                        ? 'border-emerald-100 bg-emerald-50/60'
-                        : idx % 4 === 2
-                          ? 'border-teal-100 bg-teal-50/60'
-                          : 'border-rose-100 bg-rose-50/60'
-                  }`}
-                >
-                  <p className="text-sm font-medium text-slate-600">{item.title}</p>
-                  <p className="mt-1 text-3xl font-bold leading-tight text-slate-900">{item.count}</p>
-                </a>
-              ))
-            ) : (
-              <p className="text-sm text-slate-600">{tr('dept.summary.empty.highlights')}</p>
-            )}
-          </div>
-        </section>
+        <DepartmentHighlightsSection
+          sectionTitle={tr('dept.summary.section.highlights')}
+          emptyText={tr('dept.summary.empty.highlights')}
+          departmentName={department.name}
+          departmentCode={department.code || ''}
+          highlightCards={highlightCards}
+        />
 
         <section>
           <h2 className="text-xl font-bold sm:text-2xl">{tr('dept.summary.section.organizationListing')}</h2>
