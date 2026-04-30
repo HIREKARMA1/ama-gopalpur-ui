@@ -406,11 +406,7 @@ export default function RoadsMonitoringPage() {
     setPointAName('');
     setPointBName('');
     setYearOfConstruction('');
-    setCarriagewayWidthM('');
     setLastMaintenanceDate('');
-    setTrafficClass('');
-    setDrainageStatus('');
-    setSafetyFeatures('');
     setIssues('');
     setEditingRoadId(null);
   };
