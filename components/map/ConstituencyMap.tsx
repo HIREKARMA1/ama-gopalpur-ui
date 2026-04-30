@@ -23,9 +23,6 @@ import {
   HEALTH_MARKER_ICONS,
   DEPARTMENT_MARKER_ICONS,
   HEALTH_TYPE_LABELS,
-  getRoadType,
-  ROAD_TYPE_COLORS,
-  ROAD_TYPE_LABELS,
   ELECTRICITY_MARKER_ICON,
   ELECTRICITY_TYPE_LABEL,
   getDrainLineKind,
@@ -33,7 +30,7 @@ import {
   IRRIGATION_CATEGORY_MARKER_COLORS,
   MINOR_IRRIGATION_LEGEND_ORDER,
 } from '../../lib/mapConfig';
-import type { DrainLineKind, RoadTypeKey } from '../../lib/mapConfig';
+import type { DrainLineKind } from '../../lib/mapConfig';
 import type { MessageKey } from '../i18n/messages';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
@@ -76,12 +73,40 @@ const HEALTH_TYPE_KEYS: Record<string, MessageKey> = {
 
 const WATCO_LEGEND_TYPES = ['ESR', 'SVS', 'GSR', 'PUMP HOUSE'] as const;
 
-const ROAD_TYPE_LABEL_KEYS: Record<RoadTypeKey, MessageKey> = {
-  NH: 'roads.type.nh',
-  PWD: 'roads.type.pwd',
-  RD: 'roads.type.rd',
-  OTHER: 'roads.type.other',
-};
+const ROAD_LEGEND_COLORS = [
+  '#ea4335',
+  '#1967d2',
+  '#34a853',
+  '#f59e0b',
+  '#9333ea',
+  '#0ea5e9',
+] as const;
+
+function normalizeRoadLegendSector(raw: string | null | undefined, codeRaw?: string | null): string {
+  const sector = (raw || '').trim().toUpperCase().replace(/\s+/g, ' ');
+  const code = (codeRaw || '').trim().toUpperCase();
+  if (sector.includes('NH') || code.startsWith('NH')) return 'NH';
+  if (sector.includes('SH') || code.startsWith('SH')) return 'SH';
+  if (sector.includes('PWD') || sector.includes('R&B')) return 'PWD';
+  if (sector.includes('RD')) return 'RD';
+  if (sector.includes('PS')) return 'PS';
+  if (sector.includes('GP')) return 'GP';
+  return sector || 'OTHER';
+}
+
+function roadLegendColor(typeKey: string): string {
+  const canonical = normalizeRoadLegendSector(typeKey);
+  if (canonical === 'NH') return '#ea4335';
+  if (canonical === 'SH') return '#1967d2';
+  if (canonical === 'PWD') return '#f59e0b';
+  if (canonical === 'RD') return '#34a853';
+  if (canonical === 'PS') return '#9333ea';
+  if (canonical === 'GP') return '#0ea5e9';
+  if (canonical === 'OTHER') return '#6b7280';
+  let hash = 0;
+  for (let i = 0; i < typeKey.length; i += 1) hash = (hash * 31 + typeKey.charCodeAt(i)) >>> 0;
+  return ROAD_LEGEND_COLORS[hash % ROAD_LEGEND_COLORS.length] ?? '#9e6700';
+}
 
 const WATCO_MARKER_HEX: Record<(typeof WATCO_LEGEND_TYPES)[number], string> = {
   ESR: '#0ea5e9',
@@ -251,6 +276,8 @@ export interface RoadFeature {
     code?: string;
     block?: string;
     roadSector?: string;
+    nameOfDivision?: string | null;
+    scheme?: string | null;
     lengthKm?: number | null;
     yearOfConstruction?: number | null;
     pointAName?: string;
@@ -260,14 +287,12 @@ export interface RoadFeature {
     endLat?: number | null;
     endLng?: number | null;
     carriagewayWidthM?: string | number | null;
-    surfaceType?: string | null;
-    conditionRating?: string | null;
     lastMaintenanceDate?: string | null;
-    owningAgency?: string | null;
     trafficClass?: string | null;
     drainageStatus?: string | null;
     safetyFeatures?: string | null;
     issues?: string | null;
+    remarks?: string | null;
   };
   geometry: { type: 'LineString'; coordinates: [number, number][] };
 }
@@ -359,7 +384,7 @@ export function ConstituencyMap({
   /** When set, only show markers of this type (Education/Health legend click). Click again to clear. */
   const [legendFilterType, setLegendFilterType] = useState<string | null>(null);
   /** When set, only show roads of this type (Roads legend click). Click again to clear. */
-  const [roadLegendFilterType, setRoadLegendFilterType] = useState<RoadTypeKey | null>(null);
+  const [roadLegendFilterType, setRoadLegendFilterType] = useState<string | null>(null);
   /** When set, only show drain polylines of this kind (Drainage legend). */
   const [drainKindFilter, setDrainKindFilter] = useState<DrainLineKind | null>(null);
   const [selectedBlockFilter, setSelectedBlockFilter] = useState<string>('ALL');
@@ -627,12 +652,31 @@ export function ConstituencyMap({
     return acc;
   }, [drains]);
 
+  const roadLegendTypes = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'ROADS') return [] as string[];
+    return Array.from(
+      new Set(
+        roads
+          .map((road) =>
+            normalizeRoadLegendSector(
+              road.properties?.roadSector as string,
+              road.properties?.code as string,
+            ),
+          )
+          .filter((v) => v.length > 0),
+      ),
+    ).sort();
+  }, [roads, selectedDepartmentCode]);
+
   const roadTypeCounts = useMemo(() => {
-    const acc: Record<RoadTypeKey, number> = { NH: 0, PWD: 0, RD: 0, OTHER: 0 };
+    const acc: Record<string, number> = {};
     for (const road of roads) {
-      const name = road.properties?.name ?? road.properties?.roadName ?? 'Road';
-      const code = road.properties?.code ?? '';
-      acc[getRoadType(name, code)] += 1;
+      const type = normalizeRoadLegendSector(
+        road.properties?.roadSector as string,
+        road.properties?.code as string,
+      );
+      if (!type) continue;
+      acc[type] = (acc[type] ?? 0) + 1;
     }
     return acc;
   }, [roads]);
@@ -748,15 +792,12 @@ export function ConstituencyMap({
       pointB,
       lengthKm: lengthKm != null ? lengthKm.toFixed(2) : 'N/A',
       pointsCount: coords.length,
-      carriagewayWidthM: String(props.carriagewayWidthM ?? '').trim(),
-      surfaceType: String(props.surfaceType ?? '').trim(),
-      conditionRating: String(props.conditionRating ?? '').trim(),
+      type: String(props.roadSector ?? '').trim(),
+      nameOfDivision: String(props.nameOfDivision ?? '').trim(),
+      scheme: String(props.scheme ?? '').trim(),
       lastMaintenanceDate: String(props.lastMaintenanceDate ?? '').trim(),
-      owningAgency: String(props.owningAgency ?? '').trim(),
-      trafficClass: String(props.trafficClass ?? '').trim(),
-      drainageStatus: String(props.drainageStatus ?? '').trim(),
-      safetyFeatures: String(props.safetyFeatures ?? '').trim(),
       issues: String(props.issues ?? '').trim(),
+      remarks: String(props.remarks ?? '').trim(),
     };
   }, [selectedRoad]);
 
@@ -1080,8 +1121,9 @@ export function ConstituencyMap({
       const name = String(road.properties?.name ?? road.properties?.roadName ?? '').toLowerCase();
       const code = String(road.properties?.code ?? '').toLowerCase();
       const block = String(road.properties?.block ?? '').toLowerCase();
-      const roadType = getRoadType(
-        String(road.properties?.name ?? road.properties?.roadName ?? ''),
+      const scheme = String(road.properties?.scheme ?? '').toLowerCase();
+      const roadType = normalizeRoadLegendSector(
+        String(road.properties?.roadSector ?? ''),
         String(road.properties?.code ?? ''),
       );
       if (roadLegendFilterType != null && roadType !== roadLegendFilterType) return false;
@@ -1090,6 +1132,7 @@ export function ConstituencyMap({
         name.includes(term) ||
         code.includes(term) ||
         block.includes(term) ||
+        scheme.includes(term) ||
         roadType.toLowerCase().includes(term)
       );
     });
@@ -1419,9 +1462,12 @@ export function ConstituencyMap({
               if (path.length < 2) return null;
               const name = road.properties?.name ?? road.properties?.roadName ?? 'Road';
               const code = road.properties?.code ?? '';
-              const roadType = getRoadType(name, code);
+              const roadType = normalizeRoadLegendSector(
+                String(road.properties?.roadSector ?? ''),
+                String(road.properties?.code ?? ''),
+              );
               if (roadLegendFilterType != null && roadType !== roadLegendFilterType) return null;
-              const color = ROAD_TYPE_COLORS[roadType];
+              const color = roadLegendColor(roadType || 'OTHER');
               // Include filter in key so polylines remount when legend changes (@react-google-maps/api can leave stale overlays).
               const filterKey = roadLegendFilterType ?? 'all';
               return (
@@ -1503,7 +1549,10 @@ export function ConstituencyMap({
             const name = selectedRoad.properties?.name ?? selectedRoad.properties?.roadName ?? 'Road';
             const code = selectedRoad.properties?.code ?? '';
             const block = selectedRoad.properties?.block ?? '';
-            const roadType = getRoadType(name, code);
+            const roadType = normalizeRoadLegendSector(
+              String(selectedRoad.properties?.roadSector ?? ''),
+              String(selectedRoad.properties?.code ?? ''),
+            );
             return (
               <InfoWindow
                 position={{ lat, lng }}
@@ -1516,7 +1565,7 @@ export function ConstituencyMap({
                       <>
                         {code ? (
                           <MapCalloutMetaRow>
-                            <span className="font-semibold text-slate-700">{ROAD_TYPE_LABELS[roadType]}</span>
+                            <span className="font-semibold text-slate-700">{roadType || 'Road'}</span>
                             <span className="font-mono text-slate-600"> · {code}</span>
                           </MapCalloutMetaRow>
                         ) : null}
@@ -1677,19 +1726,15 @@ export function ConstituencyMap({
                     <p><span className="font-semibold">Starting point:</span> {selectedRoadStreetInfo.pointA}</p>
                     <p><span className="font-semibold">Ending point:</span> {selectedRoadStreetInfo.pointB}</p>
                     <p><span className="font-semibold">Total distance:</span> {selectedRoadStreetInfo.lengthKm} km</p>
-                    <p><span className="font-semibold">Type of road:</span> {selectedRoadStreetInfo.sector || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Type of road:</span> {selectedRoadStreetInfo.type || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Name of division:</span> {selectedRoadStreetInfo.nameOfDivision || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Scheme:</span> {selectedRoadStreetInfo.scheme || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Year of construction:</span> {selectedRoadStreetInfo.year || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Road code:</span> {selectedRoadStreetInfo.code || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Block:</span> {selectedRoadStreetInfo.block || 'Requested from Road Dept'}</p>
-                    <p><span className="font-semibold">Carriageway width:</span> {selectedRoadStreetInfo.carriagewayWidthM || 'Requested from Road Dept'}{selectedRoadStreetInfo.carriagewayWidthM ? ' m' : ''}</p>
-                    <p><span className="font-semibold">Surface type:</span> {selectedRoadStreetInfo.surfaceType || 'Requested from Road Dept'}</p>
-                    <p><span className="font-semibold">Condition rating:</span> {selectedRoadStreetInfo.conditionRating || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Last maintenance:</span> {selectedRoadStreetInfo.lastMaintenanceDate || 'Requested from Road Dept'}</p>
-                    <p><span className="font-semibold">Owning agency:</span> {selectedRoadStreetInfo.owningAgency || 'Requested from Road Dept'}</p>
-                    <p><span className="font-semibold">Traffic class:</span> {selectedRoadStreetInfo.trafficClass || 'Requested from Road Dept'}</p>
-                    <p><span className="font-semibold">Drainage status:</span> {selectedRoadStreetInfo.drainageStatus || 'Requested from Road Dept'}</p>
-                    <p><span className="font-semibold">Safety features:</span> {selectedRoadStreetInfo.safetyFeatures || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Issues observed:</span> {selectedRoadStreetInfo.issues || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Remarks:</span> {selectedRoadStreetInfo.remarks || 'Requested from Road Dept'}</p>
                   </div>
                 </div>
               )}
@@ -2019,16 +2064,15 @@ export function ConstituencyMap({
       )}
       {isRoadsDept && roads.length > 0 && (
         <MapLegendPanel className="pointer-events-auto z-[45] md:max-w-[220px]">
-          {(Object.entries(ROAD_TYPE_LABELS) as [RoadTypeKey, string][]).map(([type]) => {
+          {roadLegendTypes.map((type) => {
             const isSelected = roadLegendFilterType === type;
-            const labelKey = ROAD_TYPE_LABEL_KEYS[type];
-            const label = labelKey ? t(labelKey, language) : ROAD_TYPE_LABELS[type];
+            const label = type;
             return (
               <MapLegendRow
                 key={type}
-                dotColor={ROAD_TYPE_COLORS[type]}
+                dotColor={roadLegendColor(type)}
                 label={label}
-                count={roadTypeCounts[type]}
+                count={roadTypeCounts[type] ?? 0}
                 isSelected={isSelected}
                 roundedRect
                 onClick={(e) => {
