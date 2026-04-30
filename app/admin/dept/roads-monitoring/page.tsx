@@ -31,11 +31,7 @@ type RoadEntry = {
   pointAName: string;
   pointBName: string;
   yearOfConstruction: string;
-  carriagewayWidthM: string;
   lastMaintenanceDate: string;
-  trafficClass: string;
-  drainageStatus: string;
-  safetyFeatures: string;
   issues: string;
   latitude: number | null;
   longitude: number | null;
@@ -58,16 +54,12 @@ type RoadCsvRow = {
   pointAName: string;
   pointBName: string;
   yearOfConstruction: string;
-  carriagewayWidthM: string;
   lastMaintenanceDate: string;
-  trafficClass: string;
-  drainageStatus: string;
-  safetyFeatures: string;
   issues: string;
 };
 
 const ROAD_TEMPLATE_HEADER =
-  'block,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,CARRIAGEWAY WIDTH (M),LAST MAINTENANCE DATE,TRAFFIC CLASS,DRAINAGE STATUS,SAFETY FEATURES,ISSUES OBSERVED';
+  'block,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED';
 
 const PAGE_SIZE = 20;
 
@@ -174,11 +166,7 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
     pointAName: idx('point a name', 'point_a_name', 'start_point_name', 'starting_point_name'),
     pointBName: idx('point b name', 'point_b_name', 'end_point_name', 'ending_point_name'),
     yearOfConstruction: idx('year of construction', 'year_of_construction', 'construction_year'),
-    carriagewayWidthM: idx('carriageway width m', 'carriageway_width_m', 'road_width_m'),
     lastMaintenanceDate: idx('last maintenance date', 'last_maintenance_date'),
-    trafficClass: idx('traffic class', 'traffic_class'),
-    drainageStatus: idx('drainage status', 'drainage_status'),
-    safetyFeatures: idx('safety features', 'safety_features'),
     issues: idx('issues observed', 'issues', 'issues_observed'),
   };
 
@@ -250,11 +238,7 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
       pointAName: get(indexes.pointAName),
       pointBName: get(indexes.pointBName),
       yearOfConstruction: get(indexes.yearOfConstruction),
-      carriagewayWidthM: get(indexes.carriagewayWidthM),
       lastMaintenanceDate: get(indexes.lastMaintenanceDate),
-      trafficClass: get(indexes.trafficClass),
-      drainageStatus: get(indexes.drainageStatus),
-      safetyFeatures: get(indexes.safetyFeatures),
       issues: get(indexes.issues),
     });
   }
@@ -299,11 +283,7 @@ export default function RoadsMonitoringPage() {
   const [pointAName, setPointAName] = useState('');
   const [pointBName, setPointBName] = useState('');
   const [yearOfConstruction, setYearOfConstruction] = useState('');
-  const [carriagewayWidthM, setCarriagewayWidthM] = useState('');
   const [lastMaintenanceDate, setLastMaintenanceDate] = useState('');
-  const [trafficClass, setTrafficClass] = useState('');
-  const [drainageStatus, setDrainageStatus] = useState('');
-  const [safetyFeatures, setSafetyFeatures] = useState('');
   const [issues, setIssues] = useState('');
   const csvInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -349,6 +329,8 @@ export default function RoadsMonitoringPage() {
     return roads
       .map((org) => {
         const attrs = (org.attributes ?? {}) as Record<string, unknown>;
+        const orgLat = org.latitude != null ? String(org.latitude) : '';
+        const orgLng = org.longitude != null ? String(org.longitude) : '';
         return {
           id: org.id,
           name: org.name,
@@ -359,18 +341,14 @@ export default function RoadsMonitoringPage() {
           scheme: String(attrs.scheme ?? attrs.scheme_name ?? ''),
           lengthKm: String(attrs.length_km ?? ''),
           pathCoordinates: String(attrs.path_coordinates ?? ''),
-          startLat: String(attrs.start_lat ?? ''),
-          startLng: String(attrs.start_lng ?? ''),
-          endLat: String(attrs.end_lat ?? ''),
-          endLng: String(attrs.end_lng ?? ''),
+          startLat: String(attrs.start_lat ?? orgLat),
+          startLng: String(attrs.start_lng ?? orgLng),
+          endLat: String(attrs.end_lat ?? orgLat),
+          endLng: String(attrs.end_lng ?? orgLng),
           pointAName: String(attrs.point_a_name ?? ''),
           pointBName: String(attrs.point_b_name ?? ''),
           yearOfConstruction: String(attrs.year_of_construction ?? ''),
-          carriagewayWidthM: String(attrs.carriageway_width_m ?? ''),
           lastMaintenanceDate: String(attrs.last_maintenance_date ?? ''),
-          trafficClass: String(attrs.traffic_class ?? ''),
-          drainageStatus: String(attrs.drainage_status ?? ''),
-          safetyFeatures: String(attrs.safety_features ?? ''),
           issues: String(attrs.issues ?? ''),
           latitude: org.latitude ?? null,
           longitude: org.longitude ?? null,
@@ -399,7 +377,6 @@ export default function RoadsMonitoringPage() {
         row.scheme,
         row.pointAName,
         row.pointBName,
-        row.trafficClass,
       ]
         .join(' ')
         .toLowerCase();
@@ -475,11 +452,7 @@ export default function RoadsMonitoringPage() {
         point_a_name: row.pointAName || null,
         point_b_name: row.pointBName || null,
         year_of_construction: row.yearOfConstruction || null,
-        carriageway_width_m: row.carriagewayWidthM || null,
         last_maintenance_date: row.lastMaintenanceDate || null,
-        traffic_class: row.trafficClass || null,
-        drainage_status: row.drainageStatus || null,
-        safety_features: row.safetyFeatures || null,
         issues: row.issues || null,
         updated_at: new Date().toISOString(),
       },
@@ -517,6 +490,7 @@ export default function RoadsMonitoringPage() {
     setError(null);
     setSuccess(null);
     try {
+      const wasEditing = editingRoadId != null;
       const formRow: RoadCsvRow = {
         block,
         roadName,
@@ -533,11 +507,7 @@ export default function RoadsMonitoringPage() {
         pointAName,
         pointBName,
         yearOfConstruction,
-        carriagewayWidthM,
         lastMaintenanceDate,
-        trafficClass,
-        drainageStatus,
-        safetyFeatures,
         issues,
       };
       if (editingRoadId) {
@@ -547,7 +517,7 @@ export default function RoadsMonitoringPage() {
       }
       resetForm();
       setRefreshTick((v) => v + 1);
-      setSuccess(editingRoadId ? 'Road updated successfully.' : 'Road added successfully.');
+      setSuccess(wasEditing ? 'Road updated successfully.' : 'Road added successfully.');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to add road');
     } finally {
@@ -567,18 +537,16 @@ export default function RoadsMonitoringPage() {
     setScheme(row.scheme);
     setLengthKm(row.lengthKm);
     setPathCoordinates(row.pathCoordinates);
-    setStartLat(row.startLat);
-    setStartLng(row.startLng);
-    setEndLat(row.endLat);
-    setEndLng(row.endLng);
+    const fallbackLat = row.latitude != null ? String(row.latitude) : '';
+    const fallbackLng = row.longitude != null ? String(row.longitude) : '';
+    setStartLat(row.startLat || fallbackLat);
+    setStartLng(row.startLng || fallbackLng);
+    setEndLat(row.endLat || fallbackLat);
+    setEndLng(row.endLng || fallbackLng);
     setPointAName(row.pointAName);
     setPointBName(row.pointBName);
     setYearOfConstruction(row.yearOfConstruction);
-    setCarriagewayWidthM(row.carriagewayWidthM);
     setLastMaintenanceDate(row.lastMaintenanceDate);
-    setTrafficClass(row.trafficClass);
-    setDrainageStatus(row.drainageStatus);
-    setSafetyFeatures(row.safetyFeatures);
     setIssues(row.issues);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -774,13 +742,9 @@ export default function RoadsMonitoringPage() {
                 point_a_name: null,
                 point_b_name: null,
                 year_of_construction: null,
-                carriageway_width_m: null,
                 name_of_division: p.division_name ? String(p.division_name) : null,
                 scheme: p.scheme ? String(p.scheme) : null,
                 last_maintenance_date: null,
-                traffic_class: null,
-                drainage_status: null,
-                safety_features: null,
                 issues: null,
                 updated_at: new Date().toISOString(),
               },
@@ -923,26 +887,10 @@ export default function RoadsMonitoringPage() {
               <input className="w-full rounded border px-3 py-2" value={yearOfConstruction} onChange={(e) => setYearOfConstruction(e.target.value)} />
             </label>
             <label className="space-y-1">
-              <span className="font-medium text-slate-700">Carriageway width (m)</span>
-              <input className="w-full rounded border px-3 py-2" value={carriagewayWidthM} onChange={(e) => setCarriagewayWidthM(e.target.value)} />
-            </label>
-            <label className="space-y-1">
               <span className="font-medium text-slate-700">Last maintenance date</span>
               <input type="date" className="w-full rounded border px-3 py-2" value={lastMaintenanceDate} onChange={(e) => setLastMaintenanceDate(e.target.value)} />
             </label>
-            <label className="space-y-1">
-              <span className="font-medium text-slate-700">Traffic class</span>
-              <input className="w-full rounded border px-3 py-2" value={trafficClass} onChange={(e) => setTrafficClass(e.target.value)} />
-            </label>
-            <label className="space-y-1">
-              <span className="font-medium text-slate-700">Drainage status</span>
-              <input className="w-full rounded border px-3 py-2" value={drainageStatus} onChange={(e) => setDrainageStatus(e.target.value)} />
-            </label>
-            <label className="space-y-1 lg:col-span-2">
-              <span className="font-medium text-slate-700">Safety features</span>
-              <input className="w-full rounded border px-3 py-2" value={safetyFeatures} onChange={(e) => setSafetyFeatures(e.target.value)} />
-            </label>
-            <label className="space-y-1 lg:col-span-2">
+            <label className="space-y-1 lg:col-span-3">
               <span className="font-medium text-slate-700">Issues observed</span>
               <input className="w-full rounded border px-3 py-2" value={issues} onChange={(e) => setIssues(e.target.value)} />
             </label>
@@ -1096,7 +1044,6 @@ export default function RoadsMonitoringPage() {
                   <th className="px-3 py-2 text-left">Starting point</th>
                   <th className="px-3 py-2 text-left">Ending point</th>
                   <th className="px-3 py-2 text-left">Construction year</th>
-                  <th className="px-3 py-2 text-left">Traffic class</th>
                   <th className="px-3 py-2 text-left">Action</th>
                 </tr>
               </thead>
@@ -1125,7 +1072,6 @@ export default function RoadsMonitoringPage() {
                     <td className="px-3 py-2">{row.pointAName || '—'}</td>
                     <td className="px-3 py-2">{row.pointBName || '—'}</td>
                     <td className="px-3 py-2">{row.yearOfConstruction || '—'}</td>
-                    <td className="px-3 py-2">{row.trafficClass || '—'}</td>
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
                         <button

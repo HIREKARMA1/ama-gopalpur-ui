@@ -24,19 +24,61 @@ import {
 const DRAINAGE_DATA_PATHS = ['/data/drainage/bahana.json', 'data/drainage/bahana.json'] as const;
 
 function parsePathCoordinates(raw: string | null | undefined): [number, number][] {
-  if (!raw || !raw.trim()) return [];
-  return raw
+  const s = (raw || '').trim();
+  if (!s) return [];
+
+  // 1) GeoJSON-like array string: [[lng,lat],[lng,lat],...]
+  try {
+    const parsed = JSON.parse(s);
+    if (Array.isArray(parsed)) {
+      const coords = parsed
+        .filter((pt) => Array.isArray(pt) && pt.length >= 2)
+        .map((pt) => [Number(pt[0]), Number(pt[1])] as [number, number])
+        .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
+      if (coords.length >= 2) return coords;
+    }
+  } catch {
+    // fallback parsers below
+  }
+
+  // 2) WKT LINESTRING(lng lat, lng lat, ...)
+  const linestringMatch = s.match(/LINESTRING\s*\(([^)]+)\)/i);
+  if (linestringMatch?.[1]) {
+    const coords = linestringMatch[1]
+      .split(',')
+      .map((pair) => pair.trim())
+      .filter(Boolean)
+      .map((pair) => {
+        const [lngStr = '', latStr = ''] = pair.split(/\s+/);
+        return [Number(lngStr), Number(latStr)] as [number, number];
+      })
+      .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
+    if (coords.length >= 2) return coords;
+  }
+
+  // 3) Existing legacy format: "lng lat;lng lat;..."
+  const legacyCoords = s
     .split(';')
     .map((pair) => pair.trim())
     .filter(Boolean)
     .map((pair) => {
       const [lngStr = '', latStr = ''] = pair.split(/\s+/);
-      const lng = Number(lngStr);
-      const lat = Number(latStr);
-      if (!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
-      return [lng, lat] as [number, number];
+      return [Number(lngStr), Number(latStr)] as [number, number];
     })
-    .filter((c): c is [number, number] => Array.isArray(c) && c.length === 2);
+    .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
+  if (legacyCoords.length >= 2) return legacyCoords;
+
+  // 4) Fallback numeric extraction (supports mixed delimiters)
+  const nums = (s.match(/-?\d+(?:\.\d+)?/g) || []).map((n) => Number(n));
+  if (nums.length < 4) return [];
+  const inferred: [number, number][] = [];
+  for (let i = 0; i + 1 < nums.length; i += 2) {
+    const lng = nums[i];
+    const lat = nums[i + 1];
+    if (!Number.isFinite(lng) || !Number.isFinite(lat)) continue;
+    inferred.push([lng, lat]);
+  }
+  return inferred.length >= 2 ? inferred : [];
 }
 
 function orgToRoadFeature(org: Organization): RoadFeature | null {
@@ -78,12 +120,9 @@ function orgToRoadFeature(org: Organization): RoadFeature | null {
       startLng: Number.isFinite(startLng) ? startLng : null,
       endLat: Number.isFinite(endLat) ? endLat : null,
       endLng: Number.isFinite(endLng) ? endLng : null,
-      carriagewayWidthM: String(attrs.carriageway_width_m ?? ''),
       lastMaintenanceDate: String(attrs.last_maintenance_date ?? ''),
-      trafficClass: String(attrs.traffic_class ?? ''),
-      drainageStatus: String(attrs.drainage_status ?? ''),
-      safetyFeatures: String(attrs.safety_features ?? ''),
       issues: String(attrs.issues ?? ''),
+      remarks: String(attrs.remarks ?? ''),
     },
     geometry: { type: 'LineString', coordinates },
   };

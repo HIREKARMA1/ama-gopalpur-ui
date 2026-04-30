@@ -102,7 +102,7 @@ const IRRIGATION_CSV_HEADER =
 const AGRICULTURE_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID,HOST INSTITUTION/AFFILIATING BODY,ESTABLISHED YEAR,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,CAMPUS AREA (ACRES),TRAINING HALL (YES/NO),TRAINING HALL CAPACITY (SEATS),SOIL TESTING (YES/NO),SOIL SAMPLES TESTED PER YEAR,SEED DISTRIBUTION (YES/NO),SEED PROCESSING UNIT (YES/NO),SEED STORAGE CAPACITY (MT),DEMO UNITS (COMMA SEPARATED),DEMO FARM (YES/NO),DEMO FARM AREA (ACRES),GREENHOUSE/POLYHOUSE (YES/NO),IRRIGATION FACILITY (YES/NO),MACHINERY/CUSTOM HIRING (YES/NO),COMPUTER/IT LAB (YES/NO),LIBRARY (YES/NO),KEY SCHEMES (COMMA SEPARATED),TOTAL STAFF (COUNT),SCIENTISTS/OFFICERS (COUNT),TECHNICAL STAFF (COUNT),EXTENSION WORKERS (COUNT),FARMER TRAINING CAPACITY (PER BATCH),TRAINING PROGRAMMES CONDUCTED LAST YEAR,ON-FARM TRIALS/FLD LAST YEAR,VILLAGES/GPS COVERED (COUNT),SOIL HEALTH CARDS ISSUED LAST YEAR,FARMERS SERVED LAST YEAR (APPROX),REMARKS/DESCRIPTION\n';
 const ROADS_CSV_HEADER =
-  'block,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,CARRIAGEWAY WIDTH (M),LAST MAINTENANCE DATE,TRAFFIC CLASS,DRAINAGE STATUS,SAFETY FEATURES,ISSUES OBSERVED\n';
+  'block,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED,REMARKS\n';
 
 const splitHeader = (header: string): string[] =>
   header.trim().replace(/\n$/, '').split(',').map((h) => h.trim());
@@ -291,6 +291,7 @@ export default function DepartmentAdminPage() {
   const [uploading, setUploading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editingOrgId, setEditingOrgId] = useState<number | null>(null);
+  const [editingRoadOrg, setEditingRoadOrg] = useState<Organization | null>(null);
   const [orgProfiles, setOrgProfiles] = useState<Record<number, CenterProfile | null>>({});
   const [healthProfiles, setHealthProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [educationProfiles, setEducationProfiles] = useState<Record<number, Record<string, unknown>>>({});
@@ -608,6 +609,7 @@ export default function DepartmentAdminPage() {
       'End Lng',
       'Point A',
       'Point B',
+      'Remarks',
     ];
   }, [deptCode]);
 
@@ -637,6 +639,7 @@ export default function DepartmentAdminPage() {
       'End Lng': attrs.end_lng,
       'Point A': attrs.point_a_name,
       'Point B': attrs.point_b_name,
+      Remarks: attrs.remarks,
     };
     return fallback(map[column]);
   };
@@ -1344,12 +1347,9 @@ export default function DepartmentAdminPage() {
           pointAName: idx('point a name', 'point_a_name', 'start_point_name', 'starting_point_name'),
           pointBName: idx('point b name', 'point_b_name', 'end_point_name', 'ending_point_name'),
           yearOfConstruction: idx('year of construction', 'year_of_construction', 'construction_year'),
-          carriagewayWidthM: idx('carriageway width m', 'carriageway_width_m', 'road_width_m'),
           lastMaintenanceDate: idx('last maintenance date', 'last_maintenance_date'),
-          trafficClass: idx('traffic class', 'traffic_class'),
-          drainageStatus: idx('drainage status', 'drainage_status'),
-          safetyFeatures: idx('safety features', 'safety_features'),
           issues: idx('issues observed', 'issues', 'issues_observed'),
+          remarks: idx('remarks', 'remark'),
         };
         if (indexes.roadName < 0) {
           setError(`Missing required column ROAD NAME. Found headers: ${parseCsvLine(lines[0]).join(', ')}`);
@@ -1441,12 +1441,9 @@ export default function DepartmentAdminPage() {
                 point_a_name: get(cols, indexes.pointAName) || null,
                 point_b_name: get(cols, indexes.pointBName) || null,
                 year_of_construction: get(cols, indexes.yearOfConstruction) || null,
-                carriageway_width_m: get(cols, indexes.carriagewayWidthM) || null,
                 last_maintenance_date: get(cols, indexes.lastMaintenanceDate) || null,
-                traffic_class: get(cols, indexes.trafficClass) || null,
-                drainage_status: get(cols, indexes.drainageStatus) || null,
-                safety_features: get(cols, indexes.safetyFeatures) || null,
                 issues: get(cols, indexes.issues) || null,
+                remarks: get(cols, indexes.remarks) || null,
                 updated_at: new Date().toISOString(),
               },
             });
@@ -1683,9 +1680,15 @@ export default function DepartmentAdminPage() {
             {deptCode === 'ROADS' && me?.department_id ? (
               <RoadsDataEntryForm
                 departmentId={me.department_id}
+                editingRoad={editingRoadOrg}
                 onCreated={(created) => {
                   setOrgs((prev) => [created, ...prev]);
                 }}
+                onUpdated={(updated) => {
+                  setOrgs((prev) => prev.map((org) => (org.id === updated.id ? updated : org)));
+                  setEditingRoadOrg(null);
+                }}
+                onCancelEdit={() => setEditingRoadOrg(null)}
               />
             ) : null}
 
@@ -4510,6 +4513,7 @@ export default function DepartmentAdminPage() {
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.end_lng)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.point_a_name)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.point_b_name)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.remarks)}</td>
                               </>
                             )}
                             {deptCode === 'WATCO_RWSS' && (
@@ -4812,6 +4816,7 @@ export default function DepartmentAdminPage() {
                                 deptCode !== 'MINOR_IRRIGATION' &&
                                 deptCode !== 'IRRIGATION' &&
                                 deptCode !== 'REVENUE_LAND' &&
+                                deptCode !== 'ROADS' &&
                                 deptCode !== 'AGRICULTURE' && (
                                   <button
                                     type="button"
@@ -4848,6 +4853,18 @@ export default function DepartmentAdminPage() {
                                     Edit
                                   </button>
                                 )}
+                              {deptCode === 'ROADS' && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingRoadOrg(o);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                >
+                                  Edit
+                                </button>
+                              )}
                               {/* Minor Irrigation edit – populate Minor Irrigation manual form */}
                               {deptCode === 'MINOR_IRRIGATION' && (
                                 <button
@@ -5713,7 +5730,7 @@ export default function DepartmentAdminPage() {
                     )}
                     {!organizationsForTable.length && (
                       <tr>
-                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 22 : deptCode === 'HEALTH' ? 28 : deptCode === 'EDUCATION' ? 62 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 3 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 3 : deptCode === 'REVENUE_LAND' ? 12 : deptCode === 'ROADS' ? 16 : 11}>
+                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 22 : deptCode === 'HEALTH' ? 28 : deptCode === 'EDUCATION' ? 62 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 3 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 3 : deptCode === 'REVENUE_LAND' ? 12 : deptCode === 'ROADS' ? 17 : 11}>
                           {orgs.length
                             ? 'No matching rows for current search/filter.'
                             : 'No organizations yet for your department.'}

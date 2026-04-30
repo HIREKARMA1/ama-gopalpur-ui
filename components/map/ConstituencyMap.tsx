@@ -82,11 +82,27 @@ const ROAD_LEGEND_COLORS = [
   '#0ea5e9',
 ] as const;
 
-function normalizeRoadLegendSector(raw: string | null | undefined): string {
-  return (raw || '').trim().toUpperCase().replace(/\s+/g, ' ');
+function normalizeRoadLegendSector(raw: string | null | undefined, codeRaw?: string | null): string {
+  const sector = (raw || '').trim().toUpperCase().replace(/\s+/g, ' ');
+  const code = (codeRaw || '').trim().toUpperCase();
+  if (sector.includes('NH') || code.startsWith('NH')) return 'NH';
+  if (sector.includes('SH') || code.startsWith('SH')) return 'SH';
+  if (sector.includes('PWD') || sector.includes('R&B')) return 'PWD';
+  if (sector.includes('RD')) return 'RD';
+  if (sector.includes('PS')) return 'PS';
+  if (sector.includes('GP')) return 'GP';
+  return sector || 'OTHER';
 }
 
 function roadLegendColor(typeKey: string): string {
+  const canonical = normalizeRoadLegendSector(typeKey);
+  if (canonical === 'NH') return '#ea4335';
+  if (canonical === 'SH') return '#1967d2';
+  if (canonical === 'PWD') return '#f59e0b';
+  if (canonical === 'RD') return '#34a853';
+  if (canonical === 'PS') return '#9333ea';
+  if (canonical === 'GP') return '#0ea5e9';
+  if (canonical === 'OTHER') return '#6b7280';
   let hash = 0;
   for (let i = 0; i < typeKey.length; i += 1) hash = (hash * 31 + typeKey.charCodeAt(i)) >>> 0;
   return ROAD_LEGEND_COLORS[hash % ROAD_LEGEND_COLORS.length] ?? '#9e6700';
@@ -276,6 +292,7 @@ export interface RoadFeature {
     drainageStatus?: string | null;
     safetyFeatures?: string | null;
     issues?: string | null;
+    remarks?: string | null;
   };
   geometry: { type: 'LineString'; coordinates: [number, number][] };
 }
@@ -640,7 +657,12 @@ export function ConstituencyMap({
     return Array.from(
       new Set(
         roads
-          .map((road) => normalizeRoadLegendSector(road.properties?.roadSector as string))
+          .map((road) =>
+            normalizeRoadLegendSector(
+              road.properties?.roadSector as string,
+              road.properties?.code as string,
+            ),
+          )
           .filter((v) => v.length > 0),
       ),
     ).sort();
@@ -649,7 +671,10 @@ export function ConstituencyMap({
   const roadTypeCounts = useMemo(() => {
     const acc: Record<string, number> = {};
     for (const road of roads) {
-      const type = normalizeRoadLegendSector(road.properties?.roadSector as string);
+      const type = normalizeRoadLegendSector(
+        road.properties?.roadSector as string,
+        road.properties?.code as string,
+      );
       if (!type) continue;
       acc[type] = (acc[type] ?? 0) + 1;
     }
@@ -770,12 +795,9 @@ export function ConstituencyMap({
       type: String(props.roadSector ?? '').trim(),
       nameOfDivision: String(props.nameOfDivision ?? '').trim(),
       scheme: String(props.scheme ?? '').trim(),
-      carriagewayWidthM: String(props.carriagewayWidthM ?? '').trim(),
       lastMaintenanceDate: String(props.lastMaintenanceDate ?? '').trim(),
-      trafficClass: String(props.trafficClass ?? '').trim(),
-      drainageStatus: String(props.drainageStatus ?? '').trim(),
-      safetyFeatures: String(props.safetyFeatures ?? '').trim(),
       issues: String(props.issues ?? '').trim(),
+      remarks: String(props.remarks ?? '').trim(),
     };
   }, [selectedRoad]);
 
@@ -1100,7 +1122,10 @@ export function ConstituencyMap({
       const code = String(road.properties?.code ?? '').toLowerCase();
       const block = String(road.properties?.block ?? '').toLowerCase();
       const scheme = String(road.properties?.scheme ?? '').toLowerCase();
-      const roadType = normalizeRoadLegendSector(String(road.properties?.roadSector ?? ''));
+      const roadType = normalizeRoadLegendSector(
+        String(road.properties?.roadSector ?? ''),
+        String(road.properties?.code ?? ''),
+      );
       if (roadLegendFilterType != null && roadType !== roadLegendFilterType) return false;
       if (!term) return true;
       return (
@@ -1437,7 +1462,10 @@ export function ConstituencyMap({
               if (path.length < 2) return null;
               const name = road.properties?.name ?? road.properties?.roadName ?? 'Road';
               const code = road.properties?.code ?? '';
-              const roadType = normalizeRoadLegendSector(String(road.properties?.roadSector ?? ''));
+              const roadType = normalizeRoadLegendSector(
+                String(road.properties?.roadSector ?? ''),
+                String(road.properties?.code ?? ''),
+              );
               if (roadLegendFilterType != null && roadType !== roadLegendFilterType) return null;
               const color = roadLegendColor(roadType || 'OTHER');
               // Include filter in key so polylines remount when legend changes (@react-google-maps/api can leave stale overlays).
@@ -1521,7 +1549,10 @@ export function ConstituencyMap({
             const name = selectedRoad.properties?.name ?? selectedRoad.properties?.roadName ?? 'Road';
             const code = selectedRoad.properties?.code ?? '';
             const block = selectedRoad.properties?.block ?? '';
-            const roadType = normalizeRoadLegendSector(String(selectedRoad.properties?.roadSector ?? ''));
+            const roadType = normalizeRoadLegendSector(
+              String(selectedRoad.properties?.roadSector ?? ''),
+              String(selectedRoad.properties?.code ?? ''),
+            );
             return (
               <InfoWindow
                 position={{ lat, lng }}
@@ -1701,12 +1732,9 @@ export function ConstituencyMap({
                     <p><span className="font-semibold">Year of construction:</span> {selectedRoadStreetInfo.year || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Road code:</span> {selectedRoadStreetInfo.code || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Block:</span> {selectedRoadStreetInfo.block || 'Requested from Road Dept'}</p>
-                    <p><span className="font-semibold">Carriageway width:</span> {selectedRoadStreetInfo.carriagewayWidthM || 'Requested from Road Dept'}{selectedRoadStreetInfo.carriagewayWidthM ? ' m' : ''}</p>
                     <p><span className="font-semibold">Last maintenance:</span> {selectedRoadStreetInfo.lastMaintenanceDate || 'Requested from Road Dept'}</p>
-                    <p><span className="font-semibold">Traffic class:</span> {selectedRoadStreetInfo.trafficClass || 'Requested from Road Dept'}</p>
-                    <p><span className="font-semibold">Drainage status:</span> {selectedRoadStreetInfo.drainageStatus || 'Requested from Road Dept'}</p>
-                    <p><span className="font-semibold">Safety features:</span> {selectedRoadStreetInfo.safetyFeatures || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Issues observed:</span> {selectedRoadStreetInfo.issues || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">Remarks:</span> {selectedRoadStreetInfo.remarks || 'Requested from Road Dept'}</p>
                   </div>
                 </div>
               )}
