@@ -20,6 +20,8 @@ type RoadEntry = {
   block: string;
   roadCode: string;
   roadSector: string;
+  nameOfDivision: string;
+  scheme: string;
   lengthKm: string;
   pathCoordinates: string;
   startLat: string;
@@ -29,14 +31,7 @@ type RoadEntry = {
   pointAName: string;
   pointBName: string;
   yearOfConstruction: string;
-  carriagewayWidthM: string;
-  surfaceType: string;
-  conditionRating: string;
   lastMaintenanceDate: string;
-  owningAgency: string;
-  trafficClass: string;
-  drainageStatus: string;
-  safetyFeatures: string;
   issues: string;
   latitude: number | null;
   longitude: number | null;
@@ -48,6 +43,8 @@ type RoadCsvRow = {
   roadName: string;
   roadCode: string;
   roadSector: string;
+  nameOfDivision: string;
+  scheme: string;
   lengthKm: string;
   pathCoordinates: string;
   startLat: string;
@@ -57,19 +54,12 @@ type RoadCsvRow = {
   pointAName: string;
   pointBName: string;
   yearOfConstruction: string;
-  carriagewayWidthM: string;
-  surfaceType: string;
-  conditionRating: string;
   lastMaintenanceDate: string;
-  owningAgency: string;
-  trafficClass: string;
-  drainageStatus: string;
-  safetyFeatures: string;
   issues: string;
 };
 
 const ROAD_TEMPLATE_HEADER =
-  'block,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,CARRIAGEWAY WIDTH (M),SURFACE TYPE,CONDITION RATING,LAST MAINTENANCE DATE,OWNING AGENCY,TRAFFIC CLASS,DRAINAGE STATUS,SAFETY FEATURES,ISSUES OBSERVED';
+  'block,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED';
 
 const PAGE_SIZE = 20;
 
@@ -163,9 +153,10 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
     roadSector: idx(
       'road sector(nh/sh/pwd/rd/ps/gp)',
       'road sector',
-      'road_type',
       'type',
     ),
+    nameOfDivision: idx('name of division', 'name_of_division', 'division name', 'division'),
+    scheme: idx('scheme', 'scheme_name'),
     lengthKm: idx('length(in km)', 'length in km', 'length_km', 'length'),
     pathCoordinates: idx('path coordinates', 'path_coordinates', 'coordinates'),
     startLat: idx('start_lat', 'start lat', 'start latitude', 'start_latitude'),
@@ -175,14 +166,7 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
     pointAName: idx('point a name', 'point_a_name', 'start_point_name', 'starting_point_name'),
     pointBName: idx('point b name', 'point_b_name', 'end_point_name', 'ending_point_name'),
     yearOfConstruction: idx('year of construction', 'year_of_construction', 'construction_year'),
-    carriagewayWidthM: idx('carriageway width m', 'carriageway_width_m', 'road_width_m'),
-    surfaceType: idx('surface type', 'surface_type'),
-    conditionRating: idx('condition rating', 'condition_rating'),
     lastMaintenanceDate: idx('last maintenance date', 'last_maintenance_date'),
-    owningAgency: idx('owning agency', 'owning_agency'),
-    trafficClass: idx('traffic class', 'traffic_class'),
-    drainageStatus: idx('drainage status', 'drainage_status'),
-    safetyFeatures: idx('safety features', 'safety_features'),
     issues: idx('issues observed', 'issues', 'issues_observed'),
   };
 
@@ -243,6 +227,8 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
       roadName,
       roadCode: get(indexes.roadCode),
       roadSector: get(indexes.roadSector),
+      nameOfDivision: get(indexes.nameOfDivision),
+      scheme: get(indexes.scheme),
       lengthKm: get(indexes.lengthKm),
       pathCoordinates,
       startLat,
@@ -252,14 +238,7 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
       pointAName: get(indexes.pointAName),
       pointBName: get(indexes.pointBName),
       yearOfConstruction: get(indexes.yearOfConstruction),
-      carriagewayWidthM: get(indexes.carriagewayWidthM),
-      surfaceType: get(indexes.surfaceType),
-      conditionRating: get(indexes.conditionRating),
       lastMaintenanceDate: get(indexes.lastMaintenanceDate),
-      owningAgency: get(indexes.owningAgency),
-      trafficClass: get(indexes.trafficClass),
-      drainageStatus: get(indexes.drainageStatus),
-      safetyFeatures: get(indexes.safetyFeatures),
       issues: get(indexes.issues),
     });
   }
@@ -288,12 +267,13 @@ export default function RoadsMonitoringPage() {
   const [searchText, setSearchText] = useState('');
   const [blockFilter, setBlockFilter] = useState('');
   const [sectorFilter, setSectorFilter] = useState('');
-  const [conditionFilter, setConditionFilter] = useState('');
 
   const [block, setBlock] = useState('');
   const [roadName, setRoadName] = useState('');
   const [roadCode, setRoadCode] = useState('');
   const [roadSector, setRoadSector] = useState('');
+  const [nameOfDivision, setNameOfDivision] = useState('');
+  const [scheme, setScheme] = useState('');
   const [lengthKm, setLengthKm] = useState('');
   const [pathCoordinates, setPathCoordinates] = useState('');
   const [startLat, setStartLat] = useState('');
@@ -303,14 +283,7 @@ export default function RoadsMonitoringPage() {
   const [pointAName, setPointAName] = useState('');
   const [pointBName, setPointBName] = useState('');
   const [yearOfConstruction, setYearOfConstruction] = useState('');
-  const [carriagewayWidthM, setCarriagewayWidthM] = useState('');
-  const [surfaceType, setSurfaceType] = useState('');
-  const [conditionRating, setConditionRating] = useState('');
   const [lastMaintenanceDate, setLastMaintenanceDate] = useState('');
-  const [owningAgency, setOwningAgency] = useState('');
-  const [trafficClass, setTrafficClass] = useState('');
-  const [drainageStatus, setDrainageStatus] = useState('');
-  const [safetyFeatures, setSafetyFeatures] = useState('');
   const [issues, setIssues] = useState('');
   const csvInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -356,29 +329,26 @@ export default function RoadsMonitoringPage() {
     return roads
       .map((org) => {
         const attrs = (org.attributes ?? {}) as Record<string, unknown>;
+        const orgLat = org.latitude != null ? String(org.latitude) : '';
+        const orgLng = org.longitude != null ? String(org.longitude) : '';
         return {
           id: org.id,
           name: org.name,
           block: String(attrs.block ?? ''),
           roadCode: String(attrs.road_code ?? ''),
           roadSector: String(attrs.road_sector ?? ''),
+          nameOfDivision: String(attrs.name_of_division ?? attrs.division_name ?? attrs.division ?? ''),
+          scheme: String(attrs.scheme ?? attrs.scheme_name ?? ''),
           lengthKm: String(attrs.length_km ?? ''),
           pathCoordinates: String(attrs.path_coordinates ?? ''),
-          startLat: String(attrs.start_lat ?? ''),
-          startLng: String(attrs.start_lng ?? ''),
-          endLat: String(attrs.end_lat ?? ''),
-          endLng: String(attrs.end_lng ?? ''),
+          startLat: String(attrs.start_lat ?? orgLat),
+          startLng: String(attrs.start_lng ?? orgLng),
+          endLat: String(attrs.end_lat ?? orgLat),
+          endLng: String(attrs.end_lng ?? orgLng),
           pointAName: String(attrs.point_a_name ?? ''),
           pointBName: String(attrs.point_b_name ?? ''),
           yearOfConstruction: String(attrs.year_of_construction ?? ''),
-          carriagewayWidthM: String(attrs.carriageway_width_m ?? ''),
-          surfaceType: String(attrs.surface_type ?? ''),
-          conditionRating: String(attrs.condition_rating ?? ''),
           lastMaintenanceDate: String(attrs.last_maintenance_date ?? ''),
-          owningAgency: String(attrs.owning_agency ?? ''),
-          trafficClass: String(attrs.traffic_class ?? ''),
-          drainageStatus: String(attrs.drainage_status ?? ''),
-          safetyFeatures: String(attrs.safety_features ?? ''),
           issues: String(attrs.issues ?? ''),
           latitude: org.latitude ?? null,
           longitude: org.longitude ?? null,
@@ -397,24 +367,22 @@ export default function RoadsMonitoringPage() {
     return tableRows.filter((row) => {
       if (blockFilter && row.block !== blockFilter) return false;
       if (sectorFilter && row.roadSector !== sectorFilter) return false;
-      if (conditionFilter && row.conditionRating !== conditionFilter) return false;
       if (!q) return true;
       const hay = [
         row.name,
         row.block,
         row.roadCode,
         row.roadSector,
+        row.nameOfDivision,
+        row.scheme,
         row.pointAName,
         row.pointBName,
-        row.owningAgency,
-        row.surfaceType,
-        row.conditionRating,
       ]
         .join(' ')
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [tableRows, searchText, blockFilter, sectorFilter, conditionFilter]);
+  }, [tableRows, searchText, blockFilter, sectorFilter]);
 
   const totalRows = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
@@ -427,6 +395,8 @@ export default function RoadsMonitoringPage() {
     setRoadName('');
     setRoadCode('');
     setRoadSector('');
+    setNameOfDivision('');
+    setScheme('');
     setLengthKm('');
     setPathCoordinates('');
     setStartLat('');
@@ -436,14 +406,7 @@ export default function RoadsMonitoringPage() {
     setPointAName('');
     setPointBName('');
     setYearOfConstruction('');
-    setCarriagewayWidthM('');
-    setSurfaceType('');
-    setConditionRating('');
     setLastMaintenanceDate('');
-    setOwningAgency('');
-    setTrafficClass('');
-    setDrainageStatus('');
-    setSafetyFeatures('');
     setIssues('');
     setEditingRoadId(null);
   };
@@ -474,6 +437,8 @@ export default function RoadsMonitoringPage() {
         block: row.block || null,
         road_code: row.roadCode || null,
         road_sector: row.roadSector || null,
+        name_of_division: row.nameOfDivision || null,
+        scheme: row.scheme || null,
         length_km: row.lengthKm || null,
         path_coordinates: row.pathCoordinates || null,
         start_lat: row.startLat || null,
@@ -483,14 +448,7 @@ export default function RoadsMonitoringPage() {
         point_a_name: row.pointAName || null,
         point_b_name: row.pointBName || null,
         year_of_construction: row.yearOfConstruction || null,
-        carriageway_width_m: row.carriagewayWidthM || null,
-        surface_type: row.surfaceType || null,
-        condition_rating: row.conditionRating || null,
         last_maintenance_date: row.lastMaintenanceDate || null,
-        owning_agency: row.owningAgency || null,
-        traffic_class: row.trafficClass || null,
-        drainage_status: row.drainageStatus || null,
-        safety_features: row.safetyFeatures || null,
         issues: row.issues || null,
         updated_at: new Date().toISOString(),
       },
@@ -528,11 +486,14 @@ export default function RoadsMonitoringPage() {
     setError(null);
     setSuccess(null);
     try {
+      const wasEditing = editingRoadId != null;
       const formRow: RoadCsvRow = {
         block,
         roadName,
         roadCode,
         roadSector,
+        nameOfDivision,
+        scheme,
         lengthKm,
         pathCoordinates,
         startLat,
@@ -542,14 +503,7 @@ export default function RoadsMonitoringPage() {
         pointAName,
         pointBName,
         yearOfConstruction,
-        carriagewayWidthM,
-        surfaceType,
-        conditionRating,
         lastMaintenanceDate,
-        owningAgency,
-        trafficClass,
-        drainageStatus,
-        safetyFeatures,
         issues,
       };
       if (editingRoadId) {
@@ -559,7 +513,7 @@ export default function RoadsMonitoringPage() {
       }
       resetForm();
       setRefreshTick((v) => v + 1);
-      setSuccess(editingRoadId ? 'Road updated successfully.' : 'Road added successfully.');
+      setSuccess(wasEditing ? 'Road updated successfully.' : 'Road added successfully.');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to add road');
     } finally {
@@ -575,23 +529,20 @@ export default function RoadsMonitoringPage() {
     setRoadName(row.name);
     setRoadCode(row.roadCode);
     setRoadSector(row.roadSector);
+    setNameOfDivision(row.nameOfDivision);
+    setScheme(row.scheme);
     setLengthKm(row.lengthKm);
     setPathCoordinates(row.pathCoordinates);
-    setStartLat(row.startLat);
-    setStartLng(row.startLng);
-    setEndLat(row.endLat);
-    setEndLng(row.endLng);
+    const fallbackLat = row.latitude != null ? String(row.latitude) : '';
+    const fallbackLng = row.longitude != null ? String(row.longitude) : '';
+    setStartLat(row.startLat || fallbackLat);
+    setStartLng(row.startLng || fallbackLng);
+    setEndLat(row.endLat || fallbackLat);
+    setEndLng(row.endLng || fallbackLng);
     setPointAName(row.pointAName);
     setPointBName(row.pointBName);
     setYearOfConstruction(row.yearOfConstruction);
-    setCarriagewayWidthM(row.carriagewayWidthM);
-    setSurfaceType(row.surfaceType);
-    setConditionRating(row.conditionRating);
     setLastMaintenanceDate(row.lastMaintenanceDate);
-    setOwningAgency(row.owningAgency);
-    setTrafficClass(row.trafficClass);
-    setDrainageStatus(row.drainageStatus);
-    setSafetyFeatures(row.safetyFeatures);
     setIssues(row.issues);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -787,14 +738,9 @@ export default function RoadsMonitoringPage() {
                 point_a_name: null,
                 point_b_name: null,
                 year_of_construction: null,
-                carriageway_width_m: null,
-                surface_type: null,
-                condition_rating: null,
+                name_of_division: p.division_name ? String(p.division_name) : null,
+                scheme: p.scheme ? String(p.scheme) : null,
                 last_maintenance_date: null,
-                owning_agency: null,
-                traffic_class: null,
-                drainage_status: null,
-                safety_features: null,
                 issues: null,
                 updated_at: new Date().toISOString(),
               },
@@ -826,7 +772,7 @@ export default function RoadsMonitoringPage() {
 
   const handleDownloadTemplate = () => {
     const example =
-      'Rangailunda,Badakusthali to Palligumula,RR(VR)L-044,RD,4.2,"84.854087 19.340684;84.852296 19.335599",19.340684,84.854087,19.335599,84.852296,Badakusthali,Palligumula,2019,5.5,Bituminous,Good,2024-03-10,RD Department,Arterial,Both-side drains,Signage+Markings,None';
+      'Rangailunda,Badakusthali to Palligumula,RR(VR)L-044,RD,Rangailunda Division,PMGSY,4.2,"84.854087 19.340684;84.852296 19.335599",19.340684,84.854087,19.335599,84.852296,Badakusthali,Palligumula,2019,5.5,2024-03-10,Arterial,Both-side drains,Signage+Markings,None';
     const blob = new Blob([`${ROAD_TEMPLATE_HEADER}\n${example}\n`], {
       type: 'text/csv;charset=utf-8;',
     });
@@ -852,7 +798,6 @@ export default function RoadsMonitoringPage() {
       sectionLabel="Roads Monitoring"
       navItems={[
         { href: '/admin/dept', labelKey: 'super.sidebar.dashboard' },
-        { href: '/admin/dept/roads-monitoring', labelKey: 'super.sidebar.dashboard' },
       ]}
       onLogout={() => {
         clearToken();
@@ -894,6 +839,14 @@ export default function RoadsMonitoringPage() {
               <input className="w-full rounded border px-3 py-2" value={roadSector} onChange={(e) => setRoadSector(e.target.value)} />
             </label>
             <label className="space-y-1">
+              <span className="font-medium text-slate-700">NAME OF DIVISION</span>
+              <input className="w-full rounded border px-3 py-2" value={nameOfDivision} onChange={(e) => setNameOfDivision(e.target.value)} />
+            </label>
+            <label className="space-y-1">
+              <span className="font-medium text-slate-700">SCHEME</span>
+              <input className="w-full rounded border px-3 py-2" value={scheme} onChange={(e) => setScheme(e.target.value)} />
+            </label>
+            <label className="space-y-1">
               <span className="font-medium text-slate-700">LENGTH(IN KM)</span>
               <input className="w-full rounded border px-3 py-2" value={lengthKm} onChange={(e) => setLengthKm(e.target.value)} />
             </label>
@@ -930,38 +883,10 @@ export default function RoadsMonitoringPage() {
               <input className="w-full rounded border px-3 py-2" value={yearOfConstruction} onChange={(e) => setYearOfConstruction(e.target.value)} />
             </label>
             <label className="space-y-1">
-              <span className="font-medium text-slate-700">Carriageway width (m)</span>
-              <input className="w-full rounded border px-3 py-2" value={carriagewayWidthM} onChange={(e) => setCarriagewayWidthM(e.target.value)} />
-            </label>
-            <label className="space-y-1">
-              <span className="font-medium text-slate-700">Surface type</span>
-              <input className="w-full rounded border px-3 py-2" value={surfaceType} onChange={(e) => setSurfaceType(e.target.value)} />
-            </label>
-            <label className="space-y-1">
-              <span className="font-medium text-slate-700">Condition rating</span>
-              <input className="w-full rounded border px-3 py-2" value={conditionRating} onChange={(e) => setConditionRating(e.target.value)} />
-            </label>
-            <label className="space-y-1">
               <span className="font-medium text-slate-700">Last maintenance date</span>
               <input type="date" className="w-full rounded border px-3 py-2" value={lastMaintenanceDate} onChange={(e) => setLastMaintenanceDate(e.target.value)} />
             </label>
-            <label className="space-y-1">
-              <span className="font-medium text-slate-700">Owning agency</span>
-              <input className="w-full rounded border px-3 py-2" value={owningAgency} onChange={(e) => setOwningAgency(e.target.value)} />
-            </label>
-            <label className="space-y-1">
-              <span className="font-medium text-slate-700">Traffic class</span>
-              <input className="w-full rounded border px-3 py-2" value={trafficClass} onChange={(e) => setTrafficClass(e.target.value)} />
-            </label>
-            <label className="space-y-1">
-              <span className="font-medium text-slate-700">Drainage status</span>
-              <input className="w-full rounded border px-3 py-2" value={drainageStatus} onChange={(e) => setDrainageStatus(e.target.value)} />
-            </label>
-            <label className="space-y-1 lg:col-span-2">
-              <span className="font-medium text-slate-700">Safety features</span>
-              <input className="w-full rounded border px-3 py-2" value={safetyFeatures} onChange={(e) => setSafetyFeatures(e.target.value)} />
-            </label>
-            <label className="space-y-1 lg:col-span-2">
+            <label className="space-y-1 lg:col-span-3">
               <span className="font-medium text-slate-700">Issues observed</span>
               <input className="w-full rounded border px-3 py-2" value={issues} onChange={(e) => setIssues(e.target.value)} />
             </label>
@@ -1080,27 +1005,13 @@ export default function RoadsMonitoringPage() {
                   <option key={v} value={v}>{v}</option>
                 ))}
               </select>
-              <select
-                value={conditionFilter}
-                onChange={(e) => {
-                  setConditionFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="rounded border px-2 py-1"
-              >
-                <option value="">All Conditions</option>
-                {[...new Set(tableRows.map((r) => r.conditionRating).filter(Boolean))].map((v) => (
-                  <option key={v} value={v}>{v}</option>
-                ))}
-              </select>
-              {(searchText || blockFilter || sectorFilter || conditionFilter) && (
+              {(searchText || blockFilter || sectorFilter) && (
                 <button
                   type="button"
                   onClick={() => {
                     setSearchText('');
                     setBlockFilter('');
                     setSectorFilter('');
-                    setConditionFilter('');
                     setPage(1);
                   }}
                   className="text-blue-600 hover:underline"
@@ -1119,6 +1030,8 @@ export default function RoadsMonitoringPage() {
                   <th className="px-3 py-2 text-left">block</th>
                   <th className="px-3 py-2 text-left">ROAD CODE</th>
                   <th className="px-3 py-2 text-left">ROAD SECTOR</th>
+                  <th className="px-3 py-2 text-left">NAME OF DIVISION</th>
+                  <th className="px-3 py-2 text-left">SCHEME</th>
                   <th className="px-3 py-2 text-left">LENGTH(IN KM)</th>
                   <th className="px-3 py-2 text-left">start_lat</th>
                   <th className="px-3 py-2 text-left">start_lng</th>
@@ -1127,9 +1040,6 @@ export default function RoadsMonitoringPage() {
                   <th className="px-3 py-2 text-left">Starting point</th>
                   <th className="px-3 py-2 text-left">Ending point</th>
                   <th className="px-3 py-2 text-left">Construction year</th>
-                  <th className="px-3 py-2 text-left">Surface type</th>
-                  <th className="px-3 py-2 text-left">Condition</th>
-                  <th className="px-3 py-2 text-left">Owning agency</th>
                   <th className="px-3 py-2 text-left">Action</th>
                 </tr>
               </thead>
@@ -1148,6 +1058,8 @@ export default function RoadsMonitoringPage() {
                     <td className="px-3 py-2">{row.block || '—'}</td>
                     <td className="px-3 py-2">{row.roadCode || '—'}</td>
                     <td className="px-3 py-2">{row.roadSector || '—'}</td>
+                    <td className="px-3 py-2">{row.nameOfDivision || '—'}</td>
+                    <td className="px-3 py-2">{row.scheme || '—'}</td>
                     <td className="px-3 py-2">{row.lengthKm || '—'}</td>
                     <td className="px-3 py-2">{row.startLat || '—'}</td>
                     <td className="px-3 py-2">{row.startLng || '—'}</td>
@@ -1156,9 +1068,6 @@ export default function RoadsMonitoringPage() {
                     <td className="px-3 py-2">{row.pointAName || '—'}</td>
                     <td className="px-3 py-2">{row.pointBName || '—'}</td>
                     <td className="px-3 py-2">{row.yearOfConstruction || '—'}</td>
-                    <td className="px-3 py-2">{row.surfaceType || '—'}</td>
-                    <td className="px-3 py-2">{row.conditionRating || '—'}</td>
-                    <td className="px-3 py-2">{row.owningAgency || '—'}</td>
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
                         <button
