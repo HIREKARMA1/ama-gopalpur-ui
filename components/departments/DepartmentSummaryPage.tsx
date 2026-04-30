@@ -9,6 +9,8 @@ import {
 import { useLanguage } from '../i18n/LanguageContext';
 import { t, type MessageKey } from '../i18n/messages';
 import { Navbar } from '../layout/Navbar';
+import { DepartmentHighlightsSection } from './DepartmentHighlightsSection';
+import { getDepartmentLabel } from './DepartmentSidebar';
 
 type Props = {
   department: Department;
@@ -19,6 +21,12 @@ type Props = {
 export function DepartmentSummaryPage({ department, organizationCount, organizations }: Props) {
   const { language } = useLanguage();
   const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
+  const localizedSummaryText = (en?: string | null, od?: string | null) => {
+    const enText = (en || '').trim();
+    const odText = (od || '').trim();
+    if (language === 'or') return odText || enText;
+    return enText || odText;
+  };
   const lang = language as Lang;
   const tr = (key: MessageKey, vars?: Record<string, string | number>) => {
     let text = t(key, language);
@@ -30,13 +38,26 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     return text;
   };
   const summary = department.department_summary;
+  const sidebarLocalizedDepartmentName = getDepartmentLabel(department, language);
+  const localizedDepartmentName =
+    localizedSummaryText(
+      sidebarLocalizedDepartmentName,
+      summary?.department_name_od,
+    ) || sidebarLocalizedDepartmentName;
+  const overviewText =
+    localizedSummaryText(summary?.overview, summary?.overview_od) || '—';
+  const ministerMessageText =
+    localizedSummaryText(summary?.minister_message, summary?.minister_message_od) || '—';
+  const ministerNameText =
+    localizedSummaryText(summary?.minister_name || 'Shri Bibhuti Bhusan Jena', summary?.minister_name_od) ||
+    'Shri Bibhuti Bhusan Jena';
   const stats = summary?.key_statistics ?? [];
   const list = (items?: string[]) => (items ?? []).filter(Boolean).slice(0, 12);
 
   const virtualOrg: Organization = {
     id: department.id,
     department_id: department.id,
-    name: department.name,
+    name: localizedDepartmentName,
     type: 'OTHER',
     description: department.description ?? null,
     latitude: null,
@@ -48,12 +69,12 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   };
 
   const profile: Record<string, unknown> = {
-    school_name_en: department.name,
-    hero_primary_tagline_en: summary?.headline || `${department.name} ${trStatic('Department', 'ବିଭାଗ')}`,
-    about_short_en: summary?.overview || '—',
+    school_name_en: localizedDepartmentName,
+    hero_primary_tagline_en: summary?.headline || `${localizedDepartmentName} ${trStatic('Department', 'ବିଭାଗ')}`,
+    about_short_en: overviewText,
     about_image: summary?.about_image || '',
-    headmaster_message_en: summary?.minister_message || '—',
-    name_of_hm: 'Shri Bibhuti Bhusan Jena',
+    headmaster_message_en: ministerMessageText,
+    name_of_hm: ministerNameText,
     hm_designation:
       language === 'or'
         ? 'ବାଣିଜ୍ୟ, ପରିବହନ, ଇସ୍ପାତ ଓ ଖଣି ମନ୍ତ୍ରୀ, ଓଡ଼ିଶା ସରକାର'
@@ -79,12 +100,12 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         legendKey: normalizeLegendParam(c.title || ''),
       }))
       .filter((c) => c.title && c.count),
-    ...legendRows.slice(0, 12).map((row) => ({
+    ...legendRows.map((row) => ({
       title: row.label,
       count: String(row.count),
       legendKey: normalizeLegendParam(row.rawLabel),
     })),
-  ].slice(0, 16);
+  ];
   const topOrganizations = [...organizations].sort((a, b) => a.name.localeCompare(b.name));
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
@@ -162,7 +183,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     setSortDir('asc');
   };
   const summaryParagraphs = toParagraphs(
-    (summary?.overview as string) ||
+    overviewText ||
     '—',
   );
 
@@ -176,9 +197,10 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           profile={profile}
           language={lang}
           sliderImages={[]}
-          aboutTitleOverride={`${department.name} Department`}
+          aboutTitleOverride={localizedDepartmentName}
           hideAboutMeta
           hideAboutText
+          hideAboutImage
           hideLeaderMeta
           hideDesignationLabel
           hideVisionMission
@@ -198,33 +220,14 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           </div>
         </section>
 
-        <section>
-          <h2 className="text-xl font-bold sm:text-2xl">{tr('dept.summary.section.highlights')}</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {highlightCards.length ? (
-              highlightCards.map((item, idx) => (
-                <a
-                  key={`highlight-${item.title}-${idx}`}
-                  href={`/?dept=${encodeURIComponent(department.code || '')}&legend=${encodeURIComponent(item.legendKey)}`}
-                  className={`block rounded-xl border p-4 shadow-sm ${
-                    idx % 4 === 0
-                      ? 'border-blue-100 bg-blue-50/60'
-                      : idx % 4 === 1
-                        ? 'border-emerald-100 bg-emerald-50/60'
-                        : idx % 4 === 2
-                          ? 'border-teal-100 bg-teal-50/60'
-                          : 'border-rose-100 bg-rose-50/60'
-                  }`}
-                >
-                  <p className="text-sm font-medium text-slate-600">{item.title}</p>
-                  <p className="mt-1 text-3xl font-bold leading-tight text-slate-900">{item.count}</p>
-                </a>
-              ))
-            ) : (
-              <p className="text-sm text-slate-600">{tr('dept.summary.empty.highlights')}</p>
-            )}
-          </div>
-        </section>
+        <DepartmentHighlightsSection
+          sectionTitle={tr('dept.summary.section.highlights')}
+          emptyText={tr('dept.summary.empty.highlights')}
+          infoText={trStatic('Click any node to view matching organizations.', 'ଯେକୌଣସି ନୋଡ୍‌କୁ ଦବାନ୍ତୁ ଏବଂ ସମ୍ବନ୍ଧିତ ସଂଗଠନ ଦେଖନ୍ତୁ।')}
+          departmentName={localizedDepartmentName}
+          departmentCode={department.code || ''}
+          highlightCards={highlightCards}
+        />
 
         <section>
           <h2 className="text-xl font-bold sm:text-2xl">{tr('dept.summary.section.organizationListing')}</h2>

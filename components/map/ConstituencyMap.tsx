@@ -1634,13 +1634,8 @@ export function ConstituencyMap({
           mapInstance={mapInstance}
           mapContainerRef={mapWrapRef}
           departmentId={selectedDepartmentId}
-          departmentTitle={mapDepartmentLabel}
-          mapSummary={mapSummary}
           showDepartmentInfo={!!selectedDepartmentCode}
           infoButtonLabelKey="map.deptInfo.open"
-          dialogTitleKey="map.deptInfo.title"
-          dialogEmptyKey="map.deptInfo.empty"
-          dialogCloseKey="map.deptInfo.close"
           mapLabelKey="map.controls.map"
           satelliteLabelKey="map.controls.satellite"
           fullscreenLabelKey="map.controls.fullscreen"

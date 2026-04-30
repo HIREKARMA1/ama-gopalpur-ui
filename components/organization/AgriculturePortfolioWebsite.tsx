@@ -21,6 +21,7 @@ import {
   type PsPersonCard,
 } from './EducationPsSections';
 import { useLanguage } from '../i18n/LanguageContext';
+import { DepartmentHighlightsSection } from '../departments/DepartmentHighlightsSection';
 
 interface AgricultureDailyMetricExtended extends AgricultureDailyMetric {
   staff_present_count?: number | null;
@@ -505,11 +506,12 @@ export function AgriculturePortfolioWebsite({
 
   const highlights = useMemo(
     () => [
-      [tr('Total staff', 'ମୋଟ କର୍ମଚାରୀ'), asString(profile.total_staff_count ?? profile.total_staff) || '0'],
-      [tr('Villages covered', 'ଆବର୍ତ୍ତିତ ଗ୍ରାମ'), asString(profile.villages_gps_covered_count ?? profile.villages_covered) || '0'],
+      [tr('Total staff', 'ମୋଟ କର୍ମଚାରୀ'), asString(profile.total_staff_count ?? profile.total_staff) || '0', 'TOTAL_STAFF'],
+      [tr('Villages covered', 'ଆବର୍ତ୍ତିତ ଗ୍ରାମ'), asString(profile.villages_gps_covered_count ?? profile.villages_covered) || '0', 'VILLAGES_COVERED'],
       [
         tr('Farmers served', 'ସେବା ପ୍ରାପ୍ତ କୃଷକ'),
         asString(profile.farmers_served_last_year_approx ?? profile.farmers_served_last_year) || '0',
+        'FARMERS_SERVED',
       ],
     ],
     [profile],
@@ -602,17 +604,18 @@ export function AgriculturePortfolioWebsite({
           )}
         </section>
 
-        <section className="rounded-[28px] border border-slate-200/70 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-md md:p-7">
-          <h2 className="text-xl font-bold sm:text-2xl">{tr('Key highlights', 'ମୁଖ୍ୟ ହାଇଲାଇଟ୍')}</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {highlights.map(([k, v]) => (
-              <div key={k} className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{k}</p>
-                <p className="mt-1 text-2xl font-bold text-slate-900">{v}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+        <DepartmentHighlightsSection
+          sectionTitle={tr('Key highlights', 'ମୁଖ୍ୟ ହାଇଲାଇଟ୍')}
+          emptyText={tr('No highlights found', 'ହାଇଲାଇଟ୍ ମିଳିଲା ନାହିଁ')}
+          infoText={tr('Click any node to view matching organizations.', 'ଯେକୌଣସି ନୋଡ୍‌କୁ ଦବାନ୍ତୁ ଏବଂ ସମ୍ବନ୍ଧିତ ସଂଗଠନ ଦେଖନ୍ତୁ।')}
+          departmentName={_departmentName || org.name}
+          departmentCode="AGRICULTURE"
+          highlightCards={highlights.map(([title, count, legendKey]) => ({
+            title: String(title),
+            count: String(count),
+            legendKey: String(legendKey),
+          }))}
+        />
 
         <AgriculturePortfolioMonitoringSection
           profile={profile}
