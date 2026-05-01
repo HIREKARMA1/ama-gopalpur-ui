@@ -194,6 +194,13 @@ export function EducationPsPortfolioAdminForm({
 
   const uploadHint = !organizationId;
   const isHighSchool = (subDepartment || '').toUpperCase() === 'HS';
+  const clearAdminCard = (fields: Array<keyof PsPortfolioOrgFields>) => {
+    const next: Partial<PsPortfolioOrgFields> = {};
+    fields.forEach((field) => {
+      next[field] = '';
+    });
+    patch(next);
+  };
 
   return (
     <div className="md:col-span-2 space-y-2 rounded-md border border-border bg-background-muted/40 p-3">
@@ -355,14 +362,32 @@ export function EducationPsPortfolioAdminForm({
         <p className="mb-2 text-[10px] text-text-muted">Names can match the main school form; photos and emails are for the public website.</p>
         <div className={`grid gap-3 md:grid-cols-2 ${isHighSchool ? 'xl:grid-cols-2' : 'xl:grid-cols-4'}`}>
           <div className="space-y-2 rounded border border-border bg-background p-2">
-            <p className="text-[11px] font-semibold uppercase text-text">DEO</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-semibold uppercase text-text">DEO</p>
+              <button
+                type="button"
+                className="text-[10px] text-red-600"
+                onClick={() => clearAdminCard(['deo_image', 'deo_name', 'deo_contact', 'deo_email'])}
+              >
+                Remove
+              </button>
+            </div>
             <ImgSlot label="Photo" organizationId={organizationId} assetType="ps_admin_deo" url={org.deo_image} onUrl={(u) => patch({ deo_image: u })} />
             <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Name" maxLength={120} value={org.deo_name} onChange={(e) => patch({ deo_name: e.target.value })} />
             <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Contact" maxLength={20} value={org.deo_contact} onChange={(e) => patch({ deo_contact: e.target.value })} />
             <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Email" type="email" maxLength={254} value={org.deo_email} onChange={(e) => patch({ deo_email: e.target.value })} />
           </div>
           <div className="space-y-2 rounded border border-border bg-background p-2">
-            <p className="text-[11px] font-semibold uppercase text-text">BEO</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-semibold uppercase text-text">BEO</p>
+              <button
+                type="button"
+                className="text-[10px] text-red-600"
+                onClick={() => clearAdminCard(['beo_image', 'beo_name', 'beo_contact', 'beo_email'])}
+              >
+                Remove
+              </button>
+            </div>
             <ImgSlot label="Photo" organizationId={organizationId} assetType="ps_admin_beo" url={org.beo_image} onUrl={(u) => patch({ beo_image: u })} />
             <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Name" maxLength={120} value={org.beo_name} onChange={(e) => patch({ beo_name: e.target.value })} />
             <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Contact" maxLength={20} value={org.beo_contact} onChange={(e) => patch({ beo_contact: e.target.value })} />
@@ -370,7 +395,16 @@ export function EducationPsPortfolioAdminForm({
           </div>
           {!isHighSchool && (
             <div className="space-y-2 rounded border border-border bg-background p-2">
-              <p className="text-[11px] font-semibold uppercase text-text">BRCC</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[11px] font-semibold uppercase text-text">BRCC</p>
+                <button
+                  type="button"
+                  className="text-[10px] text-red-600"
+                  onClick={() => clearAdminCard(['brcc_image', 'brcc_name', 'brcc_contact', 'brcc_email'])}
+                >
+                  Remove
+                </button>
+              </div>
               <ImgSlot label="Photo" organizationId={organizationId} assetType="ps_admin_brcc" url={org.brcc_image || ''} onUrl={(u) => patch({ brcc_image: u })} />
               <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Name" maxLength={120} value={org.brcc_name} onChange={(e) => patch({ brcc_name: e.target.value })} />
               <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Contact" maxLength={20} value={org.brcc_contact} onChange={(e) => patch({ brcc_contact: e.target.value })} />
@@ -379,7 +413,16 @@ export function EducationPsPortfolioAdminForm({
           )}
           {!isHighSchool && (
             <div className="space-y-2 rounded border border-border bg-background p-2">
-              <p className="text-[11px] font-semibold uppercase text-text">CRCC</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[11px] font-semibold uppercase text-text">CRCC</p>
+                <button
+                  type="button"
+                  className="text-[10px] text-red-600"
+                  onClick={() => clearAdminCard(['crc_image', 'crc_name', 'crc_contact', 'crc_email'])}
+                >
+                  Remove
+                </button>
+              </div>
               <ImgSlot label="Photo" organizationId={organizationId} assetType="ps_admin_crc" url={org.crc_image} onUrl={(u) => patch({ crc_image: u })} />
               <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Name" maxLength={120} value={org.crc_name} onChange={(e) => patch({ crc_name: e.target.value })} />
               <input className="w-full rounded border border-border px-2 py-1 text-xs" placeholder="Contact" maxLength={20} value={org.crc_contact} onChange={(e) => patch({ crc_contact: e.target.value })} />
