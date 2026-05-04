@@ -33,6 +33,7 @@ import { Loader } from '../../../components/common/Loader';
 import { AwcPortfolioDashboard } from '../../../components/organization/AwcPortfolioDashboard';
 import { EducationPortfolioDashboard } from '../../../components/organization/EducationPortfolioDashboard';
 import { EducationPsPortfolioWebsite } from '../../../components/organization/EducationPsPortfolioWebsite';
+import { EducationEngineeringPortfolioWebsite } from '../../../components/organization/EducationEngineeringPortfolioWebsite';
 import { HealthPortfolioDashboard } from '../../../components/organization/HealthPortfolioDashboard';
 import { ElectricityPortfolioDashboard } from '../../../components/organization/ElectricityPortfolioDashboard';
 import { ArcsPortfolioWebsite } from '../../../components/organization/ArcsPortfolioWebsite';
@@ -361,6 +362,20 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
         <div className="page-container">
           <Navbar />
           <EducationPsPortfolioWebsite
+            org={org}
+            profile={educationProfile}
+            images={images}
+            language={lang}
+          />
+        </div>
+      );
+    }
+    if ((org.sub_department || '').toUpperCase() === 'ENGINEERING_COLLEGE') {
+      const lang = String((educationProfile as Record<string, unknown>)?.language || 'en').toLowerCase() === 'od' ? 'od' : 'en';
+      return (
+        <div className="page-container">
+          <Navbar />
+          <EducationEngineeringPortfolioWebsite
             org={org}
             profile={educationProfile}
             images={images}

@@ -34,6 +34,7 @@ import {
   EducationPsPortfolioAdminForm,
   type PsPortfolioOrgFields,
 } from '../../../components/admin/EducationPsPortfolioAdminForm';
+import { EducationEngineeringPortfolioAdminForm } from '../../../components/admin/EducationEngineeringPortfolioAdminForm';
 import { ArcsPortfolioAdminForm, ARCS_FIELD_LIMITS, CharCount } from '../../../components/admin/ArcsPortfolioAdminForm';
 import {
   HealthPortfolioAdminForm,
@@ -3261,6 +3262,15 @@ export default function DepartmentAdminPage() {
                         setOrgs((prev) => [org, ...prev]);
                       }
                       const profileData: Record<string, unknown> = {};
+                      const parseJsonArray = (raw: string): unknown[] => {
+                        if (!raw.trim()) return [];
+                        try {
+                          const parsed = JSON.parse(raw) as unknown;
+                          return Array.isArray(parsed) ? parsed : [];
+                        } catch {
+                          return [];
+                        }
+                      };
                       headers.forEach((h) => {
                         const key = snakeFromHeader(h);
                         const val = eduFormValues[key];
@@ -3268,6 +3278,71 @@ export default function DepartmentAdminPage() {
                           profileData[key] = val;
                         }
                       });
+                      if (educationSubDept === 'ENGINEERING_COLLEGE') {
+                        const extraKeys = [
+                          'hero_primary_tagline_en',
+                          'hero_slide_1',
+                          'hero_slide_2',
+                          'hero_slide_3',
+                          'about_image',
+                          'headmaster_photo',
+                          'name_of_hm',
+                          'headmaster_message_en',
+                          'hm_qualification',
+                          'hm_period_from',
+                          'hm_period_to',
+                          'hm_period_currently_continuing',
+                          'headmaster_contact',
+                          'headmaster_email',
+                          'vision_text_en',
+                          'mission_text_en',
+                          'name_of_deans_pic_fic_oic_registrar',
+                          'placement_cell',
+                          'placement_officer_name',
+                          'placement_officer_contact',
+                          'placement_officer_email',
+                          'placement_officer_qualification',
+                          'placement_officer_photo',
+                          'placement_officer_experience_from',
+                          'placement_officer_experience_to',
+                          'placement_partners',
+                          'placement_description',
+                          'placement_percentage_last_year',
+                          'highest_package_lpa',
+                          'internship',
+                          'research_projects_count',
+                          'patents_count',
+                          'mou_count',
+                          'centre_of_excellence_comma_separated',
+                          'incubation_centre',
+                          'innovation_and_startup_fascility',
+                          'robotics_club',
+                          'cultural_clubs',
+                          'sports_and_athletics_fascility',
+                          'e_magazine',
+                          'engineering_admin_cards_json',
+                          'department_programme_cards_json',
+                          'student_life_cards_json',
+                        ] as const;
+                        extraKeys.forEach((k) => {
+                          const v = eduFormValues[k];
+                          if (v != null && String(v).trim() !== '') profileData[k] = v;
+                        });
+                        const periodFrom = String(eduFormValues.hm_period_from || '').trim();
+                        const periodTo = String(eduFormValues.hm_period_to || '').trim();
+                        const isCurrent = String(eduFormValues.hm_period_currently_continuing || '').toLowerCase() === 'true';
+                        if (periodFrom || periodTo || isCurrent) {
+                          profileData.hm_experience = isCurrent
+                            ? `${periodFrom || 'N/A'} to Present`
+                            : `${periodFrom || 'N/A'} to ${periodTo || 'N/A'}`;
+                        }
+                        profileData.facility_cards = parseJsonArray(eduFormValues.facility_cards_json || '');
+                        profileData.department_programme_cards = parseJsonArray(eduFormValues.department_programme_cards_json || '');
+                        profileData.student_life_cards = parseJsonArray(eduFormValues.student_life_cards_json || '');
+                        profileData.faculty_cards = parseJsonArray(eduFormValues.faculty_cards_json || '');
+                        profileData.photo_gallery = parseJsonArray(eduFormValues.photo_gallery_json || '');
+                        profileData.engineering_admin_cards = parseJsonArray(eduFormValues.engineering_admin_cards_json || '');
+                      }
                       profileData[latKey] = lat;
                       profileData[lngKey] = lng;
                       await educationApi.putProfile(org.id, profileData);
@@ -3286,31 +3361,52 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  {getEducationHeadersForSubDept(educationSubDept).map((header) => {
-                    const key = snakeFromHeader(header);
-                    return (
-                      <div key={key} className="space-y-1">
-                        <label className="block text-text">{header}</label>
+                  {educationSubDept === 'ENGINEERING_COLLEGE' ? (
+                    <EducationEngineeringPortfolioAdminForm
+                      organizationId={editingEducationId}
+                      values={eduFormValues}
+                      setValues={setEduFormValues}
+                      profileImageControl={
+                        <div className="space-y-1">
+                          <label className="block text-text font-medium">Profile Image</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="w-full text-xs text-text file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                            onChange={(e) => setEducationOtherImageFile(e.target.files?.[0] || null)}
+                          />
+                        </div>
+                      }
+                    />
+                  ) : (
+                    <>
+                      {getEducationHeadersForSubDept(educationSubDept).map((header) => {
+                        const key = snakeFromHeader(header);
+                        return (
+                          <div key={key} className="space-y-1">
+                            <label className="block text-text">{header}</label>
+                            <input
+                              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                              value={eduFormValues[key] ?? ''}
+                              onChange={(e) =>
+                                setEduFormValues((prev) => ({ ...prev, [key]: e.target.value }))
+                              }
+                            />
+                          </div>
+                        );
+                      })}
+
+                      <div className="md:col-span-2 space-y-1">
+                        <label className="block text-text font-medium">Profile Image</label>
                         <input
-                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
-                          value={eduFormValues[key] ?? ''}
-                          onChange={(e) =>
-                            setEduFormValues((prev) => ({ ...prev, [key]: e.target.value }))
-                          }
+                          type="file"
+                          accept="image/*"
+                          className="w-full text-xs text-text file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                          onChange={(e) => setEducationOtherImageFile(e.target.files?.[0] || null)}
                         />
                       </div>
-                    );
-                  })}
-
-                  <div className="md:col-span-2 space-y-1">
-                    <label className="block text-text font-medium">Profile Image</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="w-full text-xs text-text file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                      onChange={(e) => setEducationOtherImageFile(e.target.files?.[0] || null)}
-                    />
-                  </div>
+                    </>
+                  )}
 
                   <div className="md:col-span-2">
                     <button
@@ -5455,6 +5551,54 @@ export default function DepartmentAdminPage() {
                                       const key = snakeFromHeader(h);
                                       values[key] = v(p?.[key] ?? o.attributes?.[key]);
                                     });
+                                    if (educationSubDept === 'ENGINEERING_COLLEGE') {
+                                      values.hero_primary_tagline_en = v(p?.hero_primary_tagline_en);
+                                      values.hero_slide_1 = v(p?.hero_slide_1);
+                                      values.hero_slide_2 = v(p?.hero_slide_2);
+                                      values.hero_slide_3 = v(p?.hero_slide_3);
+                                      values.about_image = v(p?.about_image);
+                                      values.headmaster_photo = v(p?.headmaster_photo);
+                                      values.name_of_hm = v(p?.name_of_hm);
+                                      values.headmaster_message_en = v(p?.headmaster_message_en);
+                                      values.hm_qualification = v(p?.hm_qualification);
+                                      values.hm_period_from = v(p?.hm_period_from);
+                                      values.hm_period_to = v(p?.hm_period_to);
+                                      values.hm_period_currently_continuing = v(p?.hm_period_currently_continuing);
+                                      values.headmaster_contact = v(p?.headmaster_contact);
+                                      values.headmaster_email = v(p?.headmaster_email);
+                                      values.vision_text_en = v(p?.vision_text_en);
+                                      values.mission_text_en = v(p?.mission_text_en);
+                                      values.name_of_deans_pic_fic_oic_registrar = v(p?.name_of_deans_pic_fic_oic_registrar);
+                                      values.placement_cell = v(p?.placement_cell);
+                                      values.placement_officer_name = v(p?.placement_officer_name);
+                                      values.placement_officer_contact = v(p?.placement_officer_contact);
+                                      values.placement_officer_email = v(p?.placement_officer_email);
+                                      values.placement_officer_qualification = v(p?.placement_officer_qualification);
+                                      values.placement_officer_photo = v(p?.placement_officer_photo);
+                                      values.placement_officer_experience_from = v(p?.placement_officer_experience_from);
+                                      values.placement_officer_experience_to = v(p?.placement_officer_experience_to);
+                                      values.placement_partners = v(p?.placement_partners);
+                                      values.placement_description = v(p?.placement_description);
+                                      values.placement_percentage_last_year = v(p?.placement_percentage_last_year);
+                                      values.highest_package_lpa = v(p?.highest_package_lpa);
+                                      values.internship = v(p?.internship);
+                                      values.research_projects_count = v(p?.research_projects_count);
+                                      values.patents_count = v(p?.patents_count);
+                                      values.mou_count = v(p?.mou_count);
+                                      values.centre_of_excellence_comma_separated = v(p?.centre_of_excellence_comma_separated);
+                                      values.incubation_centre = v(p?.incubation_centre);
+                                      values.innovation_and_startup_fascility = v(p?.innovation_and_startup_fascility);
+                                      values.robotics_club = v(p?.robotics_club);
+                                      values.cultural_clubs = v(p?.cultural_clubs);
+                                      values.sports_and_athletics_fascility = v(p?.sports_and_athletics_fascility);
+                                      values.e_magazine = v(p?.e_magazine);
+                                      values.facility_cards_json = Array.isArray(p?.facility_cards) ? JSON.stringify(p?.facility_cards) : '[]';
+                                      values.department_programme_cards_json = Array.isArray(p?.department_programme_cards) ? JSON.stringify(p?.department_programme_cards) : '[]';
+                                      values.student_life_cards_json = Array.isArray(p?.student_life_cards) ? JSON.stringify(p?.student_life_cards) : '[]';
+                                      values.faculty_cards_json = Array.isArray(p?.faculty_cards) ? JSON.stringify(p?.faculty_cards) : '[]';
+                                      values.photo_gallery_json = Array.isArray(p?.photo_gallery) ? JSON.stringify(p?.photo_gallery) : '[]';
+                                      values.engineering_admin_cards_json = Array.isArray(p?.engineering_admin_cards) ? JSON.stringify(p?.engineering_admin_cards) : '[]';
+                                    }
 
                                     const latKey = snakeFromHeader('LATITUDE');
                                     const lngKey = snakeFromHeader('LONGITUDE');

@@ -12,6 +12,10 @@ export type Faculty = {
   qualification?: string;
   photo?: string;
   designation?: string;
+  contact?: string;
+  email?: string;
+  experience_from?: string;
+  experience_to?: string;
 };
 export type GalleryItem = { image?: string; category?: string; title?: string; description?: string };
 export type IntakeRow = { class_name?: string; intake?: string | number };
@@ -264,6 +268,9 @@ export function PsAboutSection({
             <div className="mt-5 grid gap-2 border-l-2 border-slate-300 pl-4 text-sm sm:text-base">
               <p className="text-slate-800"><span className="font-semibold">Established:</span> {asString(profile.esst_year) || '—'}</p>
               <p className="text-slate-800"><span className="font-semibold">Type:</span> {getText(profile, 'school_type', language) || asString(profile.category) || '—'}</p>
+              {asString(profile.autonomous_since_year) ? (
+                <p className="text-slate-800"><span className="font-semibold">Autonomous since:</span> {asString(profile.autonomous_since_year)}</p>
+              ) : null}
               <p className="text-slate-800"><span className="font-semibold">Location:</span> {getText(profile, 'location', language) || org.address || '—'}</p>
             </div>
           ) : null}
@@ -505,7 +512,7 @@ export function PsPersonCardsSection({
             </div>
 
             <div className="flex flex-1 flex-col p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600">{admin.role || EMPTY}</p>
+              <p className="line-clamp-2 text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600">{admin.role || EMPTY}</p>
               <p className="mt-2 text-lg font-bold text-slate-900">{admin.name}</p>
               <div className="mt-4 space-y-2 text-sm text-slate-700">
                 <p>
@@ -1373,7 +1380,11 @@ function facultyRowHasContent(f: Faculty): boolean {
     asString(f.photo).trim() !== '' ||
     asString(f.subject).trim() !== '' ||
     asString(f.qualification).trim() !== '' ||
-    asString(f.designation).trim() !== ''
+    asString(f.designation).trim() !== '' ||
+    asString(f.contact).trim() !== '' ||
+    asString(f.email).trim() !== '' ||
+    asString(f.experience_from).trim() !== '' ||
+    asString(f.experience_to).trim() !== ''
   );
 }
 
@@ -1508,6 +1519,17 @@ export function PsFacultySection({
                 {asString(f.designation) ? (
                   <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Designation:</span> {displayText(f.designation)}</p>
                 ) : null}
+                {asString(f.contact) ? (
+                  <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Contact:</span> {displayText(f.contact)}</p>
+                ) : null}
+                {asString(f.email) ? (
+                  <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Email:</span> {displayText(f.email)}</p>
+                ) : null}
+                {(asString(f.experience_from) || asString(f.experience_to)) ? (
+                  <p className="mt-1 text-sm text-slate-600">
+                    <span className="font-semibold">Experience:</span> {displayText(f.experience_from)} to {displayText(f.experience_to)}
+                  </p>
+                ) : null}
               </div>
             </article>
           ))}
@@ -1558,6 +1580,17 @@ export function PsFacultySection({
                         <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Qualification:</span> {displayText(f.qualification)}</p>
                         {asString(f.designation) ? (
                           <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Designation:</span> {displayText(f.designation)}</p>
+                        ) : null}
+                        {asString(f.contact) ? (
+                          <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Contact:</span> {displayText(f.contact)}</p>
+                        ) : null}
+                        {asString(f.email) ? (
+                          <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Email:</span> {displayText(f.email)}</p>
+                        ) : null}
+                        {(asString(f.experience_from) || asString(f.experience_to)) ? (
+                          <p className="mt-1 text-sm text-slate-600">
+                            <span className="font-semibold">Experience:</span> {displayText(f.experience_from)} to {displayText(f.experience_to)}
+                          </p>
                         ) : null}
                       </div>
                     </article>
@@ -1611,6 +1644,17 @@ export function PsFacultySection({
               <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Qualification:</span> {displayText(previewFaculty.faculty.qualification)}</p>
               {asString(previewFaculty.faculty.designation) ? (
                 <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Designation:</span> {displayText(previewFaculty.faculty.designation)}</p>
+              ) : null}
+              {asString(previewFaculty.faculty.contact) ? (
+                <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Contact:</span> {displayText(previewFaculty.faculty.contact)}</p>
+              ) : null}
+              {asString(previewFaculty.faculty.email) ? (
+                <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Email:</span> {displayText(previewFaculty.faculty.email)}</p>
+              ) : null}
+              {(asString(previewFaculty.faculty.experience_from) || asString(previewFaculty.faculty.experience_to)) ? (
+                <p className="mt-1 text-sm text-slate-600">
+                  <span className="font-semibold">Experience:</span> {displayText(previewFaculty.faculty.experience_from)} to {displayText(previewFaculty.faculty.experience_to)}
+                </p>
               ) : null}
               {showAttendance ? (
                 <p className="mt-3 inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
