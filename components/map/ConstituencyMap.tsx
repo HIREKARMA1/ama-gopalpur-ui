@@ -652,11 +652,20 @@ export function ConstituencyMap({
     return acc;
   }, [drains]);
 
+  const roadsByBlock = useMemo(() => {
+    const normalizedSelectedBlock = normalizeConstituencyBlock(selectedBlockFilter);
+    if (!normalizedSelectedBlock || normalizedSelectedBlock === 'ALL') return roads;
+    return roads.filter((road) => {
+      const normalizedRoadBlock = normalizeConstituencyBlock(road.properties?.block);
+      return normalizedRoadBlock === normalizedSelectedBlock;
+    });
+  }, [roads, selectedBlockFilter]);
+
   const roadLegendTypes = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'ROADS') return [] as string[];
     return Array.from(
       new Set(
-        roads
+        roadsByBlock
           .map((road) =>
             normalizeRoadLegendSector(
               road.properties?.roadSector as string,
@@ -666,11 +675,11 @@ export function ConstituencyMap({
           .filter((v) => v.length > 0),
       ),
     ).sort();
-  }, [roads, selectedDepartmentCode]);
+  }, [roadsByBlock, selectedDepartmentCode]);
 
   const roadTypeCounts = useMemo(() => {
     const acc: Record<string, number> = {};
-    for (const road of roads) {
+    for (const road of roadsByBlock) {
       const type = normalizeRoadLegendSector(
         road.properties?.roadSector as string,
         road.properties?.code as string,
@@ -679,17 +688,17 @@ export function ConstituencyMap({
       acc[type] = (acc[type] ?? 0) + 1;
     }
     return acc;
-  }, [roads]);
+  }, [roadsByBlock]);
 
   const isRoadsDept = selectedDepartmentCode?.toUpperCase() === 'ROADS';
   const isDrainageDept = selectedDepartmentCode?.toUpperCase() === 'DRAINAGE';
-  const showBlockFilter = !!selectedDepartmentCode && !isRoadsDept && !isDrainageDept;
+  const showBlockFilter = !!selectedDepartmentCode && !isDrainageDept;
   /**
    * Remount map when: switching polylines vs pins, or changing road/drain legend filter.
    * @react-google-maps/api often leaves Polylines on the map when filtered out via conditional render.
    */
   const googleMapLayerKey = isRoadsDept
-    ? `roads-${roadLegendFilterType ?? 'all'}`
+    ? `roads-${selectedBlockFilter}-${roadLegendFilterType ?? 'all'}`
     : isDrainageDept
       ? `drainage-${drainKindFilter ?? 'all'}`
       : 'orgs';
@@ -714,6 +723,12 @@ export function ConstituencyMap({
   }, [selectedDepartmentCode]);
 
   useEffect(() => {
+    if (!isRoadsDept) return;
+    preserveMapCameraForRemount();
+    setSelectedRoad(null);
+  }, [isRoadsDept, selectedBlockFilter, preserveMapCameraForRemount]);
+
+  useEffect(() => {
     if (!selectedDepartmentCode || !initialLegendFilterType) return;
     const applyKey = `${selectedDepartmentCode.toUpperCase()}::${initialLegendFilterType}`;
     if (lastAppliedInitialLegendRef.current === applyKey && legendFilterType === initialLegendFilterType) {
@@ -726,11 +741,11 @@ export function ConstituencyMap({
   /** Road path as Google Maps LatLng[] (GeoJSON is [lng, lat]) */
   const roadPaths = useMemo(
     () =>
-      roads.map((f) => {
+      roadsByBlock.map((f) => {
         const coords = f.geometry?.coordinates ?? [];
         return coords.map(([lng, lat]) => ({ lat, lng }));
       }),
-    [roads]
+    [roadsByBlock]
   );
 
   const selectedRoadStreetViewPosition = useMemo(() => {
@@ -1117,7 +1132,7 @@ export function ConstituencyMap({
   const filteredRoads = useMemo(() => {
     if (!isRoadsDept) return [] as RoadFeature[];
     const term = searchTerm.trim().toLowerCase();
-    return roads.filter((road) => {
+    return roadsByBlock.filter((road) => {
       const name = String(road.properties?.name ?? road.properties?.roadName ?? '').toLowerCase();
       const code = String(road.properties?.code ?? '').toLowerCase();
       const block = String(road.properties?.block ?? '').toLowerCase();
@@ -1136,7 +1151,7 @@ export function ConstituencyMap({
         roadType.toLowerCase().includes(term)
       );
     });
-  }, [isRoadsDept, roads, searchTerm, roadLegendFilterType]);
+  }, [isRoadsDept, roadsByBlock, searchTerm, roadLegendFilterType]);
 
   const focusOrganization = useCallback(
     (org: MapOrganization & { latitude: number; longitude: number }) => {
@@ -1457,7 +1472,7 @@ export function ConstituencyMap({
             }}
           />
           {showContent && isRoadsDept &&
-            roads.map((road, idx) => {
+            roadsByBlock.map((road, idx) => {
               const path = roadPaths[idx] ?? [];
               if (path.length < 2) return null;
               const name = road.properties?.name ?? road.properties?.roadName ?? 'Road';
@@ -2062,7 +2077,7 @@ export function ConstituencyMap({
           })}
         </MapLegendPanel>
       )}
-      {isRoadsDept && roads.length > 0 && (
+      {isRoadsDept && roadsByBlock.length > 0 && (
         <MapLegendPanel className="pointer-events-auto z-[45] md:max-w-[220px]">
           {roadLegendTypes.map((type) => {
             const isSelected = roadLegendFilterType === type;
