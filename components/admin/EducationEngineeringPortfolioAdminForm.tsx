@@ -215,8 +215,14 @@ export function EducationEngineeringPortfolioAdminForm({
   profileImageControl?: ReactNode;
 }) {
   const [activeSection, setActiveSection] = useState<SectionId>('hero');
-  const patch = (p: Partial<EngineeringFormFields>) =>
-    setValues((prev) => ({ ...prev, ...p }));
+  const patch = (p: Record<string, string | undefined>) =>
+    setValues((prev) => {
+      const next: EngineeringFormFields = { ...prev };
+      Object.entries(p).forEach(([k, v]) => {
+        if (typeof v === 'string') next[k] = v;
+      });
+      return next;
+    });
 
   const facilityRows = useMemo(() => parseRows(values[KEY.facilityCardsJson] || ''), [values]);
   const departmentProgrammeRows = useMemo(() => parseRows(values[KEY.departmentProgrammeCardsJson] || ''), [values]);
