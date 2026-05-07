@@ -3,6 +3,7 @@ import { CiShare1 } from 'react-icons/ci';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { Info, X } from 'lucide-react';
 import type { Department, Organization } from '../../services/api';
+import { buildOrganizationProfilePath } from '../../lib/organizationRoute';
 import {
   PsAboutSection,
   type Lang,
@@ -413,24 +414,23 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                               </span>
                             </td>
                             <td className="px-4 py-2.5 text-slate-700">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setStreetViewOrg(org);
-                                  setIsStreetInfoOpen(false);
-                                }}
+                              <a
+                                href={buildRoadStreetViewPath(org)}
                                 className="inline-flex items-center text-base font-semibold text-slate-500 hover:text-slate-800"
                                 aria-label={`Open street view for ${org.name}`}
                                 title={trStatic('Open street view', 'ସ୍ଟ୍ରିଟ ଭ୍ୟୁ ଖୋଲନ୍ତୁ')}
                               >
                                 <CiShare1 className="text-lg" />
-                              </button>
+                              </a>
                             </td>
                           </>
                         ) : (
                           <td className="px-4 py-2.5 text-slate-700">
                             <a
-                              href={`/organizations/${org.id}`}
+                              href={buildOrganizationProfilePath(org.id, {
+                                departmentCode: department.code || 'department',
+                                organizationName: org.name,
+                              })}
                               className="inline-flex items-center text-base font-semibold text-slate-500 hover:text-slate-800"
                               aria-label={`Open portfolio for ${org.name}`}
                               title={tr('dept.summary.table.openPortfolio')}
@@ -748,4 +748,21 @@ function normalizeLegendParam(label: string): string {
     .trim()
     .replace(/\s+/g, '_')
     .toUpperCase();
+}
+
+function buildRoadStreetViewPath(org: Organization): string {
+  const roadName = String(org.name || '').trim();
+  const roadNameSlug = roadName
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-');
+  const params = new URLSearchParams();
+  params.set('dept', 'ROADS');
+  params.set('road', String(org.id));
+  if (roadNameSlug) params.set('road_name', roadNameSlug);
+  params.set('sv', '1');
+  return `/?${params.toString()}`;
 }

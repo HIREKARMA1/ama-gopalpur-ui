@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { DepartmentSummaryPage } from '../../../../components/departments/DepartmentSummaryPage';
 import { Loader } from '../../../../components/common/Loader';
 import { departmentsApi, organizationsApi, type Department, type Organization } from '../../../../services/api';
+import { extractDepartmentIdFromParam } from '../../../../lib/departmentRoute';
 
 export default function DepartmentSummaryRoutePage() {
   const params = useParams<{ id: string }>();
@@ -19,7 +20,7 @@ export default function DepartmentSummaryRoutePage() {
       setLoading(true);
       setError(null);
       try {
-        const deptId = Number(params?.id);
+        const deptId = extractDepartmentIdFromParam(params?.id || '');
         const dept = await departmentsApi.get(deptId);
         setDepartment(dept);
         const pageSize = 1000;

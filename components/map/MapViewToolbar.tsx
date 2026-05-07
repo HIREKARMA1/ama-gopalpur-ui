@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { MessageKey } from '../i18n/messages';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
+import { buildDepartmentSummaryPath } from '../../lib/departmentRoute';
 
 type MapTypeId = 'roadmap' | 'satellite';
 
@@ -13,6 +14,7 @@ export function MapViewToolbar({
   mapInstance,
   mapContainerRef,
   departmentId,
+  departmentName,
   /** When false, map/satellite/fullscreen still show; info button is hidden. */
   showDepartmentInfo,
   infoButtonLabelKey,
@@ -23,6 +25,7 @@ export function MapViewToolbar({
   mapInstance: any;
   mapContainerRef: React.RefObject<HTMLDivElement | null>;
   departmentId?: number | null;
+  departmentName?: string;
   showDepartmentInfo: boolean;
   infoButtonLabelKey: MessageKey;
   mapLabelKey: MessageKey;
@@ -84,7 +87,7 @@ export function MapViewToolbar({
             type="button"
             onClick={() => {
               if (!departmentId) return;
-              router.push(`/departments/${departmentId}/summary`);
+              router.push(buildDepartmentSummaryPath(departmentId, departmentName));
             }}
             className="flex h-9 w-9 items-center justify-center rounded-md bg-orange-500 text-sm font-bold text-white shadow-md ring-1 ring-orange-800/50 hover:bg-orange-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
             title={t(infoButtonLabelKey, language)}
