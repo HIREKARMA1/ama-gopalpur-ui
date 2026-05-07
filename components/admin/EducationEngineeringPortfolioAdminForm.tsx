@@ -208,11 +208,15 @@ export function EducationEngineeringPortfolioAdminForm({
   values,
   setValues,
   profileImageControl,
+  institutionLabel = 'College',
+  headRoleLabel = 'Principal',
 }: {
   organizationId: number | null;
   values: EngineeringFormFields;
   setValues: Dispatch<SetStateAction<EngineeringFormFields>>;
   profileImageControl?: ReactNode;
+  institutionLabel?: string;
+  headRoleLabel?: string;
 }) {
   const [activeSection, setActiveSection] = useState<SectionId>('hero');
   const patch = (p: Record<string, string | undefined>) =>
@@ -259,7 +263,7 @@ export function EducationEngineeringPortfolioAdminForm({
         <SectionBox title="Hero">
           <div className="grid gap-2 md:grid-cols-2">
             <div className="space-y-1">
-              <label className="block text-text">College name</label>
+              <label className="block text-text">{institutionLabel} name</label>
               <input className="w-full rounded border border-border px-2 py-1" value={values[KEY.name] || ''} onChange={(e) => patch({ [KEY.name]: e.target.value })} />
             </div>
             <div className="space-y-1 md:col-span-2">
@@ -275,7 +279,7 @@ export function EducationEngineeringPortfolioAdminForm({
       ) : null}
 
       {activeSection === 'about' ? (
-        <SectionBox title="About PMEC">
+        <SectionBox title={`About ${institutionLabel}`}>
           <div className="grid gap-2 md:grid-cols-2">
             <ImgSlot label="About image" organizationId={organizationId} assetType="ps_about_campus" url={values[KEY.aboutImage] || ''} onUrl={(v) => patch({ [KEY.aboutImage]: v })} />
             <div className="space-y-1">
@@ -287,15 +291,7 @@ export function EducationEngineeringPortfolioAdminForm({
               <input className="w-full rounded border border-border px-2 py-1" value={values[KEY.campusArea] || ''} onChange={(e) => patch({ [KEY.campusArea]: e.target.value })} />
             </div>
             <div className="space-y-1">
-              <label className="block text-text">Affiliating university</label>
-              <input className="w-full rounded border border-border px-2 py-1" value={values[KEY.affiliatingUniversity] || ''} onChange={(e) => patch({ [KEY.affiliatingUniversity]: e.target.value })} />
-            </div>
-            <div className="space-y-1">
-              <label className="block text-text">Autonomous since year</label>
-              <input className="w-full rounded border border-border px-2 py-1" value={values[KEY.autonomousSince] || ''} onChange={(e) => patch({ [KEY.autonomousSince]: e.target.value })} />
-            </div>
-            <div className="space-y-1">
-              <label className="block text-text">College type</label>
+              <label className="block text-text">{institutionLabel} type</label>
               <input className="w-full rounded border border-border px-2 py-1" value={values[KEY.collegeType] || ''} onChange={(e) => patch({ [KEY.collegeType]: e.target.value })} />
             </div>
             <div className="space-y-1 md:col-span-2">
@@ -304,22 +300,22 @@ export function EducationEngineeringPortfolioAdminForm({
             </div>
 
             <div className="md:col-span-2 mt-2 border-t border-border pt-2">
-              <h5 className="text-[11px] font-semibold text-text">Principal Section (About)</h5>
-              <p className="text-[10px] text-text-muted">Add principal details, message, and vision/mission for the About block.</p>
+              <h5 className="text-[11px] font-semibold text-text">{headRoleLabel} Section (About)</h5>
+              <p className="text-[10px] text-text-muted">Add {headRoleLabel.toLowerCase()} details, message, and vision/mission for the About block.</p>
             </div>
             <div className="space-y-1">
-              <label className="block text-text">Principal name</label>
+              <label className="block text-text">{headRoleLabel} name</label>
               <input className="w-full rounded border border-border px-2 py-1" value={values[KEY.hmName] || ''} onChange={(e) => patch({ [KEY.hmName]: e.target.value })} />
             </div>
             <ImgSlot
-              label="Principal image"
+              label={`${headRoleLabel} image`}
               organizationId={organizationId}
               assetType="ps_headmaster_photo"
               url={values[KEY.principalPhoto] || ''}
               onUrl={(v) => patch({ [KEY.principalPhoto]: v })}
             />
             <div className="space-y-1 md:col-span-2">
-              <label className="block text-text">Principal message</label>
+              <label className="block text-text">{headRoleLabel} message</label>
               <textarea rows={3} className="w-full rounded border border-border px-2 py-1" value={values[KEY.hmMessage] || ''} onChange={(e) => patch({ [KEY.hmMessage]: e.target.value })} />
             </div>
             <div className="space-y-1">
@@ -510,14 +506,14 @@ export function EducationEngineeringPortfolioAdminForm({
                 <input className="rounded border border-border px-2 py-1" placeholder="Department name" value={row.department_name || row.name || ''} onChange={(e) => {
                   const next = [...arr]; next[i] = { ...row, department_name: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
                 }} />
-                <input className="rounded border border-border px-2 py-1" placeholder="B.Tech branch intake" value={row.btech_branch_intake || ''} onChange={(e) => {
-                  const next = [...arr]; next[i] = { ...row, btech_branch_intake: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
+                <input className="rounded border border-border px-2 py-1" placeholder="Bachelors programmes / intake" value={row.bachelors_programmes || row.btech_branch_intake || ''} onChange={(e) => {
+                  const next = [...arr]; next[i] = { ...row, bachelors_programmes: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
                 }} />
-                <input className="rounded border border-border px-2 py-1" placeholder="M.Tech branch intake" value={row.mtech_branch_intake || ''} onChange={(e) => {
-                  const next = [...arr]; next[i] = { ...row, mtech_branch_intake: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
+                <input className="rounded border border-border px-2 py-1" placeholder="Masters programmes / intake" value={row.masters_programmes || row.mtech_branch_intake || ''} onChange={(e) => {
+                  const next = [...arr]; next[i] = { ...row, masters_programmes: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
                 }} />
-                <input className="rounded border border-border px-2 py-1" placeholder="Ph.D. (YES/NO)" value={row.phd || ''} onChange={(e) => {
-                  const next = [...arr]; next[i] = { ...row, phd: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
+                <input className="rounded border border-border px-2 py-1" placeholder="PhD programmes / intake" value={row.phd_programmes || row.phd || ''} onChange={(e) => {
+                  const next = [...arr]; next[i] = { ...row, phd_programmes: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
                 }} />
                 <div className="space-y-1 md:col-span-3">
                   <input
@@ -534,7 +530,7 @@ export function EducationEngineeringPortfolioAdminForm({
                 <button type="button" className="text-[10px] text-red-600" onClick={() => patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(arr.filter((_, j) => j !== i)) })}>Remove</button>
               </div>
             ))}
-            <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson([...departmentProgrammeRows, { image: '', department_name: '', btech_branch_intake: '', mtech_branch_intake: '', phd: '', description: '' }]) })}>+ Add department/programme</button>
+            <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson([...departmentProgrammeRows, { image: '', department_name: '', bachelors_programmes: '', masters_programmes: '', phd_programmes: '', description: '' }]) })}>+ Add department/programme</button>
           </div>
         </SectionBox>
       ) : null}
@@ -697,8 +693,8 @@ export function EducationEngineeringPortfolioAdminForm({
             <div className="space-y-1"><label className="block text-text">Pin code</label><input className="w-full rounded border border-border px-2 py-1" value={values[KEY.pinCode] || ''} onChange={(e) => patch({ [KEY.pinCode]: e.target.value })} /></div>
             <div className="space-y-1"><label className="block text-text">Latitude</label><input className="w-full rounded border border-border px-2 py-1" value={values[KEY.latitude] || ''} onChange={(e) => patch({ [KEY.latitude]: e.target.value })} /></div>
             <div className="space-y-1"><label className="block text-text">Longitude</label><input className="w-full rounded border border-border px-2 py-1" value={values[KEY.longitude] || ''} onChange={(e) => patch({ [KEY.longitude]: e.target.value })} /></div>
-            <div className="space-y-1"><label className="block text-text">College phone</label><input className="w-full rounded border border-border px-2 py-1" value={values[KEY.collegePhone] || ''} onChange={(e) => patch({ [KEY.collegePhone]: e.target.value })} /></div>
-            <div className="space-y-1"><label className="block text-text">College email</label><input className="w-full rounded border border-border px-2 py-1" value={values[KEY.collegeEmail] || ''} onChange={(e) => patch({ [KEY.collegeEmail]: e.target.value })} /></div>
+            <div className="space-y-1"><label className="block text-text">{institutionLabel} phone</label><input className="w-full rounded border border-border px-2 py-1" value={values[KEY.collegePhone] || ''} onChange={(e) => patch({ [KEY.collegePhone]: e.target.value })} /></div>
+            <div className="space-y-1"><label className="block text-text">{institutionLabel} email</label><input className="w-full rounded border border-border px-2 py-1" value={values[KEY.collegeEmail] || ''} onChange={(e) => patch({ [KEY.collegeEmail]: e.target.value })} /></div>
             <div className="space-y-1 md:col-span-2"><label className="block text-text">Website</label><input className="w-full rounded border border-border px-2 py-1" value={values[KEY.website] || ''} onChange={(e) => patch({ [KEY.website]: e.target.value })} /></div>
             <div className="space-y-1"><label className="block text-text">AICTE approval (YES/NO)</label><input className="w-full rounded border border-border px-2 py-1" value={values[KEY.aicte] || ''} onChange={(e) => patch({ [KEY.aicte]: e.target.value })} /></div>
             <div className="space-y-1"><label className="block text-text">NAAC</label><input className="w-full rounded border border-border px-2 py-1" value={values[KEY.naac] || ''} onChange={(e) => patch({ [KEY.naac]: e.target.value })} /></div>
