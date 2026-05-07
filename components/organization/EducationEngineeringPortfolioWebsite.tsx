@@ -159,12 +159,12 @@ function EngineeringFacultySection({ cards }: { cards: Record<string, unknown>[]
 function DepartmentProgrammeSection({ cards }: { cards: Record<string, unknown>[] }) {
   const rows = cards.filter((row) => {
     const dept = asString(row.department_name || row.name);
-    const bIntake = asString(row.btech_branch_intake);
-    const mIntake = asString(row.mtech_branch_intake);
-    const phd = asString(row.phd);
+    const bachelors = asString(row.bachelors_programmes || row.btech_branch_intake);
+    const masters = asString(row.masters_programmes || row.mtech_branch_intake);
+    const phd = asString(row.phd_programmes || row.phd);
     const description = asString(row.description);
     const image = asString(row.image || row.photo);
-    return dept || bIntake || mIntake || phd || description || image;
+    return dept || bachelors || masters || phd || description || image;
   });
   if (!rows.length) return null;
   const desktopPageSize = 3;
@@ -188,9 +188,9 @@ function DepartmentProgrammeSection({ cards }: { cards: Record<string, unknown>[
       )}
       <div className="space-y-2 p-3 text-sm text-slate-700">
         <p className="text-base font-bold text-slate-900">{asString(row.department_name || row.name) || '-'}</p>
-        <p><span className="font-semibold">B.Tech branch intake:</span> {asString(row.btech_branch_intake) || '-'}</p>
-        <p><span className="font-semibold">M.Tech branch intake:</span> {asString(row.mtech_branch_intake) || '-'}</p>
-        <p><span className="font-semibold">Ph.D.:</span> {asString(row.phd) || '-'}</p>
+        <p><span className="font-semibold">Bachelors:</span> {asString(row.bachelors_programmes || row.btech_branch_intake) || '-'}</p>
+        <p><span className="font-semibold">Masters:</span> {asString(row.masters_programmes || row.mtech_branch_intake) || '-'}</p>
+        <p><span className="font-semibold">PhD:</span> {asString(row.phd_programmes || row.phd) || '-'}</p>
       </div>
     </article>
   );
@@ -305,6 +305,9 @@ export function EducationEngineeringPortfolioWebsite({
   images = [],
   language = 'en',
 }: EngineeringPortfolioProps) {
+  const isUniversity = (org.sub_department || '').toUpperCase() === 'UNIVERSITY';
+  const institutionLabel = isUniversity ? 'University' : 'Engineering College';
+  const headRole = isUniversity ? 'Vice Chancellor' : 'Principal';
   const heroSlides = [profile.hero_slide_1, profile.hero_slide_2, profile.hero_slide_3]
     .map((it) => asString(it))
     .filter(Boolean);
@@ -330,12 +333,12 @@ export function EducationEngineeringPortfolioWebsite({
   };
 
   const principalCard = {
-    role: 'Principal',
+    role: headRole,
     image: asString(profile.headmaster_photo || profile.principal_photo),
     name: asString(profile.principal_name || profile.name_of_hm),
     subject: '',
-    contact: asString(profile.principal_contact || profile.contact_of_hm),
-    email: asString(profile.principal_email || profile.college_email),
+    contact: asString(profile.principal_contact || profile.headmaster_contact || profile.contact_of_hm),
+    email: asString(profile.principal_email || profile.headmaster_email || profile.college_email),
   };
   const additionalAdminCards = adminCards.map((row) => ({
     role: asString(row.designation || row.role),
@@ -357,8 +360,8 @@ export function EducationEngineeringPortfolioWebsite({
           profile={mergedAboutProfile}
           language={language}
           sliderImages={sliderImages}
-          aboutTitleOverride={`About ${asString(profile.name_of_college) || org.name || 'Engineering College'}`}
-          leaderLabels={{ title: 'Principal', messageHeading: "Principal's Message" }}
+          aboutTitleOverride={`About ${asString(profile.name_of_college) || org.name || institutionLabel}`}
+          leaderLabels={{ title: headRole, messageHeading: `${headRole}'s Message` }}
           hideExtendedLeaderBio
         />
 
