@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Organization } from '../services/api';
 import type { TableColumn } from '../components/common/PaginatedHorizontalTable';
+import { buildOrganizationProfilePath } from './organizationRoute';
 
 export type RevenueGovtLandRow = {
   org: Organization;
@@ -97,7 +98,10 @@ export function buildRevenueGovtLandColumns(isOdia: boolean): TableColumn<Revenu
       tdClassName: '!max-w-[200px] overflow-visible whitespace-nowrap',
       render: (r) => (
         <Link
-          href={`/organizations/${r.org.id}`}
+          href={buildOrganizationProfilePath(r.org.id, {
+            departmentCode: 'REVENUE_LAND',
+            organizationName: r.org.name,
+          })}
           className="font-semibold text-primary underline underline-offset-2 hover:opacity-90"
           onClick={(e) => e.stopPropagation()}
         >
