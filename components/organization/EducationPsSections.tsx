@@ -478,6 +478,15 @@ export type PsPersonCard = {
   email: string;
 };
 
+function personCardHasContent(person: PsPersonCard): boolean {
+  return (
+    asString(person.image).trim() !== '' ||
+    asString(person.name).trim() !== '' ||
+    asString(person.contact).trim() !== '' ||
+    asString(person.email).trim() !== ''
+  );
+}
+
 /** Shared administration-style person grid (PS Administration, ARCS Incharge, etc.). */
 export function PsPersonCardsSection({
   title,
@@ -488,12 +497,15 @@ export function PsPersonCardsSection({
   people: PsPersonCard[];
   gridClassName: string;
 }) {
+  const visiblePeople = people.filter(personCardHasContent);
+  if (!visiblePeople.length) return null;
+
   return (
     <section className="py-2 md:py-4">
       <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{title}</h2>
 
       <div className={`mt-6 grid gap-4 ${gridClassName}`}>
-        {people.map((admin, idx) => (
+        {visiblePeople.map((admin, idx) => (
           <article
             key={`${admin.role}-${idx}-${admin.name}`}
             className="flex min-h-[370px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white"
@@ -684,8 +696,6 @@ export function PsAcademicSection({ profile, language }: { profile: Record<strin
   );
 }
 
-const EMPTY_FACILITY_SLOTS = 7;
-
 function facilityImagesFromCard(card: FacilityCard): { url: string; title: string }[] {
   const fromArray = (Array.isArray(card.images) ? card.images : [])
     .map((it) => {
@@ -710,13 +720,16 @@ export function PsFacilitiesCarouselSection({
   /** When provided (including `[]`), overrides `profile.facility_cards`. */
   facilities?: FacilityCard[];
   sectionTitle?: string;
-  /** Placeholder card count when the facilities list is empty (default: 7). */
+  /** Kept for compatibility with old callers; ignored when section is empty. */
   emptySlotCount?: number;
 }) {
   const fromProfile = parseArray<FacilityCard>(profile.facility_cards);
   const fromProps = facilities !== undefined ? facilities : fromProfile;
-  const slots = emptySlotCount ?? EMPTY_FACILITY_SLOTS;
-  const cards = fromProps.length ? fromProps : Array.from({ length: slots }, () => ({}) as FacilityCard);
+  const cards = fromProps.filter((card) => {
+    const hasImages = facilityImagesFromCard(card).length > 0;
+    return hasImages || asString(card.title).trim() !== '' || asString(card.description).trim() !== '';
+  });
+  if (!cards.length) return null;
   const desktopPageSize = 3;
   const desktopTotalPages = Math.max(1, Math.ceil(cards.length / desktopPageSize));
   const [currentDesktopPage, setCurrentDesktopPage] = useState(0);
@@ -944,8 +957,6 @@ export function PsFacilitiesCarouselSection({
   );
 }
 
-const EMPTY_MDM_SLOTS = 10;
-
 export function PsMidDayMealSection({ records }: { records: MdmDailyRecord[] }) {
   const normalized = records.map((r) => {
     const date = asString(r.date);
@@ -955,7 +966,16 @@ export function PsMidDayMealSection({ records }: { records: MdmDailyRecord[] }) 
     const totalStudents = r.total_students ?? r.total_present;
     return { date, image, totalBoys, totalGirls, totalStudents };
   });
-  const sorted = [...normalized].sort((a, b) => {
+  const sorted = normalized
+    .filter(
+      (item) =>
+        item.date ||
+        item.image ||
+        (item.totalBoys != null && String(item.totalBoys).trim() !== '') ||
+        (item.totalGirls != null && String(item.totalGirls).trim() !== '') ||
+        (item.totalStudents != null && String(item.totalStudents).trim() !== ''),
+    )
+    .sort((a, b) => {
     const ad = Date.parse(a.date || '');
     const bd = Date.parse(b.date || '');
     if (Number.isNaN(ad) && Number.isNaN(bd)) return 0;
@@ -963,11 +983,8 @@ export function PsMidDayMealSection({ records }: { records: MdmDailyRecord[] }) 
     if (Number.isNaN(bd)) return -1;
     return bd - ad;
   });
-  const list = (
-    sorted.length
-      ? sorted.slice(0, 10)
-      : Array.from({ length: EMPTY_MDM_SLOTS }, () => ({ date: '', image: '', totalBoys: '', totalGirls: '', totalStudents: '' }))
-  );
+  const list = sorted.slice(0, 10);
+  if (!list.length) return null;
 
   const desktopPageSize = 3;
   const desktopTotalPages = Math.max(1, Math.ceil(list.length / desktopPageSize));
@@ -1177,14 +1194,14 @@ export function PsMidDayMealSection({ records }: { records: MdmDailyRecord[] }) 
   );
 }
 
-const EMPTY_PTM_SLOTS = 6;
-
 export function PsParentTeacherMeetingSection({ records }: { records: ParentTeacherMeetingRecord[] }) {
-  const normalized = records.map((r) => ({
+  const normalized = records
+    .map((r) => ({
     date: asString(r.date),
     image: asString(r.image),
     description: asString(r.description),
-  }));
+    }))
+    .filter((item) => item.date || item.image || item.description);
   const sorted = [...normalized].sort((a, b) => {
     const ad = Date.parse(a.date || '');
     const bd = Date.parse(b.date || '');
@@ -1193,9 +1210,8 @@ export function PsParentTeacherMeetingSection({ records }: { records: ParentTeac
     if (Number.isNaN(bd)) return -1;
     return bd - ad;
   });
-  const list = (sorted.length
-    ? sorted.slice(0, 10)
-    : Array.from({ length: EMPTY_PTM_SLOTS }, () => ({ date: '', image: '', description: '' })));
+  const list = sorted.slice(0, 10);
+  if (!list.length) return null;
 
   const desktopPageSize = 3;
   const desktopTotalPages = Math.max(1, Math.ceil(list.length / desktopPageSize));
@@ -1372,8 +1388,6 @@ export function PsParentTeacherMeetingSection({ records }: { records: ParentTeac
   );
 }
 
-const EMPTY_FACULTY_SLOTS = 4;
-
 function facultyRowHasContent(f: Faculty): boolean {
   return (
     asString(f.name).trim() !== '' ||
@@ -1427,7 +1441,8 @@ export function PsFacultySection({
       </section>
     );
   }
-  const list = (filledFaculty.length ? filledFaculty : Array.from({ length: EMPTY_FACULTY_SLOTS }, () => ({} as Faculty))).slice(0, 8);
+  if (filledFaculty.length === 0) return null;
+  const list = filledFaculty.slice(0, 8);
   const desktopPageSize = 4;
   const desktopTotalPages = Math.max(1, Math.ceil(list.length / desktopPageSize));
   const [currentDesktopPage, setCurrentDesktopPage] = useState(0);
@@ -1737,10 +1752,9 @@ export function PsMediaSections({ infraImages, activityImages, gallery }: { infr
   );
 }
 
-const EMPTY_GALLERY_SLOTS = 8;
-
 export function PsGallerySection({ gallery }: { gallery: GalleryItem[] }) {
-  const items = gallery.length ? gallery : Array.from({ length: EMPTY_GALLERY_SLOTS }, () => ({} as GalleryItem));
+  const items = gallery.filter((item) => asString(item.image).trim() !== '');
+  if (!items.length) return null;
   const [preview, setPreview] = useState<GalleryItem | null>(null);
   const [isPreviewClosing, setIsPreviewClosing] = useState(false);
   const closePreview = () => {
@@ -1869,8 +1883,6 @@ export function PsGallerySection({ gallery }: { gallery: GalleryItem[] }) {
   );
 }
 
-const EMPTY_INTAKE_SLOTS = 5;
-
 export function PsIntakeSection({ intakeRows, profile }: { intakeRows: IntakeRow[]; profile?: Record<string, unknown> }) {
   const intakeCardsFromProfile = profile ? parseArray<IntakeCard>(profile.intake_cards) : [];
   const fromRows: IntakeCard[] = intakeRows.map((r) => {
@@ -1886,7 +1898,16 @@ export function PsIntakeSection({ intakeRows, profile }: { intakeRows: IntakeRow
     };
   });
   const merged = intakeCardsFromProfile.length ? intakeCardsFromProfile : fromRows.length ? fromRows : [];
-  const list: IntakeCard[] = merged.length ? merged : Array.from({ length: EMPTY_INTAKE_SLOTS }, () => ({} as IntakeCard));
+  const list: IntakeCard[] = merged.filter((item) => {
+    return (
+      asString(item.class_name).trim() !== '' ||
+      (item.strength != null && String(item.strength).trim() !== '') ||
+      (item.registered_this_year != null && String(item.registered_this_year).trim() !== '') ||
+      asString(item.subjects).trim() !== '' ||
+      asString(item.image).trim() !== ''
+    );
+  });
+  if (!list.length) return null;
   const desktopPageSize = 3;
   const desktopTotalPages = Math.max(1, Math.ceil(list.length / desktopPageSize));
   const [currentDesktopPage, setCurrentDesktopPage] = useState(0);
