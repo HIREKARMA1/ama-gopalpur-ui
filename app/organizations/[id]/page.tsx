@@ -370,7 +370,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
         </div>
       );
     }
-    if (['ENGINEERING_COLLEGE', 'UNIVERSITY'].includes((org.sub_department || '').toUpperCase())) {
+    if (['ENGINEERING_COLLEGE', 'UNIVERSITY', 'ITI'].includes((org.sub_department || '').toUpperCase())) {
       const lang = String((educationProfile as Record<string, unknown>)?.language || 'en').toLowerCase() === 'od' ? 'od' : 'en';
       return (
         <div className="page-container">
