@@ -103,6 +103,7 @@ function orgToRoadFeature(org: Organization): RoadFeature | null {
   return {
     type: 'Feature',
     properties: {
+      organizationId: org.id,
       name: org.name,
       roadName: org.name,
       code: String(attrs.road_code ?? ''),
@@ -148,6 +149,40 @@ function HomePageContent() {
   const { language } = useLanguage();
   const requestedDeptCode = (searchParams.get('dept') || '').trim().toUpperCase();
   const requestedLegend = normalizeLegendParam(searchParams.get('legend'));
+  const requestedOrgId = normalizeOrgParam(searchParams.get('org'));
+  const requestedRoadOrgId = normalizeOrgParam(searchParams.get('road'));
+  const requestedRoadName = normalizeRoadNameParam(searchParams.get('road_name'));
+  const requestedStreetView = normalizeStreetViewParam(searchParams.get('sv'));
+
+  const buildHomeQuery = (
+    nextDeptCode?: string | null,
+    nextLegend?: string | null,
+    nextOrgId?: number | null,
+    nextRoadOrgId?: number | null,
+    nextRoadName?: string | null,
+    nextStreetView?: boolean,
+  ) => {
+    const params = new URLSearchParams();
+    const dept = (nextDeptCode || '').trim().toUpperCase();
+    if (dept) params.set('dept', dept);
+    const legend = (nextLegend || '').trim().toUpperCase();
+    if (legend) params.set('legend', legend);
+    if (typeof nextOrgId === 'number' && Number.isFinite(nextOrgId) && nextOrgId > 0) {
+      params.set('org', String(nextOrgId));
+    }
+    if (
+      dept === 'ROADS' &&
+      typeof nextRoadOrgId === 'number' &&
+      Number.isFinite(nextRoadOrgId) &&
+      nextRoadOrgId > 0
+    ) {
+      params.set('road', String(nextRoadOrgId));
+      if (nextRoadName) params.set('road_name', slugifySegment(nextRoadName));
+      if (nextStreetView) params.set('sv', '1');
+    }
+    const query = params.toString();
+    return query ? `/?${query}` : '/';
+  };
 
   useEffect(() => {
     departmentsApi
@@ -190,14 +225,20 @@ function HomePageContent() {
 
   useEffect(() => {
     if (!requestedDeptCode || departments.length === 0) return;
+    // Only hydrate selection from URL when page has no active selection yet.
+    // This prevents manual sidebar selections from being immediately reverted
+    // by a stale search param value during the same render cycle.
+    if (selectedDept) return;
     const match = departments.find((d) => (d.code || '').toUpperCase() === requestedDeptCode);
     if (!match) return;
-    if (selectedDept?.id === match.id) return;
-    handleSelectDepartment(match);
+    handleSelectDepartment(match, { preserveSelectedOrg: true, preserveRoadState: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requestedDeptCode, departments, selectedDept?.id]);
+  }, [requestedDeptCode, departments, selectedDept]);
 
-  const handleSelectDepartment = (dept: Department) => {
+  const handleSelectDepartment = (
+    dept: Department,
+    options?: { preserveSelectedOrg?: boolean; preserveRoadState?: boolean },
+  ) => {
     setSelectedDept(dept);
     const isRoads = dept.code?.toUpperCase() === 'ROADS';
     const isRevenueLand = dept.code?.toUpperCase() === 'REVENUE_LAND';
@@ -206,6 +247,16 @@ function HomePageContent() {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('ama_gopalpur_selected_dept_code', dept.code || '');
     }
+    router.replace(
+      buildHomeQuery(
+        dept.code || null,
+        requestedLegend,
+        options?.preserveSelectedOrg ? requestedOrgId : null,
+        options?.preserveRoadState && dept.code?.toUpperCase() === 'ROADS' ? requestedRoadOrgId : null,
+        options?.preserveRoadState && dept.code?.toUpperCase() === 'ROADS' ? requestedRoadName : null,
+        options?.preserveRoadState && dept.code?.toUpperCase() === 'ROADS' ? requestedStreetView : false,
+      ),
+    );
 
     if (isRoads) {
       setDrains([]);
@@ -417,7 +468,62 @@ function HomePageContent() {
               organizations={organizations}
               roads={roads}
               drains={drains}
-              onSelectOrganization={(id) => router.push(`/organizations/${id}`)}
+              selectedOrganizationId={requestedOrgId}
+              onOrganizationInfoChange={(orgId) => {
+                router.replace(
+                  buildHomeQuery(
+                    selectedDept?.code || requestedDeptCode || null,
+                    requestedLegend,
+                    orgId,
+                    requestedRoadOrgId,
+                    requestedRoadName,
+                    requestedStreetView,
+                  ),
+                );
+              }}
+              selectedRoadOrganizationId={requestedRoadOrgId}
+              isRoadStreetViewOpen={requestedStreetView}
+              onRoadSelectionChange={(roadOrgId, roadName) => {
+                const effectiveRoadName =
+                  roadName === undefined ? requestedRoadName : roadName;
+                router.replace(
+                  buildHomeQuery(
+                    selectedDept?.code || requestedDeptCode || null,
+                    requestedLegend,
+                    requestedOrgId,
+                    roadOrgId,
+                    effectiveRoadName,
+                    false,
+                  ),
+                );
+              }}
+              onRoadStreetViewOpenChange={(open, roadOrgIdFromMap, roadNameFromMap) => {
+                const effectiveRoadOrgId =
+                  roadOrgIdFromMap === undefined ? requestedRoadOrgId : roadOrgIdFromMap;
+                const effectiveRoadName =
+                  roadNameFromMap === undefined ? requestedRoadName : roadNameFromMap;
+                const targetUrl = buildHomeQuery(
+                  selectedDept?.code || requestedDeptCode || null,
+                  requestedLegend,
+                  requestedOrgId,
+                  effectiveRoadOrgId,
+                  effectiveRoadName,
+                  open,
+                );
+                // Opening Street View should create a history step so browser back
+                // returns user to map state instead of another historical SV link.
+                if (open && !requestedStreetView) {
+                  router.push(targetUrl);
+                } else {
+                  router.replace(targetUrl);
+                }
+              }}
+              onSelectOrganization={(id) => {
+                const org = organizations.find((o) => o.id === id);
+                const deptSlug = slugifySegment(selectedDept?.code || requestedDeptCode || 'department');
+                const orgSlug = slugifySegment(org?.name || 'organization');
+                router.push(`/organizations/${deptSlug}-${orgSlug}-${id}`);
+              }}
             />
           </div>
         </div>
@@ -438,4 +544,31 @@ function normalizeLegendParam(raw: string | null): string | null {
   const value = String(raw || '').trim();
   if (!value) return null;
   return value.replace(/\s+/g, '_').toUpperCase();
+}
+
+function normalizeOrgParam(raw: string | null): number | null {
+  const value = Number(String(raw || '').trim());
+  if (!Number.isFinite(value) || value <= 0) return null;
+  return value;
+}
+
+function normalizeStreetViewParam(raw: string | null): boolean {
+  const value = String(raw || '').trim().toLowerCase();
+  return value === '1' || value === 'true' || value === 'yes';
+}
+
+function normalizeRoadNameParam(raw: string | null): string | null {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  return value;
+}
+
+function slugifySegment(raw: string): string {
+  return String(raw || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-');
 }

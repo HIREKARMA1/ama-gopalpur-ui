@@ -13,6 +13,7 @@ import {
 import { Navbar } from '../../components/layout/Navbar';
 import { PaginatedHorizontalTable, type TableColumn } from '../../components/common/PaginatedHorizontalTable';
 import { useLanguage } from '../../components/i18n/LanguageContext';
+import { buildOrganizationProfilePath } from '../../lib/organizationRoute';
 
 type TahasilOfficeRow = {
   org: Organization;
@@ -136,7 +137,14 @@ export default function RevenueGovtLandTahasilOfficesPage() {
             rows={rows}
             pageSize={10}
             getRowId={(r) => r.org.id}
-            onRowClick={(r) => router.push(`/organizations/${r.org.id}`)}
+            onRowClick={(r) =>
+              router.push(
+                buildOrganizationProfilePath(r.org.id, {
+                  departmentCode: 'REVENUE_LAND',
+                  organizationName: r.org.name,
+                }),
+              )
+            }
             emptyText={isOdia ? 'କୌଣସି ତହସିଲ ମିଳିଲା ନାହିଁ।' : 'No Tahasil offices found.'}
           />
         </div>

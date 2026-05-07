@@ -6,6 +6,7 @@ import {
   buildRevenueGovtLandColumns,
   type RevenueGovtLandRow,
 } from '../../lib/revenueGovtLandTable';
+import { buildOrganizationProfilePath } from '../../lib/organizationRoute';
 import { ImageSlider } from './ImageSlider';
 import { useLanguage } from '../i18n/LanguageContext';
 import {
@@ -1194,7 +1195,14 @@ export function RevenueLandPortfolioDashboard({
                 rows={parcelRows}
                 pageSize={parcelPageSize}
                 getRowId={(r) => r.org.id}
-                onRowClick={(r) => router.push(`/organizations/${r.org.id}`)}
+                onRowClick={(r) =>
+                  router.push(
+                    buildOrganizationProfilePath(r.org.id, {
+                      departmentCode: 'REVENUE_LAND',
+                      organizationName: r.org.name,
+                    }),
+                  )
+                }
               />
             </div>
           </div>

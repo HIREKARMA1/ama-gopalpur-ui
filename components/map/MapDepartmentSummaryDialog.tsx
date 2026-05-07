@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { MessageKey } from '../i18n/messages';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
+import { buildDepartmentSummaryPath } from '../../lib/departmentRoute';
 
 export function MapDepartmentSummaryDialog({
   open,
@@ -126,7 +127,7 @@ export function MapDepartmentSummaryDialog({
       </div>
       {departmentId ? (
         <Link
-          href={`/departments/${departmentId}/summary`}
+          href={buildDepartmentSummaryPath(departmentId, departmentTitle)}
           className="mt-3 inline-flex items-center rounded-md border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-100"
         >
           {language === 'or' ? 'ସମ୍ପୂର୍ଣ୍ଣ ବିଭାଗ ସାରାଂଶ ଦେଖନ୍ତୁ' : 'View full department summary'}

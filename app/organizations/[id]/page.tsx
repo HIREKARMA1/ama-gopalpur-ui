@@ -147,7 +147,7 @@ const AWC_PORTFOLIO_ROWS: { attribute: string; key: string }[] = [
 ];
 
 export default function OrganizationProfilePage({ params }: { params: { id: string } }) {
-  const id = Number(params.id);
+  const id = extractOrganizationId(params.id);
   const [org, setOrg] = useState<Organization | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [deptCode, setDeptCode] = useState<string | null>(null);
@@ -614,4 +614,14 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
       </main>
     </div>
   );
+}
+
+function extractOrganizationId(rawParam: string): number {
+  const raw = String(rawParam || '').trim();
+  if (!raw) return NaN;
+  const direct = Number(raw);
+  if (Number.isFinite(direct)) return direct;
+  const match = raw.match(/(\d+)(?!.*\d)/);
+  if (!match?.[1]) return NaN;
+  return Number(match[1]);
 }

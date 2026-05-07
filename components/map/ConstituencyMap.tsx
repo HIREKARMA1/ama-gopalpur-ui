@@ -271,6 +271,7 @@ export interface MapOrganization {
 export interface RoadFeature {
   type: 'Feature';
   properties: {
+    organizationId?: number | null;
     name?: string;
     roadName?: string;
     code?: string;
@@ -322,6 +323,22 @@ interface ConstituencyMapProps {
   drains?: DrainFeature[];
   /** Called when user clicks a marker (e.g. to show profile) */
   onSelectOrganization?: (id: number) => void;
+  /** Persisted selected org id (used to restore open info window on refresh). */
+  selectedOrganizationId?: number | null;
+  /** Called when map info-window org changes. */
+  onOrganizationInfoChange?: (id: number | null) => void;
+  /** Persisted selected road org id (used to restore selected road on refresh). */
+  selectedRoadOrganizationId?: number | null;
+  /** Persisted road street-view open state. */
+  isRoadStreetViewOpen?: boolean;
+  /** Called when selected road changes. */
+  onRoadSelectionChange?: (organizationId: number | null, roadName?: string | null) => void;
+  /** Called when road street-view open state changes. */
+  onRoadStreetViewOpenChange?: (
+    open: boolean,
+    organizationId?: number | null,
+    roadName?: string | null,
+  ) => void;
 }
 
 const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
@@ -372,6 +389,12 @@ export function ConstituencyMap({
   roads = [],
   drains = [],
   onSelectOrganization,
+  selectedOrganizationId = null,
+  onOrganizationInfoChange,
+  selectedRoadOrganizationId = null,
+  isRoadStreetViewOpen = false,
+  onRoadSelectionChange,
+  onRoadStreetViewOpenChange,
 }: ConstituencyMapProps) {
   const { language } = useLanguage();
   const [infoWindowOrg, setInfoWindowOrg] = useState<MapOrganization | null>(null);
@@ -395,6 +418,7 @@ export function ConstituencyMap({
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const mapWrapRef = useRef<HTMLDivElement>(null);
   const lastAppliedInitialLegendRef = useRef<string>('');
+  const lastRestoredRoadOrgIdRef = useRef<number | null>(null);
   /** Restore pan/zoom after remounting the map (polyline legend filters force remount to clear ghost overlays). */
   const mapCameraPreserveRef = useRef<{ center: { lat: number; lng: number }; zoom: number } | null>(
     null,
@@ -1170,8 +1194,9 @@ export function ConstituencyMap({
         }
       }
       setInfoWindowOrg(org);
+      onOrganizationInfoChange?.(org.id);
     },
-    [mapInstance]
+    [mapInstance, onOrganizationInfoChange]
   );
 
   const focusRoad = useCallback(
@@ -1194,8 +1219,11 @@ export function ConstituencyMap({
       setSelectedRoad(road);
       setSelectedDrain(null);
       setInfoWindowOrg(null);
+      const roadName = String(road.properties?.name ?? road.properties?.roadName ?? '').trim();
+      onRoadSelectionChange?.(road.properties?.organizationId ?? null, roadName || null);
+      onRoadStreetViewOpenChange?.(false, road.properties?.organizationId ?? null, roadName || null);
     },
-    [mapInstance]
+    [mapInstance, onRoadSelectionChange, onRoadStreetViewOpenChange]
   );
 
   const openRoadStreetView = useCallback(() => {
@@ -1207,7 +1235,15 @@ export function ConstituencyMap({
     setStreetViewPosition(selectedRoadStreetViewPosition);
     setIsStreetViewOpen(true);
     setIsStreetInfoOpen(false);
-  }, [selectedRoadStreetViewPosition]);
+    const roadName = String(
+      selectedRoad?.properties?.name ?? selectedRoad?.properties?.roadName ?? '',
+    ).trim();
+    onRoadStreetViewOpenChange?.(
+      true,
+      selectedRoad?.properties?.organizationId ?? null,
+      roadName || null,
+    );
+  }, [selectedRoadStreetViewPosition, onRoadStreetViewOpenChange, selectedRoad]);
 
   useEffect(() => {
     if (!isStreetViewOpen || !streetViewPosition) return;
@@ -1230,6 +1266,57 @@ export function ConstituencyMap({
       },
     );
   }, [isStreetViewOpen, streetViewPosition]);
+
+  useEffect(() => {
+    if (!selectedOrganizationId) {
+      if (infoWindowOrg != null) setInfoWindowOrg(null);
+      return;
+    }
+    const matchedOrg = orgsWithLocation.find((org) => org.id === selectedOrganizationId);
+    if (!matchedOrg) {
+      if (infoWindowOrg != null) setInfoWindowOrg(null);
+      return;
+    }
+    if (infoWindowOrg?.id !== matchedOrg.id) {
+      setInfoWindowOrg(matchedOrg);
+    }
+  }, [selectedOrganizationId, orgsWithLocation, infoWindowOrg]);
+
+  useEffect(() => {
+    if (!isRoadsDept) return;
+    // URL road param is used for restore/share links. Do not force-clear local
+    // road selection when param is temporarily absent during in-app clicks.
+    if (!selectedRoadOrganizationId) {
+      lastRestoredRoadOrgIdRef.current = null;
+      return;
+    }
+    if (lastRestoredRoadOrgIdRef.current === selectedRoadOrganizationId) return;
+    const matchedRoad =
+      roads.find((road) => road.properties?.organizationId === selectedRoadOrganizationId) ?? null;
+    if (!matchedRoad) return;
+    lastRestoredRoadOrgIdRef.current = selectedRoadOrganizationId;
+    setSelectedRoad(matchedRoad);
+    setSelectedDrain(null);
+    setInfoWindowOrg(null);
+  }, [isRoadsDept, selectedRoadOrganizationId, roads, selectedRoad]);
+
+  useEffect(() => {
+    if (!isRoadsDept) return;
+    if (!isRoadStreetViewOpen) {
+      if (isStreetViewOpen) setIsStreetViewOpen(false);
+      return;
+    }
+    if (!selectedRoadStreetViewPosition) return;
+    setStreetViewMessage(null);
+    setStreetViewPosition(selectedRoadStreetViewPosition);
+    setIsStreetViewOpen(true);
+    setIsStreetInfoOpen(false);
+  }, [
+    isRoadsDept,
+    isRoadStreetViewOpen,
+    selectedRoadStreetViewPosition,
+    isStreetViewOpen,
+  ]);
 
   if (!apiKey) {
     return (
@@ -1449,6 +1536,9 @@ export function ConstituencyMap({
             setInfoWindowOrg(null);
             setSelectedRoad(null);
             setSelectedDrain(null);
+            onOrganizationInfoChange?.(null);
+            onRoadSelectionChange?.(null, null);
+            onRoadStreetViewOpenChange?.(false, null, null);
           }}
         >
           <Polyline
@@ -1499,9 +1589,7 @@ export function ConstituencyMap({
                     if (e?.domEvent && 'stopPropagation' in e.domEvent && typeof e.domEvent.stopPropagation === 'function') {
                       e.domEvent.stopPropagation();
                     }
-                    setSelectedRoad(road);
-                    setSelectedDrain(null);
-                    setInfoWindowOrg(null);
+                    focusRoad(road);
                   }}
                 />
               );
@@ -1552,6 +1640,7 @@ export function ConstituencyMap({
                   setInfoWindowOrg(org);
                   setSelectedRoad(null);
                   setSelectedDrain(null);
+                  onOrganizationInfoChange?.(org.id);
                 }}
                 cursor="pointer"
               />
@@ -1571,7 +1660,11 @@ export function ConstituencyMap({
             return (
               <InfoWindow
                 position={{ lat, lng }}
-                onCloseClick={() => setSelectedRoad(null)}
+                onCloseClick={() => {
+                  setSelectedRoad(null);
+                  onRoadSelectionChange?.(null, null);
+                  onRoadStreetViewOpenChange?.(false, null, null);
+                }}
               >
                 <MapCalloutCard
                   title={name}
@@ -1624,7 +1717,10 @@ export function ConstituencyMap({
                 lat: infoWindowOrg.latitude!,
                 lng: infoWindowOrg.longitude!,
               }}
-              onCloseClick={() => setInfoWindowOrg(null)}
+              onCloseClick={() => {
+                setInfoWindowOrg(null);
+                onOrganizationInfoChange?.(null);
+              }}
             >
               <MapCalloutCard
                 title={infoWindowOrg.name}
@@ -1680,6 +1776,7 @@ export function ConstituencyMap({
           mapInstance={mapInstance}
           mapContainerRef={mapWrapRef}
           departmentId={selectedDepartmentId}
+          departmentName={mapDepartmentLabel}
           showDepartmentInfo={!!selectedDepartmentCode}
           infoButtonLabelKey="map.deptInfo.open"
           mapLabelKey="map.controls.map"
@@ -1691,7 +1788,17 @@ export function ConstituencyMap({
         <div className="fixed inset-0 z-[2000] bg-black">
           <button
             type="button"
-            onClick={() => setIsStreetViewOpen(false)}
+            onClick={() => {
+              setIsStreetViewOpen(false);
+              const roadName = String(
+                selectedRoad?.properties?.name ?? selectedRoad?.properties?.roadName ?? '',
+              ).trim();
+              onRoadStreetViewOpenChange?.(
+                false,
+                selectedRoad?.properties?.organizationId ?? null,
+                roadName || null,
+              );
+            }}
             className="absolute right-[10px] top-16 z-[2010] flex h-10 w-10 items-center justify-center rounded-sm border border-black/10 bg-[#3a3d40] text-white transition-colors hover:bg-[#2f3133]"
             aria-label="Close street view"
             title="Close"
