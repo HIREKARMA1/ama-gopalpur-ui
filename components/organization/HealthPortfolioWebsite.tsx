@@ -209,6 +209,14 @@ export function HealthPortfolioWebsite({
     () => parseArray<Record<string, string>>(healthProfile.health_ts_nts_staff_rows),
     [healthProfile.health_ts_nts_staff_rows],
   );
+  const tsNtsRowsForDisplay = useMemo(
+    () =>
+      tsNtsRows.filter((row) =>
+        [row.staff_name, row.category, row.role_designation, row.department, row.contact_number, row.email]
+          .some((value) => asString(value).trim() !== ''),
+      ),
+    [tsNtsRows],
+  );
 
   const galleryItems = parseArray<GalleryItem>(healthProfile.health_photo_gallery);
 
@@ -279,6 +287,7 @@ export function HealthPortfolioWebsite({
           emptyStateMessage={t('health.portfolio.noDoctorsAvailable', language)}
         />
 
+        {tsNtsRowsForDisplay.length > 0 ? (
         <section className="py-2 md:py-4">
           <h2 className={SECTION_H2}>{trStatic('TS & NTS staff', 'TS ଏବଂ NTS କର୍ମଚାରୀ')}</h2>
           {tableShell(
@@ -294,7 +303,7 @@ export function HealthPortfolioWebsite({
                 </tr>
               </thead>
               <tbody>
-                {(tsNtsRows.length ? tsNtsRows : [{} as Record<string, string>]).map((row, idx) => (
+                {tsNtsRowsForDisplay.map((row, idx) => (
                   <tr key={idx} className="border-t border-slate-100">
                     <td className="px-4 py-3 font-medium text-slate-900">{displayText(row.staff_name)}</td>
                     <td className="px-4 py-3 text-slate-700">{displayText(row.category)}</td>
@@ -308,6 +317,7 @@ export function HealthPortfolioWebsite({
             </table>,
           )}
         </section>
+        ) : null}
 
         <section className="rounded-[28px] border border-slate-200/70 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-md md:p-7">
           <h2 className="text-xl font-bold sm:text-2xl">{trStatic('Key highlights', 'ମୁଖ୍ୟ ହାଇଲାଇଟ୍')}</h2>

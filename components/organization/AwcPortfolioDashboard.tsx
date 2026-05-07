@@ -260,29 +260,10 @@ export function AwcPortfolioDashboard({
 
   const serviceRows = useMemo(() => {
     const rows = parseArray<Record<string, string>>(profile.awc_service_cards as unknown);
-    if (rows.length) return rows;
-    return [
-      {
-        service_title: trStatic('Supplementary Nutrition', 'ଅନୁପୂରକ ପୋଷଣ'),
-        description: trStatic('Nutrition support to beneficiaries.', 'ଲାଭାର୍ଥୀଙ୍କ ପାଇଁ ପୋଷଣ ସହାୟତା।'),
-        schedule: trStatic('Daily', 'ଦୈନିକ'),
-      },
-      {
-        service_title: trStatic('Take Home Ration (THR)', 'ଘରକୁ ନେବା ରାସନ (THR)'),
-        description: trStatic('Ration for eligible groups.', 'ଯୋଗ୍ୟ ଗୋଷ୍ଠୀ ପାଇଁ ରାସନ।'),
-        schedule: trStatic('Weekly', 'ସାପ୍ତାହିକ'),
-      },
-      {
-        service_title: trStatic('Immunization Day', 'ଟୀକାକରଣ ଦିବସ'),
-        description: trStatic('Vaccination session support.', 'ଟୀକାକରଣ ସେସନ ସହାୟତା।'),
-        schedule: trStatic('Monthly', 'ମାସିକ'),
-      },
-      {
-        service_title: 'VHSND',
-        description: trStatic('Village health and nutrition day.', 'ଗ୍ରାମ ସ୍ୱାସ୍ଥ୍ୟ ଓ ପୋଷଣ ଦିବସ।'),
-        schedule: trStatic('Monthly', 'ମାସିକ'),
-      },
-    ];
+    return rows.filter((row) =>
+      [row.service_title, row.title, row.description, row.schedule, row.frequency]
+        .some((value) => asString(value).trim() !== ''),
+    );
   }, [profile]);
 
   const galleryItems: GalleryItem[] = useMemo(() => {
@@ -385,6 +366,7 @@ export function AwcPortfolioDashboard({
           showAttendance={false}
         />
 
+        {serviceRows.length > 0 ? (
         <section className="py-2 md:py-4">
           <h2 className={SECTION_H2}>{t('awc.portfolio.servicesTableTitle', language)}</h2>
           {tableShell(
@@ -397,7 +379,7 @@ export function AwcPortfolioDashboard({
                 </tr>
               </thead>
               <tbody>
-                {(serviceRows.length ? serviceRows : [{} as Record<string, string>]).map((row, idx) => (
+                {serviceRows.map((row, idx) => (
                   <tr key={idx} className="border-t border-slate-100">
                     <td className="px-4 py-3 font-medium text-slate-900">
                       {displayText(row.service_title || row.title)}
@@ -410,6 +392,7 @@ export function AwcPortfolioDashboard({
             </table>,
           )}
         </section>
+        ) : null}
 
         <section className="rounded-[28px] border border-slate-200/70 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-md md:p-7">
           <h2 className="text-xl font-bold sm:text-2xl">{t('awc.portfolio.keyHighlightsTitle', language)}</h2>
