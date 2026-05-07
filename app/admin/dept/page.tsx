@@ -3278,7 +3278,7 @@ export default function DepartmentAdminPage() {
                           profileData[key] = val;
                         }
                       });
-                      if (educationSubDept === 'ENGINEERING_COLLEGE') {
+                      if (['ENGINEERING_COLLEGE', 'UNIVERSITY'].includes(educationSubDept)) {
                         const extraKeys = [
                           'hero_primary_tagline_en',
                           'hero_slide_1',
@@ -3361,11 +3361,13 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  {educationSubDept === 'ENGINEERING_COLLEGE' ? (
+                  {['ENGINEERING_COLLEGE', 'UNIVERSITY'].includes(educationSubDept) ? (
                     <EducationEngineeringPortfolioAdminForm
                       organizationId={editingEducationId}
                       values={eduFormValues}
                       setValues={setEduFormValues}
+                      institutionLabel={educationSubDept === 'UNIVERSITY' ? 'University' : 'College'}
+                      headRoleLabel={educationSubDept === 'UNIVERSITY' ? 'Vice Chancellor' : 'Principal'}
                       profileImageControl={
                         <div className="space-y-1">
                           <label className="block text-text font-medium">Profile Image</label>
@@ -5551,7 +5553,7 @@ export default function DepartmentAdminPage() {
                                       const key = snakeFromHeader(h);
                                       values[key] = v(p?.[key] ?? o.attributes?.[key]);
                                     });
-                                    if (educationSubDept === 'ENGINEERING_COLLEGE') {
+                                    if (['ENGINEERING_COLLEGE', 'UNIVERSITY'].includes(educationSubDept)) {
                                       values.hero_primary_tagline_en = v(p?.hero_primary_tagline_en);
                                       values.hero_slide_1 = v(p?.hero_slide_1);
                                       values.hero_slide_2 = v(p?.hero_slide_2);
