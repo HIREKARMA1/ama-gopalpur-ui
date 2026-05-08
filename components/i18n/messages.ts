@@ -1354,8 +1354,8 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     or: 'ବିଭାଗୀୟ ନେତୃତ୍ୱ',
   },
   'dept.summary.leader.messageHeading': {
-    en: "Minister's message",
-    or: 'ମନ୍ତ୍ରୀଙ୍କ ବାର୍ତ୍ତା',
+    en: 'Message',
+    or: 'ବାର୍ତ୍ତା',
   },
   'dept.summary.section.summary': {
     en: 'Department summary',

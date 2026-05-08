@@ -106,7 +106,10 @@ export function DepartmentSidebar({
         ) : (
           <ul className="space-y-3">
             {departments
-              .filter((dept) => (dept.code || '').toUpperCase() !== 'REVENUE_LAND')
+              .filter((dept) => {
+                const code = (dept.code || '').toUpperCase();
+                return code !== 'REVENUE_LAND' && code !== 'ELECTRICITY';
+              })
               .map((dept) => {
               const isSelected = dept.id === selectedId;
               const count = countByDepartmentId[dept.id];
