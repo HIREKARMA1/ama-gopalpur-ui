@@ -105,7 +105,9 @@ export function DepartmentSidebar({
           <p className="text-sm text-slate-300">{t('sidebar.loading', language)}</p>
         ) : (
           <ul className="space-y-3">
-            {departments.map((dept) => {
+            {departments
+              .filter((dept) => (dept.code || '').toUpperCase() !== 'REVENUE_LAND')
+              .map((dept) => {
               const isSelected = dept.id === selectedId;
               const count = countByDepartmentId[dept.id];
               const countDisplay = count != null ? formatLocaleDigits(count, language) : null;
@@ -157,7 +159,7 @@ export function DepartmentSidebar({
                   </button>
                 </li>
               );
-            })}
+              })}
           </ul>
         )}
       </nav>
