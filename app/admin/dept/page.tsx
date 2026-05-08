@@ -3318,7 +3318,7 @@ export default function DepartmentAdminPage() {
                           profileData[key] = val;
                         }
                       });
-                      if (['ENGINEERING_COLLEGE', 'UNIVERSITY'].includes(educationSubDept)) {
+                      if (['ENGINEERING_COLLEGE', 'UNIVERSITY', 'ITI'].includes(educationSubDept)) {
                         const extraKeys = [
                           'hero_primary_tagline_en',
                           'hero_slide_1',
@@ -3401,13 +3401,14 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  {['ENGINEERING_COLLEGE', 'UNIVERSITY'].includes(educationSubDept) ? (
+                  {['ENGINEERING_COLLEGE', 'UNIVERSITY', 'ITI'].includes(educationSubDept) ? (
                     <EducationEngineeringPortfolioAdminForm
                       organizationId={editingEducationId}
                       values={eduFormValues}
                       setValues={setEduFormValues}
-                      institutionLabel={educationSubDept === 'UNIVERSITY' ? 'University' : 'College'}
+                      institutionLabel={educationSubDept === 'UNIVERSITY' ? 'University' : educationSubDept === 'ITI' ? 'ITI' : 'College'}
                       headRoleLabel={educationSubDept === 'UNIVERSITY' ? 'Vice Chancellor' : 'Principal'}
+                      isIti={educationSubDept === 'ITI'}
                       profileImageControl={
                         <div className="space-y-1">
                           <label className="block text-text font-medium">Profile Image</label>
@@ -5593,7 +5594,7 @@ export default function DepartmentAdminPage() {
                                       const key = snakeFromHeader(h);
                                       values[key] = v(p?.[key] ?? o.attributes?.[key]);
                                     });
-                                    if (['ENGINEERING_COLLEGE', 'UNIVERSITY'].includes(educationSubDept)) {
+                                    if (['ENGINEERING_COLLEGE', 'UNIVERSITY', 'ITI'].includes(educationSubDept)) {
                                       values.hero_primary_tagline_en = v(p?.hero_primary_tagline_en);
                                       values.hero_slide_1 = v(p?.hero_slide_1);
                                       values.hero_slide_2 = v(p?.hero_slide_2);

@@ -75,7 +75,7 @@ function PillListSection({ title, values }: { title: string; values: string[] })
   );
 }
 
-function EngineeringFacultySection({ cards }: { cards: Record<string, unknown>[] }) {
+function EngineeringFacultySection({ cards, isIti = false }: { cards: Record<string, unknown>[]; isIti?: boolean }) {
   if (!cards.length) return null;
   const desktopPageSize = 3;
   const desktopTotalPages = Math.max(1, Math.ceil(cards.length / desktopPageSize));
@@ -119,7 +119,9 @@ function EngineeringFacultySection({ cards }: { cards: Record<string, unknown>[]
   return (
     <section className="py-2 md:py-4">
       <div className="flex items-end justify-between gap-4">
-        <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Faculty Overview</h2>
+        <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          {isIti ? 'Technical and Administrative Staff' : 'Faculty Overview'}
+        </h2>
         <div className="flex items-center gap-2">
           <button type="button" onClick={goPrevMobile} className="h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:hidden" aria-label="Previous faculty">‹</button>
           <button type="button" onClick={goNextMobile} className="h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:hidden" aria-label="Next faculty">›</button>
@@ -156,14 +158,19 @@ function EngineeringFacultySection({ cards }: { cards: Record<string, unknown>[]
   );
 }
 
-function DepartmentProgrammeSection({ cards }: { cards: Record<string, unknown>[] }) {
+function DepartmentProgrammeSection({ cards, isIti = false }: { cards: Record<string, unknown>[]; isIti?: boolean }) {
   const rows = cards.filter((row) => {
-    const dept = asString(row.department_name || row.name);
+    const dept = asString(row.department_name || row.trade_name || row.name);
+    const shift1 = asString(row.shift_intake_capacity_1st);
+    const shift2 = asString(row.shift_intake_capacity_2nd);
+    const shift3 = asString(row.shift_intake_capacity_3rd);
+    const totalUnits = asString(row.total_no_of_units);
     const bachelors = asString(row.bachelors_programmes || row.btech_branch_intake);
     const masters = asString(row.masters_programmes || row.mtech_branch_intake);
     const phd = asString(row.phd_programmes || row.phd);
     const description = asString(row.description);
     const image = asString(row.image || row.photo);
+    if (isIti) return dept || shift1 || shift2 || shift3 || totalUnits || description || image;
     return dept || bachelors || masters || phd || description || image;
   });
   if (!rows.length) return null;
@@ -187,10 +194,22 @@ function DepartmentProgrammeSection({ cards }: { cards: Record<string, unknown>[
         </div>
       )}
       <div className="space-y-2 p-3 text-sm text-slate-700">
-        <p className="text-base font-bold text-slate-900">{asString(row.department_name || row.name) || '-'}</p>
-        <p><span className="font-semibold">Bachelors:</span> {asString(row.bachelors_programmes || row.btech_branch_intake) || '-'}</p>
-        <p><span className="font-semibold">Masters:</span> {asString(row.masters_programmes || row.mtech_branch_intake) || '-'}</p>
-        <p><span className="font-semibold">PhD:</span> {asString(row.phd_programmes || row.phd) || '-'}</p>
+        <p className="text-base font-bold text-slate-900">{asString(row.department_name || row.trade_name || row.name) || '-'}</p>
+        {isIti ? (
+          <>
+            <p><span className="font-semibold">Trade:</span> {asString(row.department_name || row.trade_name || row.name) || '-'}</p>
+            <p><span className="font-semibold">Shift Intake Capacity (1st):</span> {asString(row.shift_intake_capacity_1st) || '-'}</p>
+            <p><span className="font-semibold">Shift Intake Capacity (2nd):</span> {asString(row.shift_intake_capacity_2nd) || '-'}</p>
+            <p><span className="font-semibold">Shift Intake Capacity (3rd):</span> {asString(row.shift_intake_capacity_3rd) || '-'}</p>
+            <p><span className="font-semibold">Total No. of Units:</span> {asString(row.total_no_of_units) || '-'}</p>
+          </>
+        ) : (
+          <>
+            <p><span className="font-semibold">Bachelors:</span> {asString(row.bachelors_programmes || row.btech_branch_intake) || '-'}</p>
+            <p><span className="font-semibold">Masters:</span> {asString(row.masters_programmes || row.mtech_branch_intake) || '-'}</p>
+            <p><span className="font-semibold">PhD:</span> {asString(row.phd_programmes || row.phd) || '-'}</p>
+          </>
+        )}
       </div>
     </article>
   );
@@ -198,7 +217,9 @@ function DepartmentProgrammeSection({ cards }: { cards: Record<string, unknown>[
   return (
     <section className="py-2 md:py-4">
       <div className="flex items-end justify-between gap-4">
-        <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Departments and Programmes</h2>
+        <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          {isIti ? 'Trades and Programmes' : 'Departments and Programmes'}
+        </h2>
         <div className="flex items-center gap-2">
           <button type="button" onClick={goPrevMobile} className="h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:hidden" aria-label="Previous department">‹</button>
           <button type="button" onClick={goNextMobile} className="h-9 w-9 rounded-full bg-slate-900 text-white transition hover:bg-slate-700 md:hidden" aria-label="Next department">›</button>
@@ -235,7 +256,7 @@ function DepartmentProgrammeSection({ cards }: { cards: Record<string, unknown>[
   );
 }
 
-function TrainingPlacementSection({ profile }: { profile: Record<string, unknown> }) {
+function TrainingPlacementSection({ profile, isIti = false }: { profile: Record<string, unknown>; isIti?: boolean }) {
   const officerName = asString(profile.placement_officer_name);
   const officerPhoto = asString(profile.placement_officer_photo);
   const officerQualification = asString(profile.placement_officer_qualification);
@@ -249,7 +270,9 @@ function TrainingPlacementSection({ profile }: { profile: Record<string, unknown
 
   return (
     <section className="py-2 md:py-4">
-      <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Training and Placement</h2>
+      <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+        {isIti ? 'Apprenticeship and Placement' : 'Training and Placement'}
+      </h2>
       <div className="mt-5 grid gap-5 lg:grid-cols-[360px_1fr]">
         <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           {officerPhoto ? (
@@ -305,8 +328,10 @@ export function EducationEngineeringPortfolioWebsite({
   images = [],
   language = 'en',
 }: EngineeringPortfolioProps) {
-  const isUniversity = (org.sub_department || '').toUpperCase() === 'UNIVERSITY';
-  const institutionLabel = isUniversity ? 'University' : 'Engineering College';
+  const subDepartment = (org.sub_department || '').toUpperCase();
+  const isIti = subDepartment === 'ITI';
+  const isUniversity = subDepartment === 'UNIVERSITY';
+  const institutionLabel = isUniversity ? 'University' : isIti ? 'Industrial Training Institute' : 'Engineering College';
   const headRole = isUniversity ? 'Vice Chancellor' : 'Principal';
   const heroSlides = [profile.hero_slide_1, profile.hero_slide_2, profile.hero_slide_3]
     .map((it) => asString(it))
@@ -376,13 +401,13 @@ export function EducationEngineeringPortfolioWebsite({
           />
         ) : null}
 
-        <DepartmentProgrammeSection cards={departmentProgrammeCards} />
+        <DepartmentProgrammeSection cards={departmentProgrammeCards} isIti={isIti} />
 
         <PsFacilitiesCarouselSection profile={profile} facilities={facilities} sectionTitle="Campus Facilities" />
 
-        {!departmentProgrammeCards.length ? <PillListSection title="Departments and Programmes" values={departments} /> : null}
+        {!departmentProgrammeCards.length ? <PillListSection title={isIti ? 'Trades and Programmes' : 'Departments and Programmes'} values={departments} /> : null}
 
-        <EngineeringFacultySection cards={facultyCards} />
+        <EngineeringFacultySection cards={facultyCards} isIti={isIti} />
 
         <DetailSection
           title="Research, Innovation, and MoUs"
@@ -396,7 +421,7 @@ export function EducationEngineeringPortfolioWebsite({
           ]}
         />
 
-        <TrainingPlacementSection profile={profile} />
+        <TrainingPlacementSection profile={profile} isIti={isIti} />
 
         {studentLifeCards.length ? (
           <PsFacilitiesCarouselSection

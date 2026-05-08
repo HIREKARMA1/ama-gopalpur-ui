@@ -210,6 +210,7 @@ export function EducationEngineeringPortfolioAdminForm({
   profileImageControl,
   institutionLabel = 'College',
   headRoleLabel = 'Principal',
+  isIti = false,
 }: {
   organizationId: number | null;
   values: EngineeringFormFields;
@@ -217,6 +218,7 @@ export function EducationEngineeringPortfolioAdminForm({
   profileImageControl?: ReactNode;
   institutionLabel?: string;
   headRoleLabel?: string;
+  isIti?: boolean;
 }) {
   const [activeSection, setActiveSection] = useState<SectionId>('hero');
   const patch = (p: Record<string, string | undefined>) =>
@@ -496,25 +498,44 @@ export function EducationEngineeringPortfolioAdminForm({
       ) : null}
 
       {activeSection === 'programmes' ? (
-        <SectionBox title="Departments and Programmes">
+        <SectionBox title={isIti ? 'Trades and Programmes' : 'Departments and Programmes'}>
           <div className="space-y-2">
             {(departmentProgrammeRows.length ? departmentProgrammeRows : [{}]).map((row, i, arr) => (
               <div key={i} className="grid gap-2 rounded border border-border p-2 md:grid-cols-[120px_1fr_1fr_1fr_1fr_auto] md:items-end">
                 <ImgSlot label="Department photo" organizationId={organizationId} assetType="ps_facility" url={row.image || row.photo || ''} onUrl={(v) => {
                   const next = [...arr]; next[i] = { ...row, image: v }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
                 }} />
-                <input className="rounded border border-border px-2 py-1" placeholder="Department name" value={row.department_name || row.name || ''} onChange={(e) => {
-                  const next = [...arr]; next[i] = { ...row, department_name: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
+                <input className="rounded border border-border px-2 py-1" placeholder={isIti ? 'Trade name' : 'Department name'} value={row.department_name || row.trade_name || row.name || ''} onChange={(e) => {
+                  const next = [...arr]; next[i] = { ...row, department_name: e.target.value, trade_name: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
                 }} />
-                <input className="rounded border border-border px-2 py-1" placeholder="Bachelors programmes / intake" value={row.bachelors_programmes || row.btech_branch_intake || ''} onChange={(e) => {
-                  const next = [...arr]; next[i] = { ...row, bachelors_programmes: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
-                }} />
-                <input className="rounded border border-border px-2 py-1" placeholder="Masters programmes / intake" value={row.masters_programmes || row.mtech_branch_intake || ''} onChange={(e) => {
-                  const next = [...arr]; next[i] = { ...row, masters_programmes: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
-                }} />
-                <input className="rounded border border-border px-2 py-1" placeholder="PhD programmes / intake" value={row.phd_programmes || row.phd || ''} onChange={(e) => {
-                  const next = [...arr]; next[i] = { ...row, phd_programmes: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
-                }} />
+                {isIti ? (
+                  <>
+                    <input className="rounded border border-border px-2 py-1" placeholder="Shift Intake Capacity (1st)" value={row.shift_intake_capacity_1st || ''} onChange={(e) => {
+                      const next = [...arr]; next[i] = { ...row, shift_intake_capacity_1st: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
+                    }} />
+                    <input className="rounded border border-border px-2 py-1" placeholder="Shift Intake Capacity (2nd)" value={row.shift_intake_capacity_2nd || ''} onChange={(e) => {
+                      const next = [...arr]; next[i] = { ...row, shift_intake_capacity_2nd: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
+                    }} />
+                    <input className="rounded border border-border px-2 py-1" placeholder="Shift Intake Capacity (3rd)" value={row.shift_intake_capacity_3rd || ''} onChange={(e) => {
+                      const next = [...arr]; next[i] = { ...row, shift_intake_capacity_3rd: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
+                    }} />
+                    <input className="rounded border border-border px-2 py-1" placeholder="Total No. of Units" value={row.total_no_of_units || ''} onChange={(e) => {
+                      const next = [...arr]; next[i] = { ...row, total_no_of_units: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
+                    }} />
+                  </>
+                ) : (
+                  <>
+                    <input className="rounded border border-border px-2 py-1" placeholder="Bachelors programmes / intake" value={row.bachelors_programmes || row.btech_branch_intake || ''} onChange={(e) => {
+                      const next = [...arr]; next[i] = { ...row, bachelors_programmes: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
+                    }} />
+                    <input className="rounded border border-border px-2 py-1" placeholder="Masters programmes / intake" value={row.masters_programmes || row.mtech_branch_intake || ''} onChange={(e) => {
+                      const next = [...arr]; next[i] = { ...row, masters_programmes: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
+                    }} />
+                    <input className="rounded border border-border px-2 py-1" placeholder="PhD programmes / intake" value={row.phd_programmes || row.phd || ''} onChange={(e) => {
+                      const next = [...arr]; next[i] = { ...row, phd_programmes: e.target.value }; patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(next) });
+                    }} />
+                  </>
+                )}
                 <div className="space-y-1 md:col-span-3">
                   <input
                     className="w-full rounded border border-border px-2 py-1"
@@ -530,7 +551,7 @@ export function EducationEngineeringPortfolioAdminForm({
                 <button type="button" className="text-[10px] text-red-600" onClick={() => patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson(arr.filter((_, j) => j !== i)) })}>Remove</button>
               </div>
             ))}
-            <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson([...departmentProgrammeRows, { image: '', department_name: '', bachelors_programmes: '', masters_programmes: '', phd_programmes: '', description: '' }]) })}>+ Add department/programme</button>
+            <button type="button" className="rounded border border-border px-2 py-1 text-[11px]" onClick={() => patch({ [KEY.departmentProgrammeCardsJson]: rowsToJson([...departmentProgrammeRows, isIti ? { image: '', department_name: '', trade_name: '', shift_intake_capacity_1st: '', shift_intake_capacity_2nd: '', shift_intake_capacity_3rd: '', total_no_of_units: '', description: '' } : { image: '', department_name: '', bachelors_programmes: '', masters_programmes: '', phd_programmes: '', description: '' }]) })}>+ Add department/programme</button>
           </div>
         </SectionBox>
       ) : null}
