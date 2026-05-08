@@ -294,8 +294,6 @@ function ArcsAboutSection({
   );
 }
 
-const EMPTY_INCHARGE_SLOTS = 3;
-
 function ArcsInchargeCard({ admin }: { admin: Record<string, unknown> }) {
   return (
     <article className="flex w-full max-w-[280px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:max-w-[300px]">
@@ -333,7 +331,8 @@ function ArcsInchargeCard({ admin }: { admin: Record<string, unknown> }) {
 
 function ArcsInchargeSection({ cards, language }: { cards: Record<string, unknown>[]; language: 'en' | 'or' }) {
   const tr = (en: string, or: string) => (language === 'or' ? or : en);
-  const list = cards.length ? cards : Array.from({ length: EMPTY_INCHARGE_SLOTS }, () => ({} as Record<string, unknown>));
+  if (!cards.length) return null;
+  const list = cards;
   const desktopPageSize = 3;
   const desktopTotalPages = Math.max(1, Math.ceil(list.length / desktopPageSize));
   const [currentDesktopPage, setCurrentDesktopPage] = useState(0);
@@ -402,7 +401,8 @@ function ArcsInchargeSection({ cards, language }: { cards: Record<string, unknow
 
 function ArcsMembershipSection({ rows, language }: { rows: Record<string, unknown>[]; language: 'en' | 'or' }) {
   const tr = (en: string, or: string) => (language === 'or' ? or : en);
-  const list = rows.length ? rows : [{ category: '', count: '' }];
+  if (!rows.length) return null;
+  const list = rows;
   return (
     <section className="py-2 md:py-4">
       <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{tr('Membership', 'ସଦସ୍ୟତା')}</h2>
@@ -427,8 +427,6 @@ function ArcsMembershipSection({ rows, language }: { rows: Record<string, unknow
     </section>
   );
 }
-
-const EMPTY_STOCK_SLOTS = 3;
 
 /** Product cards: compact image + clamped text; full copy in modal. */
 const CARD_IMG_H = 'h-[152px] sm:h-[168px]';
@@ -506,7 +504,8 @@ function ArcsStockCarouselSection({
   cards: Record<string, unknown>[];
   onCardClick: (card: Record<string, unknown>) => void;
 }) {
-  const list = cards.length ? cards : Array.from({ length: EMPTY_STOCK_SLOTS }, () => ({} as Record<string, unknown>));
+  if (!cards.length) return null;
+  const list = cards;
   const desktopPageSize = 3;
   const desktopTotalPages = Math.max(1, Math.ceil(list.length / desktopPageSize));
   const [currentDesktopPage, setCurrentDesktopPage] = useState(0);
@@ -576,7 +575,8 @@ function ArcsLoansCarouselSection({
   cards: Record<string, unknown>[];
   onSelect: (card: Record<string, unknown>) => void;
 }) {
-  const list = cards.length ? cards : Array.from({ length: EMPTY_STOCK_SLOTS }, () => ({} as Record<string, unknown>));
+  if (!cards.length) return null;
+  const list = cards;
   const desktopPageSize = 3;
   const desktopTotalPages = Math.max(1, Math.ceil(list.length / desktopPageSize));
   const [currentDesktopPage, setCurrentDesktopPage] = useState(0);

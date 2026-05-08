@@ -162,6 +162,14 @@ export function MinorIrrigationPortfolioWebsite({
     () => parseArrayJson<Record<string, string>>((profile.minor_staff_rows ?? profile.minor_staff_rows_json) as unknown),
     [profile.minor_staff_rows, profile.minor_staff_rows_json],
   );
+  const staffRowsForDisplay = useMemo(
+    () =>
+      staffRows.filter((row) =>
+        [row.staff_name, row.category, row.role_designation, row.department, row.contact_number, row.email]
+          .some((value) => asString(value).trim() !== ''),
+      ),
+    [staffRows],
+  );
 
   const galleryItems: GalleryItem[] = useMemo(() => {
     const raw = parseArrayJson<unknown>(profile.gallery_images);
@@ -261,6 +269,7 @@ export function MinorIrrigationPortfolioWebsite({
           showAttendance={false}
         />
 
+        {staffRowsForDisplay.length > 0 ? (
         <section className="py-2 md:py-4">
           <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{tr('TS & NTS staff', 'TS ଏବଂ NTS କର୍ମଚାରୀ')}</h2>
           {tableShell(
@@ -276,7 +285,7 @@ export function MinorIrrigationPortfolioWebsite({
                 </tr>
               </thead>
               <tbody>
-                {(staffRows.length ? staffRows : [{} as Record<string, string>]).map((row, idx) => (
+                {staffRowsForDisplay.map((row, idx) => (
                   <tr key={idx} className="border-t border-slate-100">
                     <td className="px-4 py-3 font-medium text-slate-900">{displayText(row.staff_name)}</td>
                     <td className="px-4 py-3 text-slate-700">{displayText(row.category)}</td>
@@ -290,6 +299,7 @@ export function MinorIrrigationPortfolioWebsite({
             </table>,
           )}
         </section>
+        ) : null}
 
         <section className="rounded-[28px] border border-slate-200/70 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-md md:p-7">
           <h2 className="text-xl font-bold sm:text-2xl">{tr('Key highlights', 'ମୁଖ୍ୟ ହାଇଲାଇଟ୍')}</h2>
@@ -307,6 +317,7 @@ export function MinorIrrigationPortfolioWebsite({
           </div>
         </section>
 
+        {activeRows.length > 0 ? (
         <section className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 shadow-sm md:p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">{tr('Project details', 'ପ୍ରକଳ୍ପ ବିବରଣୀ')}</h2>
@@ -326,16 +337,17 @@ export function MinorIrrigationPortfolioWebsite({
             </div>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {(activeRows.length ? activeRows : [['empty', EMPTY] as const]).map(([k, v]) => (
+            {activeRows.map(([k, v]) => (
               <div key={k} className="rounded-xl border border-slate-200 bg-white p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
-                  {k === 'empty' ? '—' : getMinorIrrigationProfileLabel(k, language)}
+                  {getMinorIrrigationProfileLabel(k, language)}
                 </p>
                 <p className="mt-1 text-sm font-bold text-slate-900">{formatVal(v)}</p>
               </div>
             ))}
           </div>
         </section>
+        ) : null}
 
         <PsGallerySection gallery={galleryItems} />
         <PsContactSection org={org} profile={psProfile} language={lang} />

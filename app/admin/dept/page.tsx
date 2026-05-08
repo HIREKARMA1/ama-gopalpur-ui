@@ -68,7 +68,7 @@ const HEALTH_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,LATITUDE,LONGITUDE,NAME,INSTITUTION ID,CATEGORY,INST HEAD NAME,INST HEAD CONTACT,NO OF TS,NO OF NTS,NO OF MO,NO OF PHARMACIST,NO OF ANM,NO OF HEALTH WORKER,NO OF PATHOLOGY,NO OF CLERK,NO OF SWEEPER,NO OF NW,NO OF BED,NO OF ICU,X-RAY AVAILABILTY,CT-SCAN AVAILABILITY,AVAILABILITY OF PATHOLOGY TESTING,DESCRIPTION\n';
 
 const WATCO_CSV_HEADER =
-  'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,STATION ID,STATION NAME,STATION TYPE,LOCATION,LATITUDE,LONGITUDE,COMMISSIONING DATE,SCHEME NAME,POPULATION SERVED,SOURCE TYPE,SOURCE NAME,INTAKE CAPACITY (MLD),TURBIDITY,PH,TDS,HARDNESS,IRON,FLUORIDE,SEASONAL VARIATION NOTES,WTP TYPE,DESIGN CAPACITY (MLD),OPERATIONAL CAPACITY (MLD),FLASH MIXER,CLARIFLOCCULATOR,RSF UNITS,CHLORINATION SYSTEM,SLUDGE DISPOSAL METHOD,PUMP TYPE,NO. OF WORKING PUMPS,NO. OF STANDBY PUMPS,PUMP CAPACITY (M3/HR),HEAD (M),MOTOR RATING (KW),POWER SOURCE,DG CAPACITY (KVA),NO. OF ESR,ESR CAPACITY (KL),GLR CAPACITY (KL),TOTAL PIPELINE LENGTH (KM),PIPE MATERIAL,ZONES/DMAS,HOUSEHOLDS COVERED,TOTAL CONNECTIONS,SUPPLY HOURS/DAY,PER CAPITA SUPPLY (LPCD),NRW (%),COMPLAINTS/MONTH,CAPEX COST,ANNUAL O&M COST,ELECTRICITY COST/MONTH,CHEMICAL COST/MONTH,MANPOWER COST,REVENUE COLLECTION\n';
+  'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,STATION ID,STATION NAME,SUB DEPARTMENT,STATION TYPE,LOCATION,LATITUDE,LONGITUDE,COMMISSIONING DATE,SCHEME NAME,POPULATION SERVED,SOURCE TYPE,SOURCE NAME,INTAKE CAPACITY (MLD),TURBIDITY,PH,TDS,HARDNESS,IRON,FLUORIDE,SEASONAL VARIATION NOTES,WTP TYPE,DESIGN CAPACITY (MLD),OPERATIONAL CAPACITY (MLD),FLASH MIXER,CLARIFLOCCULATOR,RSF UNITS,CHLORINATION SYSTEM,SLUDGE DISPOSAL METHOD,PUMP TYPE,NO. OF WORKING PUMPS,NO. OF STANDBY PUMPS,PUMP CAPACITY (M3/HR),HEAD (M),MOTOR RATING (KW),POWER SOURCE,DG CAPACITY (KVA),NO. OF ESR,ESR CAPACITY (KL),GLR CAPACITY (KL),TOTAL PIPELINE LENGTH (KM),PIPE MATERIAL,ZONES/DMAS,HOUSEHOLDS COVERED,TOTAL CONNECTIONS,SUPPLY HOURS/DAY,PER CAPITA SUPPLY (LPCD),NRW (%),COMPLAINTS/MONTH,CAPEX COST,ANNUAL O&M COST,ELECTRICITY COST/MONTH,CHEMICAL COST/MONTH,MANPOWER COST,REVENUE COLLECTION\n';
 
 const EDUCATION_ENGINEERING_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE,NAME OF COLLEGE,INSTITUTION ID,ESTABLISHED YEAR,CAMPUS AREA (ACRES),AFFILIATING UNIVERSITY,AUTONOMOUS (YES/NO),AUTONOMOUS SINCE YEAR,COLLEGE TYPE,PIN CODE,LATITUDE,LONGITUDE,PRINCIPAL NAME,PRINCIPAL CONTACT,PRINCIPAL EMAIL,COLLEGE PHONE,COLLEGE EMAIL,WEBSITE,AICTE APPROVAL(YES/NO),NAAC,NBA,NIRF RANKING,AARIIA-ATAL RANKING,B.TECH BRANCHES COUNT,M.TECH PROGRAMMES COUNT,PH.D. (YES/NO),DEPARTMENTS (COMMA SEPARATED),TOTAL INTAKE UG AUTOMOBILE ENGINEERING,TOTAL INTAKE UG CHEMICAL ENGINEERING,TOTAL INTAKE UG CIVIL ENGINEERING,TOTAL INTAKE UG COMPUTER SCIENCE ENGINEERING,TOTAL INTAKE UG ELECTRICAL ENGINEERING,TOTAL INTAKE UG ELECTRONICS & TELECOMMUNICATION ENGINEERING,TOTAL INTAKE UG MECHANICAL ENGINEERING,TOTAL INTAKE UG METALLURGICAL AND MATERIALS ENGINEERING,TOTAL INTAKE UG PRODUCTION ENGINEERING,TOTAL INTAKE PG DEPARTMENTS WISE (COMMA SEPARATED),TOTAL NO OF FACULTY AUTOMOBILE ENGINEERING,TOTAL NO OF FACULTY CHEMICAL ENGINEERING,TOTAL NO OF FACULTY CIVIL ENGINEERING,TOTAL NO OF FACULTY COMPUTER SCIENCE ENGINEERING,TOTAL NO OF FACULTY ELECTRICAL ENGINEERING,TOTAL NO OF FACULTY ELECTRONICS & TELECOMMUNICATION ENGINEERING,TOTAL NO OF FACULTY MECHANICAL ENGINEERING,TOTAL NO OF FACULTY METALLURGICAL AND MATERIALS ENGINEERING,TOTAL NO OF FACULTY PRODUCTION ENGINEERING,TOTAL NO OF FACULTY BASIC SCIENCE,TOTAL NO OF FACULTY HUMANITIES AND SOCIAL SCIENCE,NO OF CLASSROOMS,NO OF LABS BRACH WISE(COMMA SEPARATED),NO OF SMART CLASSROOMS,WORKSHOP,HOSTEL,HOSTEL CAPACITY BOYS,HOSTEL CAPACITY GIRLS,GUEST HOUSE,BANKING,CANTEEN,GYMNASIUM,WIFI AVAILABILITY,PLAYGROUND,GARDEN,TRANSPORT FASCILITY,PARKING FASCILITY,STAFF ACCOMMODATION,SECURITY,CCTV,RAMP (ACCESSIBILITY),DRINKING WATER,ELECTRICITY,NSS,NCC,IQAC,ICC,ICC HEAD NAME,ICC HEAD CONTACT,GRIEVANCE CELL HEAD,GRIEVANCE CELL HEAD CONTACT,ANTI-RAGGING CELL HEAD,ANTI-RAGGING CELL HEAD CONTACT,INNOVATION AND STARTUP FASCILITY,ROBOTICS CLUB,CULTURAL CLUBS,SPORTS AND ATHLETICS FASCILITY,E-MAGAZINE,TEQIP,RESEARCH PROJECTS COUNT,PATENTS COUNT,MOU COUNT,CENTRE OF EXCELLENCE(COMMA SEPARATED),INCUBATION CENTRE(AVAILABILITY),PLACEMENT CELL,PLACEMENT OFFICER NAME,PLACEMENT OFFICER CONTACT,PLACEMENT PERCENTAGE (LAST YEAR),HIGHEST PACKAGE (LPA),INTERNSHIP,NAME OF DEANS/PIC/FIC/OIC/REGISTRAR,SCHORLASHIP FASCILITY,NOTABLE AWARDS OR ACHIEVEMENTS,DESCRIPTION\n';
@@ -274,6 +274,7 @@ function getWatcoTableColumnValue(
   column: string,
 ): string {
   if (column === 'Station Name') return o.name ?? '';
+  if (column === 'SUB DEPARTMENT') return (o.sub_department || '').trim();
   const key = snakeFromHeader(column);
   const val = profile?.[key];
   return val != null && String(val).trim() !== '' ? String(val) : '';
@@ -2144,11 +2145,31 @@ export default function DepartmentAdminPage() {
                       const gp = waterFormValues[snakeFromHeader('GP/WARD')] || '';
                       const village = waterFormValues[snakeFromHeader('VILLAGE/LOCALITY')] || '';
                       const stationType = waterFormValues[snakeFromHeader('STATION TYPE')] || '';
+                      const subDepartmentRaw = (
+                        waterFormValues[snakeFromHeader('SUB DEPARTMENT')] || ''
+                      )
+                        .trim()
+                        .toUpperCase();
+                      const subDepartment =
+                        subDepartmentRaw === 'RWSS' ? 'RWSS' : 'WATCO';
                       const addressParts = [block, gp, village].filter((p) => p && p.trim());
 
                       let orgId: number;
                       if (editingWaterId) {
                         orgId = editingWaterId;
+                        await organizationsApi.update(orgId, {
+                          name,
+                          latitude: lat,
+                          longitude: lng,
+                          address: addressParts.length ? addressParts.join(', ') : undefined,
+                          sub_department: subDepartment,
+                          attributes: {
+                            ulb_block: block || null,
+                            gp_name: gp || null,
+                            ward_village: village || null,
+                            station_type: stationType || null,
+                          },
+                        });
                       } else {
                         const basePayload = {
                           name,
@@ -2161,6 +2182,7 @@ export default function DepartmentAdminPage() {
                             ward_village: village || null,
                             station_type: stationType || null,
                           } as Record<string, string | number | null>,
+                          sub_department: subDepartment,
                         };
 
                         const org = await organizationsApi.create({
@@ -2179,6 +2201,7 @@ export default function DepartmentAdminPage() {
                           profileData[key] = val;
                         }
                       });
+                      profileData[snakeFromHeader('SUB DEPARTMENT')] = subDepartment;
                       profileData[latKey] = lat;
                       profileData[lngKey] = lng;
                       profileData[nameKey] = name;
@@ -2211,19 +2234,36 @@ export default function DepartmentAdminPage() {
                 >
                   {splitHeader(WATCO_CSV_HEADER).map((header) => {
                     const key = snakeFromHeader(header);
+                    const isSubDepartment = header === 'SUB DEPARTMENT';
                     return (
                       <div key={key} className="space-y-1">
                         <label className="block text-text">{header}</label>
-                        <input
-                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
-                          value={waterFormValues[key] ?? ''}
-                          onChange={(e) =>
-                            setWaterFormValues((prev) => ({
-                              ...prev,
-                              [key]: e.target.value,
-                            }))
-                          }
-                        />
+                        {isSubDepartment ? (
+                          <select
+                            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                            value={waterFormValues[key] ?? 'WATCO'}
+                            onChange={(e) =>
+                              setWaterFormValues((prev) => ({
+                                ...prev,
+                                [key]: e.target.value,
+                              }))
+                            }
+                          >
+                            <option value="WATCO">WATCO</option>
+                            <option value="RWSS">RWSS</option>
+                          </select>
+                        ) : (
+                          <input
+                            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                            value={waterFormValues[key] ?? ''}
+                            onChange={(e) =>
+                              setWaterFormValues((prev) => ({
+                                ...prev,
+                                [key]: e.target.value,
+                              }))
+                            }
+                          />
+                        )}
                       </div>
                     );
                   })}

@@ -546,6 +546,8 @@ export type MessageKey =
   | 'map.search.submit'
   | 'map.legend.showAll'
   | 'map.legend.showOnly'
+  | 'map.legend.watco'
+  | 'map.legend.rwss'
   | 'roads.type.nh'
   | 'roads.type.pwd'
   | 'roads.type.rd'
@@ -1201,6 +1203,8 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.search.submit': { en: 'Search', or: 'ସନ୍ଧାନ' },
   'map.legend.showAll': { en: 'Show all', or: 'ସବୁ ଦେଖାନ୍ତୁ' },
   'map.legend.showOnly': { en: 'Show only', or: 'କେବଳ ଦେଖାନ୍ତୁ' },
+  'map.legend.watco': { en: 'WATCO', or: 'ୱାଟକୋ' },
+  'map.legend.rwss': { en: 'RWSS', or: 'ଆର୍.ଡବ୍ଲ୍ୟୁ.ଏସ୍.ଏସ୍' },
   'roads.type.nh': { en: 'National Highway', or: 'ଜାତୀୟ ରାଜପଥ' },
   'roads.type.pwd': { en: 'PWD / R&B', or: 'PWD / R&B' },
   'roads.type.rd': { en: 'Rural / Village Road', or: 'ଗ୍ରାମୀଣ / ଗାଁ ରାସ୍ତାଘାଟ' },
@@ -1350,8 +1354,8 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     or: 'ବିଭାଗୀୟ ନେତୃତ୍ୱ',
   },
   'dept.summary.leader.messageHeading': {
-    en: "Minister's message",
-    or: 'ମନ୍ତ୍ରୀଙ୍କ ବାର୍ତ୍ତା',
+    en: 'Message',
+    or: 'ବାର୍ତ୍ତା',
   },
   'dept.summary.section.summary': {
     en: 'Department summary',

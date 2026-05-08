@@ -503,6 +503,29 @@ export function AgriculturePortfolioWebsite({
         : parseArray<Record<string, unknown>>(profile.ag_staff_rows),
     [profile],
   );
+  const staffRowsForDisplay = useMemo(
+    () =>
+      staffRows.filter((row) =>
+        [row.staff_name, row.category, row.role_designation, row.department, row.contact_number, row.email]
+          .some((value) => asString(value).trim() !== ''),
+      ),
+    [staffRows],
+  );
+  const monthlyReportsForDisplay = useMemo(
+    () =>
+      monthlyReports.filter((row) => {
+        return (
+          (row.month != null && String(row.month).trim() !== '') ||
+          (row.year != null && String(row.year).trim() !== '') ||
+          (row.total_trainings != null && String(row.total_trainings).trim() !== '') ||
+          (row.total_farmers_served != null && String(row.total_farmers_served).trim() !== '') ||
+          (row.total_trials != null && String(row.total_trials).trim() !== '') ||
+          (row.total_soil_cards != null && String(row.total_soil_cards).trim() !== '') ||
+          asString(row.remarks).trim() !== ''
+        );
+      }),
+    [monthlyReports],
+  );
 
   const highlights = useMemo(
     () => [
@@ -574,6 +597,7 @@ export function AgriculturePortfolioWebsite({
           showAttendance
         />
 
+        {staffRowsForDisplay.length > 0 ? (
         <section className="py-2 md:py-4">
           <h2 className={SECTION_H2}>{tr('Staff Table', 'କର୍ମଚାରୀ ତାଲିକା')}</h2>
           {tableShell(
@@ -589,7 +613,7 @@ export function AgriculturePortfolioWebsite({
                 </tr>
               </thead>
               <tbody>
-                {(staffRows.length ? staffRows : [{} as Record<string, unknown>]).map((row, idx) => (
+                {staffRowsForDisplay.map((row, idx) => (
                   <tr key={idx} className="border-t border-slate-100">
                     <td className="px-4 py-3 font-medium text-slate-900">{displayText(row.staff_name)}</td>
                     <td className="px-4 py-3 text-slate-700">{displayText(row.category)}</td>
@@ -603,6 +627,7 @@ export function AgriculturePortfolioWebsite({
             </table>,
           )}
         </section>
+        ) : null}
 
         <DepartmentHighlightsSection
           sectionTitle={tr('Key highlights', 'ମୁଖ୍ୟ ହାଇଲାଇଟ୍')}
@@ -622,6 +647,7 @@ export function AgriculturePortfolioWebsite({
           dailyMetrics={dailyMetrics as AgricultureDailyMetricExtended[]}
         />
 
+        {monthlyReportsForDisplay.length > 0 ? (
         <section className="rounded-[28px] border border-slate-200/70 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-md md:p-7">
           <h2 className="text-xl font-bold sm:text-2xl">{tr('Monthly summary', 'ମାସିକ ସାରାଂଶ')}</h2>
           {tableShell(
@@ -637,7 +663,7 @@ export function AgriculturePortfolioWebsite({
                 </tr>
               </thead>
               <tbody>
-                {(monthlyReports.length ? monthlyReports : [{} as AgricultureMonthlyReport]).map((row, idx) => (
+                {monthlyReportsForDisplay.map((row, idx) => (
                   <tr key={idx} className="border-t border-slate-100">
                     <td className="px-4 py-3 font-medium text-slate-900">
                       {row.month && row.year ? `${String(row.month).padStart(2, '0')}/${row.year}` : EMPTY}
@@ -653,6 +679,7 @@ export function AgriculturePortfolioWebsite({
             </table>,
           )}
         </section>
+        ) : null}
 
         <PsGallerySection gallery={galleryItems} />
         <PsContactSection org={org} profile={contactProfile} language={lang} />
