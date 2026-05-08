@@ -71,7 +71,7 @@ const HEALTH_TYPE_KEYS: Record<string, MessageKey> = {
   OTHER: 'map.health.other',
 };
 
-const WATCO_LEGEND_TYPES = ['ESR', 'SVS', 'GSR', 'PUMP HOUSE'] as const;
+const WATCO_SUB_DEPARTMENTS = ['WATCO', 'RWSS'] as const;
 
 const ROAD_LEGEND_COLORS = [
   '#ea4335',
@@ -108,27 +108,21 @@ function roadLegendColor(typeKey: string): string {
   return ROAD_LEGEND_COLORS[hash % ROAD_LEGEND_COLORS.length] ?? '#9e6700';
 }
 
-const WATCO_MARKER_HEX: Record<(typeof WATCO_LEGEND_TYPES)[number], string> = {
-  ESR: '#0ea5e9',
-  SVS: '#22c55e',
-  GSR: '#6366f1',
-  'PUMP HOUSE': '#f97316',
+const WATCO_MARKER_HEX: Record<(typeof WATCO_SUB_DEPARTMENTS)[number], string> = {
+  WATCO: '#0ea5e9',
+  RWSS: '#22c55e',
 };
 
-const WATCO_LEGEND_LABEL_KEYS: Record<(typeof WATCO_LEGEND_TYPES)[number], MessageKey> = {
-  ESR: 'watco.legend.esr',
-  SVS: 'watco.legend.svs',
-  GSR: 'watco.legend.gsr',
-  'PUMP HOUSE': 'watco.legend.pumpHouse',
+const WATCO_LEGEND_LABEL_KEYS: Record<(typeof WATCO_SUB_DEPARTMENTS)[number], MessageKey> = {
+  WATCO: 'map.legend.watco',
+  RWSS: 'map.legend.rwss',
 };
 
-function normalizeWatcoLegendType(raw: string | null | undefined): (typeof WATCO_LEGEND_TYPES)[number] | null {
+function normalizeWatcoLegendType(raw: string | null | undefined): (typeof WATCO_SUB_DEPARTMENTS)[number] | null {
   const v = (raw || '').trim().toUpperCase();
   if (!v) return null;
-  if (v.includes('PUMP')) return 'PUMP HOUSE';
-  if (v.includes('GSR') || v.includes('GLR')) return 'GSR';
-  if (v.includes('SVS')) return 'SVS';
-  if (v.includes('ESR')) return 'ESR';
+  if (v === 'WATCO') return 'WATCO';
+  if (v === 'RWSS') return 'RWSS';
   return null;
 }
 
@@ -648,10 +642,10 @@ export function ConstituencyMap({
   const watcoStationCounts = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'WATCO_RWSS') return {} as Record<string, number>;
     const acc: Record<string, number> = {};
-    for (const t of WATCO_LEGEND_TYPES) acc[t] = 0;
+    for (const t of WATCO_SUB_DEPARTMENTS) acc[t] = 0;
     for (const org of organizationsByBlock) {
-      const stationType = normalizeWatcoLegendType(org.attributes?.station_type as string);
-      if (stationType) acc[stationType] += 1;
+      const subDepartment = normalizeWatcoLegendType(org.sub_department as string);
+      if (subDepartment) acc[subDepartment] += 1;
     }
     return acc;
   }, [organizationsByBlock, selectedDepartmentCode]);
@@ -960,6 +954,12 @@ export function ConstituencyMap({
         return createCircleMarkerSvgIcon('#ec4899');
       }
 
+      if (code === 'WATCO_RWSS') {
+        const subDepartment = normalizeWatcoLegendType(subDept);
+        const color = subDepartment ? WATCO_MARKER_HEX[subDepartment] : '#0ea5e9';
+        return createCircleMarkerSvgIcon(color);
+      }
+
       // Other departments – fall back to per-dept PNG icon if configured,
       // otherwise a generic teal pin.
       if (DEPARTMENT_MARKER_ICONS[code]) {
@@ -1018,6 +1018,10 @@ export function ConstituencyMap({
           return t('map.revenue.legend.tahasil', lang);
         }
         return lang === 'or' ? 'ଜମି ପାର୍ସେଲ୍' : 'Land parcel';
+      }
+      if (code === 'WATCO_RWSS') {
+        const value = normalizeWatcoLegendType(subDept);
+        if (value) return t(WATCO_LEGEND_LABEL_KEYS[value], lang);
       }
       const eduKey = EDUCATION_TYPE_KEYS[type];
       return eduKey ? t(eduKey, lang) : EDUCATION_TYPE_LABELS[type] || type.replace(/_/g, ' ');
@@ -1081,7 +1085,7 @@ export function ConstituencyMap({
           });
         } else if (code === 'WATCO_RWSS') {
           result = result.filter(
-            (org) => normalizeWatcoLegendType(org.attributes?.station_type as string) === legendFilterType,
+            (org) => normalizeWatcoLegendType(org.sub_department as string) === legendFilterType,
           );
         } else {
           result = result.filter((org) => org.type === legendFilterType);
@@ -2091,7 +2095,7 @@ export function ConstituencyMap({
       )}
       {selectedDepartmentCode?.toUpperCase() === 'WATCO_RWSS' && (
         <MapLegendPanel className="md:max-w-[260px]">
-          {WATCO_LEGEND_TYPES.map((type) => {
+          {WATCO_SUB_DEPARTMENTS.map((type) => {
             const value = type;
             const isSelected = legendFilterType === value;
             const label = t(WATCO_LEGEND_LABEL_KEYS[type], language);
