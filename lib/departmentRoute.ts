@@ -1,11 +1,10 @@
 export function buildDepartmentSummaryPath(
   departmentId: number,
-  departmentName?: string | null,
+  _departmentName?: string | null,
 ): string {
   const id = Number(departmentId);
   if (!Number.isFinite(id) || id <= 0) return '/';
-  const nameSlug = slugifySegment(departmentName || 'department');
-  return `/departments/${nameSlug}-${id}/summary`;
+  return `/departments/${id}/summary`;
 }
 
 export function extractDepartmentIdFromParam(rawParam: string): number {
@@ -18,12 +17,3 @@ export function extractDepartmentIdFromParam(rawParam: string): number {
   return Number(match[1]);
 }
 
-function slugifySegment(raw: string): string {
-  return String(raw || '')
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .replace(/-{2,}/g, '-');
-}
