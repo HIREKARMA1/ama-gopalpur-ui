@@ -115,6 +115,7 @@ function orgToRoadFeature(org: Organization): RoadFeature | null {
           attrs.ulb_block ??
           '',
       ),
+      gpWard: String(attrs.gp_ward ?? attrs.gpward ?? attrs.gp_ward_name ?? ''),
       roadSector: String(attrs.road_sector ?? ''),
       nameOfDivision: String(attrs.name_of_division ?? attrs.division_name ?? attrs.division ?? ''),
       scheme: String(attrs.scheme ?? attrs.scheme_name ?? ''),

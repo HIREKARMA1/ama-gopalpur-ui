@@ -103,7 +103,7 @@ const IRRIGATION_CSV_HEADER =
 const AGRICULTURE_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID,HOST INSTITUTION/AFFILIATING BODY,ESTABLISHED YEAR,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,CAMPUS AREA (ACRES),TRAINING HALL (YES/NO),TRAINING HALL CAPACITY (SEATS),SOIL TESTING (YES/NO),SOIL SAMPLES TESTED PER YEAR,SEED DISTRIBUTION (YES/NO),SEED PROCESSING UNIT (YES/NO),SEED STORAGE CAPACITY (MT),DEMO UNITS (COMMA SEPARATED),DEMO FARM (YES/NO),DEMO FARM AREA (ACRES),GREENHOUSE/POLYHOUSE (YES/NO),IRRIGATION FACILITY (YES/NO),MACHINERY/CUSTOM HIRING (YES/NO),COMPUTER/IT LAB (YES/NO),LIBRARY (YES/NO),KEY SCHEMES (COMMA SEPARATED),TOTAL STAFF (COUNT),SCIENTISTS/OFFICERS (COUNT),TECHNICAL STAFF (COUNT),EXTENSION WORKERS (COUNT),FARMER TRAINING CAPACITY (PER BATCH),TRAINING PROGRAMMES CONDUCTED LAST YEAR,ON-FARM TRIALS/FLD LAST YEAR,VILLAGES/GPS COVERED (COUNT),SOIL HEALTH CARDS ISSUED LAST YEAR,FARMERS SERVED LAST YEAR (APPROX),REMARKS/DESCRIPTION\n';
 const ROADS_CSV_HEADER =
-  'block,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED,REMARKS\n';
+  'block,GP/WARD,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED,REMARKS\n';
 
 const splitHeader = (header: string): string[] =>
   header.trim().replace(/\n$/, '').split(',').map((h) => h.trim());
@@ -600,6 +600,7 @@ export default function DepartmentAdminPage() {
     return [
       'Road Name',
       'Block',
+      'GP/Ward',
       'Road Code',
       'Road Sector',
       'Name of Division',
@@ -630,6 +631,7 @@ export default function DepartmentAdminPage() {
     if (column === 'Road Name') return fallback(o.name);
     const map: Record<string, unknown> = {
       Block: attrs.block,
+      'GP/Ward': attrs.gp_ward,
       'Road Code': attrs.road_code,
       'Road Sector': attrs.road_sector,
       'Name of Division': attrs.name_of_division,
@@ -1132,6 +1134,7 @@ export default function DepartmentAdminPage() {
       headers = [
         'Road Name',
         'Block',
+        'GP/Ward',
         'Road Code',
         'Road Sector',
         'Name of Division',
@@ -1148,6 +1151,7 @@ export default function DepartmentAdminPage() {
         rows.push([
           stringify(o.name),
           stringify(o.attributes?.block),
+          stringify(o.attributes?.gp_ward),
           stringify(o.attributes?.road_code),
           stringify(o.attributes?.road_sector),
           stringify(o.attributes?.name_of_division),
@@ -1335,6 +1339,7 @@ export default function DepartmentAdminPage() {
         };
         const indexes = {
           block: idx('block', 'ulb_block'),
+          gpWard: idx('gp/ward', 'gp ward', 'gp_ward', 'ward', 'gp'),
           roadName: idx('road name', 'road_name', 'name of road', 'name'),
           roadCode: idx('road code', 'road_code', 'code'),
           roadSector: idx('road sector(nh/sh/pwd/rd/ps/gp)', 'road sector'),
@@ -1430,6 +1435,7 @@ export default function DepartmentAdminPage() {
                 : undefined,
               attributes: {
                 block: get(cols, indexes.block) || null,
+                gp_ward: get(cols, indexes.gpWard) || null,
                 road_code: roadCode || null,
                 road_sector: get(cols, indexes.roadSector) || null,
                 name_of_division: get(cols, indexes.nameOfDivision) || null,
@@ -4641,6 +4647,7 @@ export default function DepartmentAdminPage() {
                             {deptCode === 'ROADS' && (
                               <>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.block)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_ward)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.road_code)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.road_sector)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.name_of_division)}</td>
