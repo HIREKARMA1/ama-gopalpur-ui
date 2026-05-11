@@ -44,6 +44,7 @@ export function RoadsDataEntryForm({
   const [nameOfDivision, setNameOfDivision] = useState('');
   const [scheme, setScheme] = useState('');
   const [block, setBlock] = useState('');
+  const [gpWard, setGpWard] = useState('');
   const [lengthKm, setLengthKm] = useState('');
   const [startLat, setStartLat] = useState('');
   const [startLng, setStartLng] = useState('');
@@ -68,6 +69,7 @@ export function RoadsDataEntryForm({
     setNameOfDivision('');
     setScheme('');
     setBlock('');
+    setGpWard('');
     setLengthKm('');
     setStartLat('');
     setStartLng('');
@@ -98,6 +100,7 @@ export function RoadsDataEntryForm({
     );
     setScheme(String(attrs.scheme ?? attrs.scheme_name ?? ''));
     setBlock(String(attrs.block ?? editingRoad.address ?? ''));
+    setGpWard(String(attrs.gp_ward ?? attrs.gpward ?? ''));
     setLengthKm(String(attrs.length_km ?? ''));
     setStartLat(String(attrs.start_lat ?? fallbackLat));
     setStartLng(String(attrs.start_lng ?? fallbackLng));
@@ -168,6 +171,7 @@ export function RoadsDataEntryForm({
         description: roadSector.trim() ? `Road sector: ${roadSector.trim()}` : undefined,
         attributes: {
           block: block.trim() || null,
+          gp_ward: gpWard.trim() || null,
           road_code: roadCode.trim() || null,
           road_sector: roadSector.trim() || null,
           name_of_division: nameOfDivision.trim() || null,
@@ -231,6 +235,7 @@ export function RoadsDataEntryForm({
         <input className="rounded border border-border px-3 py-2" placeholder="Name of division" value={nameOfDivision} onChange={(e) => setNameOfDivision(e.target.value)} />
         <input className="rounded border border-border px-3 py-2" placeholder="Scheme" value={scheme} onChange={(e) => setScheme(e.target.value)} />
         <input className="rounded border border-border px-3 py-2" placeholder="Block" value={block} onChange={(e) => setBlock(e.target.value)} />
+        <input className="rounded border border-border px-3 py-2" placeholder="GP/Ward" value={gpWard} onChange={(e) => setGpWard(e.target.value)} />
         <input className="rounded border border-border px-3 py-2" placeholder="Length (in km)" value={lengthKm} onChange={(e) => setLengthKm(e.target.value)} />
         <input className="rounded border border-border px-3 py-2" placeholder="Start latitude *" value={startLat} onChange={(e) => setStartLat(e.target.value)} />
         <input className="rounded border border-border px-3 py-2" placeholder="Start longitude *" value={startLng} onChange={(e) => setStartLng(e.target.value)} />

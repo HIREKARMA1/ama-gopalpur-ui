@@ -9,7 +9,7 @@ import {
   Polyline,
   Polygon,
 } from '@react-google-maps/api';
-import { Info, Search, X } from 'lucide-react';
+import { ChevronDown, Info, Search, SlidersHorizontal, X } from 'lucide-react';
 import {
   GOPALPUR_BOUNDS,
   GOPALPUR_CENTER,
@@ -270,6 +270,7 @@ export interface RoadFeature {
     roadName?: string;
     code?: string;
     block?: string;
+    gpWard?: string;
     roadSector?: string;
     nameOfDivision?: string | null;
     scheme?: string | null;
@@ -405,6 +406,10 @@ export function ConstituencyMap({
   /** When set, only show drain polylines of this kind (Drainage legend). */
   const [drainKindFilter, setDrainKindFilter] = useState<DrainLineKind | null>(null);
   const [selectedBlockFilter, setSelectedBlockFilter] = useState<string>('ALL');
+  const [selectedGpWardFilter, setSelectedGpWardFilter] = useState<string>('ALL');
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isMobileBlockDropdownOpen, setIsMobileBlockDropdownOpen] = useState(false);
+  const [isMobileGpWardDropdownOpen, setIsMobileGpWardDropdownOpen] = useState(false);
   const [isStreetViewOpen, setIsStreetViewOpen] = useState(false);
   const [isStreetInfoOpen, setIsStreetInfoOpen] = useState(false);
   const [streetViewPosition, setStreetViewPosition] = useState<{ lat: number; lng: number } | null>(null);
@@ -679,11 +684,35 @@ export function ConstituencyMap({
     });
   }, [roads, selectedBlockFilter]);
 
+  const roadGpWardOptions = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'ROADS') {
+      return [{ value: 'ALL', label: language === 'or' ? 'ସମସ୍ତ GP/Ward' : 'All GP/Ward' }];
+    }
+    const values = Array.from(
+      new Set(
+        roads
+          .map((road) => String(road.properties?.gpWard ?? '').trim())
+          .filter((value) => value.length > 0),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+    return [
+      { value: 'ALL', label: language === 'or' ? 'ସମସ୍ତ GP/Ward' : 'All GP/Ward' },
+      ...values.map((value) => ({ value, label: value })),
+    ];
+  }, [selectedDepartmentCode, language, roads]);
+
+  const roadsByBlockAndGpWard = useMemo(() => {
+    if (selectedGpWardFilter === 'ALL') return roadsByBlock;
+    return roadsByBlock.filter(
+      (road) => String(road.properties?.gpWard ?? '').trim() === selectedGpWardFilter,
+    );
+  }, [roadsByBlock, selectedGpWardFilter]);
+
   const roadLegendTypes = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'ROADS') return [] as string[];
     return Array.from(
       new Set(
-        roadsByBlock
+        roadsByBlockAndGpWard
           .map((road) =>
             normalizeRoadLegendSector(
               road.properties?.roadSector as string,
@@ -693,11 +722,11 @@ export function ConstituencyMap({
           .filter((v) => v.length > 0),
       ),
     ).sort();
-  }, [roadsByBlock, selectedDepartmentCode]);
+  }, [roadsByBlockAndGpWard, selectedDepartmentCode]);
 
   const roadTypeCounts = useMemo(() => {
     const acc: Record<string, number> = {};
-    for (const road of roadsByBlock) {
+    for (const road of roadsByBlockAndGpWard) {
       const type = normalizeRoadLegendSector(
         road.properties?.roadSector as string,
         road.properties?.code as string,
@@ -706,7 +735,7 @@ export function ConstituencyMap({
       acc[type] = (acc[type] ?? 0) + 1;
     }
     return acc;
-  }, [roadsByBlock]);
+  }, [roadsByBlockAndGpWard]);
 
   const isRoadsDept = selectedDepartmentCode?.toUpperCase() === 'ROADS';
   const isDrainageDept = selectedDepartmentCode?.toUpperCase() === 'DRAINAGE';
@@ -716,7 +745,7 @@ export function ConstituencyMap({
    * @react-google-maps/api often leaves Polylines on the map when filtered out via conditional render.
    */
   const googleMapLayerKey = isRoadsDept
-    ? `roads-${selectedBlockFilter}-${roadLegendFilterType ?? 'all'}`
+    ? `roads-${selectedBlockFilter}-${selectedGpWardFilter}-${roadLegendFilterType ?? 'all'}`
     : isDrainageDept
       ? `drainage-${drainKindFilter ?? 'all'}`
       : 'orgs';
@@ -735,6 +764,10 @@ export function ConstituencyMap({
     setRoadLegendFilterType(null);
     setDrainKindFilter(null);
     setSelectedBlockFilter('ALL');
+    setSelectedGpWardFilter('ALL');
+    setIsFilterModalOpen(false);
+    setIsMobileBlockDropdownOpen(false);
+    setIsMobileGpWardDropdownOpen(false);
     setSelectedRoad(null);
     setSelectedDrain(null);
     mapCameraPreserveRef.current = null;
@@ -744,7 +777,7 @@ export function ConstituencyMap({
     if (!isRoadsDept) return;
     preserveMapCameraForRemount();
     setSelectedRoad(null);
-  }, [isRoadsDept, selectedBlockFilter, preserveMapCameraForRemount]);
+  }, [isRoadsDept, selectedBlockFilter, selectedGpWardFilter, preserveMapCameraForRemount]);
 
   useEffect(() => {
     if (!selectedDepartmentCode || !initialLegendFilterType) return;
@@ -784,6 +817,7 @@ export function ConstituencyMap({
     const name = String(props.name ?? props.roadName ?? 'Road');
     const code = String(props.code ?? '');
     const block = String(props.block ?? '');
+    const gpWard = String(props.gpWard ?? '');
     const sector = String(props.roadSector ?? '');
     const year =
       typeof props.yearOfConstruction === 'number' && Number.isFinite(props.yearOfConstruction)
@@ -819,6 +853,7 @@ export function ConstituencyMap({
       name,
       code,
       block,
+      gpWard,
       sector,
       year,
       pointA,
@@ -1160,7 +1195,7 @@ export function ConstituencyMap({
   const filteredRoads = useMemo(() => {
     if (!isRoadsDept) return [] as RoadFeature[];
     const term = searchTerm.trim().toLowerCase();
-    return roadsByBlock.filter((road) => {
+    return roadsByBlockAndGpWard.filter((road) => {
       const name = String(road.properties?.name ?? road.properties?.roadName ?? '').toLowerCase();
       const code = String(road.properties?.code ?? '').toLowerCase();
       const block = String(road.properties?.block ?? '').toLowerCase();
@@ -1179,7 +1214,7 @@ export function ConstituencyMap({
         roadType.toLowerCase().includes(term)
       );
     });
-  }, [isRoadsDept, roadsByBlock, searchTerm, roadLegendFilterType]);
+  }, [isRoadsDept, roadsByBlockAndGpWard, searchTerm, roadLegendFilterType]);
 
   const focusOrganization = useCallback(
     (org: MapOrganization & { latitude: number; longitude: number }) => {
@@ -1504,13 +1539,176 @@ export function ConstituencyMap({
                 </div>
               )}
             </form>
+            <button
+              type="button"
+              onClick={() => setIsFilterModalOpen(true)}
+              className="pointer-events-auto sm:hidden flex h-10 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-sm"
+              aria-label="Open map filters"
+            >
+              <SlidersHorizontal size={14} />
+              {language === 'or' ? 'ଫିଲ୍ଟର' : 'Filter'}
+            </button>
+            <div className="hidden sm:flex sm:items-center sm:gap-2">
+              {showBlockFilter && (
+                <MapBlockFilter
+                  value={selectedBlockFilter}
+                  options={CONSTITUENCY_BLOCK_OPTIONS.map((o) => ({ ...o }))}
+                  onChange={setSelectedBlockFilter}
+                />
+              )}
+              {isRoadsDept && (
+                <MapBlockFilter
+                  value={selectedGpWardFilter}
+                  options={roadGpWardOptions}
+                  onChange={setSelectedGpWardFilter}
+                  label="GP/Ward"
+                  labelOffsetClassName="left-[74px]"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {selectedDepartmentCode && isFilterModalOpen && (
+        <div className="fixed inset-0 z-[120] sm:hidden">
+          <button
+            type="button"
+            aria-label="Close filters"
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setIsFilterModalOpen(false)}
+          />
+          <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-2xl bg-white p-4 pb-5 shadow-2xl">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-800">
+                {language === 'or' ? 'ମ୍ୟାପ ଫିଲ୍ଟର' : 'Map Filters'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsFilterModalOpen(false);
+                  setIsMobileBlockDropdownOpen(false);
+                  setIsMobileGpWardDropdownOpen(false);
+                }}
+                className="rounded border border-slate-200 px-2 py-1 text-[11px] text-slate-600"
+              >
+                {language === 'or' ? 'ବନ୍ଦ କରନ୍ତୁ' : 'Close'}
+              </button>
+            </div>
             {showBlockFilter && (
-              <MapBlockFilter
-                value={selectedBlockFilter}
-                options={CONSTITUENCY_BLOCK_OPTIONS.map((o) => ({ ...o }))}
-                onChange={setSelectedBlockFilter}
-              />
+              <label className="mb-3 block text-xs text-slate-600">
+                <span className="mb-1 block font-medium">{language === 'or' ? 'ବ୍ଲକ' : 'Block'}</span>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileBlockDropdownOpen((prev) => !prev);
+                      setIsMobileGpWardDropdownOpen(false);
+                    }}
+                    className="flex w-full items-center justify-between rounded border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                  >
+                    <span>
+                      {CONSTITUENCY_BLOCK_OPTIONS.find((o) => o.value === selectedBlockFilter)?.label ??
+                        CONSTITUENCY_BLOCK_OPTIONS[0]?.label}
+                    </span>
+                    <ChevronDown size={14} className={`transition-transform ${isMobileBlockDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isMobileBlockDropdownOpen && (
+                    <div className="mt-1 max-h-44 overflow-y-auto rounded border border-slate-200 bg-white shadow-lg">
+                      {CONSTITUENCY_BLOCK_OPTIONS.map((o) => {
+                        const active = selectedBlockFilter === o.value;
+                        return (
+                          <button
+                            key={o.value}
+                            type="button"
+                            onClick={() => {
+                              setSelectedBlockFilter(o.value);
+                              setIsMobileBlockDropdownOpen(false);
+                            }}
+                            className={`block w-full border-b border-slate-100 px-3 py-2 text-left text-sm last:border-b-0 ${
+                              active
+                                ? 'bg-primary/10 font-medium text-primary'
+                                : 'text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            {o.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </label>
             )}
+            {isRoadsDept && (
+              <label className="mb-4 block text-xs text-slate-600">
+                <span className="mb-1 block font-medium">GP/Ward</span>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileGpWardDropdownOpen((prev) => !prev);
+                      setIsMobileBlockDropdownOpen(false);
+                    }}
+                    className="flex w-full items-center justify-between rounded border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                  >
+                    <span>
+                      {roadGpWardOptions.find((o) => o.value === selectedGpWardFilter)?.label ??
+                        roadGpWardOptions[0]?.label}
+                    </span>
+                    <ChevronDown size={14} className={`transition-transform ${isMobileGpWardDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isMobileGpWardDropdownOpen && (
+                    <div className="mt-1 max-h-44 overflow-y-auto rounded border border-slate-200 bg-white shadow-lg">
+                      {roadGpWardOptions.map((o) => {
+                        const active = selectedGpWardFilter === o.value;
+                        return (
+                          <button
+                            key={o.value}
+                            type="button"
+                            onClick={() => {
+                              setSelectedGpWardFilter(o.value);
+                              setIsMobileGpWardDropdownOpen(false);
+                            }}
+                            className={`block w-full border-b border-slate-100 px-3 py-2 text-left text-sm last:border-b-0 ${
+                              active
+                                ? 'bg-primary/10 font-medium text-primary'
+                                : 'text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            {o.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </label>
+            )}
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedBlockFilter('ALL');
+                  setSelectedGpWardFilter('ALL');
+                  setIsMobileBlockDropdownOpen(false);
+                  setIsMobileGpWardDropdownOpen(false);
+                }}
+                className="rounded border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700"
+              >
+                {language === 'or' ? 'ରିସେଟ୍' : 'Reset'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsFilterModalOpen(false);
+                  setIsMobileBlockDropdownOpen(false);
+                  setIsMobileGpWardDropdownOpen(false);
+                }}
+                className="rounded bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
+              >
+                {language === 'or' ? 'ଲାଗୁ କରନ୍ତୁ' : 'Apply'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1566,7 +1764,7 @@ export function ConstituencyMap({
             }}
           />
           {showContent && isRoadsDept &&
-            roadsByBlock.map((road, idx) => {
+            roadsByBlockAndGpWard.map((road, idx) => {
               const path = roadPaths[idx] ?? [];
               if (path.length < 2) return null;
               const name = road.properties?.name ?? road.properties?.roadName ?? 'Road';
@@ -1656,7 +1854,8 @@ export function ConstituencyMap({
             const [lng, lat] = first;
             const name = selectedRoad.properties?.name ?? selectedRoad.properties?.roadName ?? 'Road';
             const code = selectedRoad.properties?.code ?? '';
-            const block = selectedRoad.properties?.block ?? '';
+              const block = selectedRoad.properties?.block ?? '';
+              const gpWard = String(selectedRoad.properties?.gpWard ?? '');
             const roadType = normalizeRoadLegendSector(
               String(selectedRoad.properties?.roadSector ?? ''),
               String(selectedRoad.properties?.code ?? ''),
@@ -1684,6 +1883,11 @@ export function ConstituencyMap({
                         {block ? (
                           <MapCalloutMetaMuted label={`${t('map.info.block', language)}:`}>
                             {block}
+                          </MapCalloutMetaMuted>
+                        ) : null}
+                        {gpWard ? (
+                          <MapCalloutMetaMuted label="GP/Ward:">
+                            {gpWard}
                           </MapCalloutMetaMuted>
                         ) : null}
                       </>
@@ -1858,6 +2062,7 @@ export function ConstituencyMap({
                     <p><span className="font-semibold">Year of construction:</span> {selectedRoadStreetInfo.year || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Road code:</span> {selectedRoadStreetInfo.code || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Block:</span> {selectedRoadStreetInfo.block || 'Requested from Road Dept'}</p>
+                    <p><span className="font-semibold">GP/Ward:</span> {selectedRoadStreetInfo.gpWard || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Last maintenance:</span> {selectedRoadStreetInfo.lastMaintenanceDate || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Issues observed:</span> {selectedRoadStreetInfo.issues || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Remarks:</span> {selectedRoadStreetInfo.remarks || 'Requested from Road Dept'}</p>
@@ -2188,7 +2393,7 @@ export function ConstituencyMap({
           })}
         </MapLegendPanel>
       )}
-      {isRoadsDept && roadsByBlock.length > 0 && (
+      {isRoadsDept && roadsByBlockAndGpWard.length > 0 && (
         <MapLegendPanel className="pointer-events-auto z-[45] md:max-w-[220px]">
           {roadLegendTypes.map((type) => {
             const isSelected = roadLegendFilterType === type;
