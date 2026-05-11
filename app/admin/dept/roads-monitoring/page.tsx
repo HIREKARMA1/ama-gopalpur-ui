@@ -18,6 +18,7 @@ type RoadEntry = {
   id: number;
   name: string;
   block: string;
+  gpWard: string;
   roadCode: string;
   roadSector: string;
   nameOfDivision: string;
@@ -40,6 +41,7 @@ type RoadEntry = {
 
 type RoadCsvRow = {
   block: string;
+  gpWard: string;
   roadName: string;
   roadCode: string;
   roadSector: string;
@@ -59,7 +61,7 @@ type RoadCsvRow = {
 };
 
 const ROAD_TEMPLATE_HEADER =
-  'block,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED';
+  'block,GP/WARD,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED';
 
 const PAGE_SIZE = 20;
 
@@ -148,6 +150,7 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
 
   const indexes = {
     block: idx('block', 'ulb_block'),
+    gpWard: idx('gp/ward', 'gp ward', 'gp_ward', 'ward', 'gp'),
     roadName: idx('road name', 'road_name', 'name of road', 'name'),
     roadCode: idx('road code', 'road_code', 'code'),
     roadSector: idx(
@@ -194,6 +197,7 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
 
     const roadName = get(indexes.roadName);
     const block = get(indexes.block);
+    const gpWard = get(indexes.gpWard);
     let startLat = get(indexes.startLat);
     let startLng = get(indexes.startLng);
     let endLat = get(indexes.endLat);
@@ -224,6 +228,7 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
 
     rows.push({
       block,
+      gpWard,
       roadName,
       roadCode: get(indexes.roadCode),
       roadSector: get(indexes.roadSector),
@@ -266,9 +271,11 @@ export default function RoadsMonitoringPage() {
   const [editingRoadId, setEditingRoadId] = useState<number | null>(null);
   const [searchText, setSearchText] = useState('');
   const [blockFilter, setBlockFilter] = useState('');
+  const [gpWardFilter, setGpWardFilter] = useState('');
   const [sectorFilter, setSectorFilter] = useState('');
 
   const [block, setBlock] = useState('');
+  const [gpWard, setGpWard] = useState('');
   const [roadName, setRoadName] = useState('');
   const [roadCode, setRoadCode] = useState('');
   const [roadSector, setRoadSector] = useState('');
@@ -335,6 +342,7 @@ export default function RoadsMonitoringPage() {
           id: org.id,
           name: org.name,
           block: String(attrs.block ?? ''),
+          gpWard: String(attrs.gp_ward ?? attrs.gpward ?? ''),
           roadCode: String(attrs.road_code ?? ''),
           roadSector: String(attrs.road_sector ?? ''),
           nameOfDivision: String(attrs.name_of_division ?? attrs.division_name ?? attrs.division ?? ''),
@@ -366,11 +374,13 @@ export default function RoadsMonitoringPage() {
     const q = searchText.trim().toLowerCase();
     return tableRows.filter((row) => {
       if (blockFilter && row.block !== blockFilter) return false;
+      if (gpWardFilter && row.gpWard !== gpWardFilter) return false;
       if (sectorFilter && row.roadSector !== sectorFilter) return false;
       if (!q) return true;
       const hay = [
         row.name,
         row.block,
+        row.gpWard,
         row.roadCode,
         row.roadSector,
         row.nameOfDivision,
@@ -382,7 +392,7 @@ export default function RoadsMonitoringPage() {
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [tableRows, searchText, blockFilter, sectorFilter]);
+  }, [tableRows, searchText, blockFilter, gpWardFilter, sectorFilter]);
 
   const totalRows = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
@@ -393,6 +403,7 @@ export default function RoadsMonitoringPage() {
   const resetForm = () => {
     setBlock('');
     setRoadName('');
+    setGpWard('');
     setRoadCode('');
     setRoadSector('');
     setNameOfDivision('');
@@ -435,6 +446,7 @@ export default function RoadsMonitoringPage() {
       description: row.roadSector ? `Road sector: ${row.roadSector}` : undefined,
       attributes: {
         block: row.block || null,
+        gp_ward: row.gpWard || null,
         road_code: row.roadCode || null,
         road_sector: row.roadSector || null,
         name_of_division: row.nameOfDivision || null,
@@ -489,6 +501,7 @@ export default function RoadsMonitoringPage() {
       const wasEditing = editingRoadId != null;
       const formRow: RoadCsvRow = {
         block,
+        gpWard,
         roadName,
         roadCode,
         roadSector,
@@ -527,6 +540,7 @@ export default function RoadsMonitoringPage() {
     setEditingRoadId(row.id);
     setBlock(row.block);
     setRoadName(row.name);
+    setGpWard(row.gpWard);
     setRoadCode(row.roadCode);
     setRoadSector(row.roadSector);
     setNameOfDivision(row.nameOfDivision);
@@ -700,6 +714,7 @@ export default function RoadsMonitoringPage() {
           const roadName = String(p.roadName ?? p.name ?? '').trim();
           const roadCode = String(p.code ?? '').trim();
           const blockName = String(p.block ?? '').trim();
+          const gpWardName = String(p.gp_ward ?? p.gpWard ?? '').trim();
           if (!roadName || first.length < 2 || last.length < 2) continue;
 
           const key = `${roadName.toUpperCase()}__${roadCode.toUpperCase()}`;
@@ -727,6 +742,7 @@ export default function RoadsMonitoringPage() {
               description: p.type ? `Road sector: ${String(p.type)}` : undefined,
               attributes: {
                 block: blockName || null,
+                gp_ward: gpWardName || null,
                 road_code: roadCode || null,
                 road_sector: p.type ? String(p.type) : null,
                 length_km: null,
@@ -772,7 +788,7 @@ export default function RoadsMonitoringPage() {
 
   const handleDownloadTemplate = () => {
     const example =
-      'Rangailunda,Badakusthali to Palligumula,RR(VR)L-044,RD,Rangailunda Division,PMGSY,4.2,"84.854087 19.340684;84.852296 19.335599",19.340684,84.854087,19.335599,84.852296,Badakusthali,Palligumula,2019,5.5,2024-03-10,Arterial,Both-side drains,Signage+Markings,None';
+      'Rangailunda,Badakusthali GP,Badakusthali to Palligumula,RR(VR)L-044,RD,Rangailunda Division,PMGSY,4.2,"84.854087 19.340684;84.852296 19.335599",19.340684,84.854087,19.335599,84.852296,Badakusthali,Palligumula,2019,5.5,2024-03-10,Arterial,Both-side drains,Signage+Markings,None';
     const blob = new Blob([`${ROAD_TEMPLATE_HEADER}\n${example}\n`], {
       type: 'text/csv;charset=utf-8;',
     });
@@ -825,6 +841,10 @@ export default function RoadsMonitoringPage() {
             <label className="space-y-1">
               <span className="font-medium text-slate-700">block</span>
               <input className="w-full rounded border px-3 py-2" value={block} onChange={(e) => setBlock(e.target.value)} />
+            </label>
+            <label className="space-y-1">
+              <span className="font-medium text-slate-700">GP/WARD</span>
+              <input className="w-full rounded border px-3 py-2" value={gpWard} onChange={(e) => setGpWard(e.target.value)} />
             </label>
             <label className="space-y-1 lg:col-span-2">
               <span className="font-medium text-slate-700">ROAD NAME *</span>
@@ -993,6 +1013,19 @@ export default function RoadsMonitoringPage() {
                 ))}
               </select>
               <select
+                value={gpWardFilter}
+                onChange={(e) => {
+                  setGpWardFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="rounded border px-2 py-1"
+              >
+                <option value="">All GP/Ward</option>
+                {[...new Set(tableRows.map((r) => r.gpWard).filter(Boolean))].map((v) => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </select>
+              <select
                 value={sectorFilter}
                 onChange={(e) => {
                   setSectorFilter(e.target.value);
@@ -1005,12 +1038,13 @@ export default function RoadsMonitoringPage() {
                   <option key={v} value={v}>{v}</option>
                 ))}
               </select>
-              {(searchText || blockFilter || sectorFilter) && (
+              {(searchText || blockFilter || gpWardFilter || sectorFilter) && (
                 <button
                   type="button"
                   onClick={() => {
                     setSearchText('');
                     setBlockFilter('');
+                    setGpWardFilter('');
                     setSectorFilter('');
                     setPage(1);
                   }}
@@ -1028,6 +1062,7 @@ export default function RoadsMonitoringPage() {
                   <th className="px-3 py-2 text-left">#</th>
                   <th className="px-3 py-2 text-left">ROAD NAME</th>
                   <th className="px-3 py-2 text-left">block</th>
+                  <th className="px-3 py-2 text-left">GP/WARD</th>
                   <th className="px-3 py-2 text-left">ROAD CODE</th>
                   <th className="px-3 py-2 text-left">ROAD SECTOR</th>
                   <th className="px-3 py-2 text-left">NAME OF DIVISION</th>
@@ -1046,7 +1081,7 @@ export default function RoadsMonitoringPage() {
               <tbody>
                 {paginated.length === 0 && (
                   <tr>
-                    <td colSpan={17} className="px-4 py-10 text-center italic text-slate-400">
+                    <td colSpan={18} className="px-4 py-10 text-center italic text-slate-400">
                       No road records found.
                     </td>
                   </tr>
@@ -1056,6 +1091,7 @@ export default function RoadsMonitoringPage() {
                     <td className="px-3 py-2">{start + idx + 1}</td>
                     <td className="px-3 py-2 font-medium text-slate-800">{row.name || '—'}</td>
                     <td className="px-3 py-2">{row.block || '—'}</td>
+                    <td className="px-3 py-2">{row.gpWard || '—'}</td>
                     <td className="px-3 py-2">{row.roadCode || '—'}</td>
                     <td className="px-3 py-2">{row.roadSector || '—'}</td>
                     <td className="px-3 py-2">{row.nameOfDivision || '—'}</td>
