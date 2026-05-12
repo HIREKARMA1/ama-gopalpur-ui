@@ -202,7 +202,11 @@ export function PsAboutSection({
   const schoolName = getText(profile, 'school_name', language) || org.name || EMPTY;
   const aboutText = getText(profile, 'about_short', language) || asString(profile.description) || EMPTY;
   const headmasterMessage = getText(profile, 'headmaster_message', language) || EMPTY;
-  const headmasterName = asString(profile.name_of_hm) || EMPTY;
+  const headmasterName =
+    asString(profile.name_of_hm) ||
+    asString(profile.principal_name) ||
+    asString(profile.vice_chancellor_name) ||
+    EMPTY;
   const headmasterTitle =
     leaderLabels?.title ??
     (aboutLeaderRole === 'secretary' ? (language === 'od' ? 'ସଚିବ' : 'Secretary') : language === 'od' ? 'ପ୍ରଧାନଶିକ୍ଷକ' : 'Headmaster');
@@ -220,8 +224,16 @@ export function PsAboutSection({
   const experience = asString(profile.hm_experience) || '—';
   const pastExperience = getText(profile, 'hm_past_experience', language) || asString(profile.hm_past_experience_en) || EMPTY;
   const currentExperience = getText(profile, 'hm_current_experience', language) || asString(profile.hm_current_experience_en) || EMPTY;
-  const headmasterContact = asString(profile.headmaster_contact) || asString(profile.contact_of_hm) || '—';
-  const headmasterEmail = asString(profile.headmaster_email) || asString(profile.contact_email) || '—';
+  const headmasterContact =
+    asString(profile.headmaster_contact) ||
+    asString(profile.contact_of_hm) ||
+    asString(profile.principal_contact) ||
+    '—';
+  const headmasterEmail =
+    asString(profile.headmaster_email) ||
+    asString(profile.contact_email) ||
+    asString(profile.principal_email) ||
+    '—';
   const aboutImage = asString(profile.about_image) || sliderImages[0] || '';
   const visionText = getText(profile, 'vision_text', language) || EMPTY;
   const missionText = getText(profile, 'mission_text', language) || EMPTY;

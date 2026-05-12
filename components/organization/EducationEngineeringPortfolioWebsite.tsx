@@ -331,7 +331,14 @@ export function EducationEngineeringPortfolioWebsite({
   const subDepartment = (org.sub_department || '').toUpperCase();
   const isIti = subDepartment === 'ITI';
   const isUniversity = subDepartment === 'UNIVERSITY';
-  const institutionLabel = isUniversity ? 'University' : isIti ? 'Industrial Training Institute' : 'Engineering College';
+  const isDegreeCollege = subDepartment === 'DEGREE_COLLEGE';
+  const institutionLabel = isUniversity
+    ? 'University'
+    : isDegreeCollege
+      ? 'College'
+      : isIti
+        ? 'Industrial Training Institute'
+        : 'Engineering College';
   const headRole = isUniversity ? 'Vice Chancellor' : 'Principal';
   const heroSlides = [profile.hero_slide_1, profile.hero_slide_2, profile.hero_slide_3]
     .map((it) => asString(it))
@@ -421,7 +428,7 @@ export function EducationEngineeringPortfolioWebsite({
           ]}
         />
 
-        <TrainingPlacementSection profile={profile} isIti={isIti} />
+        {!isDegreeCollege ? <TrainingPlacementSection profile={profile} isIti={isIti} /> : null}
 
         {studentLifeCards.length ? (
           <PsFacilitiesCarouselSection

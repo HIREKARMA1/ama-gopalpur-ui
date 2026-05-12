@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
+import { useEffect, useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 import { compressImage } from '../../lib/imageCompression';
 import { organizationsApi } from '../../services/api';
 
@@ -211,6 +211,7 @@ export function EducationEngineeringPortfolioAdminForm({
   institutionLabel = 'College',
   headRoleLabel = 'Principal',
   isIti = false,
+  hidePlacementSection = false,
 }: {
   organizationId: number | null;
   values: EngineeringFormFields;
@@ -219,6 +220,7 @@ export function EducationEngineeringPortfolioAdminForm({
   institutionLabel?: string;
   headRoleLabel?: string;
   isIti?: boolean;
+  hidePlacementSection?: boolean;
 }) {
   const [activeSection, setActiveSection] = useState<SectionId>('hero');
   const patch = (p: Record<string, string | undefined>) =>
@@ -237,6 +239,17 @@ export function EducationEngineeringPortfolioAdminForm({
   const galleryRows = useMemo(() => parseRows(values[KEY.photoGalleryJson] || ''), [values]);
   const adminRows = useMemo(() => parseRows(values[KEY.adminCardsJson] || ''), [values]);
 
+  const sectionRows = useMemo(
+    () => (hidePlacementSection ? SECTION_ROWS.filter((s) => s.id !== 'placement') : SECTION_ROWS),
+    [hidePlacementSection],
+  );
+
+  useEffect(() => {
+    if (hidePlacementSection && activeSection === 'placement') {
+      setActiveSection('hero');
+    }
+  }, [hidePlacementSection, activeSection]);
+
   return (
     <div className="md:col-span-2 space-y-3 rounded-md border border-border bg-background-muted/40 p-3">
       <p className="text-[11px] text-text-muted">
@@ -244,7 +257,7 @@ export function EducationEngineeringPortfolioAdminForm({
       </p>
       <div className="rounded border border-border bg-muted/30 p-2">
         <div className="flex max-h-[8.5rem] flex-col gap-1 overflow-y-auto sm:max-h-none sm:flex-row sm:flex-wrap">
-          {SECTION_ROWS.map((s) => (
+          {sectionRows.map((s) => (
             <button
               key={s.id}
               type="button"
@@ -634,7 +647,7 @@ export function EducationEngineeringPortfolioAdminForm({
         </SectionBox>
       ) : null}
 
-      {activeSection === 'placement' ? (
+      {activeSection === 'placement' && !hidePlacementSection ? (
         <SectionBox title="Training and Placement">
           <div className="grid gap-2 md:grid-cols-2">
             <ImgSlot
