@@ -58,6 +58,7 @@ const EDUCATION_SUB_DEPT_KEYS: Record<string, MessageKey> = {
   ENGINEERING_COLLEGE: 'map.edu.sub.engineeringCollege',
   ITI: 'map.edu.sub.iti',
   UNIVERSITY: 'map.edu.sub.university',
+  DEGREE_COLLEGE: 'map.edu.sub.degreeCollege',
   DIPLOMA_COLLEGE: 'map.edu.sub.diplomaCollege',
 };
 const HEALTH_TYPE_KEYS: Record<string, MessageKey> = {
@@ -136,6 +137,7 @@ const EDUCATION_SUB_DEPT_DOT_COLORS: Record<string, string> = {
   ENGINEERING_COLLEGE: '#22c55e',
   ITI: '#0ea5e9',
   UNIVERSITY: '#f97316',
+  DEGREE_COLLEGE: '#ea580c',
   DIPLOMA_COLLEGE: '#8b5cf6',
 };
 

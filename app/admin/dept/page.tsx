@@ -81,6 +81,35 @@ const EDUCATION_DIPLOMA_CSV_HEADER =
 
 const EDUCATION_UNIVERSITY_CSV_HEADER =
   'UNIVERSITY NAME,UNIVERSITY TYPE (STATE/CENTRAL/PRIVATE/DEEMED),TEACHING-CUM-AFFILIATING (YES/NO),ESTABLISHED YEAR,OWNERSHIP (GOVT/PRIVATE),NAAC GRADE,UGC 2(F) (YES/NO),UGC 12(B) (YES/NO),AISHE CODE,NIRF UNIVERSITY RANK,NIRF YEAR,STATE,DISTRICT,BLOCK/ULB,GP/WARD,VILLAGE,PIN CODE,LATITUDE,LONGITUDE,WEBSITE,UNIVERSITY EMAIL,PHONE NUMBER,CHANCELLOR NAME,VICE-CHANCELLOR NAME,REGISTRAR NAME,FINANCE OFFICER NAME,CONTROLLER OF EXAMS NAME,IQAC COORDINATOR NAME,NODAL OFFICER (AISHE) NAME,NODAL OFFICER CONTACT,CAMPUS AREA (ACRES),NO OF CAMPUSES/UNITS,OFF-CAMPUS CENTRES (COUNT),OFF-CAMPUS LOCATIONS (LIST),DISTANCE EDUCATION (YES/NO),ONLINE PROGRAMMES (YES/NO),TOTAL FACULTIES,TOTAL DEPARTMENTS,DEPARTMENTS (COMMA SEPARATED),TOTAL RESEARCH CENTRES,RESEARCH CENTRES (COMMA SEPARATED),TOTAL CENTRES OF EXCELLENCE,CENTRES OF EXCELLENCE (COMMA SEPARARTED),TOTAL CONSTITUENT COLLEGES,TOTAL AFFILIATED COLLEGES,TOTAL UG PROGRAMMES,UG PROGRAMMES (COMMA SEPARATED),TOTAL PG PROGRAMMES,PG PROGRAMMES (COMMA SEPARATED),TOTAL INTEGRATED PROGRAMMES,INTEGRATED PROGRAMMES (COMMA SEPARATED),TOTAL DIPLOMA/CERTIFICATE PROGRAMMES,DIPLOMA/CERTIFICATE PROGRAMMES (COMMA SEPARATED),TOTAL PH.D. PROGRAMMES,PH.D. PROGRAMMES (COMMA SEPARATED),D.LITT./D.SC. (YES/NO),D.LITT./D.SC. (COMMA SEPARATED),TOTAL SANCTIONED STUDENT INTAKE UG,TOTAL SANCTIONED STUDENT INTAKE PG,ADMISSION MODE (ENTRANCE/MERIT/BOTH),ENTRANCE TEST NAME,ACADEMIC YEAR SYSTEM (SEMESTER/TRIMESTER/ANNUAL),RESULT DECLARATION TIMELINE,ACADEMIC CALENDAR (URL),EXAMINATION CELL (YES/NO),UG COMPLETION RATE (%),PG COMPLETION RATE (%),TOTAL STUDENT ENROLLMENT,UG STUDENT ENROLLMENT,PG STUDENT ENROLLMENT,PH.D. STUDENT ENROLLMENT,STUDENTS FROM OTHER STATES (%),FEMALE STUDENTS (%),SC STUDENTS (COUNT),ST STUDENTS (COUNT),OBC STUDENTS (COUNT),EWS STUDENTS (COUNT),GENERAL STUDENTS (COUNT),MINORITY STUDENTS (COUNT),PWD STUDENTS (COUNT),SCHOLARSHIPS (GOVT) (YES/NO),SCHOLARSHIPS (INSTITUTIONAL) (YES/NO),TOTAL TEACHING STAFF,TOTAL PERMANENT TEACHING STAFF,TOTAL CONTRACT/GUEST FACULTY,TOTAL TEACHING STAFF (PROF),TOTAL TEACHING STAFF (ASSOC PROF),TOTAL TEACHING STAFF (ASST PROF),TOTAL TEACHERS WITH PH.D. (COUNT),TOTAL TEACHERS WITH NET/SET (COUNT),STUDENT-TEACHER RATIO,NON-TEACHING STAFF (COUNT),TECHNICAL STAFF (COUNT),LIBRARY (YES/NO),CENTRAL LIBRARY NAME,LIBRARY BOOKS (COUNT),LIBRARY JOURNALS (COUNT),E-JOURNALS (YES/NO),E-BOOKS (YES/NO),LIBRARY SOFTWARE (KOHA/RFID/OTHER),DIGITAL LIBRARY (YES/NO),COMPUTER CENTRE (YES/NO),TOTAL COMPUTERS,WIFI CAMPUS (YES/NO),NKN CONNECTIVITY (YES/NO),SMART CLASSROOMS (COUNT),SEMINAR HALLS (COUNT),AUDITORIUM (YES/NO),LABORATORIES (COUNT),MAJOR EQUIPMENT/INSTRUMENTATION (LIST COMMA SEPARATED),WORKSHOPS (COUNT),HOSTELS (YES/NO),HOSTEL COUNT,HOSTEL CAPACITY BOYS,HOSTEL CAPACITY GIRLS,STAFF QUARTERS (YES/NO),GUEST HOUSE (YES/NO),HEALTH CENTRE (YES/NO),CANTEEN (YES/NO),BANK/ATM (YES/NO),SPORTS FACILITIES (YES/NO),PLAYGROUND (YES/NO),GYMNASIUM (YES/NO),TRANSPORT FACILITY (YES/NO),PARKING (YES/NO),SECURITY (YES/NO),CCTV (YES/NO),FIRE SAFETY (YES/NO),RAMP/ACCESSIBILITY (YES/NO),FACILITIES FOR PWD (LIST),DRINKING WATER (YES/NO),ELECTRICITY (YES/NO),POWER BACKUP (YES/NO),SOLAR (YES/NO),IQAC (YES/NO),GRIEVANCE CELL (YES/NO),ANTI-RAGGING CELL (YES/NO),ICC HEAD NAME,ICC HEAD CONTACT,ALUMNI ASSOCIATION (YES/NO),NSS (YES/NO),NCC (YES/NO),STUDENT CLUBS (LIST COMMA SEPARATED),CULTURAL ACTIVITIES (YES/NO),TECHNICAL FEST/EVENTS (LIST COMMA SEPARATED),INDUSTRY COLLABORATION (MoUs) (COUNT),MoUs (LIST COMMA SEPARATED),RESEARCH PROJECTS (COUNT),PUBLICATIONS (LAST YEAR),PATENTS FILED,PATENTS GRANTED,STARTUPS/INCUBATION (YES/NO),INCUBATION CENTRE NAME(LIST COMMA SEPARATED),PLACEMENT CELL (YES/NO),PLACEMENT OFFICER NAME,PLACEMENT OFFICER CONTACT,PLACEMENT % (LAST YEAR),MEDIAN SALARY (LPA),HIGHEST PACKAGE (LPA),STUDENTS TO HIGHER STUDIES (COUNT),MOOCs/SWAYAM/NPTEL (YES/NO),VALUE-ADDED COURSES (COUNT),NOTABLE AWARDS/ACHIEVEMENTS,DESCRIPTION\n';
+const EDUCATION_DEGREE_CSV_HEADER = (() => {
+  const excluded = new Set([
+    'UNIVERSITY TYPE (STATE/CENTRAL/PRIVATE/DEEMED)',
+    'TEACHING-CUM-AFFILIATING (YES/NO)',
+    'CHANCELLOR NAME',
+    'PLACEMENT CELL (YES/NO)',
+  ]);
+  const parts = EDUCATION_UNIVERSITY_CSV_HEADER.trim().replace(/\n$/, '').split(',').map((h) => h.trim()).filter((h) => !excluded.has(h));
+  const out: string[] = [];
+  let splitFirstUniversityName = false;
+  for (const h of parts) {
+    if (h === 'UNIVERSITY NAME' && !splitFirstUniversityName) {
+      splitFirstUniversityName = true;
+      out.push('COLLEGE NAME');
+      out.push('UNIVERSITY NAME');
+      continue;
+    }
+    if (h === 'UNIVERSITY EMAIL') {
+      out.push('COLLEGE EMAIL');
+      continue;
+    }
+    if (h === 'VICE-CHANCELLOR NAME') {
+      out.push('PRINCIPAL NAME');
+      continue;
+    }
+    out.push(h);
+  }
+  return `${out.join(',')}\n`;
+})();
 const ELECTRICITY_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID/CODE,OWNERSHIP,PARENT ORGANIZATION,HIERARCHY LEVEL,HOST INSTITUTION (IF TRAINING CENTER),ESTABLISHED YEAR,COMMISSIONED YEAR (SUBSTATIONS),FULL ADDRESS,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE DESIGNATION,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,OFFICE HOURS,TOLL-FREE/CUSTOMER CARE NUMBER,HELPLINE AVAILABLE (YES/NO),VOLTAGE LEVEL PRIMARY (kV),VOLTAGE LEVEL SECONDARY (kV),INSTALLED CAPACITY (MVA),NO OF TRANSFORMERS,TRANSFORMER RATINGS MVA (COMMA SEPARATED),NO OF INCOMING FEEDERS,NO OF OUTGOING FEEDERS,TOTAL FEEDERS,BAYS (COUNT),SWITCHGEAR TYPE (GIS/AIS/HYBRID),33kV FEEDER LENGTH (KM),11kV FEEDER LENGTH (KM),LT LINE LENGTH (KM),NO OF DISTRIBUTION TRANSFORMERS (DTs),DT TOTAL CAPACITY (kVA),FEEDER METERING (YES/NO),FEEDER METERS (COUNT),DT METERING (YES/NO),DT METERS (COUNT),SMART METERS INSTALLED (COUNT),PREPAID METERS (COUNT),CONSUMER METERS TOTAL (COUNT),CONSUMERS UNDER JURISDICTION (APPROX),CONSUMERS DOMESTIC (COUNT),CONSUMERS COMMERCIAL (COUNT),CONSUMERS INDUSTRIAL (COUNT),CONSUMERS AGRICULTURAL (COUNT),CONSUMERS OTHER (COUNT),HT CONSUMERS (COUNT),LT CONSUMERS (COUNT),CONNECTED LOAD (MW),AT&C LOSS PERCENT,BILLING EFFICIENCY PERCENT,COLLECTION EFFICIENCY PERCENT,HOURS OF SUPPLY RURAL,HOURS OF SUPPLY URBAN,COMPLAINTS REGISTERED LAST YEAR,COMPLAINTS REDRESSED LAST YEAR,CONSUMER CARE COUNTER (YES/NO),BILLING FACILITY (YES/NO),ONLINE PAYMENT (YES/NO),MOBILE APP (YES/NO),ONLINE COMPLAINT PORTAL (YES/NO),CUSTOMER CARE EMAIL,GRIEVANCE REDRESSAL FORUM (YES/NO),TOTAL STAFF (COUNT),ENGINEERS (COUNT),TECHNICAL STAFF (COUNT),LINEMEN (COUNT),CONTRACT STAFF (COUNT),ADMIN/OFFICE STAFF (COUNT),VILLAGES/LOCALITIES COVERED (COUNT),GPs COVERED (COUNT),AREA COVERED SQ KM,BUILDING TYPE (OWN/RENTED),TOTAL FLOORS,OFFICE AREA SQ FT,TRAINING CENTER (YES/NO),TRAINING CAPACITY SEATS,WORKSHOP/GARAGE (YES/NO),STORE (YES/NO),DG SET (YES/NO),SOLAR (YES/NO),VEHICLES (COUNT),TWO-WHEELERS (COUNT),ANNUAL REVENUE CR (APPROX),BILLING CR LAST YEAR,DATA AS ON (YYYY-MM-DD),REMARKS/DESCRIPTION\n';
 
@@ -127,9 +156,20 @@ const getEducationHeadersForSubDept = (subDept: string): string[] => {
       return splitHeader(EDUCATION_DIPLOMA_CSV_HEADER);
     case 'UNIVERSITY':
       return splitHeader(EDUCATION_UNIVERSITY_CSV_HEADER);
+    case 'DEGREE_COLLEGE':
+      return splitHeader(EDUCATION_DEGREE_CSV_HEADER);
     default:
       return [];
   }
+};
+
+/** Table filter + grid: skip CSV columns that duplicate the first org-name column. */
+const getEducationTableHeadersForSubDept = (subDept: string): string[] => {
+  const headers = getEducationHeadersForSubDept(subDept);
+  if (subDept === 'DEGREE_COLLEGE') {
+    return headers.filter((h) => h !== 'COLLEGE NAME');
+  }
+  return headers;
 };
 
 const EDUCATION_SCHOOL_SUB_DEPTS = [
@@ -566,7 +606,10 @@ export default function DepartmentAdminPage() {
         'Longitude',
       ];
     }
-    return ['Institution Name', ...getEducationHeadersForSubDept(educationSubDept)];
+    return [
+      educationSubDept === 'DEGREE_COLLEGE' ? 'College Name' : 'Institution Name',
+      ...getEducationTableHeadersForSubDept(educationSubDept),
+    ];
   }, [deptCode, educationSubDept]);
 
   useEffect(() => {
@@ -705,6 +748,10 @@ export default function DepartmentAdminPage() {
       const ep = educationProfiles[o.id];
       const fallback = (v: unknown) => (v != null && String(v).trim() !== '' ? String(v) : '');
       if (column === 'School Name' || column === 'Institution Name') return fallback(o.name);
+      if (column === 'College Name') {
+        const p = ep as Record<string, unknown> | undefined;
+        return fallback(p?.name_of_college ?? p?.college_name) || fallback(o.name);
+      }
       if (column === 'Latitude') return o.latitude != null ? o.latitude.toFixed(6) : '';
       if (column === 'Longitude') return o.longitude != null ? o.longitude.toFixed(6) : '';
 
@@ -1214,6 +1261,8 @@ export default function DepartmentAdminPage() {
           result = await educationApi.bulkItiCollegesCsv(file);
         } else if (educationSubDept === 'UNIVERSITY') {
           result = await educationApi.bulkUniversitiesCsv(file);
+        } else if (educationSubDept === 'DEGREE_COLLEGE') {
+          result = await educationApi.bulkDegreeCollegesCsv(file);
         } else if (educationSubDept === 'DIPLOMA_COLLEGE') {
           result = await educationApi.bulkDiplomaCollegesCsv(file);
         } else {
@@ -1515,9 +1564,15 @@ export default function DepartmentAdminPage() {
       } else if (educationSubDept === 'ITI') {
         csvContent = EDUCATION_ITI_CSV_HEADER;
         filename = 'education_iti_colleges_template.csv';
-      } else if (educationSubDept === 'UNIVERSITY') {
-        csvContent = EDUCATION_UNIVERSITY_CSV_HEADER;
-        filename = 'education_universities_template.csv';
+      } else if (educationSubDept === 'UNIVERSITY' || educationSubDept === 'DEGREE_COLLEGE') {
+        csvContent =
+          educationSubDept === 'DEGREE_COLLEGE'
+            ? EDUCATION_DEGREE_CSV_HEADER
+            : EDUCATION_UNIVERSITY_CSV_HEADER;
+        filename =
+          educationSubDept === 'UNIVERSITY'
+            ? 'education_universities_template.csv'
+            : 'education_degree_colleges_template.csv';
       } else if (educationSubDept === 'DIPLOMA_COLLEGE') {
         csvContent = EDUCATION_DIPLOMA_CSV_HEADER;
         filename = 'education_diploma_colleges_template.csv';
@@ -1676,6 +1731,7 @@ export default function DepartmentAdminPage() {
                     <option value="ENGINEERING_COLLEGE">Engineering College</option>
                     <option value="ITI">ITI</option>
                     <option value="UNIVERSITY">University</option>
+                    <option value="DEGREE_COLLEGE">Degree College</option>
                     <option value="DIPLOMA_COLLEGE">Diploma College</option>
                   </select>
                   <span className="text-text-muted">
@@ -3226,7 +3282,9 @@ export default function DepartmentAdminPage() {
                         ? 'Diploma College'
                         : educationSubDept === 'UNIVERSITY'
                           ? 'University'
-                          : 'Education'}{' '}
+                          : educationSubDept === 'DEGREE_COLLEGE'
+                            ? 'Degree College'
+                            : 'Education'}{' '}
                   entry
                 </h2>
                 <p className="mt-1 text-xs text-text-muted">
@@ -3248,6 +3306,8 @@ export default function DepartmentAdminPage() {
                           ? 'ITI NAME'
                           : educationSubDept === 'DIPLOMA_COLLEGE'
                             ? 'COLLEGE NAME'
+                            : educationSubDept === 'DEGREE_COLLEGE'
+                              ? 'COLLEGE NAME'
                             : educationSubDept === 'UNIVERSITY'
                               ? 'UNIVERSITY NAME'
                               : '';
@@ -3324,7 +3384,7 @@ export default function DepartmentAdminPage() {
                           profileData[key] = val;
                         }
                       });
-                      if (['ENGINEERING_COLLEGE', 'UNIVERSITY', 'ITI'].includes(educationSubDept)) {
+                      if (['ENGINEERING_COLLEGE', 'UNIVERSITY', 'DEGREE_COLLEGE', 'ITI'].includes(educationSubDept)) {
                         const extraKeys = [
                           'hero_primary_tagline_en',
                           'hero_slide_1',
@@ -3343,7 +3403,7 @@ export default function DepartmentAdminPage() {
                           'vision_text_en',
                           'mission_text_en',
                           'name_of_deans_pic_fic_oic_registrar',
-                          'placement_cell',
+                          ...(educationSubDept === 'DEGREE_COLLEGE' ? [] : (['placement_cell'] as const)),
                           'placement_officer_name',
                           'placement_officer_contact',
                           'placement_officer_email',
@@ -3374,6 +3434,25 @@ export default function DepartmentAdminPage() {
                           const v = eduFormValues[k];
                           if (v != null && String(v).trim() !== '') profileData[k] = v;
                         });
+                        if (educationSubDept === 'UNIVERSITY' || educationSubDept === 'DEGREE_COLLEGE') {
+                          const leadName = String(eduFormValues.name_of_hm || '').trim();
+                          if (leadName) profileData.principal_name = leadName;
+                          const leadContact = String(eduFormValues.headmaster_contact || '').trim();
+                          if (leadContact) profileData.principal_contact = leadContact;
+                          const leadEmail = String(eduFormValues.headmaster_email || '').trim();
+                          if (leadEmail) profileData.principal_email = leadEmail;
+                          const leadPhoto = String(eduFormValues.headmaster_photo || '').trim();
+                          if (leadPhoto) profileData.principal_photo = leadPhoto;
+                        }
+                        if (educationSubDept === 'DEGREE_COLLEGE') {
+                          const displayCollege = String(
+                            eduFormValues.name_of_college || eduFormValues[snakeFromHeader('COLLEGE NAME')] || '',
+                          ).trim();
+                          if (displayCollege) {
+                            profileData.name_of_college = displayCollege;
+                            profileData.college_name = displayCollege;
+                          }
+                        }
                         const periodFrom = String(eduFormValues.hm_period_from || '').trim();
                         const periodTo = String(eduFormValues.hm_period_to || '').trim();
                         const isCurrent = String(eduFormValues.hm_period_currently_continuing || '').toLowerCase() === 'true';
@@ -3407,14 +3486,23 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  {['ENGINEERING_COLLEGE', 'UNIVERSITY', 'ITI'].includes(educationSubDept) ? (
+                  {['ENGINEERING_COLLEGE', 'UNIVERSITY', 'DEGREE_COLLEGE', 'ITI'].includes(educationSubDept) ? (
                     <EducationEngineeringPortfolioAdminForm
                       organizationId={editingEducationId}
                       values={eduFormValues}
                       setValues={setEduFormValues}
-                      institutionLabel={educationSubDept === 'UNIVERSITY' ? 'University' : educationSubDept === 'ITI' ? 'ITI' : 'College'}
+                      institutionLabel={
+                        educationSubDept === 'UNIVERSITY'
+                          ? 'University'
+                          : educationSubDept === 'DEGREE_COLLEGE'
+                            ? 'College'
+                            : educationSubDept === 'ITI'
+                              ? 'ITI'
+                              : 'College'
+                      }
                       headRoleLabel={educationSubDept === 'UNIVERSITY' ? 'Vice Chancellor' : 'Principal'}
                       isIti={educationSubDept === 'ITI'}
+                      hidePlacementSection={educationSubDept === 'DEGREE_COLLEGE'}
                       profileImageControl={
                         <div className="space-y-1">
                           <label className="block text-text font-medium">Profile Image</label>
@@ -4312,7 +4400,9 @@ export default function DepartmentAdminPage() {
                           deptCode === 'EDUCATION'
                             ? isEducationSchoolSubDept(educationSubDept)
                               ? 'School Name'
-                              : 'Institution Name'
+                              : educationSubDept === 'DEGREE_COLLEGE'
+                                ? 'College Name'
+                                : 'Institution Name'
                             : deptCode === 'HEALTH'
                               ? 'Facility Name'
                               : deptCode === 'ELECTRICITY'
@@ -4464,7 +4554,7 @@ export default function DepartmentAdminPage() {
                       )}
                       {deptCode === 'EDUCATION' && !isEducationSchoolSubDept(educationSubDept) && (
                         <>
-                          {getEducationHeadersForSubDept(educationSubDept).map((header) => (
+                          {getEducationTableHeadersForSubDept(educationSubDept).map((header) => (
                             <th
                               key={header}
                               className="px-2 py-1 text-left font-medium text-text whitespace-nowrap"
@@ -4833,7 +4923,7 @@ export default function DepartmentAdminPage() {
                             )}
                             {deptCode === 'EDUCATION' && !isEducationSchoolSubDept(educationSubDept) && (
                               <>
-                                {getEducationHeadersForSubDept(educationSubDept).map((header) => {
+                                {getEducationTableHeadersForSubDept(educationSubDept).map((header) => {
                                   const key = snakeFromHeader(header);
                                   const val = ep ? ep[key] : undefined;
                                   const show = (v: unknown) =>
@@ -5601,7 +5691,7 @@ export default function DepartmentAdminPage() {
                                       const key = snakeFromHeader(h);
                                       values[key] = v(p?.[key] ?? o.attributes?.[key]);
                                     });
-                                    if (['ENGINEERING_COLLEGE', 'UNIVERSITY', 'ITI'].includes(educationSubDept)) {
+                                    if (['ENGINEERING_COLLEGE', 'UNIVERSITY', 'DEGREE_COLLEGE', 'ITI'].includes(educationSubDept)) {
                                       values.hero_primary_tagline_en = v(p?.hero_primary_tagline_en);
                                       values.hero_slide_1 = v(p?.hero_slide_1);
                                       values.hero_slide_2 = v(p?.hero_slide_2);
@@ -5619,7 +5709,7 @@ export default function DepartmentAdminPage() {
                                       values.vision_text_en = v(p?.vision_text_en);
                                       values.mission_text_en = v(p?.mission_text_en);
                                       values.name_of_deans_pic_fic_oic_registrar = v(p?.name_of_deans_pic_fic_oic_registrar);
-                                      values.placement_cell = v(p?.placement_cell);
+                                      if (educationSubDept !== 'DEGREE_COLLEGE') values.placement_cell = v(p?.placement_cell);
                                       values.placement_officer_name = v(p?.placement_officer_name);
                                       values.placement_officer_contact = v(p?.placement_officer_contact);
                                       values.placement_officer_email = v(p?.placement_officer_email);
@@ -5659,10 +5749,88 @@ export default function DepartmentAdminPage() {
                                       educationSubDept === 'ENGINEERING_COLLEGE' ? 'NAME OF COLLEGE' :
                                         educationSubDept === 'ITI' ? 'ITI NAME' :
                                           educationSubDept === 'DIPLOMA_COLLEGE' ? 'COLLEGE NAME' :
-                                            educationSubDept === 'UNIVERSITY' ? 'UNIVERSITY NAME' : '';
+                                            educationSubDept === 'DEGREE_COLLEGE' ? 'COLLEGE NAME' :
+                                            educationSubDept === 'UNIVERSITY'
+                                              ? 'UNIVERSITY NAME'
+                                              : '';
                                     if (nameHeader) {
                                       const nameKey = snakeFromHeader(nameHeader);
                                       if (!values[nameKey]) values[nameKey] = o.name;
+                                    }
+                                    if (educationSubDept === 'DEGREE_COLLEGE') {
+                                      const collegeKey = snakeFromHeader('COLLEGE NAME');
+                                      const uniKey = snakeFromHeader('UNIVERSITY NAME');
+                                      if (!String(values[collegeKey] ?? '').trim()) {
+                                        values[collegeKey] = v(
+                                          (p as Record<string, unknown>)?.college_name ??
+                                            p?.name_of_college ??
+                                            o.name,
+                                        );
+                                      }
+                                      if (!String(values[uniKey] ?? '').trim()) {
+                                        values[uniKey] = v(p?.university_name);
+                                      }
+                                      values.name_of_college = v(p?.name_of_college) || values[collegeKey] || values.name_of_college || o.name;
+                                    }
+                                    if (educationSubDept === 'UNIVERSITY' || educationSubDept === 'DEGREE_COLLEGE') {
+                                      const adminCards = Array.isArray(p?.engineering_admin_cards)
+                                        ? (p.engineering_admin_cards as Record<string, unknown>[])
+                                        : [];
+                                      const principalCard = adminCards.find((row) => {
+                                        const role = String(row?.designation ?? row?.role ?? '').toLowerCase();
+                                        return (
+                                          role.includes('principal') ||
+                                          (role.includes('vice') && role.includes('chancellor'))
+                                        );
+                                      });
+                                      if (!String(values.name_of_hm ?? '').trim()) {
+                                        values.name_of_hm =
+                                          v(p?.principal_name) ||
+                                          v(p?.vice_chancellor_name) ||
+                                          v(principalCard?.name);
+                                      }
+                                      if (!String(values.headmaster_contact ?? '').trim()) {
+                                        values.headmaster_contact =
+                                          v(p?.principal_contact) ||
+                                          v(p?.nodal_officer_aishe_contact) ||
+                                          v(p?.phone_number) ||
+                                          v(principalCard?.contact);
+                                      }
+                                      if (!String(values.headmaster_email ?? '').trim()) {
+                                        values.headmaster_email =
+                                          v(p?.principal_email) ||
+                                          v(p?.college_email) ||
+                                          v(p?.university_email) ||
+                                          v(principalCard?.email);
+                                      }
+                                      if (!String(values.headmaster_photo ?? '').trim()) {
+                                        values.headmaster_photo =
+                                          v(p?.principal_photo) ||
+                                          v(
+                                            typeof principalCard?.image === 'string'
+                                              ? principalCard.image
+                                              : undefined,
+                                          ) ||
+                                          v(
+                                            typeof principalCard?.photo === 'string'
+                                              ? principalCard.photo
+                                              : undefined,
+                                          );
+                                      }
+                                      const exp = v(p?.hm_experience);
+                                      if (exp && !String(values.hm_period_from ?? '').trim()) {
+                                        const fromTo = exp.match(/^(\d{4}-\d{2}-\d{2})\s+to\s+(\d{4}-\d{2}-\d{2})/i);
+                                        const fromPresent = exp.match(/^(\d{4}-\d{2}-\d{2})\s+to\s+present/i);
+                                        if (fromTo) {
+                                          values.hm_period_from = fromTo[1]!;
+                                          values.hm_period_to = fromTo[2]!;
+                                          values.hm_period_currently_continuing = 'false';
+                                        } else if (fromPresent) {
+                                          values.hm_period_from = fromPresent[1]!;
+                                          values.hm_period_to = '';
+                                          values.hm_period_currently_continuing = 'true';
+                                        }
+                                      }
                                     }
 
                                     setEduFormValues(values);
