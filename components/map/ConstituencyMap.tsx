@@ -792,11 +792,11 @@ export function ConstituencyMap({
   /** Road path as Google Maps LatLng[] (GeoJSON is [lng, lat]) */
   const roadPaths = useMemo(
     () =>
-      roadsByBlock.map((f) => {
+      roadsByBlockAndGpWard.map((f) => {
         const coords = f.geometry?.coordinates ?? [];
         return coords.map(([lng, lat]) => ({ lat, lng }));
       }),
-    [roadsByBlock]
+    [roadsByBlockAndGpWard]
   );
 
   const selectedRoadStreetViewPosition = useMemo(() => {
