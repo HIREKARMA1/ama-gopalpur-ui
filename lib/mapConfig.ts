@@ -77,6 +77,7 @@ export const EDUCATION_SUB_DEPT_LABELS: Record<string, string> = {
   ENGINEERING_COLLEGE: 'Engineering College',
   ITI: 'ITI',
   UNIVERSITY: 'University',
+  DEGREE_COLLEGE: 'Degree College',
   DIPLOMA_COLLEGE: 'Diploma College',
 };
 
@@ -91,6 +92,7 @@ export const EDUCATION_SUB_DEPT_MARKERS: Record<string, string> = {
   ENGINEERING_COLLEGE: MARKER_COLORS.yellow,
   ITI: MARKER_COLORS.green,
   UNIVERSITY: MARKER_COLORS.yellow,
+  DEGREE_COLLEGE: MARKER_COLORS.orange,
   DIPLOMA_COLLEGE: MARKER_COLORS.purple,
 };
 

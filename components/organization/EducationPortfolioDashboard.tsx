@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Organization,
 } from '../../services/api';
@@ -490,13 +490,21 @@ export function EducationPortfolioDashboard({
     v == null ? null : typeof v === 'object' ? undefined : (v as string | number);
 
   // Stats for the top row
-  const isCollege = ['ENGINEERING_COLLEGE', 'ITI', 'UNIVERSITY', 'DIPLOMA_COLLEGE'].includes(org.sub_department || '');
+  const isCollege = ['ENGINEERING_COLLEGE', 'ITI', 'UNIVERSITY', 'DIPLOMA_COLLEGE', 'DEGREE_COLLEGE'].includes(org.sub_department || '');
   const isUniversity = org.sub_department === 'UNIVERSITY';
+  const isUniversityLike = isUniversity || org.sub_department === 'DEGREE_COLLEGE';
+  const hidePlacementTab = org.sub_department === 'DEGREE_COLLEGE';
+
+  useEffect(() => {
+    if (hidePlacementTab && detailTab === 'placement') {
+      setDetailTab('profile');
+    }
+  }, [hidePlacementTab, detailTab, org.id]);
 
   // Calculate total intake for colleges
   const totalIntake = useMemo(() => {
     // ITI uses total_seats_all_trades directly (handled separately in topStats)
-    if (org.sub_department === 'UNIVERSITY') {
+    if (org.sub_department === 'UNIVERSITY' || org.sub_department === 'DEGREE_COLLEGE') {
       // For universities, use sanctioned UG + PG intake (with fallbacks)
       const ug =
         Number(educationProfile['total_sanctioned_intake_ug'] ?? educationProfile['total_sanctioned_student_intake_ug'] ?? 0);
@@ -521,7 +529,17 @@ export function EducationPortfolioDashboard({
     return sum > 0 ? sum : null;
   }, [educationProfile, org.sub_department]);
 
-  const topStats = isCollege ? [
+  const topStats = isCollege ? (
+    org.sub_department === 'DEGREE_COLLEGE'
+      ? [
+          {
+            label: t('edu.stat.totalIntake', language),
+            value: totalIntake,
+            icon: GraduationCap,
+            color: 'blue',
+          },
+        ]
+      : [
     {
       label: t('edu.stat.totalIntake', language),
       value: org.sub_department === 'ITI'
@@ -557,7 +575,8 @@ export function EducationPortfolioDashboard({
       icon: Award,
       color: 'amber'
     },
-  ] : [
+  ]
+  ) : [
     { label: t('edu.stat.teachers', language), value: toStatVal(educationProfile['no_of_ts']), icon: Users, color: 'emerald' },
     { label: t('edu.stat.classrooms', language), value: toStatVal(educationProfile['no_of_classrooms'] || educationProfile['no_of_rooms']), icon: School, color: 'indigo' },
     { label: t('edu.stat.smartClassrooms', language), value: toStatVal(educationProfile['no_of_smart_classrooms'] || educationProfile['no_of_smart_class_rooms']), icon: Monitor, color: 'amber' },
@@ -609,7 +628,7 @@ export function EducationPortfolioDashboard({
                   { id: 'intake', label: t('edu.tab.intake', language), icon: Users },
                   { id: 'infrastructure', label: t('edu.tab.infra', language), icon: School },
                   { id: 'admin', label: t('edu.tab.admin', language), icon: UserCheck },
-                  { id: 'placement', label: t('edu.tab.placement', language), icon: Briefcase },
+                  ...(hidePlacementTab ? [] : [{ id: 'placement', label: t('edu.tab.placement', language), icon: Briefcase }]),
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -673,7 +692,7 @@ export function EducationPortfolioDashboard({
                       return false;
                     }
                     // University: academic / programme / governance info
-                    if (isUniversity) {
+                    if (isUniversityLike) {
                       const k = String(key);
                       const academicFragments = [
                         'university_type',
@@ -738,7 +757,7 @@ export function EducationPortfolioDashboard({
                       return false;
                     }
                     // University: all staff / faculty metrics
-                    if (isUniversity) {
+                    if (isUniversityLike) {
                       const k = String(key);
                       const facultyFragments = [
                         'faculty',
@@ -782,7 +801,7 @@ export function EducationPortfolioDashboard({
                       return false;
                     }
                     // University: sanctioned intake, enrolment, higher studies
-                    if (isUniversity) {
+                    if (isUniversityLike) {
                       const k = String(key);
                       const intakeFragments = [
                         'intake_ug',
@@ -823,7 +842,7 @@ export function EducationPortfolioDashboard({
                       return false;
                     }
                     // University: physical and digital infrastructure
-                    if (isUniversity) {
+                    if (isUniversityLike) {
                       const k = String(key);
                       const infraFragments = [
                         'library',
@@ -895,7 +914,7 @@ export function EducationPortfolioDashboard({
                       return false;
                     }
                     // University: leadership, cells, associations, clubs
-                    if (isUniversity) {
+                    if (isUniversityLike) {
                       const k = String(key);
                       const adminFragments = [
                         'chancellor',
