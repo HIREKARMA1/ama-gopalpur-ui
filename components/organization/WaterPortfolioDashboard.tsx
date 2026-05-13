@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Organization,
   WatcoDailyOperation,
@@ -21,10 +21,12 @@ import { ImageSlider } from './ImageSlider';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
 import { getHealthProfileLabel, getMinorIrrigationProfileLabel } from '../../lib/profileLabels';
+import type { LucideIcon } from 'lucide-react';
 import {
   Droplets,
   MapPin,
   Building,
+  Building2,
   Gauge,
   Activity,
   Users,
@@ -42,6 +44,82 @@ import {
   Calendar,
   Waves,
   UtilityPole,
+  Hash,
+  Factory,
+  LayoutGrid,
+  Signpost,
+  Home,
+  ClipboardList,
+  Compass,
+  Navigation,
+  Flag,
+  Warehouse,
+  LocateFixed,
+  Globe2,
+  Hexagon,
+  CircleDot,
+  FlaskConical,
+  Sparkles,
+  AlertCircle,
+  Eye,
+  Cpu,
+  Cog,
+  Box,
+  Package,
+  Ruler,
+  Anchor,
+  Shield,
+  Battery,
+  Plug,
+  SunMedium,
+  CloudRain,
+  Filter,
+  Droplet,
+  ArrowUpFromLine,
+  Route,
+  Landmark,
+  Coins,
+  BarChart3,
+  Clipboard,
+  CircleGauge,
+  Orbit,
+  Radio,
+  Satellite,
+  Cable,
+  Fan,
+  Heater,
+  Snowflake,
+  Leaf,
+  Mountain,
+  TreeDeciduous,
+  OctagonAlert,
+  BadgePercent,
+  Banknote,
+  Receipt,
+  CircleDollarSign,
+  HardHat,
+  Truck,
+  Milestone,
+  Fence,
+  CircleParking,
+  Bookmark,
+  Briefcase,
+  Award,
+  Star,
+  Bell,
+  Camera,
+  Image,
+  Link2,
+  Share2,
+  CircleHelp,
+  Info,
+  Lightbulb,
+  BookOpen,
+  NotebookText,
+  ListChecks,
+  ListOrdered,
+  Grid3x3,
+  PanelsTopLeft,
 } from 'lucide-react';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
 import { GOPALPUR_BOUNDS } from '../../lib/mapConfig';
@@ -63,84 +141,218 @@ export interface WaterPortfolioDashboardProps {
   dailyTankLevels?: WatcoDailyTankLevel[];
 }
 
-function formatVal(v: unknown): string {
-  if (v == null) return '—';
-  const s = String(v).trim();
-  return s === '' ? '—' : s;
+const HIGHLIGHTED_SCHEME_KEYS = new Set([
+  'block_ulb',
+  'gp_ward',
+  'village_locality',
+  'village',
+  'station_id',
+  'station_name',
+  'scheme_name',
+  'population_served',
+  'source_type',
+  'source_name',
+  'intake_capacity_mld',
+  'design_capacity_mld',
+  'operational_capacity_mld',
+  'supply_hours_day',
+  'per_capita_supply_lpcd',
+  'nrw',
+  'latitude',
+  'longitude',
+]);
+
+/** Keys never shown as generic scheme-detail rows (gallery is rendered separately). */
+const WATER_SCHEME_TAB_EXCLUDED_KEYS = new Set(['watco_photo_gallery', 'gallery_images']);
+
+const WATER_SCHEME_CATEGORY_MAP = {
+  basic: ['district', 'state', 'commissioning_date', 'division', 'sub_division', 'location', 'region', 'zone'],
+  quality: ['turbidity', 'ph', 'tds', 'hardness', 'iron', 'fluoride', 'seasonal_variation_notes', 'water_quality'],
+  treatment: ['wtp_type', 'flash_mixer', 'clariflocculator', 'rsf_units', 'chlorination_system', 'sludge_disposal_method', 'filter_media_status'],
+  pumping: [
+    'pump_type',
+    'no_of_working_pumps',
+    'no_of_standby_pumps',
+    'pump_capacity_m3_hr',
+    'head_m',
+    'pump_running_hours_per_day',
+    'raw_water_transformer_capacity',
+    'raw_water_dg_set_details',
+    'wtp_transformer_capacity',
+    'wtp_dg_set_details',
+  ],
+  dist: [
+    'clear_water_reservoir_capacity',
+    'esr_type_capacity',
+    'total_distribution_length_km',
+    'pipe_type',
+    'household_connections',
+    'stand_posts',
+    'water_tariff',
+    'flow_meter_status',
+    'staff_availability',
+  ],
+} as const;
+
+type WaterSchemeCategoryTabId = keyof typeof WATER_SCHEME_CATEGORY_MAP;
+
+const ALL_CATEGORY_KEYS_FLAT = new Set(
+  (Object.values(WATER_SCHEME_CATEGORY_MAP) as unknown as string[][]).flat(),
+);
+
+/** Icons are unique within each category tab (order matches WATER_SCHEME_CATEGORY_MAP). */
+const CATEGORY_TAB_STYLES: Record<WaterSchemeCategoryTabId, { icon: LucideIcon; color: string }[]> = {
+  basic: [
+    { icon: MapPin, color: 'blue' },
+    { icon: Flag, color: 'sky' },
+    { icon: Calendar, color: 'emerald' },
+    { icon: Building2, color: 'indigo' },
+    { icon: Warehouse, color: 'violet' },
+    { icon: LocateFixed, color: 'rose' },
+    { icon: Globe2, color: 'amber' },
+    { icon: Hexagon, color: 'teal' },
+  ],
+  quality: [
+    { icon: Waves, color: 'emerald' },
+    { icon: Thermometer, color: 'sky' },
+    { icon: Layers, color: 'amber' },
+    { icon: UtilityPole, color: 'slate' },
+    { icon: CircleDot, color: 'rose' },
+    { icon: FlaskConical, color: 'pink' },
+    { icon: Wind, color: 'teal' },
+    { icon: Sparkles, color: 'violet' },
+  ],
+  treatment: [
+    { icon: Settings, color: 'violet' },
+    { icon: Wrench, color: 'teal' },
+    { icon: Droplets, color: 'blue' },
+    { icon: Package, color: 'indigo' },
+    { icon: Thermometer, color: 'emerald' },
+    { icon: CloudRain, color: 'slate' },
+    { icon: Filter, color: 'cyan' },
+  ],
+  pumping: [
+    { icon: Cog, color: 'orange' },
+    { icon: Cpu, color: 'emerald' },
+    { icon: Battery, color: 'slate' },
+    { icon: TrendingUp, color: 'blue' },
+    { icon: Ruler, color: 'indigo' },
+    { icon: Timer, color: 'violet' },
+    { icon: Zap, color: 'amber' },
+    { icon: Plug, color: 'orange' },
+    { icon: Satellite, color: 'pink' },
+    { icon: Cable, color: 'yellow' },
+  ],
+  dist: [
+    { icon: Droplet, color: 'sky' },
+    { icon: Anchor, color: 'blue' },
+    { icon: Route, color: 'emerald' },
+    { icon: Box, color: 'slate' },
+    { icon: Users, color: 'teal' },
+    { icon: Signpost, color: 'indigo' },
+    { icon: Coins, color: 'amber' },
+    { icon: CircleGauge, color: 'violet' },
+    { icon: HardHat, color: 'rose' },
+  ],
+};
+
+function buildCategoryStyleByKeyMap(): Record<
+  WaterSchemeCategoryTabId,
+  Record<string, { icon: LucideIcon; color: string }>
+> {
+  const tabIds: WaterSchemeCategoryTabId[] = ['basic', 'quality', 'treatment', 'pumping', 'dist'];
+  const out = {} as Record<WaterSchemeCategoryTabId, Record<string, { icon: LucideIcon; color: string }>>;
+  for (const cat of tabIds) {
+    const keys = [...WATER_SCHEME_CATEGORY_MAP[cat]];
+    const styles = CATEGORY_TAB_STYLES[cat];
+    const row: Record<string, { icon: LucideIcon; color: string }> = {};
+    keys.forEach((key, i) => {
+      row[key] = styles[i]!;
+    });
+    out[cat] = row;
+  }
+  return out;
 }
 
-// Icon/color mapping per water attribute (snake_case key)
-function getWaterFieldConfig(key: string): { icon: any; color: string } {
-  const config: Record<string, { icon: any; color: string }> = {
-    // Basic
-    district: { icon: MapPin, color: 'blue' },
-    state: { icon: MapPin, color: 'sky' },
-    commissioning_date: { icon: Calendar, color: 'emerald' },
-    division: { icon: Building, color: 'indigo' },
-    sub_division: { icon: Building, color: 'violet' },
-    location: { icon: MapPin, color: 'rose' },
-    region: { icon: MapPin, color: 'amber' },
-    zone: { icon: MapPin, color: 'orange' },
+const CATEGORY_STYLE_BY_KEY = buildCategoryStyleByKeyMap();
 
-    // Quality
-    turbidity: { icon: Waves, color: 'emerald' },
-    ph: { icon: Thermometer, color: 'sky' },
-    tds: { icon: Layers, color: 'amber' },
-    hardness: { icon: UtilityPole, color: 'slate' },
-    iron: { icon: AlertTriangle, color: 'rose' },
-    fluoride: { icon: AlertTriangle, color: 'pink' },
-    seasonal_variation_notes: { icon: Wind, color: 'teal' },
-    water_quality: { icon: Activity, color: 'blue' },
+const OTHER_TAB_ICON_POOL: { icon: LucideIcon; color: string }[] = [
+  { icon: Truck, color: 'blue' },
+  { icon: Milestone, color: 'sky' },
+  { icon: Fence, color: 'emerald' },
+  { icon: CircleParking, color: 'indigo' },
+  { icon: Bookmark, color: 'violet' },
+  { icon: Briefcase, color: 'rose' },
+  { icon: Award, color: 'amber' },
+  { icon: Star, color: 'teal' },
+  { icon: Bell, color: 'pink' },
+  { icon: Camera, color: 'slate' },
+  { icon: Image, color: 'blue' },
+  { icon: Link2, color: 'sky' },
+  { icon: Share2, color: 'emerald' },
+  { icon: CircleHelp, color: 'indigo' },
+  { icon: Info, color: 'violet' },
+  { icon: Lightbulb, color: 'amber' },
+  { icon: BookOpen, color: 'teal' },
+  { icon: NotebookText, color: 'rose' },
+  { icon: ListChecks, color: 'pink' },
+  { icon: ListOrdered, color: 'slate' },
+  { icon: Grid3x3, color: 'blue' },
+  { icon: PanelsTopLeft, color: 'sky' },
+  { icon: Phone, color: 'emerald' },
+  { icon: FileText, color: 'indigo' },
+  { icon: Building, color: 'violet' },
+  { icon: MapPin, color: 'rose' },
+  { icon: BarChart3, color: 'amber' },
+  { icon: Clipboard, color: 'teal' },
+  { icon: Receipt, color: 'pink' },
+  { icon: Banknote, color: 'slate' },
+  { icon: BadgePercent, color: 'blue' },
+  { icon: CircleDollarSign, color: 'sky' },
+  { icon: Orbit, color: 'emerald' },
+  { icon: Radio, color: 'indigo' },
+  { icon: Fan, color: 'violet' },
+  { icon: Heater, color: 'rose' },
+  { icon: Snowflake, color: 'amber' },
+  { icon: Leaf, color: 'teal' },
+  { icon: Mountain, color: 'pink' },
+  { icon: TreeDeciduous, color: 'slate' },
+  { icon: OctagonAlert, color: 'blue' },
+  { icon: AlertTriangle, color: 'sky' },
+  { icon: Shield, color: 'emerald' },
+  { icon: SunMedium, color: 'indigo' },
+  { icon: ArrowUpFromLine, color: 'violet' },
+  { icon: Landmark, color: 'rose' },
+  { icon: Activity, color: 'amber' },
+  { icon: Gauge, color: 'teal' },
+  { icon: Eye, color: 'pink' },
+];
 
-    // Treatment
-    wtp_type: { icon: Settings, color: 'violet' },
-    flash_mixer: { icon: Wrench, color: 'teal' },
-    clariflocculator: { icon: Waves, color: 'blue' },
-    rsf_units: { icon: Layers, color: 'indigo' },
-    chlorination_system: { icon: Thermometer, color: 'emerald' },
-    sludge_disposal_method: { icon: Wind, color: 'slate' },
-    filter_media_status: { icon: Waves, color: 'cyan' },
+function formatVal(v: unknown): string {
+  if (v == null) return '';
+  if (typeof v === 'object') {
+    if (Array.isArray(v)) {
+      if (v.length === 0) return '';
+      if (typeof v[0] === 'object') return '';
+      return v
+        .map((x) => String(x).trim())
+        .filter(Boolean)
+        .join(', ');
+    }
+    return '';
+  }
+  const s = String(v).trim();
+  return s === '' ? '' : s;
+}
 
-    // Pumping
-    pump_type: { icon: Settings, color: 'orange' },
-    no_of_working_pumps: { icon: Activity, color: 'emerald' },
-    no_of_standby_pumps: { icon: Timer, color: 'slate' },
-    pump_capacity_m3_hr: { icon: TrendingUp, color: 'blue' },
-    head_m: { icon: TrendingUp, color: 'indigo' },
-    pump_running_hours_per_day: { icon: Timer, color: 'violet' },
-    raw_water_transformer_capacity: { icon: Zap, color: 'amber' },
-    raw_water_dg_set_details: { icon: Zap, color: 'orange' },
-    wtp_transformer_capacity: { icon: Zap, color: 'yellow' },
-    wtp_dg_set_details: { icon: Zap, color: 'pink' },
-
-    // Distribution
-    clear_water_reservoir_capacity: { icon: Droplets, color: 'sky' },
-    esr_type_capacity: { icon: Droplets, color: 'blue' },
-    total_distribution_length_km: { icon: TrendingUp, color: 'emerald' },
-    pipe_type: { icon: Settings, color: 'slate' },
-    household_connections: { icon: Users, color: 'teal' },
-    stand_posts: { icon: MapPin, color: 'indigo' },
-    water_tariff: { icon: FileText, color: 'amber' },
-    flow_meter_status: { icon: Gauge, color: 'emerald' },
-    staff_availability: { icon: Users, color: 'violet' },
-  } as any;
-
-  const direct = config[key];
-  if (direct) return direct;
-
-  // Fallbacks by key fragment
-  const k = key.toLowerCase();
-  if (k.includes('capacity') || k.includes('mld')) return { icon: Droplets, color: 'sky' };
-  if (k.includes('level') || k.includes('quality') || k.includes('ph') || k.includes('tds')) return { icon: Activity, color: 'emerald' };
-  if (k.includes('pump') || k.includes('motor')) return { icon: Settings, color: 'indigo' };
-  if (k.includes('pipe') || k.includes('length') || k.includes('dist')) return { icon: TrendingUp, color: 'teal' };
-  if (k.includes('power') || k.includes('transformer') || k.includes('volt') || k.includes('dg_') || k.includes('generator')) return { icon: Zap, color: 'amber' };
-  if (k.includes('staff') || k.includes('employee') || k.includes('operator')) return { icon: Users, color: 'violet' };
-  if (k.includes('date') || k.includes('year') || k.includes('time')) return { icon: Calendar, color: 'rose' };
-  if (k.includes('phone') || k.includes('contact')) return { icon: Phone, color: 'emerald' };
-  if (k.includes('address') || k.includes('pin') || k.includes('loc') || k.includes('ward')) return { icon: MapPin, color: 'pink' };
-
-  return { icon: FileText, color: 'slate' };
+function hasWaterSchemeValue(v: unknown): boolean {
+  if (v == null) return false;
+  if (typeof v === 'number') return !Number.isNaN(v);
+  if (typeof v === 'boolean') return true;
+  if (typeof v === 'string') return v.trim() !== '';
+  if (Array.isArray(v)) return v.length > 0 && typeof v[0] !== 'object';
+  if (typeof v === 'object') return false;
+  return String(v).trim() !== '';
 }
 
 export function WaterPortfolioDashboard({
@@ -200,34 +412,11 @@ export function WaterPortfolioDashboard({
     rose: 'bg-rose-50 text-rose-600 border-rose-100',
     pink: 'bg-pink-50 text-pink-600 border-pink-100',
     sky: 'bg-sky-50 text-sky-600 border-sky-100',
+    indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+    orange: 'bg-orange-50 text-orange-600 border-orange-100',
+    cyan: 'bg-cyan-50 text-cyan-600 border-cyan-100',
+    yellow: 'bg-yellow-50 text-yellow-700 border-yellow-100',
   };
-
-  const highlightedKeys = new Set([
-    'block_ulb',
-    'gp_ward',
-    'village_locality',
-    'station_id',
-    'station_name',
-    'scheme_name',
-    'population_served',
-    'source_type',
-    'source_name',
-    'intake_capacity_mld',
-    'design_capacity_mld',
-    'operational_capacity_mld',
-    'supply_hours_day',
-    'per_capita_supply_lpcd',
-    'nrw',
-    'latitude',
-    'longitude',
-  ]);
-
-  const extraAttributes = Object.entries(waterProfile || {}).filter(
-    ([key, value]) =>
-      value != null &&
-      String(value).trim() !== '' &&
-      !highlightedKeys.has(key),
-  );
 
   const keyToLabel = (key: string) =>
     key
@@ -235,44 +424,121 @@ export function WaterPortfolioDashboard({
       .map((part) => (part ? part[0].toUpperCase() + part.slice(1) : ''))
       .join(' ');
 
-  const CATEGORY_MAP: Record<string, string[]> = {
-    basic: ['district', 'state', 'commissioning_date', 'division', 'sub_division', 'location', 'region', 'zone'],
-    quality: ['turbidity', 'ph', 'tds', 'hardness', 'iron', 'fluoride', 'seasonal_variation_notes', 'water_quality'],
-    treatment: ['wtp_type', 'flash_mixer', 'clariflocculator', 'rsf_units', 'chlorination_system', 'sludge_disposal_method', 'filter_media_status'],
-    pumping: ['pump_type', 'no_of_working_pumps', 'no_of_standby_pumps', 'pump_capacity_m3_hr', 'head_m', 'pump_running_hours_per_day', 'raw_water_transformer_capacity', 'raw_water_dg_set_details', 'wtp_transformer_capacity', 'wtp_dg_set_details'],
-    dist: ['clear_water_reservoir_capacity', 'esr_type_capacity', 'total_distribution_length_km', 'pipe_type', 'household_connections', 'stand_posts', 'water_tariff', 'flow_meter_status', 'staff_availability'],
-  };
+  const wp = waterProfile || {};
 
-  const categorizedAttributes = useMemo(() => {
-    const cats: Record<string, [string, unknown][]> = {
-      basic: [], quality: [], treatment: [], pumping: [], dist: [], other: []
+  const otherFieldKeys = useMemo(
+    () =>
+      Object.keys(wp)
+        .filter(
+          (k) =>
+            !HIGHLIGHTED_SCHEME_KEYS.has(k) &&
+            !ALL_CATEGORY_KEYS_FLAT.has(k) &&
+            !WATER_SCHEME_TAB_EXCLUDED_KEYS.has(k),
+        )
+        .sort(),
+    [wp],
+  );
+
+  const categoryRowsFull = useMemo(() => {
+    const rows: Record<string, [string, unknown][]> = {
+      basic: WATER_SCHEME_CATEGORY_MAP.basic.map((k) => [k, wp[k]] as [string, unknown]),
+      quality: WATER_SCHEME_CATEGORY_MAP.quality.map((k) => [k, wp[k]] as [string, unknown]),
+      treatment: WATER_SCHEME_CATEGORY_MAP.treatment.map((k) => [k, wp[k]] as [string, unknown]),
+      pumping: WATER_SCHEME_CATEGORY_MAP.pumping.map((k) => [k, wp[k]] as [string, unknown]),
+      dist: WATER_SCHEME_CATEGORY_MAP.dist.map((k) => [k, wp[k]] as [string, unknown]),
+      other: otherFieldKeys.map((k) => [k, wp[k]] as [string, unknown]),
     };
+    return rows;
+  }, [wp, otherFieldKeys]);
 
-    extraAttributes.forEach(([key, value]) => {
-      let matched = false;
-      for (const [catName, keys] of Object.entries(CATEGORY_MAP)) {
-        if (keys.includes(key)) {
-          cats[catName].push([key, value]);
-          matched = true;
-          break;
-        }
-      }
-      if (!matched) cats.other.push([key, value]);
+  const otherTabStylesByKey = useMemo(() => {
+    const m: Record<string, { icon: LucideIcon; color: string }> = {};
+    otherFieldKeys.forEach((k, i) => {
+      m[k] = OTHER_TAB_ICON_POOL[i % OTHER_TAB_ICON_POOL.length]!;
     });
-    return cats;
-  }, [extraAttributes]);
+    return m;
+  }, [otherFieldKeys]);
 
-  const assetTabs: { id: string; label: string; icon: any }[] = [
-    { id: 'overview', label: t('water.assets.waterAssets', language), icon: Gauge },
-    { id: 'basic', label: t('water.assets.generalData', language), icon: FileText },
-    { id: 'quality', label: t('water.assets.waterQuality', language), icon: Activity },
-    { id: 'treatment', label: t('water.assets.treatmentPlant', language), icon: Droplets },
-    { id: 'pumping', label: t('water.assets.pumpingPower', language), icon: Timer },
-    { id: 'dist', label: t('water.assets.distribution', language), icon: MapPin },
-    { id: 'other', label: t('water.assets.otherSpecs', language), icon: AlertTriangle },
-  ].filter((tab) => tab.id === 'overview' || categorizedAttributes[tab.id]?.length > 0);
+  const profileRows = useMemo(
+    () =>
+      [
+        { key: 'station_name', label: t('water.field.stationName', language), raw: wp['station_name'], icon: Building2, color: 'blue' },
+        { key: 'station_id', label: t('water.field.stationId', language), raw: wp['station_id'], icon: Hash, color: 'slate' },
+        {
+          key: 'station_type',
+          label: t('water.field.stationType', language),
+          raw: wp['station_type'] ?? org.attributes?.station_type,
+          icon: Factory,
+          color: 'indigo',
+        },
+        { key: 'block_ulb', label: getHealthProfileLabel('block_ulb', language), raw: wp['block_ulb'], icon: LayoutGrid, color: 'emerald' },
+        { key: 'gp_ward', label: getHealthProfileLabel('gp_ward', language), raw: wp['gp_ward'], icon: Home, color: 'sky' },
+        {
+          key: 'village_locality',
+          label: getMinorIrrigationProfileLabel('village_locality', language),
+          raw: wp['village_locality'] ?? wp['village'],
+          icon: Signpost,
+          color: 'violet',
+        },
+        { key: 'scheme_name', label: t('water.field.schemeName', language), raw: wp['scheme_name'], icon: ClipboardList, color: 'teal' },
+        { key: 'population_served', label: t('water.field.populationServed', language), raw: wp['population_served'], icon: Users, color: 'amber' },
+        { key: 'source_type', label: t('water.field.sourceType', language), raw: wp['source_type'], icon: Droplets, color: 'cyan' },
+        { key: 'source_name', label: t('water.field.sourceName', language), raw: wp['source_name'], icon: Waves, color: 'orange' },
+        { key: 'latitude', label: getHealthProfileLabel('latitude', language), raw: org.latitude, icon: Compass, color: 'rose' },
+        { key: 'longitude', label: getHealthProfileLabel('longitude', language), raw: org.longitude, icon: Navigation, color: 'pink' },
+      ] as const,
+    [language, wp, org.attributes?.station_type, org.latitude, org.longitude],
+  );
+
+  const profileTabVisible = useMemo(() => profileRows.some((r) => hasWaterSchemeValue(r.raw)), [profileRows]);
+
+  const overviewDefs = useMemo(
+    () => [
+      { key: 'intake', label: t('water.overview.intakeCapacity', language), raw: intake, icon: Droplets, color: 'blue' },
+      { key: 'design', label: t('water.overview.designCapacity', language), raw: designCapacity, icon: Gauge, color: 'emerald' },
+      { key: 'operational', label: t('water.overview.operationalCapacity', language), raw: wp['operational_capacity_mld'], icon: Activity, color: 'violet' },
+      { key: 'hours', label: t('water.overview.supplyHours', language), raw: hours, icon: Timer, color: 'amber' },
+      { key: 'percap', label: t('water.overview.perCapita', language), raw: perCapita, icon: BarChart3, color: 'sky' },
+      { key: 'nrw', label: t('water.overview.nrw', language), raw: wp['nrw'], icon: AlertTriangle, color: 'rose' },
+    ],
+    [language, intake, designCapacity, hours, perCapita, wp],
+  );
+
+  const overviewTabVisible = useMemo(() => overviewDefs.some((r) => hasWaterSchemeValue(r.raw)), [overviewDefs]);
+
+  const schemeTabs = useMemo(() => {
+    const tabs: { id: string; label: string; icon: LucideIcon }[] = [];
+    if (profileTabVisible) tabs.push({ id: 'profile', label: t('water.tab.profile', language), icon: Building });
+    if (overviewTabVisible) tabs.push({ id: 'overview', label: t('water.assets.waterAssets', language), icon: Gauge });
+    if (categoryRowsFull.basic.some(([, v]) => hasWaterSchemeValue(v))) {
+      tabs.push({ id: 'basic', label: t('water.assets.generalData', language), icon: FileText });
+    }
+    if (categoryRowsFull.quality.some(([, v]) => hasWaterSchemeValue(v))) {
+      tabs.push({ id: 'quality', label: t('water.assets.waterQuality', language), icon: Activity });
+    }
+    if (categoryRowsFull.treatment.some(([, v]) => hasWaterSchemeValue(v))) {
+      tabs.push({ id: 'treatment', label: t('water.assets.treatmentPlant', language), icon: Droplets });
+    }
+    if (categoryRowsFull.pumping.some(([, v]) => hasWaterSchemeValue(v))) {
+      tabs.push({ id: 'pumping', label: t('water.assets.pumpingPower', language), icon: Timer });
+    }
+    if (categoryRowsFull.dist.some(([, v]) => hasWaterSchemeValue(v))) {
+      tabs.push({ id: 'dist', label: t('water.assets.distribution', language), icon: MapPin });
+    }
+    if (categoryRowsFull.other.some(([, v]) => hasWaterSchemeValue(v))) {
+      tabs.push({ id: 'other', label: t('water.assets.otherSpecs', language), icon: AlertTriangle });
+    }
+    return tabs;
+  }, [profileTabVisible, overviewTabVisible, categoryRowsFull, language]);
 
   const [detailTab, setDetailTab] = useState<string>('profile');
+
+  useEffect(() => {
+    if (schemeTabs.length === 0) return;
+    if (!schemeTabs.some((x) => x.id === detailTab)) {
+      setDetailTab(schemeTabs[0]!.id);
+    }
+  }, [schemeTabs, detailTab]);
   const galleryItems = parseArray<GalleryItem>(waterProfile.watco_photo_gallery);
 
   return (
@@ -299,10 +565,7 @@ export function WaterPortfolioDashboard({
                 {t('water.portfolio.schemeDetails', language)}
               </h2>
               <div className="flex flex-wrap items-center justify-center sm:justify-start rounded-full bg-slate-100 p-1 w-full sm:w-auto">
-                {[
-                  { id: 'profile', label: t('water.tab.profile', language), icon: Building },
-                  ...assetTabs,
-                ].map((tab) => (
+                {schemeTabs.map((tab) => (
                   <button
                     key={tab.id}
                     type="button"
@@ -322,83 +585,10 @@ export function WaterPortfolioDashboard({
               </div>
             </div>
 
-            {detailTab === 'profile' && (
+            {detailTab === 'profile' && profileTabVisible && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[
-                  {
-                    label: t('water.field.stationName', language),
-                    val: waterProfile['station_name'] || org.name,
-                    icon: Building,
-                    color: 'blue',
-                  },
-                  {
-                    label: t('water.field.stationId', language),
-                    val: waterProfile['station_id'],
-                    icon: FileText,
-                    color: 'slate',
-                  },
-                  {
-                    label: t('water.field.stationType', language),
-                    val: waterProfile['station_type'] || org.attributes?.station_type,
-                    icon: Droplets,
-                    color: 'indigo',
-                  },
-                  {
-                    label: getHealthProfileLabel('block_ulb', language),
-                    val: waterProfile['block_ulb'],
-                    icon: MapPin,
-                    color: 'emerald',
-                  },
-                  {
-                    label: getHealthProfileLabel('gp_ward', language),
-                    val: waterProfile['gp_ward'],
-                    icon: MapPin,
-                    color: 'sky',
-                  },
-                  {
-                    label: getMinorIrrigationProfileLabel('village_locality', language),
-                    val: waterProfile['village_locality'] || waterProfile['village'],
-                    icon: MapPin,
-                    color: 'violet',
-                  },
-                  {
-                    label: t('water.field.schemeName', language),
-                    val: waterProfile['scheme_name'],
-                    icon: FileText,
-                    color: 'teal',
-                  },
-                  {
-                    label: t('water.field.populationServed', language),
-                    val: waterProfile['population_served'],
-                    icon: Users,
-                    color: 'amber',
-                  },
-                  {
-                    label: t('water.field.sourceType', language),
-                    val: waterProfile['source_type'],
-                    icon: Droplets,
-                    color: 'sky',
-                  },
-                  {
-                    label: t('water.field.sourceName', language),
-                    val: waterProfile['source_name'],
-                    icon: Droplets,
-                    color: 'blue',
-                  },
-                  {
-                    label: getHealthProfileLabel('latitude', language),
-                    val: org.latitude,
-                    icon: MapPin,
-                    color: 'rose',
-                  },
-                  {
-                    label: getHealthProfileLabel('longitude', language),
-                    val: org.longitude,
-                    icon: MapPin,
-                    color: 'pink',
-                  },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex gap-4 items-center">
+                {profileRows.filter((item) => hasWaterSchemeValue(item.raw)).map((item) => (
+                  <div key={item.key} className="flex gap-4 items-center">
                     <div className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${colorMap[item.color]}`}>
                       <item.icon size={20} strokeWidth={2} />
                     </div>
@@ -407,7 +597,7 @@ export function WaterPortfolioDashboard({
                         {item.label}
                       </p>
                       <p className="text-[15px] font-bold text-[#0f172a] truncate">
-                        {formatVal(item.val)}
+                        {formatVal(item.raw)}
                       </p>
                     </div>
                   </div>
@@ -415,17 +605,10 @@ export function WaterPortfolioDashboard({
               </div>
             )}
 
-            {detailTab === 'overview' && (
+            {detailTab === 'overview' && overviewTabVisible && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[
-                  { label: t('water.overview.intakeCapacity', language), val: intake, icon: Droplets, color: 'blue' },
-                  { label: t('water.overview.designCapacity', language), val: designCapacity, icon: Gauge, color: 'emerald' },
-                  { label: t('water.overview.operationalCapacity', language), val: waterProfile['operational_capacity_mld'], icon: Activity, color: 'violet' },
-                  { label: t('water.overview.supplyHours', language), val: hours, icon: Timer, color: 'amber' },
-                  { label: t('water.overview.perCapita', language), val: perCapita, icon: Users, color: 'sky' },
-                  { label: t('water.overview.nrw', language), val: waterProfile['nrw'], icon: AlertTriangle, color: 'rose' },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex gap-4 items-center">
+                {overviewDefs.filter((item) => hasWaterSchemeValue(item.raw)).map((item) => (
+                  <div key={item.key} className="flex gap-4 items-center">
                     <div className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${colorMap[item.color]}`}>
                       <item.icon size={20} strokeWidth={2} />
                     </div>
@@ -433,18 +616,30 @@ export function WaterPortfolioDashboard({
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-1">
                         {item.label}
                       </p>
-                      <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(item.val)}</p>
+                      <p className="text-[15px] font-bold text-[#0f172a] truncate">{formatVal(item.raw)}</p>
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            {detailTab !== 'profile' && detailTab !== 'overview' && categorizedAttributes[detailTab]?.length > 0 && (
+            {detailTab !== 'profile' &&
+              detailTab !== 'overview' &&
+              (detailTab === 'basic' ||
+                detailTab === 'quality' ||
+                detailTab === 'treatment' ||
+                detailTab === 'pumping' ||
+                detailTab === 'dist' ||
+                detailTab === 'other') && (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {categorizedAttributes[detailTab].map(([key, value]) => {
-                    const cfg = getWaterFieldConfig(key);
+                  {categoryRowsFull[detailTab]
+                    .filter(([, value]) => hasWaterSchemeValue(value))
+                    .map(([key, value]) => {
+                    const cfg =
+                      detailTab === 'other'
+                        ? otherTabStylesByKey[key]!
+                        : CATEGORY_STYLE_BY_KEY[detailTab as WaterSchemeCategoryTabId][key]!;
                     const colorClass = colorMap[cfg.color] || colorMap.slate;
 
                     return (
@@ -547,7 +742,8 @@ export function WaterPortfolioDashboard({
         </div>
       </section> */}
 
-      {/* Daily Monitoring Section */}
+      {/* Daily monitoring (WATCO/RWSS portfolio): temporarily hidden — set to true to restore */}
+      {false && (
       <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-16">
         <div className="rounded-3xl border border-cyan-200 bg-cyan-50/60 p-6 sm:p-8 shadow-sm backdrop-blur-md">
           <div className="mb-6">
@@ -740,6 +936,7 @@ export function WaterPortfolioDashboard({
           </div>
         </div>
       </section>
+      )}
 
       <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8">
         <PsGallerySection gallery={galleryItems} />
