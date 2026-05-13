@@ -56,7 +56,7 @@ import {
   Warehouse,
   LocateFixed,
   Globe2,
-  Crosshair,
+  Hexagon,
   CircleDot,
   FlaskConical,
   Sparkles,
@@ -210,7 +210,7 @@ const CATEGORY_TAB_STYLES: Record<WaterSchemeCategoryTabId, { icon: LucideIcon; 
     { icon: Warehouse, color: 'violet' },
     { icon: LocateFixed, color: 'rose' },
     { icon: Globe2, color: 'amber' },
-    { icon: Crosshair, color: 'teal' },
+    { icon: Hexagon, color: 'teal' },
   ],
   quality: [
     { icon: Waves, color: 'emerald' },
@@ -255,6 +255,26 @@ const CATEGORY_TAB_STYLES: Record<WaterSchemeCategoryTabId, { icon: LucideIcon; 
     { icon: HardHat, color: 'rose' },
   ],
 };
+
+function buildCategoryStyleByKeyMap(): Record<
+  WaterSchemeCategoryTabId,
+  Record<string, { icon: LucideIcon; color: string }>
+> {
+  const tabIds: WaterSchemeCategoryTabId[] = ['basic', 'quality', 'treatment', 'pumping', 'dist'];
+  const out = {} as Record<WaterSchemeCategoryTabId, Record<string, { icon: LucideIcon; color: string }>>;
+  for (const cat of tabIds) {
+    const keys = [...WATER_SCHEME_CATEGORY_MAP[cat]];
+    const styles = CATEGORY_TAB_STYLES[cat];
+    const row: Record<string, { icon: LucideIcon; color: string }> = {};
+    keys.forEach((key, i) => {
+      row[key] = styles[i]!;
+    });
+    out[cat] = row;
+  }
+  return out;
+}
+
+const CATEGORY_STYLE_BY_KEY = buildCategoryStyleByKeyMap();
 
 const OTHER_TAB_ICON_POOL: { icon: LucideIcon; color: string }[] = [
   { icon: Truck, color: 'blue' },
@@ -567,7 +587,7 @@ export function WaterPortfolioDashboard({
 
             {detailTab === 'profile' && profileTabVisible && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {profileRows.map((item) => (
+                {profileRows.filter((item) => hasWaterSchemeValue(item.raw)).map((item) => (
                   <div key={item.key} className="flex gap-4 items-center">
                     <div className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${colorMap[item.color]}`}>
                       <item.icon size={20} strokeWidth={2} />
@@ -587,7 +607,7 @@ export function WaterPortfolioDashboard({
 
             {detailTab === 'overview' && overviewTabVisible && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {overviewDefs.map((item) => (
+                {overviewDefs.filter((item) => hasWaterSchemeValue(item.raw)).map((item) => (
                   <div key={item.key} className="flex gap-4 items-center">
                     <div className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${colorMap[item.color]}`}>
                       <item.icon size={20} strokeWidth={2} />
@@ -613,11 +633,13 @@ export function WaterPortfolioDashboard({
                 detailTab === 'other') && (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {categoryRowsFull[detailTab].map(([key, value], idx) => {
+                  {categoryRowsFull[detailTab]
+                    .filter(([, value]) => hasWaterSchemeValue(value))
+                    .map(([key, value]) => {
                     const cfg =
                       detailTab === 'other'
                         ? otherTabStylesByKey[key]!
-                        : CATEGORY_TAB_STYLES[detailTab as WaterSchemeCategoryTabId][idx]!;
+                        : CATEGORY_STYLE_BY_KEY[detailTab as WaterSchemeCategoryTabId][key]!;
                     const colorClass = colorMap[cfg.color] || colorMap.slate;
 
                     return (
