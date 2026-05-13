@@ -547,7 +547,8 @@ export function WaterPortfolioDashboard({
         </div>
       </section> */}
 
-      {/* Daily Monitoring Section */}
+      {/* Daily monitoring (WATCO/RWSS portfolio): temporarily hidden — set to true to restore */}
+      {false && (
       <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mb-16">
         <div className="rounded-3xl border border-cyan-200 bg-cyan-50/60 p-6 sm:p-8 shadow-sm backdrop-blur-md">
           <div className="mb-6">
@@ -740,6 +741,7 @@ export function WaterPortfolioDashboard({
           </div>
         </div>
       </section>
+      )}
 
       <section className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8">
         <PsGallerySection gallery={galleryItems} />
