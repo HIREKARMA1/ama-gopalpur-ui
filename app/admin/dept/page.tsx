@@ -44,6 +44,12 @@ import {
   MinorIrrigationPortfolioAdminForm,
   MINOR_IRRIGATION_PORTFOLIO_EMPTY_FORM,
 } from '../../../components/admin/MinorIrrigationPortfolioAdminForm';
+import { TahasilPortfolioAdminForm } from '../../../components/admin/TahasilPortfolioAdminForm';
+import {
+  TAHASIL_PORTFOLIO_EMPTY_FORM,
+  mergeTahasilPortfolioFromProfile,
+  tahasilPortfolioFormToProfilePayload,
+} from '../../../lib/tahasilPortfolioForm';
 import {
   AGRICULTURE_PORTFOLIO_EMPTY_FORM,
   AgriculturePortfolioAdminForm,
@@ -491,6 +497,9 @@ export default function DepartmentAdminPage() {
   const [revenueTahasilFormValues, setRevenueTahasilFormValues] = useState<Record<string, string>>({});
   const [revenueTahasilImageFile, setRevenueTahasilImageFile] = useState<File | null>(null);
   const [editingRevenueTahasilId, setEditingRevenueTahasilId] = useState<number | null>(null);
+  const [tahasilPortfolioForm, setTahasilPortfolioForm] = useState<Record<string, string>>(() => ({
+    ...TAHASIL_PORTFOLIO_EMPTY_FORM,
+  }));
 
   const emptyAgricultureOrg = () => ({
     block_ulb: '',
@@ -2533,6 +2542,7 @@ export default function DepartmentAdminPage() {
                         const val = (revenueTahasilFormValues[key] || '').trim();
                         if (val) profilePayload[key] = val;
                       });
+                      Object.assign(profilePayload, tahasilPortfolioFormToProfilePayload(tahasilPortfolioForm));
                       // Keep a canonical key used by parcel-link logic and existing dashboards.
                       if (tahasilKey) profilePayload.tahasil = tahasilKey;
 
@@ -2549,6 +2559,7 @@ export default function DepartmentAdminPage() {
                         [orgIdNum]: (prof && typeof prof === 'object' ? prof : {}) as Record<string, unknown>,
                       }));
                       setRevenueTahasilFormValues({});
+                      setTahasilPortfolioForm({ ...TAHASIL_PORTFOLIO_EMPTY_FORM });
                       setEditingRevenueTahasilId(null);
                     } catch (err: any) {
                       setError(err.message || 'Failed to save Tahasil office');
@@ -2572,6 +2583,14 @@ export default function DepartmentAdminPage() {
                       </div>
                     );
                   })}
+                  <div className="md:col-span-2 min-w-0 w-full overflow-visible rounded-lg border border-dashed border-border/80 bg-muted/20 p-3">
+                    <p className="mb-2 text-[11px] font-semibold text-text">Public portfolio (health-style)</p>
+                    <TahasilPortfolioAdminForm
+                      organizationId={editingRevenueTahasilId}
+                      form={tahasilPortfolioForm}
+                      setForm={setTahasilPortfolioForm}
+                    />
+                  </div>
                   <div className="md:col-span-2 space-y-1">
                     <label className="block text-text font-medium">Profile Image</label>
                     <input
@@ -2596,6 +2615,7 @@ export default function DepartmentAdminPage() {
                         onClick={() => {
                           setEditingRevenueTahasilId(null);
                           setRevenueTahasilFormValues({});
+                          setTahasilPortfolioForm({ ...TAHASIL_PORTFOLIO_EMPTY_FORM });
                           setRevenueTahasilImageFile(null);
                         }}
                       >
@@ -5970,10 +5990,9 @@ export default function DepartmentAdminPage() {
                                       e.stopPropagation();
                                       setEditingRevenueTahasilId(o.id);
                                       const existingProfile =
-                                        revenueProfiles[o.id] ||
-                                        ((await revenueLandApi.getProfile(o.id)) as
-                                          | Record<string, unknown>
-                                          | null);
+                                        ((await revenueLandApi.getProfile(o.id)) as Record<string, unknown> | null) ??
+                                        {};
+                                      setRevenueProfiles((prev) => ({ ...prev, [o.id]: existingProfile }));
                                       const v = (x: unknown) =>
                                         x != null && String(x).trim() !== '' ? String(x) : '';
                                       const vals: Record<string, string> = {};
@@ -5989,6 +6008,13 @@ export default function DepartmentAdminPage() {
                                       if (!vals[lngKey]) vals[lngKey] = o.longitude != null ? String(o.longitude) : '';
 
                                       setRevenueTahasilFormValues(vals);
+                                      const merged = mergeTahasilPortfolioFromProfile(existingProfile);
+                                      const cover = o.cover_image_key != null ? String(o.cover_image_key).trim() : '';
+                                      setTahasilPortfolioForm({
+                                        ...merged,
+                                        tahasil_display_name: merged.tahasil_display_name.trim() || o.name,
+                                        tahasil_office_image: merged.tahasil_office_image.trim() || cover,
+                                      });
                                       window.scrollTo({ top: 0, behavior: 'smooth' });
                                     }}
                                   >
