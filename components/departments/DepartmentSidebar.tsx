@@ -108,7 +108,7 @@ export function DepartmentSidebar({
             {departments
               .filter((dept) => {
                 const code = (dept.code || '').toUpperCase();
-                return code !== 'REVENUE_LAND' && code !== 'ELECTRICITY';
+                return code !== 'ELECTRICITY';
               })
               .map((dept) => {
               const isSelected = dept.id === selectedId;
