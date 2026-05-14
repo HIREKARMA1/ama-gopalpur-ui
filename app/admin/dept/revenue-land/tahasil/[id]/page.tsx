@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   authApi,
@@ -101,6 +101,9 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
   const [creating, setCreating] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deletingParcelId, setDeletingParcelId] = useState<number | null>(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [selectedParcelIds, setSelectedParcelIds] = useState<Set<number>>(() => new Set());
+  const selectAllRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const [parcelImageFile, setParcelImageFile] = useState<File | null>(null);
@@ -154,7 +157,7 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
       } catch (err: any) {
         setError(
           err.message ||
-            tr('Failed to load Tahasil office.', 'ତହସିଲ କାର୍ଯ୍ୟାଳୟ ଲୋଡ୍ କରିବାରେ ବିଫଳ।'),
+          tr('Failed to load Tahasil office.', 'ତହସିଲ କାର୍ଯ୍ୟାଳୟ ଲୋଡ୍ କରିବାରେ ବିଫଳ।'),
         );
       } finally {
         setLoading(false);
@@ -167,6 +170,33 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
     const start = page * PAGE_SIZE;
     return parcelOrgs.slice(start, start + PAGE_SIZE);
   }, [parcelOrgs, page]);
+
+  const selectedInListCount = useMemo(
+    () => parcelOrgs.filter((o) => selectedParcelIds.has(o.id)).length,
+    [parcelOrgs, selectedParcelIds],
+  );
+
+  const allParcelsSelected = parcelOrgs.length > 0 && selectedInListCount === parcelOrgs.length;
+  const someParcelsSelected = selectedInListCount > 0 && !allParcelsSelected;
+
+  useLayoutEffect(() => {
+    const el = selectAllRef.current;
+    if (el) el.indeterminate = someParcelsSelected;
+  }, [someParcelsSelected]);
+
+  useEffect(() => {
+    const valid = new Set(parcelOrgs.map((o) => o.id));
+    setSelectedParcelIds((prev) => {
+      let changed = false;
+      const next = new Set<number>();
+      prev.forEach((id) => {
+        if (valid.has(id)) next.add(id);
+        else changed = true;
+      });
+      if (!changed && next.size === prev.size) return prev;
+      return next;
+    });
+  }, [parcelOrgs]);
 
   const handleDeleteParcel = async (org: Organization) => {
     const confirmed = window.confirm(
@@ -189,11 +219,84 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
       const nextTotal = Math.max(0, parcelOrgs.length - 1);
       const nextMaxPage = Math.max(0, Math.ceil(nextTotal / PAGE_SIZE) - 1);
       setPage((p) => Math.min(p, nextMaxPage));
+      setSelectedParcelIds((prev) => {
+        const n = new Set(prev);
+        n.delete(org.id);
+        return n;
+      });
       await loadParcels(tahasilOrgId);
     } catch (err: any) {
       setError(err.message || tr('Failed to delete land parcel', 'ଜମି ପାର୍ସେଲ୍ ଡିଲିଟ୍ କରିବାରେ ବିଫଳ'));
     } finally {
       setDeletingParcelId(null);
+    }
+  };
+
+  const toggleSelectAllParcels = () => {
+    if (parcelOrgs.length === 0) return;
+    if (allParcelsSelected) {
+      setSelectedParcelIds(new Set());
+      return;
+    }
+    setSelectedParcelIds(new Set(parcelOrgs.map((o) => o.id)));
+  };
+
+  const toggleParcelSelected = (id: number) => {
+    setSelectedParcelIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleDeleteSelectedParcels = async () => {
+    const ids = parcelOrgs.filter((o) => selectedParcelIds.has(o.id)).map((o) => o.id);
+    if (ids.length === 0) return;
+    const confirmed = window.confirm(
+      tr(
+        `Delete ${ids.length} land parcel(s)? This action cannot be undone.`,
+        `${ids.length} ଟି ଜମି ପାର୍ସେଲ୍ ଡିଲିଟ୍ କରିବେ କି? ଏହି କାର୍ଯ୍ୟ ପୁନରୁଦ୍ଧାର ହେବ ନାହିଁ।`,
+      ),
+    );
+    if (!confirmed) return;
+
+    setBulkDeleting(true);
+    setError(null);
+    try {
+      const results = await Promise.allSettled(ids.map((id) => organizationsApi.delete(id)));
+      const failed = results.filter((r) => r.status === 'rejected') as PromiseRejectedResult[];
+      if (failed.length > 0) {
+        const first = failed[0]?.reason;
+        const msg =
+          first instanceof Error ? first.message : typeof first === 'string' ? first : tr('Delete failed', 'ଡିଲିଟ୍ ବିଫଳ');
+        setError(
+          failed.length === results.length
+            ? msg
+            : tr(
+                `${failed.length} of ${ids.length} could not be deleted. First error: ${msg}`,
+                `${ids.length} ମଧ୍ୟରୁ ${failed.length} ଡିଲିଟ୍ ହେଲା ନାହିଁ। ପ୍ରଥମ ତ୍ରୁଟି: ${msg}`,
+              ),
+        );
+      }
+      const deletedIds = new Set<number>();
+      results.forEach((r, i) => {
+        if (r.status === 'fulfilled') deletedIds.add(ids[i]);
+      });
+      if (editingParcelId != null && deletedIds.has(editingParcelId)) {
+        setEditingParcelId(null);
+        setFormValues({});
+        setParcelImageFile(null);
+      }
+      setSelectedParcelIds(new Set());
+      const nextTotal = Math.max(0, parcelOrgs.length - deletedIds.size);
+      const nextMaxPage = Math.max(0, Math.ceil(nextTotal / PAGE_SIZE) - 1);
+      setPage((p) => Math.min(p, nextMaxPage));
+      await loadParcels(tahasilOrgId);
+    } catch (err: any) {
+      setError(err.message || tr('Failed to delete land parcels', 'ଜମି ପାର୍ସେଲ୍ ଡିଲିଟ୍ କରିବାରେ ବିଫଳ'));
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -361,19 +464,19 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
 
                 const org = editingParcelId
                   ? await organizationsApi.update(editingParcelId, {
-                      name,
-                      address: addressParts.length ? addressParts.join(', ') : undefined,
-                      sub_department: 'LAND_PARCEL',
-                      attributes: attrs,
-                    })
+                    name,
+                    address: addressParts.length ? addressParts.join(', ') : undefined,
+                    sub_department: 'LAND_PARCEL',
+                    attributes: attrs,
+                  })
                   : await organizationsApi.create({
-                      department_id: me.department_id,
-                      name,
-                      type: 'OTHER',
-                      address: addressParts.length ? addressParts.join(', ') : undefined,
-                      sub_department: 'LAND_PARCEL',
-                      attributes: attrs,
-                    });
+                    department_id: me.department_id,
+                    name,
+                    type: 'OTHER',
+                    address: addressParts.length ? addressParts.join(', ') : undefined,
+                    sub_department: 'LAND_PARCEL',
+                    attributes: attrs,
+                  });
 
                 const profileData: Record<string, unknown> = {};
                 headers.forEach((header) => {
@@ -402,7 +505,7 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
               } catch (err: any) {
                 setError(
                   err.message ||
-                    tr('Failed to save land parcel', 'ଜମି ପାର୍ସେଲ୍ ସେଭ୍ କରିବାରେ ବିଫଳ'),
+                  tr('Failed to save land parcel', 'ଜମି ପାର୍ସେଲ୍ ସେଭ୍ କରିବାରେ ବିଫଳ'),
                 );
               } finally {
                 setCreating(false);
@@ -494,19 +597,47 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
         </section>
 
         <section className="rounded-lg border border-border bg-background p-3">
-          <h2 className="text-sm font-semibold text-text">
-            {tr('Land data table', 'ଜମି ତଥ୍ୟ ତାଲିକା')}
-          </h2>
-          <p className="mt-1 text-xs text-text-muted">
-            {tr(
-              'Linked parcels under this Tahasil office.',
-              'ଏହି ତହସିଲ କାର୍ଯ୍ୟାଳୟ ଅଧୀନରେ ଯୋଡାଯାଇଥିବା ପାର୍ସେଲ୍‌ଗୁଡିକ।',
-            )}
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold text-text">
+                {tr('Land data table', 'ଜମି ତଥ୍ୟ ତାଲିକା')}
+              </h2>
+              <p className="mt-1 text-xs text-text-muted">
+                {tr(
+                  'Linked parcels under this Tahasil office.',
+                  'ଏହି ତହସିଲ କାର୍ଯ୍ୟାଳୟ ଅଧୀନରେ ଯୋଡାଯାଇଥିବା ପାର୍ସେଲ୍‌ଗୁଡିକ।',
+                )}
+              </p>
+            </div>
+            {selectedInListCount > 0 ? (
+              <button
+                type="button"
+                disabled={bulkDeleting}
+                className="shrink-0 rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-60"
+                onClick={handleDeleteSelectedParcels}
+              >
+                {bulkDeleting
+                  ? tr('Deleting…', 'ଡିଲିଟ୍ ହେଉଛି…')
+                  : tr(`Delete selected (${selectedInListCount})`, `ବାଛିଥିବା ଡିଲିଟ୍ (${selectedInListCount})`)}
+              </button>
+            ) : null}
+          </div>
           <div className="mt-3 overflow-x-auto">
             <table className="min-w-full border-collapse text-xs">
               <thead>
                 <tr className="border-b border-border bg-muted/40">
+                  <th className="w-10 px-2 py-1 text-left font-medium text-text">
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      className="h-3.5 w-3.5 rounded border-border accent-primary"
+                      checked={allParcelsSelected}
+                      disabled={bulkDeleting || parcelOrgs.length === 0}
+                      onChange={toggleSelectAllParcels}
+                      title={tr('Select all parcels', 'ସମସ୍ତ ପାର୍ସେଲ୍ ବାଛନ୍ତୁ')}
+                      aria-label={tr('Select all parcels', 'ସମସ୍ତ ପାର୍ସେଲ୍ ବାଛନ୍ତୁ')}
+                    />
+                  </th>
                   <th className="px-2 py-1 text-left font-medium text-text">
                     {tr('SL NO', 'କ୍ରମିକ ସଂଖ୍ୟା')}
                   </th>
@@ -528,6 +659,16 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
                   const profile = parcelProfiles[org.id] || {};
                   return (
                     <tr key={org.id} className="border-b border-border/60">
+                      <td className="px-2 py-1 align-middle">
+                        <input
+                          type="checkbox"
+                          className="h-3.5 w-3.5 rounded border-border accent-primary"
+                          checked={selectedParcelIds.has(org.id)}
+                          disabled={bulkDeleting}
+                          onChange={() => toggleParcelSelected(org.id)}
+                          aria-label={tr('Select row', 'ଧାଡ଼ି ବାଛନ୍ତୁ')}
+                        />
+                      </td>
                       <td className="px-2 py-1 text-text-muted">{page * PAGE_SIZE + idx + 1}</td>
                       <td className="px-2 py-1 text-text">{org.name}</td>
                       {headers.filter((h) => h !== 'TAHASIL OFFICE ORG ID').map((header) => {
@@ -546,7 +687,8 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
                         <div className="flex items-center gap-1.5">
                           <button
                             type="button"
-                            className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                            disabled={bulkDeleting}
+                            className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50 disabled:opacity-60"
                             onClick={() => {
                               setEditingParcelId(org.id);
                               setParcelImageFile(null);
@@ -570,7 +712,7 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
                           </button>
                           <button
                             type="button"
-                            disabled={deletingParcelId === org.id}
+                            disabled={deletingParcelId === org.id || bulkDeleting}
                             className="rounded border border-red-300 px-2 py-0.5 text-[11px] text-red-600 hover:bg-red-50 disabled:opacity-60"
                             onClick={() => handleDeleteParcel(org)}
                           >
@@ -585,7 +727,7 @@ export default function TahasilParcelsPage({ params }: { params: { id: string } 
                 })}
                 {visibleParcels.length === 0 && (
                   <tr>
-                    <td className="px-2 py-2 text-text-muted" colSpan={headers.length + 3}>
+                    <td className="px-2 py-2 text-text-muted" colSpan={headers.filter((h) => h !== 'TAHASIL OFFICE ORG ID').length + 4}>
                       {tr(
                         'No land parcel data yet.',
                         'ଏ ପର୍ଯ୍ୟନ୍ତ କୌଣସି ଜମି ପାର୍ସେଲ୍ ତଥ୍ୟ ନାହିଁ।',

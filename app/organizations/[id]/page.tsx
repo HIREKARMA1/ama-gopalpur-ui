@@ -39,10 +39,10 @@ import { ElectricityPortfolioDashboard } from '../../../components/organization/
 import { ArcsPortfolioWebsite } from '../../../components/organization/ArcsPortfolioWebsite';
 import { WaterPortfolioDashboard } from '../../../components/organization/WaterPortfolioDashboard';
 import { RevenueLandPortfolioDashboard } from '../../../components/organization/RevenueLandPortfolioDashboard';
+import { TahasilPortfolioWebsite } from '../../../components/organization/TahasilPortfolioWebsite';
 import { AgriculturePortfolioDashboard } from '../../../components/organization/AgriculturePortfolioDashboard';
 import { MinorIrrigationPortfolioWebsite } from '../../../components/organization/MinorIrrigationPortfolioWebsite';
 import { IrrigationPortfolioDashboard } from '../../../components/organization/IrrigationPortfolioDashboard';
-import type { RevenueGovtLandRow } from '../../../lib/revenueGovtLandTable';
 
 const HEALTH_TYPE_LABELS: Record<string, string> = {
   HOSPITAL: 'Hospital',
@@ -169,7 +169,6 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   const [waterDailyPumpLogs, setWaterDailyPumpLogs] = useState<Awaited<ReturnType<typeof watcoApi.listDailyPumpLogs>>>([]);
   const [waterDailyTankLevels, setWaterDailyTankLevels] = useState<Awaited<ReturnType<typeof watcoApi.listDailyTankLevels>>>([]);
   const [revenueProfile, setRevenueProfile] = useState<Record<string, unknown>>({});
-  const [revenueTahasilParcels, setRevenueTahasilParcels] = useState<RevenueGovtLandRow[]>([]);
   const [agricultureProfile, setAgricultureProfile] = useState<Record<string, unknown>>({});
   const [agricultureDailyMetrics, setAgricultureDailyMetrics] = useState<import('../../../services/api').AgricultureDailyMetric[]>([]);
   const [agricultureMonthlyReports, setAgricultureMonthlyReports] = useState<import('../../../services/api').AgricultureMonthlyReport[]>([]);
@@ -202,7 +201,6 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
         const dept = deptsRes.find((d) => d.id === orgRes.department_id);
         const code = dept?.code ?? null;
         setDeptCode(code ?? null);
-        setRevenueTahasilParcels([]);
 
         if (code === 'EDUCATION') {
           const profile = await educationApi.getProfile(id);
@@ -221,8 +219,8 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
             Array.isArray(medicinePrimary) && medicinePrimary.length > 0
               ? medicinePrimary
               : await healthApi
-                  .listDailyMedicineStockForDept({ organization_id: id, limit: 500 })
-                  .catch(() => []);
+                .listDailyMedicineStockForDept({ organization_id: id, limit: 500 })
+                .catch(() => []);
           setHealthProfile(
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
@@ -264,20 +262,6 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           setRevenueProfile(
             profile && typeof profile === 'object' ? (profile as Record<string, unknown>) : {},
           );
-          if ((orgRes.sub_department || '') === 'TAHASIL_OFFICE') {
-            const parcelOrgs = await revenueLandApi.listParcelsForTahasilOffice(id);
-            const parcelProfiles = await Promise.all(
-              parcelOrgs.map((o) => revenueLandApi.getProfile(o.id).catch(() => ({}))),
-            );
-            setRevenueTahasilParcels(
-              parcelOrgs.map((po, idx) => ({
-                org: po,
-                profile: (parcelProfiles[idx] && typeof parcelProfiles[idx] === 'object'
-                  ? parcelProfiles[idx]
-                  : {}) as Record<string, unknown>,
-              })),
-            );
-          }
         } else if (code === 'AGRICULTURE') {
           const { agricultureApi } = await import('../../../services/api');
           const [profile, dailyMetrics, monthlyReports] = await Promise.all([
@@ -414,6 +398,19 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
   }
 
   if (deptCode === 'REVENUE_LAND') {
+    if (org.sub_department === 'TAHASIL_OFFICE') {
+      return (
+        <div className="page-container">
+          <Navbar />
+          <TahasilPortfolioWebsite
+            org={org}
+            profile={revenueProfile}
+            lazyParcelsForTahasilOrgId={org.id}
+            parcelRows={[]}
+          />
+        </div>
+      );
+    }
     const galleryImages = Array.isArray((revenueProfile as any)?.gallery_images)
       ? ((revenueProfile as any).gallery_images as string[])
       : [];
@@ -426,8 +423,8 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
           profile={revenueProfile}
           departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
-          isTahasilOffice={org.sub_department === 'TAHASIL_OFFICE'}
-          parcelRows={revenueTahasilParcels}
+          isTahasilOffice={false}
+          parcelRows={[]}
         />
       </div>
     );
