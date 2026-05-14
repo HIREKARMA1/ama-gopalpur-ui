@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Clock, GraduationCap, Images, Mail, MapPin, Phone, School, Star, Users, X } from 'lucide-react';
+import { Clock, ExternalLink, Globe, GraduationCap, Images, Mail, MapPin, Phone, School, Star, Users, X } from 'lucide-react';
 import { Organization } from '../../services/api';
 import { ImageSlider } from './ImageSlider';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -2111,6 +2111,8 @@ export function PsContactSection({ org, profile, language }: { org: Organization
     asString(profile.health_emergency_phone) || asString(profile.emergency_phone) || '';
   const email = asString(profile.contact_email) || EMPTY;
   const officeHours = getText(profile, 'office_hours', language) || EMPTY;
+  const websiteUrl = asString(profile.contact_website_url);
+  const landRecordsUrl = asString(profile.contact_land_records_url);
   const hasMap = org.latitude != null && org.longitude != null;
   const mapSrc = hasMap
     ? `https://maps.google.com/maps?q=${org.latitude},${org.longitude}&z=15&output=embed`
@@ -2169,6 +2171,47 @@ export function PsContactSection({ org, profile, language }: { org: Organization
             </div>
             <p className="mt-2 text-base text-slate-800">{officeHours}</p>
           </article>
+
+          {(websiteUrl || landRecordsUrl) ? (
+            <div className="grid gap-5 sm:grid-cols-2">
+              {websiteUrl ? (
+                <article className="border-b border-slate-200 pb-5">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <Globe className="h-4 w-4 text-indigo-600" />
+                    {tr('Website', 'ୱେବସାଇଟ୍')}
+                  </div>
+                  <p className="mt-2 text-base">
+                    <a
+                      href={websiteUrl}
+                      className="break-all font-medium text-indigo-600 underline hover:text-indigo-800"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {websiteUrl}
+                    </a>
+                  </p>
+                </article>
+              ) : null}
+              {landRecordsUrl ? (
+                <article className="border-b border-slate-200 pb-5">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <ExternalLink className="h-4 w-4 text-indigo-600" />
+                    {tr('Online land records', 'ଅନଲାଇନ୍ ଭୂମି ରେକର୍ଡ')}
+                  </div>
+                  <p className="mt-2 text-base">
+                    <a
+                      href={landRecordsUrl}
+                      className="break-all font-medium text-indigo-600 underline hover:text-indigo-800"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {landRecordsUrl}
+                    </a>
+                  </p>
+                </article>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <article>

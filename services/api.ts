@@ -295,6 +295,16 @@ export const organizationsApi = {
       body: form,
     });
   },
+  /** Tahasil / Revenue Govt Land portfolio image (Tahasil office orgs only). */
+  uploadRevenueLandPortfolioAsset: (id: number, file: File, assetType: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('asset_type', assetType);
+    return apiFetch<{ url: string }>(`/api/v1/organizations/${id}/revenue-land-portfolio-asset`, {
+      method: 'POST',
+      body: form,
+    });
+  },
 };
 
 export const authApi = {
@@ -1560,6 +1570,45 @@ export const revenueLandApi = {
   /** Land parcel orgs under a Tahasil office (public). */
   listParcelsForTahasilOffice: (tahasilOrgId: number) =>
     apiFetch<Organization[]>(`/api/v1/revenue-land/tahasil-offices/${tahasilOrgId}/parcels`),
+  /** Paginated parcel list for large Tahasils (items + total). */
+  listParcelsForTahasilOfficePaged: (
+    tahasilOrgId: number,
+    params?: {
+      skip?: number;
+      limit?: number;
+      ri_circle?: string | null;
+      mouza?: string | null;
+      category?: string | null;
+      kisam?: string | null;
+      q?: string | null;
+    },
+  ) => {
+    const p = new URLSearchParams();
+    p.set('skip', String(params?.skip ?? 0));
+    p.set('limit', String(params?.limit ?? 25));
+    if (params?.ri_circle) p.set('ri_circle', params.ri_circle);
+    if (params?.mouza) p.set('mouza', params.mouza);
+    if (params?.category) p.set('category', params.category);
+    if (params?.kisam) p.set('kisam', params.kisam);
+    if (params?.q) p.set('q', params.q);
+    return apiFetch<{ items: Organization[]; total: number }>(
+      `/api/v1/revenue-land/tahasil-offices/${tahasilOrgId}/parcels/paged?${p}`,
+    );
+  },
+  /** Cascading RI → Mouza → Category → Kisam options for Tahasil parcel filters (public). */
+  listTahasilParcelFilterFacets: (
+    tahasilOrgId: number,
+    params?: { ri_circle?: string | null; mouza?: string | null; category?: string | null },
+  ) => {
+    const p = new URLSearchParams();
+    if (params?.ri_circle) p.set('ri_circle', params.ri_circle);
+    if (params?.mouza) p.set('mouza', params.mouza);
+    if (params?.category) p.set('category', params.category);
+    const qs = p.toString();
+    return apiFetch<{ ri_circles: string[]; mouzas: string[]; categories: string[]; kisams: string[] }>(
+      `/api/v1/revenue-land/tahasil-offices/${tahasilOrgId}/parcels/filter-facets${qs ? `?${qs}` : ''}`,
+    );
+  },
 };
 
 export interface WatcoDailyOperation {
