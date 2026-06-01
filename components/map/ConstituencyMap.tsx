@@ -7,13 +7,11 @@ import {
   Marker,
   InfoWindow,
   Polyline,
-  Polygon,
 } from '@react-google-maps/api';
 import { ChevronDown, Info, Search, SlidersHorizontal, X } from 'lucide-react';
 import {
   GOPALPUR_BOUNDS,
   GOPALPUR_CENTER,
-  GOPALPUR_BORDER,
   DEFAULT_ZOOM,
   EDUCATION_MARKER_ICONS,
   EDUCATION_TYPE_LABELS,
@@ -1868,26 +1866,6 @@ export function ConstituencyMap({
             onRoadStreetViewOpenChange?.(false, null, null);
           }}
         >
-          <Polyline
-            path={GOPALPUR_BORDER}
-            options={{
-              strokeColor: '#ef4444', // red-500
-              strokeOpacity: 0,
-              icons: [
-                {
-                  icon: {
-                    path: 'M 0,-1 0,1',
-                    strokeOpacity: 1,
-                    scale: 3,
-                    strokeWeight: 2,
-                  },
-                  offset: '0',
-                  repeat: '20px',
-                },
-              ],
-              clickable: false,
-            }}
-          />
           {showContent && isRoadsDept &&
             roadsByBlockAndGpWard.map((road, idx) => {
               const path = roadPaths[idx] ?? [];
