@@ -2383,11 +2383,9 @@ export function ConstituencyMap({
       )}
       {selectedDepartmentCode?.toUpperCase() === 'ARCS' && (
         <MapLegendPanel className="md:max-w-[280px]">
-          {(['RURAL', 'URBAN'] as const).map((jur) => {
+          {(['RURAL'] as const).map((jur) => {
             const isSelected = legendFilterType === jur;
-            const labelKey =
-              jur === 'RURAL' ? ('arcs.type.rural' as MessageKey) : ('arcs.type.urban' as MessageKey);
-            const rowLabel = t(labelKey, language);
+            const rowLabel = t('arcs.type.rural', language);
             return (
               <MapLegendRow
                 key={jur}
