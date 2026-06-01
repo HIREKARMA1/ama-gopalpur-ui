@@ -13,7 +13,11 @@ import { t, type MessageKey } from '../i18n/messages';
 import { Navbar } from '../layout/Navbar';
 import { DepartmentHighlightsSection } from './DepartmentHighlightsSection';
 import { getDepartmentLabel } from './DepartmentSidebar';
-import { normalizeLegendParam, resolveEffectiveHighlightCards } from '../../lib/departmentSummaryHighlights';
+import {
+  normalizeLegendParam,
+  organizationListingCategory,
+  resolveEffectiveHighlightCards,
+} from '../../lib/departmentSummaryHighlights';
 
 type Props = {
   department: Department;
@@ -23,7 +27,9 @@ type Props = {
 
 export function DepartmentSummaryPage({ department, organizationCount, organizations }: Props) {
   const { language } = useLanguage();
-  const isRoadsDept = (department.code || '').toUpperCase() === 'ROADS';
+  const deptCode = (department.code || '').toUpperCase();
+  const isRoadsDept = deptCode === 'ROADS';
+  const isArcsDept = deptCode === 'ARCS';
   const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
   const localizedSummaryText = (en?: string | null, od?: string | null) => {
     const enText = (en || '').trim();
@@ -117,27 +123,17 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       Array.from(
         new Set(
           topOrganizations
-            .map(
-              (o) =>
-              ((isRoadsDept
-                ? ((o.attributes?.road_sector as string) || '')
-                : '') ||
-                o.sub_department ||
-                  (o.attributes?.category as string) ||
-                  (o.attributes?.institution_type as string) ||
-                  '') as string,
-            )
-            .map((s) => s.trim())
+            .map((o) => organizationListingCategory(o, department.code))
             .filter(Boolean),
         ),
       ).sort((a, b) => a.localeCompare(b)),
-    [topOrganizations, isRoadsDept],
+    [topOrganizations, department.code],
   );
 
   const filteredOrganizations = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     return topOrganizations.filter((org) => {
-      const categoryLabel = organizationCategory(org);
+      const categoryLabel = organizationListingCategory(org, department.code);
       const address = (org.address || '').toString();
       const attrs = (org.attributes ?? {}) as Record<string, unknown>;
       const roadCode = String(attrs.road_code ?? '').toLowerCase();
@@ -154,13 +150,13 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       const matchesCategory = categoryFilter === 'ALL' || categoryLabel === categoryFilter;
       return matchesSearch && matchesCategory;
     });
-  }, [topOrganizations, searchTerm, categoryFilter, isRoadsDept]);
+  }, [topOrganizations, searchTerm, categoryFilter, isRoadsDept, department.code]);
 
   const sortedOrganizations = useMemo(() => {
     const rows = [...filteredOrganizations];
     rows.sort((a, b) => {
-      const aCategory = organizationCategory(a);
-      const bCategory = organizationCategory(b);
+      const aCategory = organizationListingCategory(a, department.code);
+      const bCategory = organizationListingCategory(b, department.code);
       const aAddress = (a.address || '') as string;
       const bAddress = (b.address || '') as string;
       const factor = sortDir === 'asc' ? 1 : -1;
@@ -170,7 +166,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       return aAddress.localeCompare(bAddress) * factor;
     });
     return rows;
-  }, [filteredOrganizations, sortKey, sortDir]);
+  }, [filteredOrganizations, sortKey, sortDir, department.code]);
 
   const totalPages = Math.max(1, Math.ceil(sortedOrganizations.length / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -355,7 +351,10 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     </th>
                     <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
                       <button type="button" onClick={() => onSort('category')} className="inline-flex items-center gap-1 hover:text-slate-700">
-                        {tr('dept.summary.table.subDepartmentCategory')} <SortIcon active={sortKey === 'category'} direction={sortDir} />
+                        {isArcsDept
+                          ? tr('dept.summary.table.jurisdictionType')
+                          : tr('dept.summary.table.subDepartmentCategory')}{' '}
+                        <SortIcon active={sortKey === 'category'} direction={sortDir} />
                       </button>
                     </th>
                     <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
@@ -391,7 +390,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                         </td>
                         <td className="px-4 py-2.5 text-xs font-medium text-slate-800">{org.name}</td>
                         <td className="px-4 py-2.5 text-sm text-slate-600">
-                          {organizationCategory(org) || '—'}
+                          {organizationListingCategory(org, department.code) || '—'}
                         </td>
                         <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
                           <span className="line-clamp-1">{org.address || '—'}</span>
@@ -556,16 +555,6 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         </div>
       )}
     </div>
-  );
-}
-
-function organizationCategory(org: Organization): string {
-  return (
-    (org.attributes?.road_sector as string) ||
-    org.sub_department ||
-    (org.attributes?.category as string) ||
-    (org.attributes?.institution_type as string) ||
-    ''
   );
 }
 

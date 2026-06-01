@@ -642,6 +642,7 @@ export type MessageKey =
   | 'dept.summary.table.slNo'
   | 'dept.summary.table.organization'
   | 'dept.summary.table.subDepartmentCategory'
+  | 'dept.summary.table.jurisdictionType'
   | 'dept.summary.table.address'
   | 'dept.summary.table.portfolio'
   | 'dept.summary.table.openPortfolio'
@@ -1398,6 +1399,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'dept.summary.table.subDepartmentCategory': {
     en: 'Sub-department / Category',
     or: 'ଉପ-ବିଭାଗ / ଶ୍ରେଣୀ',
+  },
+  'dept.summary.table.jurisdictionType': {
+    en: 'Jurisdiction type',
+    or: 'କ୍ଷେତ୍ର ପ୍ରକାର',
   },
   'dept.summary.table.address': {
     en: 'Address',

@@ -110,3 +110,20 @@ export function normalizeLegendParam(label: string): string {
     .replace(/\s+/g, '_')
     .toUpperCase();
 }
+
+/** Category column value on the department summary organization table. */
+export function organizationListingCategory(org: Organization, departmentCode?: string): string {
+  const code = (departmentCode || '').toUpperCase();
+  if (code === 'ARCS') {
+    const jurisdiction = String(org.attributes?.jurisdiction_type ?? '').trim();
+    if (jurisdiction) return jurisdiction.replace(/_/g, ' ');
+    return (org.type || '').trim();
+  }
+  return (
+    (org.attributes?.road_sector as string) ||
+    org.sub_department ||
+    (org.attributes?.category as string) ||
+    (org.attributes?.institution_type as string) ||
+    ''
+  ).trim();
+}
