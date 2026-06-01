@@ -6,6 +6,7 @@ import { DepartmentSummaryPage } from '../../../../components/departments/Depart
 import { Loader } from '../../../../components/common/Loader';
 import { departmentsApi, organizationsApi, type Department, type Organization } from '../../../../services/api';
 import { extractDepartmentIdFromParam } from '../../../../lib/departmentRoute';
+import { enrichArcsOrganizationsForListing } from '../../../../lib/departmentSummaryHighlights';
 
 export default function DepartmentSummaryRoutePage() {
   const params = useParams<{ id: string }>();
@@ -36,7 +37,11 @@ export default function DepartmentSummaryRoutePage() {
           if (skip > 100000) break; // hard safety guard
         }
         setOrganizationCount(total);
-        setOrganizations(all);
+        const listingOrgs =
+          (dept.code || '').toUpperCase() === 'ARCS'
+            ? await enrichArcsOrganizationsForListing(all)
+            : all;
+        setOrganizations(listingOrgs);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Failed to load department summary.');
       } finally {

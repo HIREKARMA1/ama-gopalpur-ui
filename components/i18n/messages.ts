@@ -550,8 +550,11 @@ export type MessageKey =
   | 'map.legend.watco'
   | 'map.legend.rwss'
   | 'roads.type.nh'
+  | 'roads.type.sh'
   | 'roads.type.pwd'
   | 'roads.type.rd'
+  | 'roads.type.ps'
+  | 'roads.type.gp'
   | 'roads.type.other'
   | 'watco.type.megaEsr'
   | 'watco.type.existingEsr'
@@ -639,15 +642,37 @@ export type MessageKey =
   | 'dept.summary.empty.organizations'
   | 'dept.summary.search.placeholder'
   | 'dept.summary.search.allCategories'
+  | 'dept.summary.search.allJurisdictionTypes'
   | 'dept.summary.table.slNo'
   | 'dept.summary.table.organization'
   | 'dept.summary.table.subDepartmentCategory'
+  | 'dept.summary.table.jurisdictionType'
   | 'dept.summary.table.address'
   | 'dept.summary.table.portfolio'
   | 'dept.summary.table.openPortfolio'
   | 'dept.summary.pagination.showing'
   | 'dept.summary.pagination.previous'
-  | 'dept.summary.pagination.next';
+  | 'dept.summary.pagination.next'
+  | 'dept.summary.highlights.clickHint'
+  | 'dept.summary.drainage.drainType'
+  | 'dept.summary.drainage.allDrainTypes'
+  | 'dept.summary.drainage.project'
+  | 'dept.summary.drainage.lengthKm'
+  | 'dept.summary.drainage.startLat'
+  | 'dept.summary.drainage.startLng'
+  | 'dept.summary.drainage.endLat'
+  | 'dept.summary.drainage.endLng'
+  | 'dept.summary.drainage.remarks'
+  | 'map.filter.label'
+  | 'map.filter.title'
+  | 'map.filter.close'
+  | 'map.filter.block'
+  | 'map.filter.allGpWard'
+  | 'map.filter.reset'
+  | 'map.filter.apply'
+  | 'map.drainage.info.project'
+  | 'map.drainage.info.lengthKm'
+  | 'map.drainage.info.remarks';
 
 const messages: Record<MessageKey, { en: string; or: string }> = {
   'govBar.title': {
@@ -842,12 +867,12 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     or: 'ସଂରକ୍ଷଣ ହେଲା ନାହିଁ । ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ ।',
   },
   'map.drainage.legend.mainChannel': {
-    en: 'Main drain / nalla',
-    or: 'ମୁଖ୍ୟ ଡ୍ରେନ୍ / ନଳା',
+    en: 'Main',
+    or: 'ମୁଖ୍ୟ',
   },
   'map.drainage.legend.branchLink': {
-    en: 'Branch / link',
-    or: 'ଶାଖା / ଲିଙ୍କ୍',
+    en: 'Branch',
+    or: 'ଶାଖା',
   },
   'map.revenue.legend.tahasil': {
     en: 'Tahasil office',
@@ -1207,9 +1232,12 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.legend.showOnly': { en: 'Show only', or: 'କେବଳ ଦେଖାନ୍ତୁ' },
   'map.legend.watco': { en: 'WATCO', or: 'ୱାଟକୋ' },
   'map.legend.rwss': { en: 'RWSS', or: 'ଆର୍.ଡବ୍ଲ୍ୟୁ.ଏସ୍.ଏସ୍' },
-  'roads.type.nh': { en: 'National Highway', or: 'ଜାତୀୟ ରାଜପଥ' },
-  'roads.type.pwd': { en: 'PWD / R&B', or: 'PWD / R&B' },
-  'roads.type.rd': { en: 'Rural / Village Road', or: 'ଗ୍ରାମୀଣ / ଗାଁ ରାସ୍ତାଘାଟ' },
+  'roads.type.nh': { en: 'NH', or: 'ଜାତୀୟ ରାଜପଥ' },
+  'roads.type.sh': { en: 'SH', or: 'ରାଜ୍ୟ ରାଜପଥ' },
+  'roads.type.pwd': { en: 'PWD', or: 'PWD' },
+  'roads.type.rd': { en: 'RD', or: 'ଗ୍ରାମୀଣ ରାସ୍ତା' },
+  'roads.type.ps': { en: 'PS', or: 'ପଞ୍ଚାୟତ ସମିତି' },
+  'roads.type.gp': { en: 'GP', or: 'ଗ୍ରାମ ପଞ୍ଚାୟତ' },
   'roads.type.other': { en: 'Other', or: 'ଅନ୍ୟ' },
   'watco.type.megaEsr': { en: 'MEGA ESR', or: 'ମେଗା ESR' },
   'watco.type.existingEsr': { en: 'EXISTING ESR', or: 'ବିଦ୍ୟମାନ ESR' },
@@ -1387,6 +1415,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
     en: 'All categories',
     or: 'ସମସ୍ତ ଶ୍ରେଣୀ',
   },
+  'dept.summary.search.allJurisdictionTypes': {
+    en: 'All jurisdiction types',
+    or: 'ସମସ୍ତ କ୍ଷେତ୍ର ପ୍ରକାର',
+  },
   'dept.summary.table.slNo': {
     en: 'Sl No',
     or: 'କ୍ରମିକ ସଂଖ୍ୟା',
@@ -1398,6 +1430,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'dept.summary.table.subDepartmentCategory': {
     en: 'Sub-department / Category',
     or: 'ଉପ-ବିଭାଗ / ଶ୍ରେଣୀ',
+  },
+  'dept.summary.table.jurisdictionType': {
+    en: 'Jurisdiction type',
+    or: 'କ୍ଷେତ୍ର ପ୍ରକାର',
   },
   'dept.summary.table.address': {
     en: 'Address',
@@ -1422,6 +1458,86 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'dept.summary.pagination.next': {
     en: 'Next',
     or: 'ପରବର୍ତ୍ତୀ',
+  },
+  'dept.summary.highlights.clickHint': {
+    en: 'Click any node to view matching organizations on the map.',
+    or: 'ମାନଚିତ୍ରରେ ସମ୍ବନ୍ଧିତ ସଂସ୍ଥା ଦେଖିବାକୁ ଯେକୌଣସି ନୋଡ୍ ଉପରେ କ୍ଲିକ୍ କରନ୍ତୁ।',
+  },
+  'dept.summary.drainage.drainType': {
+    en: 'Drain type',
+    or: 'ନାଳା ପ୍ରକାର',
+  },
+  'dept.summary.drainage.allDrainTypes': {
+    en: 'All drain types',
+    or: 'ସମସ୍ତ ନାଳା ପ୍ରକାର',
+  },
+  'dept.summary.drainage.project': {
+    en: 'Project',
+    or: 'ପ୍ରକଳ୍ପ',
+  },
+  'dept.summary.drainage.lengthKm': {
+    en: 'Length (KM)',
+    or: 'ଦୈର୍ଘ୍ୟ (କି.ମି.)',
+  },
+  'dept.summary.drainage.startLat': {
+    en: 'Start Lat',
+    or: 'ଆରମ୍ଭ ଅକ୍ଷାଂଶ',
+  },
+  'dept.summary.drainage.startLng': {
+    en: 'Start Lng',
+    or: 'ଆରମ୍ଭ ଦ୍ରାଘିମା',
+  },
+  'dept.summary.drainage.endLat': {
+    en: 'End Lat',
+    or: 'ଶେଷ ଅକ୍ଷାଂଶ',
+  },
+  'dept.summary.drainage.endLng': {
+    en: 'End Lng',
+    or: 'ଶେଷ ଦ୍ରାଘିମା',
+  },
+  'dept.summary.drainage.remarks': {
+    en: 'Remarks',
+    or: 'ରିମାର୍କ',
+  },
+  'map.filter.label': {
+    en: 'Filter',
+    or: 'ଫିଲ୍ଟର',
+  },
+  'map.filter.title': {
+    en: 'Map filters',
+    or: 'ମ୍ୟାପ ଫିଲ୍ଟର',
+  },
+  'map.filter.close': {
+    en: 'Close',
+    or: 'ବନ୍ଦ କରନ୍ତୁ',
+  },
+  'map.filter.block': {
+    en: 'Block',
+    or: 'ବ୍ଲକ',
+  },
+  'map.filter.allGpWard': {
+    en: 'All GP/Ward',
+    or: 'ସମସ୍ତ GP/Ward',
+  },
+  'map.filter.reset': {
+    en: 'Reset',
+    or: 'ରିସେଟ୍',
+  },
+  'map.filter.apply': {
+    en: 'Apply',
+    or: 'ଲାଗୁ କରନ୍ତୁ',
+  },
+  'map.drainage.info.project': {
+    en: 'Project',
+    or: 'ପ୍ରକଳ୍ପ',
+  },
+  'map.drainage.info.lengthKm': {
+    en: 'Length (km)',
+    or: 'ଦୈର୍ଘ୍ୟ (କି.ମି.)',
+  },
+  'map.drainage.info.remarks': {
+    en: 'Remarks',
+    or: 'ରିମାର୍କ',
   },
   'login.email': {
     en: 'Email',

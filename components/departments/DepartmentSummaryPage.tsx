@@ -3,7 +3,6 @@ import { CiShare1 } from 'react-icons/ci';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { Info, X } from 'lucide-react';
 import type { Department, Organization } from '../../services/api';
-import { buildOrganizationProfilePath } from '../../lib/organizationRoute';
 import {
   PsAboutSection,
   type Lang,
@@ -13,6 +12,21 @@ import { t, type MessageKey } from '../i18n/messages';
 import { Navbar } from '../layout/Navbar';
 import { DepartmentHighlightsSection } from './DepartmentHighlightsSection';
 import { getDepartmentLabel } from './DepartmentSidebar';
+import {
+  ARCS_SUMMARY_TABLE_COLUMNS,
+  legendHighlightTitle,
+  normalizeLegendParam,
+  organizationListingArcsAttribute,
+  organizationListingCategory,
+  resolveEffectiveHighlightCards,
+} from '../../lib/departmentSummaryHighlights';
+import {
+  DRAINAGE_SUMMARY_TABLE_COLUMNS,
+  drainageSummaryColumnLabel,
+  drainageTypeMessageKey,
+  getDrainLineKindFromOrg,
+  getDrainTableColumnValue,
+} from '../../lib/drainageOrganization';
 
 type Props = {
   department: Department;
@@ -22,7 +36,10 @@ type Props = {
 
 export function DepartmentSummaryPage({ department, organizationCount, organizations }: Props) {
   const { language } = useLanguage();
-  const isRoadsDept = (department.code || '').toUpperCase() === 'ROADS';
+  const deptCode = (department.code || '').toUpperCase();
+  const isRoadsDept = deptCode === 'ROADS';
+  const isArcsDept = deptCode === 'ARCS';
+  const isDrainageDept = deptCode === 'DRAINAGE';
   const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
   const localizedSummaryText = (en?: string | null, od?: string | null) => {
     const enText = (en || '').trim();
@@ -94,21 +111,13 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     office_hours_en: '',
   };
 
-  const legendRows = buildLegendRows(organizations, department.code);
-  const highlightCards = [
-    ...(summary?.highlight_cards ?? [])
-      .map((c) => ({
-        title: (c.title || '').trim(),
-        count: (c.value || '').trim(),
-        legendKey: normalizeLegendParam(c.title || ''),
-      }))
-      .filter((c) => c.title && c.count),
-    ...legendRows.map((row) => ({
-      title: row.label,
-      count: String(row.count),
-      legendKey: normalizeLegendParam(row.rawLabel),
-    })),
-  ];
+  const highlightCards = resolveEffectiveHighlightCards(summary, organizations, department.code).map(
+    (card) => ({
+      title: legendHighlightTitle(card, department.code, language),
+      count: card.value,
+      legendKey: normalizeLegendParam(card.legend_key || card.title),
+    }),
+  );
   const topOrganizations = [...organizations].sort((a, b) => a.name.localeCompare(b.name));
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
@@ -119,55 +128,64 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const [isStreetInfoOpen, setIsStreetInfoOpen] = useState(false);
   const pageSize = 15;
 
-  const categoryOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          topOrganizations
-            .map(
-              (o) =>
-              ((isRoadsDept
-                ? ((o.attributes?.road_sector as string) || '')
-                : '') ||
-                o.sub_department ||
-                  (o.attributes?.category as string) ||
-                  (o.attributes?.institution_type as string) ||
-                  '') as string,
-            )
-            .map((s) => s.trim())
-            .filter(Boolean),
-        ),
-      ).sort((a, b) => a.localeCompare(b)),
-    [topOrganizations, isRoadsDept],
-  );
+  const categoryOptions = useMemo(() => {
+    if (isDrainageDept) {
+      return ['MAIN', 'BRANCH'] as const;
+    }
+    return Array.from(
+      new Set(
+        topOrganizations
+          .map((o) => organizationListingCategory(o, department.code))
+          .filter(Boolean),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+  }, [topOrganizations, department.code, isDrainageDept]);
 
   const filteredOrganizations = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     return topOrganizations.filter((org) => {
-      const categoryLabel = organizationCategory(org);
+      const categoryLabel = organizationListingCategory(org, department.code);
       const address = (org.address || '').toString();
       const attrs = (org.attributes ?? {}) as Record<string, unknown>;
       const roadCode = String(attrs.road_code ?? '').toLowerCase();
       const roadBlock = String(attrs.block ?? '').toLowerCase();
       const roadRemarks = String(attrs.remarks ?? '').toLowerCase();
 
+      const arcsSearchText = isArcsDept
+        ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => organizationListingArcsAttribute(org, col.keys).toLowerCase()).join(' ')
+        : '';
+
+      const drainageSearchText = isDrainageDept
+        ? [
+            org.name,
+            ...DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => getDrainTableColumnValue(org, col)),
+          ]
+            .join(' ')
+            .toLowerCase()
+        : '';
+
       const matchesSearch =
         !q ||
         org.name.toLowerCase().includes(q) ||
         categoryLabel.toLowerCase().includes(q) ||
         address.toLowerCase().includes(q) ||
+        (isArcsDept && arcsSearchText.includes(q)) ||
+        (isDrainageDept && drainageSearchText.includes(q)) ||
         (isRoadsDept &&
           (roadCode.includes(q) || roadBlock.includes(q) || roadRemarks.includes(q)));
-      const matchesCategory = categoryFilter === 'ALL' || categoryLabel === categoryFilter;
+      const drainKind = isDrainageDept ? getDrainLineKindFromOrg(org) : '';
+      const matchesCategory =
+        categoryFilter === 'ALL' ||
+        (isDrainageDept ? drainKind === categoryFilter : categoryLabel === categoryFilter);
       return matchesSearch && matchesCategory;
     });
-  }, [topOrganizations, searchTerm, categoryFilter, isRoadsDept]);
+  }, [topOrganizations, searchTerm, categoryFilter, isRoadsDept, isArcsDept, isDrainageDept, department.code]);
 
   const sortedOrganizations = useMemo(() => {
     const rows = [...filteredOrganizations];
     rows.sort((a, b) => {
-      const aCategory = organizationCategory(a);
-      const bCategory = organizationCategory(b);
+      const aCategory = organizationListingCategory(a, department.code);
+      const bCategory = organizationListingCategory(b, department.code);
       const aAddress = (a.address || '') as string;
       const bAddress = (b.address || '') as string;
       const factor = sortDir === 'asc' ? 1 : -1;
@@ -177,7 +195,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       return aAddress.localeCompare(bAddress) * factor;
     });
     return rows;
-  }, [filteredOrganizations, sortKey, sortDir]);
+  }, [filteredOrganizations, sortKey, sortDir, department.code]);
 
   const totalPages = Math.max(1, Math.ceil(sortedOrganizations.length / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -313,7 +331,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         <DepartmentHighlightsSection
           sectionTitle={tr('dept.summary.section.highlights')}
           emptyText={tr('dept.summary.empty.highlights')}
-          infoText={trStatic('Click any node to view matching organizations.', 'ଯେକୌଣସି ନୋଡ୍‌କୁ ଦବାନ୍ତୁ ଏବଂ ସମ୍ବନ୍ଧିତ ସଂଗଠନ ଦେଖନ୍ତୁ।')}
+          infoText={tr('dept.summary.highlights.clickHint')}
           departmentName={localizedDepartmentName}
           departmentCode={department.code || ''}
           highlightCards={highlightCards}
@@ -337,12 +355,30 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                 setCategoryFilter(e.target.value);
                 setCurrentPage(1);
               }}
+              aria-label={
+                isArcsDept
+                  ? tr('dept.summary.table.jurisdictionType')
+                  : isDrainageDept
+                    ? tr('dept.summary.drainage.allDrainTypes')
+                    : tr('dept.summary.search.allCategories')
+              }
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             >
-              <option value="ALL">{tr('dept.summary.search.allCategories')}</option>
+              <option value="ALL">
+                {isArcsDept
+                  ? tr('dept.summary.search.allJurisdictionTypes')
+                  : isDrainageDept
+                    ? tr('dept.summary.drainage.allDrainTypes')
+                    : tr('dept.summary.search.allCategories')}
+              </option>
               {categoryOptions.map((opt) => (
                 <option key={`cat-${opt}`} value={opt}>
-                  {opt}
+                  {isDrainageDept
+                    ? (() => {
+                        const key = drainageTypeMessageKey(opt);
+                        return key ? tr(key) : opt;
+                      })()
+                    : opt}
                 </option>
               ))}
             </select>
@@ -362,14 +398,40 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     </th>
                     <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
                       <button type="button" onClick={() => onSort('category')} className="inline-flex items-center gap-1 hover:text-slate-700">
-                        {tr('dept.summary.table.subDepartmentCategory')} <SortIcon active={sortKey === 'category'} direction={sortDir} />
+                        {isArcsDept
+                          ? tr('dept.summary.table.jurisdictionType')
+                          : isDrainageDept
+                            ? tr('dept.summary.drainage.drainType')
+                            : tr('dept.summary.table.subDepartmentCategory')}{' '}
+                        <SortIcon active={sortKey === 'category'} direction={sortDir} />
                       </button>
                     </th>
-                    <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                      <button type="button" onClick={() => onSort('address')} className="inline-flex items-center gap-1 hover:text-slate-700">
-                        {tr('dept.summary.table.address')} <SortIcon active={sortKey === 'address'} direction={sortDir} />
-                      </button>
-                    </th>
+                    {isArcsDept
+                      ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => (
+                          <th
+                            key={col.id}
+                            className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500"
+                          >
+                            {tr(col.labelKey)}
+                          </th>
+                        ))
+                      : null}
+                    {isDrainageDept
+                      ? DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => (
+                          <th
+                            key={col}
+                            className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500"
+                          >
+                            {drainageSummaryColumnLabel(col, language)}
+                          </th>
+                        ))
+                      : (
+                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
+                          <button type="button" onClick={() => onSort('address')} className="inline-flex items-center gap-1 hover:text-slate-700">
+                            {tr('dept.summary.table.address')} <SortIcon active={sortKey === 'address'} direction={sortDir} />
+                          </button>
+                        </th>
+                      )}
                     {isRoadsDept ? (
                       <>
                         <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
@@ -382,11 +444,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                           {trStatic('Street View', 'ସ୍ଟ୍ରିଟ ଭ୍ୟୁ')}
                         </th>
                       </>
-                    ) : (
-                      <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                        {tr('dept.summary.table.portfolio')}
-                      </th>
-                    )}
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -398,11 +456,34 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                         </td>
                         <td className="px-4 py-2.5 text-xs font-medium text-slate-800">{org.name}</td>
                         <td className="px-4 py-2.5 text-sm text-slate-600">
-                          {organizationCategory(org) || '—'}
+                          {isDrainageDept
+                            ? (() => {
+                                const kind = getDrainLineKindFromOrg(org);
+                                const key = drainageTypeMessageKey(kind);
+                                return key ? tr(key) : kind || '—';
+                              })()
+                            : organizationListingCategory(org, department.code) || '—'}
                         </td>
-                        <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
-                          <span className="line-clamp-1">{org.address || '—'}</span>
-                        </td>
+                        {isArcsDept
+                          ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => (
+                              <td key={`${org.id}-${col.id}`} className="px-4 py-2.5 text-sm text-slate-600">
+                                {organizationListingArcsAttribute(org, col.keys) || '—'}
+                              </td>
+                            ))
+                          : null}
+                        {isDrainageDept
+                          ? DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => (
+                              <td key={`${org.id}-${col}`} className="px-4 py-2.5 text-sm text-slate-600">
+                                <span className={col === 'Remarks' ? 'line-clamp-2' : ''}>
+                                  {getDrainTableColumnValue(org, col) || '—'}
+                                </span>
+                              </td>
+                            ))
+                          : (
+                            <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
+                              <span className="line-clamp-1">{org.address || '—'}</span>
+                            </td>
+                          )}
                         {isRoadsDept ? (
                           <>
                             <td className="px-4 py-2.5 text-sm text-slate-600">
@@ -424,26 +505,17 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                               </a>
                             </td>
                           </>
-                        ) : (
-                          <td className="px-4 py-2.5 text-slate-700">
-                            <a
-                              href={buildOrganizationProfilePath(org.id, {
-                                departmentCode: department.code || 'department',
-                                organizationName: org.name,
-                              })}
-                              className="inline-flex items-center text-base font-semibold text-slate-500 hover:text-slate-800"
-                              aria-label={`Open portfolio for ${org.name}`}
-                              title={tr('dept.summary.table.openPortfolio')}
-                            >
-                              <CiShare1 className="text-lg" />
-                            </a>
-                          </td>
-                        )}
+                        ) : null}
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td className="px-4 py-3 text-slate-600" colSpan={isRoadsDept ? 7 : 5}>
+                      <td
+                        className="px-4 py-3 text-slate-600"
+                        colSpan={
+                          isRoadsDept ? 7 : isArcsDept ? 7 : isDrainageDept ? 10 : 4
+                        }
+                      >
                         {tr('dept.summary.empty.organizations')}
                       </td>
                     </tr>
@@ -566,16 +638,6 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   );
 }
 
-function organizationCategory(org: Organization): string {
-  return (
-    (org.attributes?.road_sector as string) ||
-    org.sub_department ||
-    (org.attributes?.category as string) ||
-    (org.attributes?.institution_type as string) ||
-    ''
-  );
-}
-
 function parseRoadPathCoordinates(raw: unknown): Array<[number, number]> {
   const s = String(raw ?? '').trim();
   if (!s) return [];
@@ -673,81 +735,11 @@ function SortIcon({
   );
 }
 
-function buildLegendRows(organizations: Organization[], departmentCode?: string): { label: string; rawLabel: string; count: number }[] {
-  const code = (departmentCode || '').toUpperCase();
-  const bucket = new Map<string, number>();
-  const add = (label?: string | null) => {
-    const l = (label || '').trim();
-    if (!l) return;
-    bucket.set(l, (bucket.get(l) || 0) + 1);
-  };
-
-  for (const org of organizations) {
-    if (code === 'EDUCATION') {
-      add(org.sub_department || org.type);
-      continue;
-    }
-    if (code === 'HEALTH') {
-      add((org.attributes?.category as string) || org.type);
-      continue;
-    }
-    if (code === 'AGRICULTURE') {
-      add(org.sub_department || (org.attributes?.sub_department as string) || org.type);
-      continue;
-    }
-    if (code === 'ELECTRICITY') {
-      add((org.attributes?.institution_type as string) || org.type);
-      continue;
-    }
-    if (code === 'ARCS') {
-      add((org.attributes?.jurisdiction_type as string) || org.type);
-      continue;
-    }
-    if (code === 'WATCO_RWSS') {
-      add((org.attributes?.station_type as string) || org.type);
-      continue;
-    }
-    if (code === 'ROADS') {
-      add(
-        (org.attributes?.road_sector as string) ||
-          org.sub_department ||
-          (org.attributes?.category as string) ||
-          org.type,
-      );
-      continue;
-    }
-    if (code === 'MINOR_IRRIGATION') {
-      add((org.attributes?.category_type as string) || org.type);
-      continue;
-    }
-    if (code === 'IRRIGATION') {
-      add((org.attributes?.category as string) || org.type);
-      continue;
-    }
-    if (code === 'REVENUE_LAND') {
-      add(org.sub_department || (org.attributes?.land_type as string) || org.type);
-      continue;
-    }
-    add(org.sub_department || org.type);
-  }
-
-  return Array.from(bucket.entries())
-    .map(([label, count]) => ({ label: label.replace(/_/g, ' '), rawLabel: label, count }))
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
-}
-
 function toParagraphs(text: string): string[] {
   return String(text || '')
     .split(/\n\s*\n/g)
     .map((p) => p.trim())
     .filter(Boolean);
-}
-
-function normalizeLegendParam(label: string): string {
-  return String(label || '')
-    .trim()
-    .replace(/\s+/g, '_')
-    .toUpperCase();
 }
 
 function buildRoadStreetViewPath(org: Organization): string {

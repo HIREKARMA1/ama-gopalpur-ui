@@ -14,6 +14,7 @@ import {
   healthApi,
   electricityApi,
   arcsApi,
+  drainageApi,
   watcoApi,
   minorIrrigationApi,
   revenueLandApi,
@@ -29,6 +30,12 @@ import { t } from '../../../components/i18n/messages';
 import { Loader } from '../../../components/common/Loader';
 import { DepartmentSummaryManagementSection } from '../../../components/admin/DepartmentSummaryManagementSection';
 import { RoadsDataEntryForm } from '../../../components/admin/RoadsDataEntryForm';
+import { DrainageDataEntryForm } from '../../../components/admin/DrainageDataEntryForm';
+import {
+  DRAINAGE_CSV_HEADER,
+  DRAINAGE_TABLE_COLUMNS,
+  getDrainTableColumnValue,
+} from '../../../lib/drainageOrganization';
 import { compressImage } from '../../../lib/imageCompression';
 import {
   EducationPsPortfolioAdminForm,
@@ -340,6 +347,7 @@ export default function DepartmentAdminPage() {
   const [creating, setCreating] = useState(false);
   const [editingOrgId, setEditingOrgId] = useState<number | null>(null);
   const [editingRoadOrg, setEditingRoadOrg] = useState<Organization | null>(null);
+  const [editingDrainOrg, setEditingDrainOrg] = useState<Organization | null>(null);
   const [orgProfiles, setOrgProfiles] = useState<Record<number, CenterProfile | null>>({});
   const [healthProfiles, setHealthProfiles] = useState<Record<number, Record<string, unknown>>>({});
   const [educationProfiles, setEducationProfiles] = useState<Record<number, Record<string, unknown>>>({});
@@ -396,6 +404,10 @@ export default function DepartmentAdminPage() {
   const [roadsTableSearchText, setRoadsTableSearchText] = useState<string>('');
   const [roadsSortColumn, setRoadsSortColumn] = useState<string>('Road Name');
   const [roadsSortDirection, setRoadsSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [drainageTableFilterColumn, setDrainageTableFilterColumn] = useState<string>('Drain Name');
+  const [drainageTableSearchText, setDrainageTableSearchText] = useState<string>('');
+  const [drainageSortColumn, setDrainageSortColumn] = useState<string>('Drain Name');
+  const [drainageSortDirection, setDrainageSortDirection] = useState<'asc' | 'desc'>('asc');
   const [selectedOrgIds, setSelectedOrgIds] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [allSearchOrgs, setAllSearchOrgs] = useState<Organization[] | null>(null);
@@ -677,6 +689,22 @@ export default function DepartmentAdminPage() {
     setRoadsSortDirection('asc');
   }, [deptCode, roadsTableColumns]);
 
+  const drainageTableColumns = useMemo(() => {
+    if (deptCode !== 'DRAINAGE') return [] as string[];
+    return [...DRAINAGE_TABLE_COLUMNS];
+  }, [deptCode]);
+
+  useEffect(() => {
+    if (deptCode !== 'DRAINAGE' || !drainageTableColumns.length) return;
+    setDrainageTableFilterColumn((prev) =>
+      drainageTableColumns.includes(prev) ? prev : drainageTableColumns[0]!,
+    );
+    setDrainageSortColumn((prev) =>
+      drainageTableColumns.includes(prev) ? prev : drainageTableColumns[0]!,
+    );
+    setDrainageSortDirection('asc');
+  }, [deptCode, drainageTableColumns]);
+
   const getRoadTableColumnValue = (o: Organization, column: string): string => {
     const fallback = (v: unknown) => (v != null && String(v).trim() !== '' ? String(v) : '');
     const attrs = (o.attributes ?? {}) as Record<string, unknown>;
@@ -747,6 +775,33 @@ export default function DepartmentAdminPage() {
           cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
         }
         return roadsSortDirection === 'asc' ? cmp : -cmp;
+      });
+    }
+    if (deptCode === 'DRAINAGE') {
+      const q = drainageTableSearchText.trim().toLowerCase();
+      const filtered = !q
+        ? base
+        : base.filter((o) =>
+            getDrainTableColumnValue(o, drainageTableFilterColumn).toLowerCase().includes(q),
+          );
+      const numericColumns = new Set(['Length (KM)', 'Start Lat', 'Start Lng', 'End Lat', 'End Lng']);
+      return [...filtered].sort((a, b) => {
+        const av = getDrainTableColumnValue(a, drainageSortColumn).trim();
+        const bv = getDrainTableColumnValue(b, drainageSortColumn).trim();
+        let cmp = 0;
+        if (numericColumns.has(drainageSortColumn)) {
+          const an = Number(av);
+          const bn = Number(bv);
+          const aValid = Number.isFinite(an);
+          const bValid = Number.isFinite(bn);
+          if (aValid && bValid) cmp = an - bn;
+          else if (aValid) cmp = 1;
+          else if (bValid) cmp = -1;
+          else cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+        } else {
+          cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+        }
+        return drainageSortDirection === 'asc' ? cmp : -cmp;
       });
     }
     if (deptCode !== 'EDUCATION') return base;
@@ -838,6 +893,10 @@ export default function DepartmentAdminPage() {
     roadsTableSearchText,
     roadsSortColumn,
     roadsSortDirection,
+    drainageTableFilterColumn,
+    drainageTableSearchText,
+    drainageSortColumn,
+    drainageSortDirection,
     icdsTableFilterColumn,
     icdsTableSearchText,
   ]);
@@ -847,8 +906,9 @@ export default function DepartmentAdminPage() {
     if (deptCode === 'ICDS' || deptCode === 'AWC_ICDS') return icdsTableSearchText;
     if (deptCode === 'WATCO_RWSS') return watcoTableSearchText;
     if (deptCode === 'ROADS') return roadsTableSearchText;
+    if (deptCode === 'DRAINAGE') return drainageTableSearchText;
     return '';
-  }, [deptCode, educationTableSearchText, icdsTableSearchText, watcoTableSearchText, roadsTableSearchText]);
+  }, [deptCode, educationTableSearchText, icdsTableSearchText, watcoTableSearchText, roadsTableSearchText, drainageTableSearchText]);
 
   useEffect(() => {
     const query = activeTableSearchText.trim();
@@ -1186,7 +1246,12 @@ export default function DepartmentAdminPage() {
     const rows: string[][] = [];
     let headers: string[] = [];
 
-    if (deptCode === 'ROADS') {
+    if (deptCode === 'DRAINAGE') {
+      headers = [...DRAINAGE_TABLE_COLUMNS];
+      organizationsForTable.forEach((o) => {
+        rows.push(DRAINAGE_TABLE_COLUMNS.map((col) => stringify(getDrainTableColumnValue(o, col))));
+      });
+    } else if (deptCode === 'ROADS') {
       headers = [
         'Road Name',
         'Block',
@@ -1318,6 +1383,15 @@ export default function DepartmentAdminPage() {
         }
       } else if (deptCode === 'AGRICULTURE') {
         const result = await agricultureApi.bulkCsv(file);
+        if (result.errors?.length) {
+          setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
+        }
+      } else if (deptCode === 'DRAINAGE') {
+        const lower = file.name.toLowerCase();
+        const result =
+          lower.endsWith('.json') || lower.endsWith('.geojson')
+            ? await drainageApi.bulkGeojson(file)
+            : await drainageApi.bulkCsv(file);
         if (result.errors?.length) {
           setError(`Imported ${result.imported}; errors: ${result.errors.slice(0, 5).join('; ')}`);
         }
@@ -1616,6 +1690,9 @@ export default function DepartmentAdminPage() {
     } else if (deptCode === 'ROADS') {
       csvContent = ROADS_CSV_HEADER;
       filename = 'roads_template.csv';
+    } else if (deptCode === 'DRAINAGE') {
+      csvContent = `${DRAINAGE_CSV_HEADER}\n`;
+      filename = 'drainage_template.csv';
     } else {
       csvContent = ICDS_CSV_HEADER + 'RANGEILUNDA,BADAKUSASTHALLI,BADAGUMULA,BADA GUMULLA-I,,,19.270275,84.781087,,,,,,,,,,KAMALAPUR,412630\n';
       filename = 'icds_awc_template.csv';
@@ -1762,6 +1839,21 @@ export default function DepartmentAdminPage() {
                   setEditingRoadOrg(null);
                 }}
                 onCancelEdit={() => setEditingRoadOrg(null)}
+              />
+            ) : null}
+
+            {deptCode === 'DRAINAGE' && me?.department_id ? (
+              <DrainageDataEntryForm
+                departmentId={me.department_id}
+                editingDrain={editingDrainOrg}
+                onCreated={(created) => {
+                  setOrgs((prev) => [created, ...prev]);
+                }}
+                onUpdated={(updated) => {
+                  setOrgs((prev) => prev.map((org) => (org.id === updated.id ? updated : org)));
+                  setEditingDrainOrg(null);
+                }}
+                onCancelEdit={() => setEditingDrainOrg(null)}
               />
             ) : null}
 
@@ -4186,6 +4278,8 @@ export default function DepartmentAdminPage() {
                               ? 'Upload Tahasil portfolio CSV. Organizations will be created/updated by TAHSIL_NAME (or OFFICE NAME), LATITUDE, LONGITUDE, and all additional attributes are saved to profile.'
                               : deptCode === 'ROADS'
                                 ? 'Upload Roads CSV. Organizations will be created from ROAD NAME plus start/end coordinates (or PATH COORDINATES).'
+                                : deptCode === 'DRAINAGE'
+                                  ? 'Upload Drainage CSV without re-saving from Excel. For checking data in Excel use templates/drainage/bahana_drains_review.csv (no path column).'
                               : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
               </p>
               <div className="mt-3 flex flex-col gap-2 text-xs md:flex-row md:items-center md:justify-between">
@@ -4200,7 +4294,11 @@ export default function DepartmentAdminPage() {
                   <input
                     type="file"
                     name="file"
-                    accept=".csv,text/csv"
+                    accept={
+                      deptCode === 'DRAINAGE'
+                        ? '.tsv,.txt,text/tab-separated-values,.csv,text/csv,.json,.geojson,application/json'
+                        : '.csv,text/csv'
+                    }
                     className="text-xs"
                   />
                   <button
@@ -4208,7 +4306,11 @@ export default function DepartmentAdminPage() {
                     disabled={uploading}
                     className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
                   >
-                    {uploading ? 'Uploading...' : 'Upload CSV'}
+                    {uploading
+                      ? 'Uploading...'
+                      : deptCode === 'DRAINAGE'
+                        ? 'Upload file'
+                        : 'Upload CSV'}
                   </button>
                 </form>
               </div>
@@ -4347,6 +4449,37 @@ export default function DepartmentAdminPage() {
                   </div>
                 </div>
               )}
+              {deptCode === 'DRAINAGE' && (
+                <div className="mt-3 grid gap-2 rounded border border-border bg-background-muted/30 p-2 text-xs md:grid-cols-[220px_1fr]">
+                  <div className="space-y-1">
+                    <label className="block text-[11px] text-text-muted">Filter column</label>
+                    <select
+                      value={drainageTableFilterColumn}
+                      onChange={(e) => setDrainageTableFilterColumn(e.target.value)}
+                      className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
+                    >
+                      {drainageTableColumns.map((col) => (
+                        <option key={col} value={col}>
+                          {col}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[11px] text-text-muted">Search value</label>
+                    <input
+                      value={drainageTableSearchText}
+                      onChange={(e) => setDrainageTableSearchText(e.target.value)}
+                      placeholder={
+                        drainageTableFilterColumn
+                          ? `Type value for ${drainageTableFilterColumn}`
+                          : 'Type value to search'
+                      }
+                      className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
+                    />
+                  </div>
+                </div>
+              )}
               {deptCode !== 'REVENUE_LAND' && (
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <button
@@ -4416,6 +4549,22 @@ export default function DepartmentAdminPage() {
                             <span>Road Name</span>
                             <span className="text-[10px]">{roadsSortColumn === 'Road Name' ? (roadsSortDirection === 'asc' ? '▲' : '▼') : '↕'}</span>
                           </button>
+                        ) : deptCode === 'DRAINAGE' ? (
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 hover:text-orange-700"
+                            onClick={() => {
+                              if (drainageSortColumn === 'Drain Name') {
+                                setDrainageSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+                              } else {
+                                setDrainageSortColumn('Drain Name');
+                                setDrainageSortDirection('asc');
+                              }
+                            }}
+                          >
+                            <span>Drain Name</span>
+                            <span className="text-[10px]">{drainageSortColumn === 'Drain Name' ? (drainageSortDirection === 'asc' ? '▲' : '▼') : '↕'}</span>
+                          </button>
                         ) : (
                           deptCode === 'EDUCATION'
                             ? isEducationSchoolSubDept(educationSubDept)
@@ -4442,7 +4591,7 @@ export default function DepartmentAdminPage() {
                                             : 'AWC Name'
                         )}
                       </th>
-                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY' && deptCode !== 'ARCS' && deptCode !== 'WATCO_RWSS' && deptCode !== 'MINOR_IRRIGATION' && deptCode !== 'IRRIGATION' && deptCode !== 'REVENUE_LAND' && deptCode !== 'AGRICULTURE' && deptCode !== 'ROADS') && (
+                      {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'ELECTRICITY' && deptCode !== 'ARCS' && deptCode !== 'WATCO_RWSS' && deptCode !== 'MINOR_IRRIGATION' && deptCode !== 'IRRIGATION' && deptCode !== 'REVENUE_LAND' && deptCode !== 'AGRICULTURE' && deptCode !== 'ROADS' && deptCode !== 'DRAINAGE') && (
                         <>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">ULB / Block</th>
                           <th className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">GP / Ward</th>
@@ -4482,6 +4631,29 @@ export default function DepartmentAdminPage() {
                               >
                                 <span>{col}</span>
                                 <span className="text-[10px]">{roadsSortColumn === col ? (roadsSortDirection === 'asc' ? '▲' : '▼') : '↕'}</span>
+                              </button>
+                            </th>
+                          ))}
+                        </>
+                      )}
+                      {deptCode === 'DRAINAGE' && (
+                        <>
+                          {drainageTableColumns.filter((col) => col !== 'Drain Name').map((col) => (
+                            <th key={col} className="px-2 py-1 text-left font-medium text-text whitespace-nowrap">
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-1 hover:text-orange-700"
+                                onClick={() => {
+                                  if (drainageSortColumn === col) {
+                                    setDrainageSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+                                  } else {
+                                    setDrainageSortColumn(col);
+                                    setDrainageSortDirection('asc');
+                                  }
+                                }}
+                              >
+                                <span>{col}</span>
+                                <span className="text-[10px]">{drainageSortColumn === col ? (drainageSortDirection === 'asc' ? '▲' : '▼') : '↕'}</span>
                               </button>
                             </th>
                           ))}
@@ -4732,7 +4904,7 @@ export default function DepartmentAdminPage() {
                                 o.name
                               )}
                             </td>
-                            {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'WATCO_RWSS' && deptCode !== 'ELECTRICITY' && deptCode !== 'ARCS' && deptCode !== 'MINOR_IRRIGATION' && deptCode !== 'IRRIGATION' && deptCode !== 'REVENUE_LAND' && deptCode !== 'AGRICULTURE' && deptCode !== 'ROADS') && (
+                            {(deptCode !== 'EDUCATION' && deptCode !== 'HEALTH' && deptCode !== 'WATCO_RWSS' && deptCode !== 'ELECTRICITY' && deptCode !== 'ARCS' && deptCode !== 'MINOR_IRRIGATION' && deptCode !== 'IRRIGATION' && deptCode !== 'REVENUE_LAND' && deptCode !== 'AGRICULTURE' && deptCode !== 'ROADS' && deptCode !== 'DRAINAGE') && (
                               <>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.ulb_block ?? prof?.block_name)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_name ?? prof?.gram_panchayat)}</td>
@@ -4770,6 +4942,17 @@ export default function DepartmentAdminPage() {
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.point_a_name)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.point_b_name)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.remarks)}</td>
+                              </>
+                            )}
+                            {deptCode === 'DRAINAGE' && (
+                              <>
+                                {drainageTableColumns
+                                  .filter((col) => col !== 'Drain Name')
+                                  .map((col) => (
+                                    <td key={`${o.id}-${col}`} className="px-2 py-1 text-text-muted">
+                                      {_(getDrainTableColumnValue(o, col))}
+                                    </td>
+                                  ))}
                               </>
                             )}
                             {deptCode === 'WATCO_RWSS' && (
@@ -5055,7 +5238,9 @@ export default function DepartmentAdminPage() {
                               </>
                             )}
                             <td className="px-2 py-1 space-x-1">
-                              {deptCode !== 'REVENUE_LAND' && (
+                              {deptCode !== 'REVENUE_LAND' &&
+                                deptCode !== 'DRAINAGE' &&
+                                deptCode !== 'ROADS' && (
                                 <Link
                                   href={`/organizations/${o.id}`}
                                   className="rounded border border-primary/50 px-2 py-0.5 text-[11px] text-primary hover:bg-primary/10"
@@ -5073,6 +5258,7 @@ export default function DepartmentAdminPage() {
                                 deptCode !== 'IRRIGATION' &&
                                 deptCode !== 'REVENUE_LAND' &&
                                 deptCode !== 'ROADS' &&
+                                deptCode !== 'DRAINAGE' &&
                                 deptCode !== 'AGRICULTURE' && (
                                   <button
                                     type="button"
@@ -5114,6 +5300,18 @@ export default function DepartmentAdminPage() {
                                   type="button"
                                   onClick={() => {
                                     setEditingRoadOrg(o);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
+                                >
+                                  Edit
+                                </button>
+                              )}
+                              {deptCode === 'DRAINAGE' && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingDrainOrg(o);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}
                                   className="rounded border border-border px-2 py-0.5 text-[11px] text-text hover:bg-gray-50"
@@ -6118,7 +6316,7 @@ export default function DepartmentAdminPage() {
                     )}
                     {!organizationsForTable.length && (
                       <tr>
-                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 22 : deptCode === 'HEALTH' ? 28 : deptCode === 'EDUCATION' ? 62 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 3 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 3 : deptCode === 'REVENUE_LAND' ? 12 : deptCode === 'ROADS' ? 17 : 11}>
+                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 22 : deptCode === 'HEALTH' ? 28 : deptCode === 'EDUCATION' ? 62 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 3 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 3 : deptCode === 'REVENUE_LAND' ? 12 : deptCode === 'ROADS' ? 17 : deptCode === 'DRAINAGE' ? 14 : 11}>
                           {orgs.length
                             ? 'No matching rows for current search/filter.'
                             : 'No organizations yet for your department.'}
