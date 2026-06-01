@@ -14,7 +14,9 @@ import { Navbar } from '../layout/Navbar';
 import { DepartmentHighlightsSection } from './DepartmentHighlightsSection';
 import { getDepartmentLabel } from './DepartmentSidebar';
 import {
+  ARCS_SUMMARY_TABLE_COLUMNS,
   normalizeLegendParam,
+  organizationListingArcsAttribute,
   organizationListingCategory,
   resolveEffectiveHighlightCards,
 } from '../../lib/departmentSummaryHighlights';
@@ -140,17 +142,22 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       const roadBlock = String(attrs.block ?? '').toLowerCase();
       const roadRemarks = String(attrs.remarks ?? '').toLowerCase();
 
+      const arcsSearchText = isArcsDept
+        ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => organizationListingArcsAttribute(org, col.keys).toLowerCase()).join(' ')
+        : '';
+
       const matchesSearch =
         !q ||
         org.name.toLowerCase().includes(q) ||
         categoryLabel.toLowerCase().includes(q) ||
         address.toLowerCase().includes(q) ||
+        (isArcsDept && arcsSearchText.includes(q)) ||
         (isRoadsDept &&
           (roadCode.includes(q) || roadBlock.includes(q) || roadRemarks.includes(q)));
       const matchesCategory = categoryFilter === 'ALL' || categoryLabel === categoryFilter;
       return matchesSearch && matchesCategory;
     });
-  }, [topOrganizations, searchTerm, categoryFilter, isRoadsDept, department.code]);
+  }, [topOrganizations, searchTerm, categoryFilter, isRoadsDept, isArcsDept, department.code]);
 
   const sortedOrganizations = useMemo(() => {
     const rows = [...filteredOrganizations];
@@ -357,6 +364,16 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                         <SortIcon active={sortKey === 'category'} direction={sortDir} />
                       </button>
                     </th>
+                    {isArcsDept
+                      ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => (
+                          <th
+                            key={col.id}
+                            className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500"
+                          >
+                            {tr(col.labelKey)}
+                          </th>
+                        ))
+                      : null}
                     <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
                       <button type="button" onClick={() => onSort('address')} className="inline-flex items-center gap-1 hover:text-slate-700">
                         {tr('dept.summary.table.address')} <SortIcon active={sortKey === 'address'} direction={sortDir} />
@@ -392,6 +409,13 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                         <td className="px-4 py-2.5 text-sm text-slate-600">
                           {organizationListingCategory(org, department.code) || '—'}
                         </td>
+                        {isArcsDept
+                          ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => (
+                              <td key={`${org.id}-${col.id}`} className="px-4 py-2.5 text-sm text-slate-600">
+                                {organizationListingArcsAttribute(org, col.keys) || '—'}
+                              </td>
+                            ))
+                          : null}
                         <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
                           <span className="line-clamp-1">{org.address || '—'}</span>
                         </td>
@@ -435,7 +459,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     ))
                   ) : (
                     <tr>
-                      <td className="px-4 py-3 text-slate-600" colSpan={isRoadsDept ? 7 : 5}>
+                      <td className="px-4 py-3 text-slate-600" colSpan={isRoadsDept ? 7 : isArcsDept ? 7 : 5}>
                         {tr('dept.summary.empty.organizations')}
                       </td>
                     </tr>

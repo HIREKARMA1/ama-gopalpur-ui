@@ -1,9 +1,11 @@
 import {
+  arcsApi,
   organizationsApi,
   type DepartmentSummaryContent,
   type DepartmentSummaryHighlightCard,
   type Organization,
 } from '../services/api';
+import type { MessageKey } from '../components/i18n/messages';
 
 export type LegendRow = { label: string; rawLabel: string; count: number };
 
@@ -109,6 +111,66 @@ export function normalizeLegendParam(label: string): string {
     .trim()
     .replace(/\s+/g, '_')
     .toUpperCase();
+}
+
+export type ArcsSummaryTableColumn = {
+  id: 'block_ulb' | 'total_membership';
+  labelKey: MessageKey;
+  keys: string[];
+};
+
+export const ARCS_SUMMARY_TABLE_COLUMNS: ArcsSummaryTableColumn[] = [
+  { id: 'block_ulb', labelKey: 'arcs.field.blockUlb', keys: ['ulb_block', 'block_ulb'] },
+  { id: 'total_membership', labelKey: 'arcs.fieldLabel.totalMembership', keys: ['total_membership'] },
+];
+
+function arcsJurisdictionFromProfile(profile: Record<string, unknown>): string {
+  const raw = String(profile.jurisdiction_type_rural_urban_mixed ?? '').toUpperCase();
+  if (!raw) return '';
+  if (raw.includes('RURAL') && raw.includes('URBAN')) return 'MIXED';
+  if (raw.includes('MIX')) return 'MIXED';
+  if (raw.startsWith('URBAN')) return 'URBAN';
+  if (raw.startsWith('RURAL')) return 'RURAL';
+  return '';
+}
+
+/** Load ARCS profile fields used by the summary organization table. */
+export async function enrichArcsOrganizationsForListing(orgs: Organization[]): Promise<Organization[]> {
+  return Promise.all(
+    orgs.map(async (org) => {
+      const attrs: Record<string, unknown> = { ...(org.attributes || {}) };
+      let profile: Record<string, unknown> = {};
+      try {
+        profile = await arcsApi.getProfile(org.id);
+      } catch {
+        profile = {};
+      }
+
+      const jurisdiction =
+        String(attrs.jurisdiction_type ?? '').trim() || arcsJurisdictionFromProfile(profile);
+      if (jurisdiction) attrs.jurisdiction_type = jurisdiction;
+
+      const block = String(attrs.ulb_block ?? attrs.block_ulb ?? profile.block_ulb ?? '').trim();
+      if (block) {
+        attrs.ulb_block = block;
+        attrs.block_ulb = block;
+      }
+
+      const totalMembership = String(attrs.total_membership ?? profile.total_membership ?? '').trim();
+      if (totalMembership) attrs.total_membership = totalMembership;
+
+      return { ...org, attributes: attrs };
+    }),
+  );
+}
+
+export function organizationListingArcsAttribute(org: Organization, keys: string[]): string {
+  const attrs = (org.attributes ?? {}) as Record<string, unknown>;
+  for (const key of keys) {
+    const value = String(attrs[key] ?? '').trim();
+    if (value) return value.replace(/_/g, ' ');
+  }
+  return '';
 }
 
 /** Category column value on the department summary organization table. */
