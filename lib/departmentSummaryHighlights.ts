@@ -138,7 +138,7 @@ function arcsJurisdictionFromProfile(profile: Record<string, unknown>): string {
 export async function enrichArcsOrganizationsForListing(orgs: Organization[]): Promise<Organization[]> {
   return Promise.all(
     orgs.map(async (org) => {
-      const attrs: Record<string, unknown> = { ...(org.attributes || {}) };
+      const attrs: Record<string, string | number | null> = { ...(org.attributes || {}) };
       let profile: Record<string, unknown> = {};
       try {
         profile = await arcsApi.getProfile(org.id);
