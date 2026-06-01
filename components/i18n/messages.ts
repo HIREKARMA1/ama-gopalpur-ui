@@ -639,6 +639,7 @@ export type MessageKey =
   | 'dept.summary.empty.organizations'
   | 'dept.summary.search.placeholder'
   | 'dept.summary.search.allCategories'
+  | 'dept.summary.search.allJurisdictionTypes'
   | 'dept.summary.table.slNo'
   | 'dept.summary.table.organization'
   | 'dept.summary.table.subDepartmentCategory'
@@ -1387,6 +1388,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'dept.summary.search.allCategories': {
     en: 'All categories',
     or: 'ସମସ୍ତ ଶ୍ରେଣୀ',
+  },
+  'dept.summary.search.allJurisdictionTypes': {
+    en: 'All jurisdiction types',
+    or: 'ସମସ୍ତ କ୍ଷେତ୍ର ପ୍ରକାର',
   },
   'dept.summary.table.slNo': {
     en: 'Sl No',
