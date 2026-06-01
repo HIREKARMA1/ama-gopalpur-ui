@@ -1,7 +1,13 @@
 'use client';
 
-import type { Department } from '../../services/api';
+import { useEffect, useMemo, useState } from 'react';
+import type { Department, Organization } from '../../services/api';
 import { departmentsApi } from '../../services/api';
+import {
+  fetchAllOrganizationsForDepartment,
+  resolveEffectiveHighlightCards,
+} from '../../lib/departmentSummaryHighlights';
+import { DepartmentHighlightsEditor } from './DepartmentHighlightsEditor';
 import { DepartmentMapSummaryEditor } from './DepartmentMapSummaryEditor';
 import { DepartmentSummaryEditor } from './DepartmentSummaryEditor';
 
@@ -11,6 +17,32 @@ type Props = {
 };
 
 export function DepartmentSummaryManagementSection({ department, onDepartmentUpdated }: Props) {
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [orgsLoading, setOrgsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setOrgsLoading(true);
+      try {
+        const all = await fetchAllOrganizationsForDepartment(department.id);
+        if (!cancelled) setOrganizations(all);
+      } catch {
+        if (!cancelled) setOrganizations([]);
+      } finally {
+        if (!cancelled) setOrgsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [department.id]);
+
+  const displayCards = useMemo(
+    () => resolveEffectiveHighlightCards(department.department_summary, organizations, department.code),
+    [department.department_summary, department.code, organizations],
+  );
+
   return (
     <div className="space-y-4">
       <DepartmentMapSummaryEditor
@@ -42,6 +74,17 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
         }}
         onSave={async (department_summary) => {
           const updated = await departmentsApi.updateSummary(department.id, { department_summary });
+          onDepartmentUpdated(updated);
+        }}
+      />
+      <DepartmentHighlightsEditor
+        departmentId={department.id}
+        displayCards={displayCards}
+        loading={orgsLoading}
+        onSave={async ({ highlight_cards }) => {
+          const updated = await departmentsApi.updateSummary(department.id, {
+            department_summary: { highlight_cards },
+          });
           onDepartmentUpdated(updated);
         }}
       />

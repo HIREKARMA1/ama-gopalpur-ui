@@ -13,6 +13,7 @@ import { t, type MessageKey } from '../i18n/messages';
 import { Navbar } from '../layout/Navbar';
 import { DepartmentHighlightsSection } from './DepartmentHighlightsSection';
 import { getDepartmentLabel } from './DepartmentSidebar';
+import { normalizeLegendParam, resolveEffectiveHighlightCards } from '../../lib/departmentSummaryHighlights';
 
 type Props = {
   department: Department;
@@ -94,21 +95,13 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     office_hours_en: '',
   };
 
-  const legendRows = buildLegendRows(organizations, department.code);
-  const highlightCards = [
-    ...(summary?.highlight_cards ?? [])
-      .map((c) => ({
-        title: (c.title || '').trim(),
-        count: (c.value || '').trim(),
-        legendKey: normalizeLegendParam(c.title || ''),
-      }))
-      .filter((c) => c.title && c.count),
-    ...legendRows.map((row) => ({
-      title: row.label,
-      count: String(row.count),
-      legendKey: normalizeLegendParam(row.rawLabel),
-    })),
-  ];
+  const highlightCards = resolveEffectiveHighlightCards(summary, organizations, department.code).map(
+    (card) => ({
+      title: card.title,
+      count: card.value,
+      legendKey: normalizeLegendParam(card.title),
+    }),
+  );
   const topOrganizations = [...organizations].sort((a, b) => a.name.localeCompare(b.name));
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
@@ -673,81 +666,11 @@ function SortIcon({
   );
 }
 
-function buildLegendRows(organizations: Organization[], departmentCode?: string): { label: string; rawLabel: string; count: number }[] {
-  const code = (departmentCode || '').toUpperCase();
-  const bucket = new Map<string, number>();
-  const add = (label?: string | null) => {
-    const l = (label || '').trim();
-    if (!l) return;
-    bucket.set(l, (bucket.get(l) || 0) + 1);
-  };
-
-  for (const org of organizations) {
-    if (code === 'EDUCATION') {
-      add(org.sub_department || org.type);
-      continue;
-    }
-    if (code === 'HEALTH') {
-      add((org.attributes?.category as string) || org.type);
-      continue;
-    }
-    if (code === 'AGRICULTURE') {
-      add(org.sub_department || (org.attributes?.sub_department as string) || org.type);
-      continue;
-    }
-    if (code === 'ELECTRICITY') {
-      add((org.attributes?.institution_type as string) || org.type);
-      continue;
-    }
-    if (code === 'ARCS') {
-      add((org.attributes?.jurisdiction_type as string) || org.type);
-      continue;
-    }
-    if (code === 'WATCO_RWSS') {
-      add((org.attributes?.station_type as string) || org.type);
-      continue;
-    }
-    if (code === 'ROADS') {
-      add(
-        (org.attributes?.road_sector as string) ||
-          org.sub_department ||
-          (org.attributes?.category as string) ||
-          org.type,
-      );
-      continue;
-    }
-    if (code === 'MINOR_IRRIGATION') {
-      add((org.attributes?.category_type as string) || org.type);
-      continue;
-    }
-    if (code === 'IRRIGATION') {
-      add((org.attributes?.category as string) || org.type);
-      continue;
-    }
-    if (code === 'REVENUE_LAND') {
-      add(org.sub_department || (org.attributes?.land_type as string) || org.type);
-      continue;
-    }
-    add(org.sub_department || org.type);
-  }
-
-  return Array.from(bucket.entries())
-    .map(([label, count]) => ({ label: label.replace(/_/g, ' '), rawLabel: label, count }))
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
-}
-
 function toParagraphs(text: string): string[] {
   return String(text || '')
     .split(/\n\s*\n/g)
     .map((p) => p.trim())
     .filter(Boolean);
-}
-
-function normalizeLegendParam(label: string): string {
-  return String(label || '')
-    .trim()
-    .replace(/\s+/g, '_')
-    .toUpperCase();
 }
 
 function buildRoadStreetViewPath(org: Organization): string {
