@@ -109,6 +109,22 @@ function roadLegendColor(typeKey: string): string {
   return ROAD_LEGEND_COLORS[hash % ROAD_LEGEND_COLORS.length] ?? '#9e6700';
 }
 
+const ROAD_LEGEND_LABEL_KEYS: Record<string, MessageKey> = {
+  NH: 'roads.type.nh',
+  SH: 'roads.type.sh',
+  PWD: 'roads.type.pwd',
+  RD: 'roads.type.rd',
+  PS: 'roads.type.ps',
+  GP: 'roads.type.gp',
+  OTHER: 'roads.type.other',
+};
+
+function roadLegendLabel(typeKey: string, lang: 'en' | 'or'): string {
+  const canonical = normalizeRoadLegendSector(typeKey);
+  const msgKey = ROAD_LEGEND_LABEL_KEYS[canonical];
+  return msgKey ? t(msgKey, lang) : canonical;
+}
+
 const WATCO_MARKER_HEX: Record<(typeof WATCO_SUB_DEPARTMENTS)[number], string> = {
   WATCO: '#0ea5e9',
   RWSS: '#22c55e',
@@ -298,7 +314,17 @@ export interface RoadFeature {
 /** Drain segment from GeoJSON (point A to B path) for Drainage department map */
 export interface DrainFeature {
   type: 'Feature';
-  properties: { name?: string; drainName?: string; code?: string; block?: string };
+  properties: {
+    organizationId?: number | null;
+    name?: string;
+    drainName?: string;
+    code?: string;
+    block?: string;
+    project?: string;
+    drainLineKind?: DrainLineKind;
+    lengthKm?: string;
+    remarks?: string;
+  };
   geometry: { type: 'LineString'; coordinates: [number, number][] };
 }
 
@@ -672,7 +698,8 @@ export function ConstituencyMap({
     const acc: Record<DrainLineKind, number> = { MAIN: 0, BRANCH: 0 };
     for (const drain of drains) {
       const name = drain.properties?.name ?? drain.properties?.drainName ?? 'Drain';
-      acc[getDrainLineKind(name)] += 1;
+      const kind = drain.properties?.drainLineKind ?? getDrainLineKind(name);
+      acc[kind] += 1;
     }
     return acc;
   }, [drains]);
@@ -688,7 +715,7 @@ export function ConstituencyMap({
 
   const roadGpWardOptions = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'ROADS') {
-      return [{ value: 'ALL', label: language === 'or' ? 'ସମସ୍ତ GP/Ward' : 'All GP/Ward' }];
+      return [{ value: 'ALL', label: t('map.filter.allGpWard', language) }];
     }
     const values = Array.from(
       new Set(
@@ -698,7 +725,7 @@ export function ConstituencyMap({
       ),
     ).sort((a, b) => a.localeCompare(b));
     return [
-      { value: 'ALL', label: language === 'or' ? 'ସମସ୍ତ GP/Ward' : 'All GP/Ward' },
+      { value: 'ALL', label: t('map.filter.allGpWard', language) },
       ...values.map((value) => ({ value, label: value })),
     ];
   }, [selectedDepartmentCode, language, roads]);
@@ -1218,6 +1245,27 @@ export function ConstituencyMap({
     });
   }, [isRoadsDept, roadsByBlockAndGpWard, searchTerm, roadLegendFilterType]);
 
+  const filteredDrains = useMemo(() => {
+    if (!isDrainageDept) return [] as DrainFeature[];
+    const term = searchTerm.trim().toLowerCase();
+    return drains.filter((drain) => {
+      const displayName = drain.properties?.name ?? drain.properties?.drainName ?? 'Drain';
+      const name = String(displayName).toLowerCase();
+      const project = String(drain.properties?.project ?? '').toLowerCase();
+      const remarks = String(drain.properties?.remarks ?? '').toLowerCase();
+      const block = String(drain.properties?.block ?? '').toLowerCase();
+      const lineKind = drain.properties?.drainLineKind ?? getDrainLineKind(displayName);
+      if (drainKindFilter != null && lineKind !== drainKindFilter) return false;
+      if (!term) return true;
+      return (
+        name.includes(term) ||
+        project.includes(term) ||
+        remarks.includes(term) ||
+        block.includes(term)
+      );
+    });
+  }, [isDrainageDept, drains, searchTerm, drainKindFilter]);
+
   const focusOrganization = useCallback(
     (org: MapOrganization & { latitude: number; longitude: number }) => {
       if (!mapInstance) return;
@@ -1265,6 +1313,31 @@ export function ConstituencyMap({
       onRoadStreetViewOpenChange?.(false, road.properties?.organizationId ?? null, roadName || null);
     },
     [mapInstance, onRoadSelectionChange, onRoadStreetViewOpenChange]
+  );
+
+  const focusDrain = useCallback(
+    (drain: DrainFeature) => {
+      if (!mapInstance) return;
+      const coords = drain.geometry?.coordinates ?? [];
+      if (!coords.length) return;
+      const mid = coords[Math.floor(coords.length / 2)] ?? coords[0];
+      if (!mid) return;
+      const [lng, lat] = mid;
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      mapInstance.panTo({ lat, lng });
+      if (
+        typeof mapInstance.getZoom === 'function' &&
+        typeof mapInstance.setZoom === 'function'
+      ) {
+        const currentZoom = mapInstance.getZoom() ?? DEFAULT_ZOOM;
+        if (currentZoom < 14) mapInstance.setZoom(14);
+      }
+      setSelectedDrain(drain);
+      setSelectedRoad(null);
+      setInfoWindowOrg(null);
+      onOrganizationInfoChange?.(drain.properties?.organizationId ?? null);
+    },
+    [mapInstance, onOrganizationInfoChange],
   );
 
   const openRoadStreetView = useCallback(() => {
@@ -1409,6 +1482,19 @@ export function ConstituencyMap({
       return;
     }
 
+    if (isDrainageDept) {
+      const exactDrain = filteredDrains.find(
+        (d) =>
+          String(d.properties?.name ?? d.properties?.drainName ?? '').toLowerCase() === term,
+      );
+      const drainToSelect = exactDrain || (filteredDrains.length === 1 ? filteredDrains[0] : null);
+      if (drainToSelect) {
+        focusDrain(drainToSelect);
+        setShowSearchDropdown(false);
+      }
+      return;
+    }
+
     // Only auto-select if there is exactly one match OR an exact name match
     const exactMatch = filteredOrgs.find((org) => (org.name || '').toLowerCase() === term);
     const resultToSelect = exactMatch || (filteredOrgs.length === 1 ? filteredOrgs[0] : null);
@@ -1424,7 +1510,8 @@ export function ConstituencyMap({
     !!selectedDepartmentCode ||
     zoom >= 13 ||
     !!infoWindowOrg ||
-    (searchTerm.trim() !== '' && (filteredOrgs.length > 0 || filteredRoads.length > 0));
+    (searchTerm.trim() !== '' &&
+      (filteredOrgs.length > 0 || filteredRoads.length > 0 || filteredDrains.length > 0));
 
   return (
     <div className="relative h-full w-full min-h-[400px] overflow-hidden flex flex-col">
@@ -1481,7 +1568,12 @@ export function ConstituencyMap({
                       {t('map.search.noResults', language)}
                     </div>
                   )}
-                  {!isRoadsDept && searchSuggestions.length === 0 && (
+                  {isDrainageDept && filteredDrains.length === 0 && (
+                    <div className="px-3 py-3 text-xs text-slate-500">
+                      {t('map.search.noResults', language)}
+                    </div>
+                  )}
+                  {!isRoadsDept && !isDrainageDept && searchSuggestions.length === 0 && (
                     <div className="px-3 py-3 text-xs text-slate-500">
                       {t('map.search.noResults', language)}
                     </div>
@@ -1509,7 +1601,38 @@ export function ConstituencyMap({
                       </button>
                     );
                   })}
-                  {!isRoadsDept && searchSuggestions.map((org) => (
+                  {isDrainageDept &&
+                    filteredDrains.map((drain, idx) => {
+                      const name = String(
+                        drain.properties?.name ?? drain.properties?.drainName ?? 'Drain',
+                      );
+                      const project = String(drain.properties?.project ?? '').trim();
+                      const lineKind =
+                        drain.properties?.drainLineKind ?? getDrainLineKind(name);
+                      const typeLabel =
+                        lineKind === 'MAIN'
+                          ? t('map.drainage.legend.mainChannel', language)
+                          : t('map.drainage.legend.branchLink', language);
+                      return (
+                        <button
+                          key={`drain-search-${drain.properties?.organizationId ?? idx}-${name}`}
+                          type="button"
+                          onClick={() => {
+                            focusDrain(drain);
+                            setShowSearchDropdown(false);
+                          }}
+                          className="w-full px-3 py-2 text-left hover:bg-slate-50"
+                        >
+                          <div className="font-medium text-slate-900 truncate">{name}</div>
+                          {(project || typeLabel) && (
+                            <div className="mt-0.5 text-[11px] text-slate-500 truncate">
+                              {[project, typeLabel].filter(Boolean).join(' · ')}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  {!isRoadsDept && !isDrainageDept && searchSuggestions.map((org) => (
                     <button
                       key={org.id}
                       type="button"
@@ -1548,7 +1671,7 @@ export function ConstituencyMap({
               aria-label="Open map filters"
             >
               <SlidersHorizontal size={14} />
-              {language === 'or' ? 'ଫିଲ୍ଟର' : 'Filter'}
+              {t('map.filter.label', language)}
             </button>
             <div className="hidden sm:flex sm:items-center sm:gap-2">
               {showBlockFilter && (
@@ -1582,7 +1705,7 @@ export function ConstituencyMap({
           <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-2xl bg-white p-4 pb-5 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-slate-800">
-                {language === 'or' ? 'ମ୍ୟାପ ଫିଲ୍ଟର' : 'Map Filters'}
+                {t('map.filter.title', language)}
               </h3>
               <button
                 type="button"
@@ -1593,12 +1716,12 @@ export function ConstituencyMap({
                 }}
                 className="rounded border border-slate-200 px-2 py-1 text-[11px] text-slate-600"
               >
-                {language === 'or' ? 'ବନ୍ଦ କରନ୍ତୁ' : 'Close'}
+                {t('map.filter.close', language)}
               </button>
             </div>
             {showBlockFilter && (
               <label className="mb-3 block text-xs text-slate-600">
-                <span className="mb-1 block font-medium">{language === 'or' ? 'ବ୍ଲକ' : 'Block'}</span>
+                <span className="mb-1 block font-medium">{t('map.filter.block', language)}</span>
                 <div className="relative">
                   <button
                     type="button"
@@ -1697,7 +1820,7 @@ export function ConstituencyMap({
                 }}
                 className="rounded border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700"
               >
-                {language === 'or' ? 'ରିସେଟ୍' : 'Reset'}
+                {t('map.filter.reset', language)}
               </button>
               <button
                 type="button"
@@ -1708,7 +1831,7 @@ export function ConstituencyMap({
                 }}
                 className="rounded bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
               >
-                {language === 'or' ? 'ଲାଗୁ କରନ୍ତୁ' : 'Apply'}
+                {t('map.filter.apply', language)}
               </button>
             </div>
           </div>
@@ -1804,7 +1927,8 @@ export function ConstituencyMap({
               if (path.length < 2) return null;
               const name =
                 drain.properties?.name ?? drain.properties?.drainName ?? 'Drain';
-              const lineKind = getDrainLineKind(name);
+              const lineKind =
+                drain.properties?.drainLineKind ?? getDrainLineKind(name);
               if (drainKindFilter != null && lineKind !== drainKindFilter) return null;
               const strokeColor = DRAIN_LINE_COLORS[lineKind];
               const drainFilterKey = drainKindFilter ?? 'all';
@@ -1912,12 +2036,54 @@ export function ConstituencyMap({
               selectedDrain.properties?.name ??
               selectedDrain.properties?.drainName ??
               'Drain';
+            const lineKind =
+              selectedDrain.properties?.drainLineKind ?? getDrainLineKind(name);
+            const typeLabel =
+              lineKind === 'MAIN'
+                ? t('map.drainage.legend.mainChannel', language)
+                : t('map.drainage.legend.branchLink', language);
+            const project = selectedDrain.properties?.project?.trim();
+            const lengthKm = selectedDrain.properties?.lengthKm?.trim();
+            const remarks = selectedDrain.properties?.remarks?.trim();
             return (
               <InfoWindow
                 position={{ lat, lng }}
                 onCloseClick={() => setSelectedDrain(null)}
               >
-                <MapCalloutCard title={name} badge={t('dept.drainage', language)} />
+                <MapCalloutCard
+                  title={name}
+                  badge={typeLabel}
+                  meta={
+                    project || lengthKm || remarks ? (
+                      <>
+                        {project ? (
+                          <MapCalloutMetaRow>
+                            <span className="text-slate-500">
+                              {t('map.drainage.info.project', language)}:
+                            </span>{' '}
+                            {project}
+                          </MapCalloutMetaRow>
+                        ) : null}
+                        {lengthKm ? (
+                          <MapCalloutMetaRow>
+                            <span className="text-slate-500">
+                              {t('map.drainage.info.lengthKm', language)}:
+                            </span>{' '}
+                            {lengthKm}
+                          </MapCalloutMetaRow>
+                        ) : null}
+                        {remarks ? (
+                          <MapCalloutMetaRow>
+                            <span className="text-slate-500">
+                              {t('map.drainage.info.remarks', language)}:
+                            </span>{' '}
+                            {remarks}
+                          </MapCalloutMetaRow>
+                        ) : null}
+                      </>
+                    ) : undefined
+                  }
+                />
               </InfoWindow>
             );
           })()}
@@ -2399,7 +2565,7 @@ export function ConstituencyMap({
         <MapLegendPanel className="pointer-events-auto z-[45] md:max-w-[220px]">
           {roadLegendTypes.map((type) => {
             const isSelected = roadLegendFilterType === type;
-            const label = type;
+            const label = roadLegendLabel(type, language);
             return (
               <MapLegendRow
                 key={type}

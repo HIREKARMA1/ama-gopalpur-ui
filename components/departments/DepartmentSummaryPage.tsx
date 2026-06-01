@@ -3,7 +3,6 @@ import { CiShare1 } from 'react-icons/ci';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { Info, X } from 'lucide-react';
 import type { Department, Organization } from '../../services/api';
-import { buildOrganizationProfilePath } from '../../lib/organizationRoute';
 import {
   PsAboutSection,
   type Lang,
@@ -15,11 +14,19 @@ import { DepartmentHighlightsSection } from './DepartmentHighlightsSection';
 import { getDepartmentLabel } from './DepartmentSidebar';
 import {
   ARCS_SUMMARY_TABLE_COLUMNS,
+  legendHighlightTitle,
   normalizeLegendParam,
   organizationListingArcsAttribute,
   organizationListingCategory,
   resolveEffectiveHighlightCards,
 } from '../../lib/departmentSummaryHighlights';
+import {
+  DRAINAGE_SUMMARY_TABLE_COLUMNS,
+  drainageSummaryColumnLabel,
+  drainageTypeMessageKey,
+  getDrainLineKindFromOrg,
+  getDrainTableColumnValue,
+} from '../../lib/drainageOrganization';
 
 type Props = {
   department: Department;
@@ -32,6 +39,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const deptCode = (department.code || '').toUpperCase();
   const isRoadsDept = deptCode === 'ROADS';
   const isArcsDept = deptCode === 'ARCS';
+  const isDrainageDept = deptCode === 'DRAINAGE';
   const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
   const localizedSummaryText = (en?: string | null, od?: string | null) => {
     const enText = (en || '').trim();
@@ -105,9 +113,9 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
 
   const highlightCards = resolveEffectiveHighlightCards(summary, organizations, department.code).map(
     (card) => ({
-      title: card.title,
+      title: legendHighlightTitle(card, department.code, language),
       count: card.value,
-      legendKey: normalizeLegendParam(card.title),
+      legendKey: normalizeLegendParam(card.legend_key || card.title),
     }),
   );
   const topOrganizations = [...organizations].sort((a, b) => a.name.localeCompare(b.name));
@@ -120,17 +128,18 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const [isStreetInfoOpen, setIsStreetInfoOpen] = useState(false);
   const pageSize = 15;
 
-  const categoryOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          topOrganizations
-            .map((o) => organizationListingCategory(o, department.code))
-            .filter(Boolean),
-        ),
-      ).sort((a, b) => a.localeCompare(b)),
-    [topOrganizations, department.code],
-  );
+  const categoryOptions = useMemo(() => {
+    if (isDrainageDept) {
+      return ['MAIN', 'BRANCH'] as const;
+    }
+    return Array.from(
+      new Set(
+        topOrganizations
+          .map((o) => organizationListingCategory(o, department.code))
+          .filter(Boolean),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+  }, [topOrganizations, department.code, isDrainageDept]);
 
   const filteredOrganizations = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -146,18 +155,31 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => organizationListingArcsAttribute(org, col.keys).toLowerCase()).join(' ')
         : '';
 
+      const drainageSearchText = isDrainageDept
+        ? [
+            org.name,
+            ...DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => getDrainTableColumnValue(org, col)),
+          ]
+            .join(' ')
+            .toLowerCase()
+        : '';
+
       const matchesSearch =
         !q ||
         org.name.toLowerCase().includes(q) ||
         categoryLabel.toLowerCase().includes(q) ||
         address.toLowerCase().includes(q) ||
         (isArcsDept && arcsSearchText.includes(q)) ||
+        (isDrainageDept && drainageSearchText.includes(q)) ||
         (isRoadsDept &&
           (roadCode.includes(q) || roadBlock.includes(q) || roadRemarks.includes(q)));
-      const matchesCategory = categoryFilter === 'ALL' || categoryLabel === categoryFilter;
+      const drainKind = isDrainageDept ? getDrainLineKindFromOrg(org) : '';
+      const matchesCategory =
+        categoryFilter === 'ALL' ||
+        (isDrainageDept ? drainKind === categoryFilter : categoryLabel === categoryFilter);
       return matchesSearch && matchesCategory;
     });
-  }, [topOrganizations, searchTerm, categoryFilter, isRoadsDept, isArcsDept, department.code]);
+  }, [topOrganizations, searchTerm, categoryFilter, isRoadsDept, isArcsDept, isDrainageDept, department.code]);
 
   const sortedOrganizations = useMemo(() => {
     const rows = [...filteredOrganizations];
@@ -309,7 +331,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         <DepartmentHighlightsSection
           sectionTitle={tr('dept.summary.section.highlights')}
           emptyText={tr('dept.summary.empty.highlights')}
-          infoText={trStatic('Click any node to view matching organizations.', 'ଯେକୌଣସି ନୋଡ୍‌କୁ ଦବାନ୍ତୁ ଏବଂ ସମ୍ବନ୍ଧିତ ସଂଗଠନ ଦେଖନ୍ତୁ।')}
+          infoText={tr('dept.summary.highlights.clickHint')}
           departmentName={localizedDepartmentName}
           departmentCode={department.code || ''}
           highlightCards={highlightCards}
@@ -336,18 +358,27 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
               aria-label={
                 isArcsDept
                   ? tr('dept.summary.table.jurisdictionType')
-                  : tr('dept.summary.search.allCategories')
+                  : isDrainageDept
+                    ? tr('dept.summary.drainage.allDrainTypes')
+                    : tr('dept.summary.search.allCategories')
               }
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             >
               <option value="ALL">
                 {isArcsDept
                   ? tr('dept.summary.search.allJurisdictionTypes')
-                  : tr('dept.summary.search.allCategories')}
+                  : isDrainageDept
+                    ? tr('dept.summary.drainage.allDrainTypes')
+                    : tr('dept.summary.search.allCategories')}
               </option>
               {categoryOptions.map((opt) => (
                 <option key={`cat-${opt}`} value={opt}>
-                  {opt}
+                  {isDrainageDept
+                    ? (() => {
+                        const key = drainageTypeMessageKey(opt);
+                        return key ? tr(key) : opt;
+                      })()
+                    : opt}
                 </option>
               ))}
             </select>
@@ -369,7 +400,9 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                       <button type="button" onClick={() => onSort('category')} className="inline-flex items-center gap-1 hover:text-slate-700">
                         {isArcsDept
                           ? tr('dept.summary.table.jurisdictionType')
-                          : tr('dept.summary.table.subDepartmentCategory')}{' '}
+                          : isDrainageDept
+                            ? tr('dept.summary.drainage.drainType')
+                            : tr('dept.summary.table.subDepartmentCategory')}{' '}
                         <SortIcon active={sortKey === 'category'} direction={sortDir} />
                       </button>
                     </th>
@@ -383,11 +416,22 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                           </th>
                         ))
                       : null}
-                    <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                      <button type="button" onClick={() => onSort('address')} className="inline-flex items-center gap-1 hover:text-slate-700">
-                        {tr('dept.summary.table.address')} <SortIcon active={sortKey === 'address'} direction={sortDir} />
-                      </button>
-                    </th>
+                    {isDrainageDept
+                      ? DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => (
+                          <th
+                            key={col}
+                            className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500"
+                          >
+                            {drainageSummaryColumnLabel(col, language)}
+                          </th>
+                        ))
+                      : (
+                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
+                          <button type="button" onClick={() => onSort('address')} className="inline-flex items-center gap-1 hover:text-slate-700">
+                            {tr('dept.summary.table.address')} <SortIcon active={sortKey === 'address'} direction={sortDir} />
+                          </button>
+                        </th>
+                      )}
                     {isRoadsDept ? (
                       <>
                         <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
@@ -400,11 +444,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                           {trStatic('Street View', 'ସ୍ଟ୍ରିଟ ଭ୍ୟୁ')}
                         </th>
                       </>
-                    ) : (
-                      <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                        {tr('dept.summary.table.portfolio')}
-                      </th>
-                    )}
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -416,7 +456,13 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                         </td>
                         <td className="px-4 py-2.5 text-xs font-medium text-slate-800">{org.name}</td>
                         <td className="px-4 py-2.5 text-sm text-slate-600">
-                          {organizationListingCategory(org, department.code) || '—'}
+                          {isDrainageDept
+                            ? (() => {
+                                const kind = getDrainLineKindFromOrg(org);
+                                const key = drainageTypeMessageKey(kind);
+                                return key ? tr(key) : kind || '—';
+                              })()
+                            : organizationListingCategory(org, department.code) || '—'}
                         </td>
                         {isArcsDept
                           ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => (
@@ -425,9 +471,19 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                               </td>
                             ))
                           : null}
-                        <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
-                          <span className="line-clamp-1">{org.address || '—'}</span>
-                        </td>
+                        {isDrainageDept
+                          ? DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => (
+                              <td key={`${org.id}-${col}`} className="px-4 py-2.5 text-sm text-slate-600">
+                                <span className={col === 'Remarks' ? 'line-clamp-2' : ''}>
+                                  {getDrainTableColumnValue(org, col) || '—'}
+                                </span>
+                              </td>
+                            ))
+                          : (
+                            <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
+                              <span className="line-clamp-1">{org.address || '—'}</span>
+                            </td>
+                          )}
                         {isRoadsDept ? (
                           <>
                             <td className="px-4 py-2.5 text-sm text-slate-600">
@@ -449,26 +505,17 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                               </a>
                             </td>
                           </>
-                        ) : (
-                          <td className="px-4 py-2.5 text-slate-700">
-                            <a
-                              href={buildOrganizationProfilePath(org.id, {
-                                departmentCode: department.code || 'department',
-                                organizationName: org.name,
-                              })}
-                              className="inline-flex items-center text-base font-semibold text-slate-500 hover:text-slate-800"
-                              aria-label={`Open portfolio for ${org.name}`}
-                              title={tr('dept.summary.table.openPortfolio')}
-                            >
-                              <CiShare1 className="text-lg" />
-                            </a>
-                          </td>
-                        )}
+                        ) : null}
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td className="px-4 py-3 text-slate-600" colSpan={isRoadsDept ? 7 : isArcsDept ? 7 : 5}>
+                      <td
+                        className="px-4 py-3 text-slate-600"
+                        colSpan={
+                          isRoadsDept ? 7 : isArcsDept ? 7 : isDrainageDept ? 10 : 4
+                        }
+                      >
                         {tr('dept.summary.empty.organizations')}
                       </td>
                     </tr>

@@ -6,6 +6,8 @@ import {
   type Organization,
 } from '../services/api';
 import type { MessageKey } from '../components/i18n/messages';
+import { t } from '../components/i18n/messages';
+import { getDrainLineKindFromOrg } from './drainageOrganization';
 
 export type LegendRow = { label: string; rawLabel: string; count: number };
 
@@ -52,6 +54,10 @@ export function buildLegendRows(organizations: Organization[], departmentCode?: 
       );
       continue;
     }
+    if (code === 'DRAINAGE') {
+      add(getDrainLineKindFromOrg(org));
+      continue;
+    }
     if (code === 'MINOR_IRRIGATION') {
       add((org.attributes?.category_type as string) || org.type);
       continue;
@@ -68,7 +74,15 @@ export function buildLegendRows(organizations: Organization[], departmentCode?: 
   }
 
   return Array.from(bucket.entries())
-    .map(([label, count]) => ({ label: label.replace(/_/g, ' '), rawLabel: label, count }))
+    .map(([rawLabel, count]) => {
+      const label =
+        code === 'DRAINAGE' && rawLabel === 'MAIN'
+          ? 'Main'
+          : code === 'DRAINAGE' && rawLabel === 'BRANCH'
+            ? 'Branch'
+            : rawLabel.replace(/_/g, ' ');
+      return { label, rawLabel, count };
+    })
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 }
 
@@ -89,6 +103,7 @@ export function resolveEffectiveHighlightCards(
   return buildLegendRows(organizations, departmentCode).map((row) => ({
     title: row.label,
     value: String(row.count),
+    legend_key: normalizeLegendParam(row.rawLabel),
   }));
 }
 
@@ -111,6 +126,40 @@ export function normalizeLegendParam(label: string): string {
     .trim()
     .replace(/\s+/g, '_')
     .toUpperCase();
+}
+
+const DRAINAGE_HIGHLIGHT_KEYS: Record<string, MessageKey> = {
+  MAIN: 'map.drainage.legend.mainChannel',
+  BRANCH: 'map.drainage.legend.branchLink',
+};
+
+const ROAD_HIGHLIGHT_KEYS: Record<string, MessageKey> = {
+  NH: 'roads.type.nh',
+  SH: 'roads.type.sh',
+  PWD: 'roads.type.pwd',
+  RD: 'roads.type.rd',
+  PS: 'roads.type.ps',
+  GP: 'roads.type.gp',
+  OTHER: 'roads.type.other',
+};
+
+/** Localized title for summary highlight nodes (map legend filter links). */
+export function legendHighlightTitle(
+  card: Pick<DepartmentSummaryHighlightCard, 'title' | 'legend_key'>,
+  departmentCode: string | undefined,
+  lang: 'en' | 'or',
+): string {
+  const code = (departmentCode || '').toUpperCase();
+  const legendKey = normalizeLegendParam(card.legend_key || card.title);
+  if (code === 'DRAINAGE') {
+    const key = DRAINAGE_HIGHLIGHT_KEYS[legendKey];
+    if (key) return t(key, lang);
+  }
+  if (code === 'ROADS') {
+    const key = ROAD_HIGHLIGHT_KEYS[legendKey];
+    if (key) return t(key, lang);
+  }
+  return (card.title || '').trim();
 }
 
 export type ArcsSummaryTableColumn = {
@@ -176,6 +225,9 @@ export function organizationListingArcsAttribute(org: Organization, keys: string
 /** Category column value on the department summary organization table. */
 export function organizationListingCategory(org: Organization, departmentCode?: string): string {
   const code = (departmentCode || '').toUpperCase();
+  if (code === 'DRAINAGE') {
+    return getDrainLineKindFromOrg(org);
+  }
   if (code === 'ARCS') {
     const jurisdiction = String(org.attributes?.jurisdiction_type ?? '').trim();
     if (jurisdiction) return jurisdiction.replace(/_/g, ' ');

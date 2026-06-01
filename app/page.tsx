@@ -20,8 +20,7 @@ import {
   Department,
   Organization,
 } from '../services/api';
-
-const DRAINAGE_DATA_PATHS = ['/data/drainage/bahana.json', 'data/drainage/bahana.json'] as const;
+import { orgToDrainFeature } from '../lib/drainageOrganization';
 
 function parsePathCoordinates(raw: string | null | undefined): [number, number][] {
   const s = (raw || '').trim();
@@ -285,32 +284,18 @@ function HomePageContent() {
         })
         .finally(() => setLoading(false));
     } else if (isDrainage) {
-      (async () => {
-        let all: DrainFeature[] = [];
-        for (const path of DRAINAGE_DATA_PATHS) {
-          try {
-            const res = await fetch(path);
-            if (!res.ok) {
-              // eslint-disable-next-line no-console
-              console.warn(`Drainage map data not found at ${path}: ${res.status}`);
-              continue;
-            }
-            const fc = await res.json();
-            if (fc?.features?.length) {
-              all = fc.features;
-              break;
-            }
-          } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn(`Failed to load drainage map data from ${path}`, e);
-          }
-        }
-
-        setDrains(all);
-        setRoads([]);
-        setOrganizations([]);
-        setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: all.length }));
-      })().finally(() => setLoading(false));
+      organizationsApi
+        .listByDepartment(dept.id, { limit: 1000 })
+        .then((data) => {
+          const all = data
+            .map((org) => orgToDrainFeature(org))
+            .filter((feature): feature is DrainFeature => feature != null);
+          setDrains(all);
+          setRoads([]);
+          setOrganizations([]);
+          setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: all.length }));
+        })
+        .finally(() => setLoading(false));
     } else {
       organizationsApi
         .listByDepartment(dept.id, {
