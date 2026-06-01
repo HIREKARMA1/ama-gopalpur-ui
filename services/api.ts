@@ -668,6 +668,14 @@ export const educationApi = {
       body: form,
     });
   },
+  bulkSssCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/education/bulk-csv/sss', {
+      method: 'POST',
+      body: form,
+    });
+  },
   bulkDiplomaCollegesCsv: (file: File) => {
     const form = new FormData();
     form.append('file', file);

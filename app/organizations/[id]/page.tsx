@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Navbar } from '../../../components/layout/Navbar';
+import { isEngineeringPortfolioSubDept } from '../../../lib/educationSubDepartments';
 import {
   organizationsApi,
   departmentsApi,
@@ -354,7 +355,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
         </div>
       );
     }
-    if (['ENGINEERING_COLLEGE', 'UNIVERSITY', 'DEGREE_COLLEGE', 'ITI'].includes((org.sub_department || '').toUpperCase())) {
+    if (isEngineeringPortfolioSubDept(org.sub_department)) {
       const lang = String((educationProfile as Record<string, unknown>)?.language || 'en').toLowerCase() === 'od' ? 'od' : 'en';
       return (
         <div className="page-container">
