@@ -333,9 +333,18 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                 setCategoryFilter(e.target.value);
                 setCurrentPage(1);
               }}
+              aria-label={
+                isArcsDept
+                  ? tr('dept.summary.table.jurisdictionType')
+                  : tr('dept.summary.search.allCategories')
+              }
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             >
-              <option value="ALL">{tr('dept.summary.search.allCategories')}</option>
+              <option value="ALL">
+                {isArcsDept
+                  ? tr('dept.summary.search.allJurisdictionTypes')
+                  : tr('dept.summary.search.allCategories')}
+              </option>
               {categoryOptions.map((opt) => (
                 <option key={`cat-${opt}`} value={opt}>
                   {opt}
