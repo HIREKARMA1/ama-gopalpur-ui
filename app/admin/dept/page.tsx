@@ -1251,6 +1251,24 @@ export default function DepartmentAdminPage() {
       organizationsForTable.forEach((o) => {
         rows.push(DRAINAGE_TABLE_COLUMNS.map((col) => stringify(getDrainTableColumnValue(o, col))));
       });
+    } else if (deptCode === 'MINOR_IRRIGATION') {
+      headers = splitHeader(MINOR_IRRIGATION_CSV_HEADER);
+      organizationsForTable.forEach((o) => {
+        const data = minorIrrigationProfiles[o.id] as Record<string, unknown> | undefined;
+        rows.push(
+          headers.map((header) => {
+            const key = snakeFromHeader(header);
+            if (header === 'NAME OF M.I.P') return stringify(o.name);
+            if (header === 'LATITUDE') {
+              return o.latitude != null ? String(o.latitude) : stringify(data?.[key]);
+            }
+            if (header === 'LONGITUDE') {
+              return o.longitude != null ? String(o.longitude) : stringify(data?.[key]);
+            }
+            return stringify(data?.[key]);
+          }),
+        );
+      });
     } else if (deptCode === 'ROADS') {
       headers = [
         'Road Name',
