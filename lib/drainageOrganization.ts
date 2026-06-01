@@ -4,6 +4,8 @@ import { t } from '../components/i18n/messages';
 import { getDrainLineKind, type DrainLineKind } from './mapConfig';
 import type { Organization } from '../services/api';
 
+export type { DrainLineKind };
+
 export const DRAINAGE_CSV_HEADER =
   'PROJECT NAME,DRAIN NAME,DRAIN TYPE,LENGTH (KM),START LATITUDE,START LONGITUDE,END LATITUDE,END LONGITUDE,REMARKS,PATH COORDINATES';
 
