@@ -36,6 +36,7 @@ import {
   DRAINAGE_TABLE_COLUMNS,
   getDrainTableColumnValue,
 } from '../../../lib/drainageOrganization';
+import { isGpRoadSector, roadDedupeKeyFromOrg, roadImportDedupeKey } from '../../../lib/roadsOrganization';
 import { compressImage } from '../../../lib/imageCompression';
 import {
   EducationPsPortfolioAdminForm,
@@ -266,7 +267,7 @@ const IRRIGATION_CSV_HEADER =
 const AGRICULTURE_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID,HOST INSTITUTION/AFFILIATING BODY,ESTABLISHED YEAR,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,CAMPUS AREA (ACRES),TRAINING HALL (YES/NO),TRAINING HALL CAPACITY (SEATS),SOIL TESTING (YES/NO),SOIL SAMPLES TESTED PER YEAR,SEED DISTRIBUTION (YES/NO),SEED PROCESSING UNIT (YES/NO),SEED STORAGE CAPACITY (MT),DEMO UNITS (COMMA SEPARATED),DEMO FARM (YES/NO),DEMO FARM AREA (ACRES),GREENHOUSE/POLYHOUSE (YES/NO),IRRIGATION FACILITY (YES/NO),MACHINERY/CUSTOM HIRING (YES/NO),COMPUTER/IT LAB (YES/NO),LIBRARY (YES/NO),KEY SCHEMES (COMMA SEPARATED),TOTAL STAFF (COUNT),SCIENTISTS/OFFICERS (COUNT),TECHNICAL STAFF (COUNT),EXTENSION WORKERS (COUNT),FARMER TRAINING CAPACITY (PER BATCH),TRAINING PROGRAMMES CONDUCTED LAST YEAR,ON-FARM TRIALS/FLD LAST YEAR,VILLAGES/GPS COVERED (COUNT),SOIL HEALTH CARDS ISSUED LAST YEAR,FARMERS SERVED LAST YEAR (APPROX),REMARKS/DESCRIPTION\n';
 const ROADS_CSV_HEADER =
-  'block,GP/WARD,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED,REMARKS\n';
+  'block,GP/WARD,VILLAGE,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED,REMARKS\n';
 
 const splitHeader = (header: string): string[] =>
   header.trim().replace(/\n$/, '').split(',').map((h) => h.trim());
@@ -786,6 +787,7 @@ export default function DepartmentAdminPage() {
       'Road Name',
       'Block',
       'GP/Ward',
+      'Village',
       'Road Code',
       'Road Sector',
       'Name of Division',
@@ -833,6 +835,7 @@ export default function DepartmentAdminPage() {
     const map: Record<string, unknown> = {
       Block: attrs.block,
       'GP/Ward': attrs.gp_ward,
+      Village: attrs.village,
       'Road Code': attrs.road_code,
       'Road Sector': attrs.road_sector,
       'Name of Division': attrs.name_of_division,
@@ -1395,6 +1398,7 @@ export default function DepartmentAdminPage() {
         'Road Name',
         'Block',
         'GP/Ward',
+        'Village',
         'Road Code',
         'Road Sector',
         'Name of Division',
@@ -1412,6 +1416,7 @@ export default function DepartmentAdminPage() {
           stringify(o.name),
           stringify(o.attributes?.block),
           stringify(o.attributes?.gp_ward),
+          stringify(o.attributes?.village),
           stringify(o.attributes?.road_code),
           stringify(o.attributes?.road_sector),
           stringify(o.attributes?.name_of_division),
@@ -1611,6 +1616,7 @@ export default function DepartmentAdminPage() {
         const indexes = {
           block: idx('block', 'ulb_block'),
           gpWard: idx('gp/ward', 'gp ward', 'gp_ward', 'ward', 'gp'),
+          village: idx('village', 'village name', 'village_name'),
           roadName: idx('road name', 'road_name', 'name of road', 'name'),
           roadCode: idx('road code', 'road_code', 'code'),
           roadSector: idx('road sector(nh/sh/pwd/rd/ps/gp)', 'road sector'),
@@ -1638,15 +1644,18 @@ export default function DepartmentAdminPage() {
           return;
         }
 
-        const existing = await organizationsApi.listByDepartment(me.department_id, { skip: 0, limit: 1000 });
-        const existingKeys = new Set(
-          existing.map((org) => {
-            const attrs = (org.attributes ?? {}) as Record<string, unknown>;
-            const code = String(attrs.road_code ?? '').trim().toUpperCase();
-            const name = String(org.name ?? '').trim().toUpperCase();
-            return `${name}__${code}`;
-          }),
-        );
+        const existingKeys = new Set<string>();
+        {
+          const pageSize = 1000;
+          let skip = 0;
+          while (true) {
+            const batch = await organizationsApi.listByDepartment(me.department_id, { skip, limit: pageSize });
+            for (const org of batch) existingKeys.add(roadDedupeKeyFromOrg(org));
+            if (batch.length < pageSize) break;
+            skip += pageSize;
+            if (skip > 100000) break;
+          }
+        }
 
         const get = (cols: string[], position: number) => (position >= 0 && position < cols.length ? cols[position] : '');
         let imported = 0;
@@ -1673,13 +1682,25 @@ export default function DepartmentAdminPage() {
               endLng = endLng || derived.endLng;
             }
           }
-          if (!startLat || !startLng || !endLat || !endLng) {
-            errors.push(`Row ${i + 1}: provide start/end coordinates, or a valid PATH COORDINATES value.`);
+          const roadSector = get(cols, indexes.roadSector);
+          const gpSummaryOnly = isGpRoadSector(roadSector);
+          if (!gpSummaryOnly && (!startLat || !startLng || !endLat || !endLng)) {
+            errors.push(`Row ${i + 1}: provide start/end coordinates, or a valid PATH COORDINATES value (not required for GP roads).`);
             continue;
           }
 
           const roadCode = get(cols, indexes.roadCode);
-          const dedupeKey = `${roadName.trim().toUpperCase()}__${roadCode.trim().toUpperCase()}`;
+          const block = get(cols, indexes.block);
+          const gpWard = get(cols, indexes.gpWard);
+          const village = get(cols, indexes.village);
+          const dedupeKey = roadImportDedupeKey({
+            name: roadName,
+            roadCode,
+            block,
+            gpWard,
+            village,
+            roadSector,
+          });
           if (existingKeys.has(dedupeKey)) {
             skippedDuplicates += 1;
             continue;
@@ -1690,9 +1711,17 @@ export default function DepartmentAdminPage() {
           const eLat = toNumberOrNull(endLat);
           const eLng = toNumberOrNull(endLng);
           const centerLat =
-            sLat != null && eLat != null ? Number(((sLat + eLat) / 2).toFixed(6)) : sLat ?? eLat ?? null;
+            !gpSummaryOnly && sLat != null && eLat != null
+              ? Number(((sLat + eLat) / 2).toFixed(6))
+              : gpSummaryOnly
+                ? null
+                : sLat ?? eLat ?? null;
           const centerLng =
-            sLng != null && eLng != null ? Number(((sLng + eLng) / 2).toFixed(6)) : sLng ?? eLng ?? null;
+            !gpSummaryOnly && sLng != null && eLng != null
+              ? Number(((sLng + eLng) / 2).toFixed(6))
+              : gpSummaryOnly
+                ? null
+                : sLng ?? eLng ?? null;
           try {
             await organizationsApi.create({
               department_id: me.department_id,
@@ -1701,28 +1730,28 @@ export default function DepartmentAdminPage() {
               latitude: centerLat,
               longitude: centerLng,
               address: get(cols, indexes.block) || undefined,
-              description: get(cols, indexes.roadSector)
-                ? `Road sector: ${get(cols, indexes.roadSector)}`
-                : undefined,
+              description: roadSector ? `Road sector: ${roadSector}` : undefined,
               attributes: {
                 block: get(cols, indexes.block) || null,
                 gp_ward: get(cols, indexes.gpWard) || null,
+                village: get(cols, indexes.village) || null,
                 road_code: roadCode || null,
-                road_sector: get(cols, indexes.roadSector) || null,
+                road_sector: roadSector || null,
                 name_of_division: get(cols, indexes.nameOfDivision) || null,
                 scheme: get(cols, indexes.scheme) || null,
                 length_km: get(cols, indexes.lengthKm) || null,
-                path_coordinates: pathCoordinates || null,
-                start_lat: startLat || null,
-                start_lng: startLng || null,
-                end_lat: endLat || null,
-                end_lng: endLng || null,
+                path_coordinates: gpSummaryOnly ? null : pathCoordinates || null,
+                start_lat: gpSummaryOnly ? null : startLat || null,
+                start_lng: gpSummaryOnly ? null : startLng || null,
+                end_lat: gpSummaryOnly ? null : endLat || null,
+                end_lng: gpSummaryOnly ? null : endLng || null,
                 point_a_name: get(cols, indexes.pointAName) || null,
                 point_b_name: get(cols, indexes.pointBName) || null,
                 year_of_construction: get(cols, indexes.yearOfConstruction) || null,
                 last_maintenance_date: get(cols, indexes.lastMaintenanceDate) || null,
                 issues: get(cols, indexes.issues) || null,
                 remarks: get(cols, indexes.remarks) || null,
+                summary_only: gpSummaryOnly ? 'true' : null,
                 updated_at: new Date().toISOString(),
               },
             });
@@ -4417,7 +4446,7 @@ export default function DepartmentAdminPage() {
                             : deptCode === 'REVENUE_LAND'
                               ? 'Upload Tahasil portfolio CSV. Organizations will be created/updated by TAHSIL_NAME (or OFFICE NAME), LATITUDE, LONGITUDE, and all additional attributes are saved to profile.'
                               : deptCode === 'ROADS'
-                                ? 'Upload Roads CSV. Organizations will be created from ROAD NAME plus start/end coordinates (or PATH COORDINATES).'
+                                ? 'Upload Roads CSV. Map roads (NH/SH/PWD/RD/PS) need coordinates. GP roads need only ROAD NAME, BLOCK, GP/WARD, VILLAGE, and ROAD SECTOR=GP — road code and point names are optional.'
                                 : deptCode === 'DRAINAGE'
                                   ? 'Upload Drainage CSV without re-saving from Excel. For checking data in Excel use templates/drainage/bahana_drains_review.csv (no path column).'
                               : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
@@ -5070,6 +5099,7 @@ export default function DepartmentAdminPage() {
                               <>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.block)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_ward)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.village)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.road_code)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.road_sector)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.name_of_division)}</td>
@@ -6459,7 +6489,7 @@ export default function DepartmentAdminPage() {
                     )}
                     {!organizationsForTable.length && (
                       <tr>
-                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 22 : deptCode === 'HEALTH' ? 28 : deptCode === 'EDUCATION' ? 62 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 3 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 3 : deptCode === 'REVENUE_LAND' ? 12 : deptCode === 'ROADS' ? 17 : deptCode === 'DRAINAGE' ? 14 : 11}>
+                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 22 : deptCode === 'HEALTH' ? 28 : deptCode === 'EDUCATION' ? 62 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 3 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 3 : deptCode === 'REVENUE_LAND' ? 12 : deptCode === 'ROADS' ? 18 : deptCode === 'DRAINAGE' ? 14 : 11}>
                           {orgs.length
                             ? 'No matching rows for current search/filter.'
                             : 'No organizations yet for your department.'}

@@ -146,8 +146,8 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       const roadCode = String(attrs.road_code ?? '').toLowerCase();
       const roadBlock = String(attrs.block ?? '').toLowerCase();
       const roadGpWard = String(attrs.gp_ward ?? attrs.gpward ?? attrs.gp_ward_name ?? '').toLowerCase();
-      const roadPointA = String(attrs.point_a_name ?? '').toLowerCase();
-      const roadPointB = String(attrs.point_b_name ?? '').toLowerCase();
+      const roadVillage = String(attrs.village ?? attrs.village_name ?? '').toLowerCase();
+      const roadLength = String(attrs.length_km ?? '').toLowerCase();
 
       const arcsSearchText = isArcsDept
         ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => organizationListingArcsAttribute(org, col.keys).toLowerCase()).join(' ')
@@ -155,11 +155,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
 
       const drainageSearchText = isDrainageDept
         ? [
-            org.name,
-            ...DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => getDrainTableColumnValue(org, col)),
-          ]
-            .join(' ')
-            .toLowerCase()
+          org.name,
+          ...DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => getDrainTableColumnValue(org, col)),
+        ]
+          .join(' ')
+          .toLowerCase()
         : '';
 
       const matchesSearch =
@@ -174,8 +174,8 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
             roadCode.includes(q) ||
             roadBlock.includes(q) ||
             roadGpWard.includes(q) ||
-            roadPointA.includes(q) ||
-            roadPointB.includes(q)
+            roadVillage.includes(q) ||
+            roadLength.includes(q)
           ));
       const drainKind = isDrainageDept ? getDrainLineKindFromOrg(org) : '';
       const matchesCategory =
@@ -304,9 +304,9 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                 <option key={`cat-${opt}`} value={opt}>
                   {isDrainageDept
                     ? (() => {
-                        const key = drainageTypeMessageKey(opt);
-                        return key ? tr(key) : opt;
-                      })()
+                      const key = drainageTypeMessageKey(opt);
+                      return key ? tr(key) : opt;
+                    })()
                     : opt}
                 </option>
               ))}
@@ -339,23 +339,23 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     </th>
                     {isArcsDept
                       ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => (
-                          <th
-                            key={col.id}
-                            className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500"
-                          >
-                            {tr(col.labelKey)}
-                          </th>
-                        ))
+                        <th
+                          key={col.id}
+                          className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500"
+                        >
+                          {tr(col.labelKey)}
+                        </th>
+                      ))
                       : null}
                     {isDrainageDept
                       ? DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => (
-                          <th
-                            key={col}
-                            className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500"
-                          >
-                            {drainageSummaryColumnLabel(col, language)}
-                          </th>
-                        ))
+                        <th
+                          key={col}
+                          className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500"
+                        >
+                          {drainageSummaryColumnLabel(col, language)}
+                        </th>
+                      ))
                       : isRoadsDept ? null : (
                         <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
                           <button type="button" onClick={() => onSort('address')} className="inline-flex items-center gap-1 hover:text-slate-700">
@@ -372,10 +372,10 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                           {trStatic('GP/Ward', 'ଜିପି/ୱାର୍ଡ')}
                         </th>
                         <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                          {trStatic('Starting point name', 'ଆରମ୍ଭ ବିନ୍ଦୁ ନାମ')}
+                          {trStatic('Village', 'ଗ୍ରାମ')}
                         </th>
                         <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                          {trStatic('Ending point name', 'ଶେଷ ବିନ୍ଦୁ ନାମ')}
+                          {trStatic('Length (km)', 'ଦୈର୍ଘ୍ୟ (କି.ମି.)')}
                         </th>
                       </>
                     ) : null}
@@ -392,27 +392,27 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                         <td className="px-4 py-2.5 text-sm text-slate-600">
                           {isDrainageDept
                             ? (() => {
-                                const kind = getDrainLineKindFromOrg(org);
-                                const key = drainageTypeMessageKey(kind);
-                                return key ? tr(key) : kind || '—';
-                              })()
+                              const kind = getDrainLineKindFromOrg(org);
+                              const key = drainageTypeMessageKey(kind);
+                              return key ? tr(key) : kind || '—';
+                            })()
                             : organizationListingCategory(org, department.code) || '—'}
                         </td>
                         {isArcsDept
                           ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => (
-                              <td key={`${org.id}-${col.id}`} className="px-4 py-2.5 text-sm text-slate-600">
-                                {organizationListingArcsAttribute(org, col.keys) || '—'}
-                              </td>
-                            ))
+                            <td key={`${org.id}-${col.id}`} className="px-4 py-2.5 text-sm text-slate-600">
+                              {organizationListingArcsAttribute(org, col.keys) || '—'}
+                            </td>
+                          ))
                           : null}
                         {isDrainageDept
                           ? DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => (
-                              <td key={`${org.id}-${col}`} className="px-4 py-2.5 text-sm text-slate-600">
-                                <span className={col === 'Remarks' ? 'line-clamp-2' : ''}>
-                                  {getDrainTableColumnValue(org, col) || '—'}
-                                </span>
-                              </td>
-                            ))
+                            <td key={`${org.id}-${col}`} className="px-4 py-2.5 text-sm text-slate-600">
+                              <span className={col === 'Remarks' ? 'line-clamp-2' : ''}>
+                                {getDrainTableColumnValue(org, col) || '—'}
+                              </span>
+                            </td>
+                          ))
                           : isRoadsDept ? null : (
                             <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
                               <span className="line-clamp-1">{org.address || '—'}</span>
@@ -437,12 +437,16 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                             </td>
                             <td className="px-4 py-2.5 text-sm text-slate-600">
                               <span className="line-clamp-1">
-                                {String((org.attributes as Record<string, unknown> | null)?.point_a_name ?? '—')}
+                                {String(
+                                  (org.attributes as Record<string, unknown> | null)?.village ??
+                                  (org.attributes as Record<string, unknown> | null)?.village_name ??
+                                  '—',
+                                )}
                               </span>
                             </td>
                             <td className="px-4 py-2.5 text-sm text-slate-600">
                               <span className="line-clamp-1">
-                                {String((org.attributes as Record<string, unknown> | null)?.point_b_name ?? '—')}
+                                {String((org.attributes as Record<string, unknown> | null)?.length_km ?? '—')}
                               </span>
                             </td>
                           </>
@@ -488,11 +492,10 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     key={`page-${p}`}
                     type="button"
                     onClick={() => setCurrentPage(p)}
-                    className={`h-6 min-w-6 rounded border px-1.5 text-sm ${
-                      p === safeCurrentPage
+                    className={`h-6 min-w-6 rounded border px-1.5 text-sm ${p === safeCurrentPage
                         ? 'border-orange-300 bg-orange-50 text-orange-700'
                         : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     {p}
                   </button>

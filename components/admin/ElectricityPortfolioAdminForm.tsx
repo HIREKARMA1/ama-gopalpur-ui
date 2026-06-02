@@ -155,7 +155,13 @@ export function ElectricityPortfolioAdminForm({
   }, [headers]);
 
   const patch = (next: Partial<ElectricityFormValues>) =>
-    setValues((prev) => ({ ...prev, ...next }));
+    setValues((prev) => {
+      const merged = { ...prev };
+      for (const [key, value] of Object.entries(next)) {
+        if (value !== undefined) merged[key] = value;
+      }
+      return merged;
+    });
 
   return (
     <div className="space-y-4">

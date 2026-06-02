@@ -62,7 +62,7 @@ function buildStaffRows(profile: ElectricityProfileRecord): Faculty[] {
       email: asString(profile[`email_${i}`]),
       subject: asString(profile[`job_type_${i}`]),
       experience_from: asString(profile[`date_of_joining_${i}`]),
-      image: asString(profile[`staff_${i}_photo`]),
+      photo: asString(profile[`staff_${i}_photo`]),
     };
     if (
       row.name ||

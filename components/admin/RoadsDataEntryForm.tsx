@@ -1,7 +1,8 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { organizationsApi, type Organization } from '../../services/api';
+import { isGpRoadSector } from '../../lib/roadsOrganization';
 
 type Props = {
   departmentId: number;
@@ -31,6 +32,8 @@ function parsePathCoordinatePairs(value: string): Array<[number, number]> {
   return out;
 }
 
+const ROAD_SECTOR_OPTIONS = ['NH', 'SH', 'PWD', 'RD', 'PS', 'GP'] as const;
+
 export function RoadsDataEntryForm({
   departmentId,
   onCreated,
@@ -45,6 +48,7 @@ export function RoadsDataEntryForm({
   const [scheme, setScheme] = useState('');
   const [block, setBlock] = useState('');
   const [gpWard, setGpWard] = useState('');
+  const [village, setVillage] = useState('');
   const [lengthKm, setLengthKm] = useState('');
   const [startLat, setStartLat] = useState('');
   const [startLng, setStartLng] = useState('');
@@ -61,6 +65,7 @@ export function RoadsDataEntryForm({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const isEditing = editingRoad != null;
+  const isGpSummaryOnly = useMemo(() => isGpRoadSector(roadSector), [roadSector]);
 
   const reset = () => {
     setRoadName('');
@@ -70,6 +75,7 @@ export function RoadsDataEntryForm({
     setScheme('');
     setBlock('');
     setGpWard('');
+    setVillage('');
     setLengthKm('');
     setStartLat('');
     setStartLng('');
@@ -101,6 +107,7 @@ export function RoadsDataEntryForm({
     setScheme(String(attrs.scheme ?? attrs.scheme_name ?? ''));
     setBlock(String(attrs.block ?? editingRoad.address ?? ''));
     setGpWard(String(attrs.gp_ward ?? attrs.gpward ?? ''));
+    setVillage(String(attrs.village ?? attrs.village_name ?? ''));
     setLengthKm(String(attrs.length_km ?? ''));
     setStartLat(String(attrs.start_lat ?? fallbackLat));
     setStartLng(String(attrs.start_lng ?? fallbackLng));
@@ -125,39 +132,51 @@ export function RoadsDataEntryForm({
       setError('Road name is required.');
       return;
     }
-    const parsedPath = parsePathCoordinatePairs(pathCoordinates);
+    if (!roadSector.trim()) {
+      setError('Road type (sector) is required.');
+      return;
+    }
 
+    const parsedPath = parsePathCoordinatePairs(pathCoordinates);
     const sLat = toNumberOrNull(startLat);
     const sLng = toNumberOrNull(startLng);
     const eLat = toNumberOrNull(endLat);
     const eLng = toNumberOrNull(endLng);
     const hasStartEnd = sLat != null && sLng != null && eLat != null && eLng != null;
     const hasPath = parsedPath.length >= 2;
-    if (!hasStartEnd && !hasPath) {
-      setError('Provide start/end coordinates or a valid path coordinates value.');
-      return;
-    }
 
-    const derivedStart = hasStartEnd ? [sLng as number, sLat as number] : parsedPath[0];
-    const derivedEnd = hasStartEnd
-      ? [eLng as number, eLat as number]
-      : parsedPath[parsedPath.length - 1];
-    const finalStartLng = derivedStart?.[0] ?? null;
-    const finalStartLat = derivedStart?.[1] ?? null;
-    const finalEndLng = derivedEnd?.[0] ?? null;
-    const finalEndLat = derivedEnd?.[1] ?? null;
-    if (
-      finalStartLat == null ||
-      finalStartLng == null ||
-      finalEndLat == null ||
-      finalEndLng == null
-    ) {
-      setError('Unable to derive valid road coordinates.');
-      return;
-    }
+    let finalStartLat: number | null = null;
+    let finalStartLng: number | null = null;
+    let finalEndLat: number | null = null;
+    let finalEndLng: number | null = null;
+    let latitude: number | null = null;
+    let longitude: number | null = null;
 
-    const latitude = Number(((finalStartLat + finalEndLat) / 2).toFixed(6));
-    const longitude = Number(((finalStartLng + finalEndLng) / 2).toFixed(6));
+    if (!isGpSummaryOnly) {
+      if (!hasStartEnd && !hasPath) {
+        setError('Provide start/end coordinates or a valid path coordinates value.');
+        return;
+      }
+      const derivedStart = hasStartEnd ? [sLng as number, sLat as number] : parsedPath[0];
+      const derivedEnd = hasStartEnd
+        ? [eLng as number, eLat as number]
+        : parsedPath[parsedPath.length - 1];
+      finalStartLng = derivedStart?.[0] ?? null;
+      finalStartLat = derivedStart?.[1] ?? null;
+      finalEndLng = derivedEnd?.[0] ?? null;
+      finalEndLat = derivedEnd?.[1] ?? null;
+      if (
+        finalStartLat == null ||
+        finalStartLng == null ||
+        finalEndLat == null ||
+        finalEndLng == null
+      ) {
+        setError('Unable to derive valid road coordinates.');
+        return;
+      }
+      latitude = Number(((finalStartLat + finalEndLat) / 2).toFixed(6));
+      longitude = Number(((finalStartLng + finalEndLng) / 2).toFixed(6));
+    }
 
     setSaving(true);
     try {
@@ -172,22 +191,24 @@ export function RoadsDataEntryForm({
         attributes: {
           block: block.trim() || null,
           gp_ward: gpWard.trim() || null,
+          village: village.trim() || null,
           road_code: roadCode.trim() || null,
           road_sector: roadSector.trim() || null,
           name_of_division: nameOfDivision.trim() || null,
           scheme: scheme.trim() || null,
           length_km: lengthKm.trim() || null,
-          path_coordinates: pathCoordinates.trim() || null,
-          start_lat: String(finalStartLat),
-          start_lng: String(finalStartLng),
-          end_lat: String(finalEndLat),
-          end_lng: String(finalEndLng),
+          path_coordinates: isGpSummaryOnly ? null : pathCoordinates.trim() || null,
+          start_lat: finalStartLat != null ? String(finalStartLat) : null,
+          start_lng: finalStartLng != null ? String(finalStartLng) : null,
+          end_lat: finalEndLat != null ? String(finalEndLat) : null,
+          end_lng: finalEndLng != null ? String(finalEndLng) : null,
           point_a_name: pointAName.trim() || null,
           point_b_name: pointBName.trim() || null,
           year_of_construction: yearOfConstruction.trim() || null,
           last_maintenance_date: lastMaintenanceDate.trim() || null,
           issues: issues.trim() || null,
           remarks: remarks.trim() || null,
+          summary_only: isGpSummaryOnly ? 'true' : null,
           updated_at: new Date().toISOString(),
         },
       };
@@ -222,29 +243,136 @@ export function RoadsDataEntryForm({
       <h2 className="text-sm font-semibold text-text">Road data entry</h2>
       <p className="mt-1 text-xs text-text-muted">
         {isEditing
-          ? 'Edit road record directly from department admin panel.'
-          : 'Add road records directly from department admin panel.'}
+          ? 'Edit road record for the summary Road Listing table.'
+          : 'Add road records for the summary Road Listing table.'}
       </p>
       <p className="mt-1 text-[11px] text-text-muted">
-        Tip: for actual road shape on map, provide full path coordinates (for example `lng lat;lng lat;...` or GeoJSON-style coordinate array), not only start/end points.
+        {isGpSummaryOnly
+          ? 'GP roads are summary-only (not on map). Required: road name, road type GP, Block, GP/Ward. Road code, village, length, and point names are optional.'
+          : 'For NH/SH/PWD/RD/PS roads shown on the map, provide path coordinates or start/end coordinates.'}
       </p>
       <form onSubmit={submit} className="mt-3 grid gap-3 text-xs md:grid-cols-2">
-        <input className="rounded border border-border px-3 py-2" placeholder="Road name *" value={roadName} onChange={(e) => setRoadName(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="Road code" value={roadCode} onChange={(e) => setRoadCode(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="Road sector (NH/SH/PWD/RD/PS/GP)" value={roadSector} onChange={(e) => setRoadSector(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="Name of division" value={nameOfDivision} onChange={(e) => setNameOfDivision(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="Scheme" value={scheme} onChange={(e) => setScheme(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="Block" value={block} onChange={(e) => setBlock(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="GP/Ward" value={gpWard} onChange={(e) => setGpWard(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="Length (in km)" value={lengthKm} onChange={(e) => setLengthKm(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="Start latitude *" value={startLat} onChange={(e) => setStartLat(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="Start longitude *" value={startLng} onChange={(e) => setStartLng(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="End latitude *" value={endLat} onChange={(e) => setEndLat(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="End longitude *" value={endLng} onChange={(e) => setEndLng(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2 md:col-span-2" placeholder="Path coordinates (optional)" value={pathCoordinates} onChange={(e) => setPathCoordinates(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="Starting point name" value={pointAName} onChange={(e) => setPointAName(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="Ending point name" value={pointBName} onChange={(e) => setPointBName(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2" placeholder="Year of construction" value={yearOfConstruction} onChange={(e) => setYearOfConstruction(e.target.value)} />
+        <input
+          className="rounded border border-border px-3 py-2 md:col-span-2"
+          placeholder="Road name *"
+          value={roadName}
+          onChange={(e) => setRoadName(e.target.value)}
+        />
+        {!isGpSummaryOnly ? (
+          <input
+            className="rounded border border-border px-3 py-2"
+            placeholder="Road code"
+            value={roadCode}
+            onChange={(e) => setRoadCode(e.target.value)}
+          />
+        ) : null}
+        <label className="flex flex-col gap-1">
+          <span className="text-[11px] font-medium text-text">Road type *</span>
+          <select
+            className="rounded border border-border bg-background px-3 py-2"
+            value={roadSector}
+            onChange={(e) => setRoadSector(e.target.value)}
+          >
+            <option value="">Select type</option>
+            {ROAD_SECTOR_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt === 'GP' ? 'GP (summary listing only)' : opt}
+              </option>
+            ))}
+          </select>
+        </label>
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder="Name of division"
+          value={nameOfDivision}
+          onChange={(e) => setNameOfDivision(e.target.value)}
+        />
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder="Scheme"
+          value={scheme}
+          onChange={(e) => setScheme(e.target.value)}
+        />
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder="Block *"
+          value={block}
+          onChange={(e) => setBlock(e.target.value)}
+        />
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder="GP/Ward *"
+          value={gpWard}
+          onChange={(e) => setGpWard(e.target.value)}
+        />
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder="Village"
+          value={village}
+          onChange={(e) => setVillage(e.target.value)}
+        />
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder="Length (in km)"
+          value={lengthKm}
+          onChange={(e) => setLengthKm(e.target.value)}
+        />
+        {!isGpSummaryOnly ? (
+          <>
+            <input
+              className="rounded border border-border px-3 py-2"
+              placeholder="Starting point name (optional)"
+              value={pointAName}
+              onChange={(e) => setPointAName(e.target.value)}
+            />
+            <input
+              className="rounded border border-border px-3 py-2"
+              placeholder="Ending point name (optional)"
+              value={pointBName}
+              onChange={(e) => setPointBName(e.target.value)}
+            />
+          </>
+        ) : null}
+        {!isGpSummaryOnly ? (
+          <>
+            <input
+              className="rounded border border-border px-3 py-2"
+              placeholder="Start latitude *"
+              value={startLat}
+              onChange={(e) => setStartLat(e.target.value)}
+            />
+            <input
+              className="rounded border border-border px-3 py-2"
+              placeholder="Start longitude *"
+              value={startLng}
+              onChange={(e) => setStartLng(e.target.value)}
+            />
+            <input
+              className="rounded border border-border px-3 py-2"
+              placeholder="End latitude *"
+              value={endLat}
+              onChange={(e) => setEndLat(e.target.value)}
+            />
+            <input
+              className="rounded border border-border px-3 py-2"
+              placeholder="End longitude *"
+              value={endLng}
+              onChange={(e) => setEndLng(e.target.value)}
+            />
+            <input
+              className="rounded border border-border px-3 py-2 md:col-span-2"
+              placeholder="Path coordinates (optional)"
+              value={pathCoordinates}
+              onChange={(e) => setPathCoordinates(e.target.value)}
+            />
+          </>
+        ) : null}
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder="Year of construction"
+          value={yearOfConstruction}
+          onChange={(e) => setYearOfConstruction(e.target.value)}
+        />
         <label className="flex flex-col gap-1 text-[11px] text-text-muted">
           <span>Last maintenance</span>
           <input
@@ -254,10 +382,24 @@ export function RoadsDataEntryForm({
             onChange={(e) => setLastMaintenanceDate(e.target.value)}
           />
         </label>
-        <input className="rounded border border-border px-3 py-2 md:col-span-2" placeholder="Issues observed" value={issues} onChange={(e) => setIssues(e.target.value)} />
-        <input className="rounded border border-border px-3 py-2 md:col-span-2" placeholder="Remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} />
+        <input
+          className="rounded border border-border px-3 py-2 md:col-span-2"
+          placeholder="Issues observed"
+          value={issues}
+          onChange={(e) => setIssues(e.target.value)}
+        />
+        <input
+          className="rounded border border-border px-3 py-2 md:col-span-2"
+          placeholder="Remarks"
+          value={remarks}
+          onChange={(e) => setRemarks(e.target.value)}
+        />
         <div className="md:col-span-2 flex items-center gap-3">
-          <button type="submit" disabled={saving} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-60">
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-60"
+          >
             {saving ? 'Saving...' : isEditing ? 'Update road' : 'Save road'}
           </button>
           {isEditing ? (

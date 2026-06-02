@@ -280,7 +280,7 @@ function HomePageContent() {
           setRoads(all);
           setDrains([]);
           setOrganizations([]);
-          setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: all.length }));
+          setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: data.length }));
         })
         .finally(() => setLoading(false));
     } else if (isDrainage) {
