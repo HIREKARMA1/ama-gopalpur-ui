@@ -145,7 +145,9 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       const attrs = (org.attributes ?? {}) as Record<string, unknown>;
       const roadCode = String(attrs.road_code ?? '').toLowerCase();
       const roadBlock = String(attrs.block ?? '').toLowerCase();
-      const roadRemarks = String(attrs.remarks ?? '').toLowerCase();
+      const roadGpWard = String(attrs.gp_ward ?? attrs.gpward ?? attrs.gp_ward_name ?? '').toLowerCase();
+      const roadPointA = String(attrs.point_a_name ?? '').toLowerCase();
+      const roadPointB = String(attrs.point_b_name ?? '').toLowerCase();
 
       const arcsSearchText = isArcsDept
         ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => organizationListingArcsAttribute(org, col.keys).toLowerCase()).join(' ')
@@ -168,7 +170,13 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         (isArcsDept && arcsSearchText.includes(q)) ||
         (isDrainageDept && drainageSearchText.includes(q)) ||
         (isRoadsDept &&
-          (roadCode.includes(q) || roadBlock.includes(q) || roadRemarks.includes(q)));
+          (
+            roadCode.includes(q) ||
+            roadBlock.includes(q) ||
+            roadGpWard.includes(q) ||
+            roadPointA.includes(q) ||
+            roadPointB.includes(q)
+          ));
       const drainKind = isDrainageDept ? getDrainLineKindFromOrg(org) : '';
       const matchesCategory =
         categoryFilter === 'ALL' ||
@@ -348,7 +356,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                             {drainageSummaryColumnLabel(col, language)}
                           </th>
                         ))
-                      : (
+                      : isRoadsDept ? null : (
                         <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
                           <button type="button" onClick={() => onSort('address')} className="inline-flex items-center gap-1 hover:text-slate-700">
                             {tr('dept.summary.table.address')} <SortIcon active={sortKey === 'address'} direction={sortDir} />
@@ -358,7 +366,16 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     {isRoadsDept ? (
                       <>
                         <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                          {trStatic('Remarks', 'ରିମାର୍କସ୍')}
+                          {trStatic('Block', 'ବ୍ଲକ୍')}
+                        </th>
+                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
+                          {trStatic('GP/Ward', 'ଜିପି/ୱାର୍ଡ')}
+                        </th>
+                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
+                          {trStatic('Starting point name', 'ଆରମ୍ଭ ବିନ୍ଦୁ ନାମ')}
+                        </th>
+                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
+                          {trStatic('Ending point name', 'ଶେଷ ବିନ୍ଦୁ ନାମ')}
                         </th>
                       </>
                     ) : null}
@@ -396,16 +413,36 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                                 </span>
                               </td>
                             ))
-                          : (
+                          : isRoadsDept ? null : (
                             <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
                               <span className="line-clamp-1">{org.address || '—'}</span>
                             </td>
                           )}
                         {isRoadsDept ? (
                           <>
-                            <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
+                            <td className="px-4 py-2.5 text-sm text-slate-600">
                               <span className="line-clamp-1">
-                                {String((org.attributes as Record<string, unknown> | null)?.remarks ?? '—')}
+                                {String((org.attributes as Record<string, unknown> | null)?.block ?? '—')}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-sm text-slate-600">
+                              <span className="line-clamp-1">
+                                {String(
+                                  (org.attributes as Record<string, unknown> | null)?.gp_ward ??
+                                  (org.attributes as Record<string, unknown> | null)?.gpward ??
+                                  (org.attributes as Record<string, unknown> | null)?.gp_ward_name ??
+                                  '—',
+                                )}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-sm text-slate-600">
+                              <span className="line-clamp-1">
+                                {String((org.attributes as Record<string, unknown> | null)?.point_a_name ?? '—')}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-sm text-slate-600">
+                              <span className="line-clamp-1">
+                                {String((org.attributes as Record<string, unknown> | null)?.point_b_name ?? '—')}
                               </span>
                             </td>
                           </>
@@ -417,7 +454,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                       <td
                         className="px-4 py-3 text-slate-600"
                         colSpan={
-                          isRoadsDept ? 5 : isArcsDept ? 7 : isDrainageDept ? 10 : 4
+                          isRoadsDept ? 7 : isArcsDept ? 7 : isDrainageDept ? 10 : 4
                         }
                       >
                         {tr('dept.summary.empty.organizations')}
