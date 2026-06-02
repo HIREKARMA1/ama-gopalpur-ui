@@ -62,6 +62,7 @@ function buildStaffRows(profile: ElectricityProfileRecord): Faculty[] {
       email: asString(profile[`email_${i}`]),
       subject: asString(profile[`job_type_${i}`]),
       experience_from: asString(profile[`date_of_joining_${i}`]),
+      image: asString(profile[`staff_${i}_photo`]),
     };
     if (
       row.name ||
@@ -142,7 +143,7 @@ export function ElectricityPortfolioWebsite({
         name: asString(profile.in_charge_name),
         contact: asString(profile.in_charge_mobile_number),
         email: asString(profile.in_charge_email),
-        image: asString(profile.in_charge_photo),
+        image: asString(profile.in_charge_photo) || asString(profile.electricity_in_charge_photo),
       },
       {
         role: tr('Customer Care', 'ଗ୍ରାହକ ସେବା'),
@@ -150,7 +151,7 @@ export function ElectricityPortfolioWebsite({
         contact:
           asString(profile.customer_care_toll_free_number) || asString(profile.emergency_helpline_number_1),
         email: asString(profile.customer_care_email) || asString(profile.office_email),
-        image: '',
+        image: asString(profile.electricity_customer_care_photo) || asString(profile.electricity_emergency_contact_photo),
       },
     ];
     return cards.filter((c) => c.name || c.contact || c.email || c.image);
@@ -161,26 +162,32 @@ export function ElectricityPortfolioWebsite({
       {
         title: tr('Voltage Levels', 'ଭୋଲ୍ଟେଜ୍ ସ୍ତର'),
         description: `${displayText(profile.primary_voltage_level_kv)} / ${displayText(profile.secondary_voltage_level_kv)} kV`,
+        image: asString(profile.electricity_infra_voltage_image),
       },
       {
         title: tr('Installed Capacity', 'ସ୍ଥାପିତ କ୍ଷମତା'),
         description: `${displayText(profile.installed_capacity_mva)} MVA`,
+        image: asString(profile.electricity_infra_capacity_image),
       },
       {
         title: tr('Main Transformers', 'ମୁଖ୍ୟ ଟ୍ରାନ୍ସଫର୍ମର'),
         description: `${displayText(profile.number_of_main_transformers)} (${displayText(profile.transformer_ratings)})`,
+        image: asString(profile.electricity_infra_transformer_image),
       },
       {
         title: tr('Feeders', 'ଫିଡର୍'),
         description: `${displayText(profile.number_of_incoming_feeders)} in / ${displayText(profile.number_of_outgoing_feeders)} out / ${displayText(profile.total_feeders)} total`,
+        image: asString(profile.electricity_infra_feeders_image),
       },
       {
         title: tr('Distribution Transformers', 'ଡିଷ୍ଟ୍ରିବ୍ୟୁସନ୍ ଟ୍ରାନ୍ସଫର୍ମର'),
         description: `${displayText(profile.number_of_distribution_transformers_dts)} DTs, ${displayText(profile.total_dt_capacity_kva)} kVA`,
+        image: asString(profile.electricity_infra_dt_image),
       },
       {
         title: tr('Consumers', 'ଗ୍ରାହକ'),
         description: `HT ${displayText(profile.high_tension_ht_consumers_count)} / LT ${displayText(profile.low_tension_lt_consumers_count)}`,
+        image: asString(profile.electricity_infra_consumers_image),
       },
     ],
     [profile, tr],

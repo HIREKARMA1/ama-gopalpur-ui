@@ -1,7 +1,5 @@
 import { useMemo, useState } from 'react';
-import { CiShare1 } from 'react-icons/ci';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import { Info, X } from 'lucide-react';
 import type { Department, Organization } from '../../services/api';
 import {
   PsAboutSection,
@@ -124,8 +122,6 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const [sortKey, setSortKey] = useState<'name' | 'category' | 'address'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
-  const [streetViewOrg, setStreetViewOrg] = useState<Organization | null>(null);
-  const [isStreetInfoOpen, setIsStreetInfoOpen] = useState(false);
   const pageSize = 15;
 
   const categoryOptions = useMemo(() => {
@@ -218,83 +214,6 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     overviewText ||
     '—',
   );
-  const streetViewPosition = useMemo(() => {
-    if (!streetViewOrg) return null as { lat: number; lng: number } | null;
-    return roadStreetViewPosition(streetViewOrg);
-  }, [streetViewOrg]);
-  const streetViewEmbedUrl = useMemo(() => {
-    if (!streetViewPosition) return '';
-    const { lat, lng } = streetViewPosition;
-    return `https://www.google.com/maps?q=&layer=c&cbll=${lat},${lng}&cbp=11,0,0,0,0&output=svembed`;
-  }, [streetViewPosition]);
-  const selectedRoadStreetInfo = useMemo(() => {
-    if (!streetViewOrg) return null as null | {
-      name: string;
-      code: string;
-      block: string;
-      sector: string;
-      year: string;
-      pointA: string;
-      pointB: string;
-      lengthKm: string;
-      type: string;
-      nameOfDivision: string;
-      scheme: string;
-      lastMaintenanceDate: string;
-      issues: string;
-      remarks: string;
-    };
-    const attrs = (streetViewOrg.attributes ?? {}) as Record<string, unknown>;
-    const path = parseRoadPathCoordinates(attrs.path_coordinates);
-    const name = streetViewOrg.name || 'Road';
-    const code = String(attrs.road_code ?? '').trim();
-    const block = String(attrs.block ?? '').trim();
-    const type = String(attrs.road_sector ?? '').trim();
-    const nameOfDivision = String(attrs.name_of_division ?? '').trim();
-    const scheme = String(attrs.scheme ?? '').trim();
-    const yearRaw = Number(attrs.year_of_construction);
-    const year = Number.isFinite(yearRaw) ? String(yearRaw) : '';
-    const pointAName = String(attrs.point_a_name ?? '').trim();
-    const pointBName = String(attrs.point_b_name ?? '').trim();
-    const inferredPair = (() => {
-      const match = name.match(/^\s*(.+?)\s+to\s+(.+?)\s*$/i);
-      if (!match) return null;
-      return { a: match[1].trim(), b: match[2].trim() };
-    })();
-    const start = path[0];
-    const end = path.length ? path[path.length - 1] : undefined;
-    const pointA =
-      pointAName ||
-      inferredPair?.a ||
-      (start ? `${start[1].toFixed(5)}, ${start[0].toFixed(5)}` : 'Requested from Road Dept');
-    const pointB =
-      pointBName ||
-      inferredPair?.b ||
-      (end ? `${end[1].toFixed(5)}, ${end[0].toFixed(5)}` : 'Requested from Road Dept');
-    const providedLength = Number(attrs.length_km);
-    const computedLength =
-      path.length > 1 ? pathLengthKm(path) : null;
-    const lengthKm = Number.isFinite(providedLength)
-      ? providedLength
-      : computedLength;
-    return {
-      name,
-      code,
-      block,
-      sector: type,
-      year,
-      pointA,
-      pointB,
-      lengthKm: lengthKm != null ? lengthKm.toFixed(2) : 'N/A',
-      type,
-      nameOfDivision,
-      scheme,
-      lastMaintenanceDate: String(attrs.last_maintenance_date ?? '').trim(),
-      issues: String(attrs.issues ?? '').trim(),
-      remarks: String(attrs.remarks ?? '').trim(),
-    };
-  }, [streetViewOrg]);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 via-slate-50 to-white text-slate-800">
       <Navbar />
@@ -338,7 +257,9 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         />
 
         <section>
-          <h2 className="text-xl font-bold sm:text-2xl">{tr('dept.summary.section.organizationListing')}</h2>
+          <h2 className="text-xl font-bold sm:text-2xl">
+            {isRoadsDept ? trStatic('Road Listing', 'ରୋଡ୍ ତାଲିକା') : tr('dept.summary.section.organizationListing')}
+          </h2>
           <div className="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 md:grid-cols-3">
             <input
               value={searchTerm}
@@ -393,7 +314,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     </th>
                     <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
                       <button type="button" onClick={() => onSort('name')} className="inline-flex items-center gap-1 hover:text-slate-700">
-                        {tr('dept.summary.table.organization')} <SortIcon active={sortKey === 'name'} direction={sortDir} />
+                        {isRoadsDept ? trStatic('Road', 'ରୋଡ୍') : tr('dept.summary.table.organization')} <SortIcon active={sortKey === 'name'} direction={sortDir} />
                       </button>
                     </th>
                     <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
@@ -402,7 +323,9 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                           ? tr('dept.summary.table.jurisdictionType')
                           : isDrainageDept
                             ? tr('dept.summary.drainage.drainType')
-                            : tr('dept.summary.table.subDepartmentCategory')}{' '}
+                            : isRoadsDept
+                              ? trStatic('Road type', 'ରୋଡ୍ ପ୍ରକାର')
+                              : tr('dept.summary.table.subDepartmentCategory')}{' '}
                         <SortIcon active={sortKey === 'category'} direction={sortDir} />
                       </button>
                     </th>
@@ -435,13 +358,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     {isRoadsDept ? (
                       <>
                         <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                          {trStatic('Road code', 'ରୋଡ୍ କୋଡ୍')}
-                        </th>
-                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
                           {trStatic('Remarks', 'ରିମାର୍କସ୍')}
-                        </th>
-                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                          {trStatic('Street View', 'ସ୍ଟ୍ରିଟ ଭ୍ୟୁ')}
                         </th>
                       </>
                     ) : null}
@@ -486,23 +403,10 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                           )}
                         {isRoadsDept ? (
                           <>
-                            <td className="px-4 py-2.5 text-sm text-slate-600">
-                              {String((org.attributes as Record<string, unknown> | null)?.road_code ?? '—')}
-                            </td>
                             <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
                               <span className="line-clamp-1">
                                 {String((org.attributes as Record<string, unknown> | null)?.remarks ?? '—')}
                               </span>
-                            </td>
-                            <td className="px-4 py-2.5 text-slate-700">
-                              <a
-                                href={buildRoadStreetViewPath(org)}
-                                className="inline-flex items-center text-base font-semibold text-slate-500 hover:text-slate-800"
-                                aria-label={`Open street view for ${org.name}`}
-                                title={trStatic('Open street view', 'ସ୍ଟ୍ରିଟ ଭ୍ୟୁ ଖୋଲନ୍ତୁ')}
-                              >
-                                <CiShare1 className="text-lg" />
-                              </a>
                             </td>
                           </>
                         ) : null}
@@ -513,7 +417,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                       <td
                         className="px-4 py-3 text-slate-600"
                         colSpan={
-                          isRoadsDept ? 7 : isArcsDept ? 7 : isDrainageDept ? 10 : 4
+                          isRoadsDept ? 5 : isArcsDept ? 7 : isDrainageDept ? 10 : 4
                         }
                       >
                         {tr('dept.summary.empty.organizations')}
@@ -569,139 +473,8 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           </div>
         </section>
       </main>
-      {streetViewOrg && streetViewPosition && (
-        <div className="fixed inset-0 z-[2000] bg-black">
-          {selectedRoadStreetInfo && (
-            <button
-              type="button"
-              onClick={() => setIsStreetInfoOpen(true)}
-              className="absolute left-0 top-20 z-[2010] flex h-10 w-10 items-center justify-center rounded-r-md border border-white/20 bg-black/65 text-white transition-colors hover:bg-black/75"
-              aria-label="Open road information"
-              title="Road information"
-            >
-              <Info size={16} strokeWidth={2.4} />
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => {
-              setStreetViewOrg(null);
-              setIsStreetInfoOpen(false);
-            }}
-            className="absolute right-[10px] top-16 z-[2010] flex h-10 w-10 items-center justify-center rounded-sm border border-black/10 bg-[#3a3d40] text-white transition-colors hover:bg-[#2f3133]"
-            aria-label="Close street view"
-            title="Close"
-          >
-            <X size={16} strokeWidth={2.5} />
-          </button>
-          <iframe
-            title={`Street view - ${streetViewOrg.name}`}
-            src={streetViewEmbedUrl}
-            className="h-full w-full border-0"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
-          />
-          {selectedRoadStreetInfo && isStreetInfoOpen && (
-            <div className="absolute left-0 top-20 z-[2020] w-[min(360px,calc(100vw-0.5rem))] max-h-[calc(100vh-7.5rem)] overflow-y-auto rounded-r-md border border-white/15 bg-black/70 p-3 text-white shadow-lg backdrop-blur-sm">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-sm font-semibold">{selectedRoadStreetInfo.name}</h3>
-                <button
-                  type="button"
-                  onClick={() => setIsStreetInfoOpen(false)}
-                  className="flex h-7 w-7 items-center justify-center rounded border border-white/20 bg-white/10 text-white hover:bg-white/20"
-                  aria-label="Close road information"
-                  title="Close"
-                >
-                  <X size={14} strokeWidth={2.5} />
-                </button>
-              </div>
-              <div className="mt-2 space-y-1 text-[11px] leading-4 text-white/90">
-                <p><span className="font-semibold">Starting point:</span> {selectedRoadStreetInfo.pointA}</p>
-                <p><span className="font-semibold">Ending point:</span> {selectedRoadStreetInfo.pointB}</p>
-                <p><span className="font-semibold">Total distance:</span> {selectedRoadStreetInfo.lengthKm} km</p>
-                <p><span className="font-semibold">Type of road:</span> {selectedRoadStreetInfo.type || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Name of division:</span> {selectedRoadStreetInfo.nameOfDivision || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Scheme:</span> {selectedRoadStreetInfo.scheme || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Year of construction:</span> {selectedRoadStreetInfo.year || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Road code:</span> {selectedRoadStreetInfo.code || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Block:</span> {selectedRoadStreetInfo.block || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Last maintenance:</span> {selectedRoadStreetInfo.lastMaintenanceDate || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Issues observed:</span> {selectedRoadStreetInfo.issues || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Remarks:</span> {selectedRoadStreetInfo.remarks || 'Requested from Road Dept'}</p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
-}
-
-function parseRoadPathCoordinates(raw: unknown): Array<[number, number]> {
-  const s = String(raw ?? '').trim();
-  if (!s) return [];
-  try {
-    const parsed = JSON.parse(s);
-    if (Array.isArray(parsed)) {
-      return parsed
-        .filter((pt) => Array.isArray(pt) && pt.length >= 2)
-        .map((pt) => [Number(pt[0]), Number(pt[1])] as [number, number])
-        .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
-    }
-  } catch {
-    // ignore, try legacy formats
-  }
-  return s
-    .split(';')
-    .map((pair) => pair.trim())
-    .filter(Boolean)
-    .map((pair) => {
-      const [lngStr = '', latStr = ''] = pair.split(/\s+/);
-      return [Number(lngStr), Number(latStr)] as [number, number];
-    })
-    .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
-}
-
-function roadStreetViewPosition(org: Organization): { lat: number; lng: number } | null {
-  const attrs = (org.attributes ?? {}) as Record<string, unknown>;
-  const path = parseRoadPathCoordinates(attrs.path_coordinates);
-  const mid = path.length ? path[Math.floor(path.length / 2)] : null;
-  const startLat = Number(attrs.start_lat ?? NaN);
-  const startLng = Number(attrs.start_lng ?? NaN);
-  const endLat = Number(attrs.end_lat ?? NaN);
-  const endLng = Number(attrs.end_lng ?? NaN);
-  const fallback =
-    Number.isFinite(startLat) && Number.isFinite(startLng)
-      ? [startLng, startLat]
-      : Number.isFinite(endLat) && Number.isFinite(endLng)
-        ? [endLng, endLat]
-        : org.latitude != null && org.longitude != null
-          ? [org.longitude, org.latitude]
-          : null;
-  const spot = mid || (fallback as [number, number] | null);
-  if (!spot) return null;
-  const [lng, lat] = spot;
-  return { lat, lng };
-}
-
-function haversineKm(a: [number, number], b: [number, number]): number {
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const [lng1, lat1] = a;
-  const [lng2, lat2] = b;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const rLat1 = toRad(lat1);
-  const rLat2 = toRad(lat2);
-  const h =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(rLat1) * Math.cos(rLat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-}
-
-function pathLengthKm(coords: [number, number][]): number | null {
-  if (coords.length < 2) return null;
-  return coords.slice(1).reduce((sum, c, i) => sum + haversineKm(coords[i], c), 0);
 }
 
 function pageWindow(currentPage: number, totalPages: number): number[] {
@@ -742,19 +515,3 @@ function toParagraphs(text: string): string[] {
     .filter(Boolean);
 }
 
-function buildRoadStreetViewPath(org: Organization): string {
-  const roadName = String(org.name || '').trim();
-  const roadNameSlug = roadName
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .replace(/-{2,}/g, '-');
-  const params = new URLSearchParams();
-  params.set('dept', 'ROADS');
-  params.set('road', String(org.id));
-  if (roadNameSlug) params.set('road_name', roadNameSlug);
-  params.set('sv', '1');
-  return `/?${params.toString()}`;
-}

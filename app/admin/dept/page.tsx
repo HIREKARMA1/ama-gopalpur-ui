@@ -48,6 +48,10 @@ import {
   normalizeHealthFacilityCardsForSave,
 } from '../../../components/admin/HealthPortfolioAdminForm';
 import {
+  ElectricityPortfolioAdminForm,
+  ELECTRICITY_PORTFOLIO_EXTRA_KEYS,
+} from '../../../components/admin/ElectricityPortfolioAdminForm';
+import {
   MinorIrrigationPortfolioAdminForm,
   MINOR_IRRIGATION_PORTFOLIO_EMPTY_FORM,
 } from '../../../components/admin/MinorIrrigationPortfolioAdminForm';
@@ -4032,10 +4036,10 @@ export default function DepartmentAdminPage() {
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual Electricity entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
-                  Add a single Electricity office/center manually. Fields mirror the CSV columns.
+                  Manage Electricity data section-wise (identity, location, contacts, staff, infrastructure, consumers) with portfolio image uploads.
                 </p>
                 <form
-                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  className="mt-3 space-y-3 text-xs"
                   onSubmit={async (e) => {
                     e.preventDefault();
                     if (!me?.department_id) {
@@ -4099,6 +4103,12 @@ export default function DepartmentAdminPage() {
                           profileData[key] = val;
                         }
                       });
+                      ELECTRICITY_PORTFOLIO_EXTRA_KEYS.forEach((key) => {
+                        const val = elecFormValues[key];
+                        if (val != null && String(val).trim() !== '') {
+                          profileData[key] = val;
+                        }
+                      });
                       profileData[latKey] = lat;
                       profileData[lngKey] = lng;
                       await electricityApi.putProfile(org.id, profileData);
@@ -4117,31 +4127,26 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  {splitHeader(ELECTRICITY_CSV_HEADER).map((header) => {
-                    const key = snakeFromHeader(header);
-                    return (
-                      <div key={key} className="space-y-1">
-                        <label className="block text-text">{header}</label>
-                        <input
-                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
-                          value={elecFormValues[key] ?? ''}
-                          onChange={(e) =>
-                            setElecFormValues((prev) => ({ ...prev, [key]: e.target.value }))
-                          }
-                        />
-                      </div>
-                    );
-                  })}
-                  <div className="md:col-span-2 space-y-1">
-                    <label className="block text-text font-medium">Profile Image</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="w-full text-xs text-text file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                      onChange={(e) => setElectricityImageFile(e.target.files?.[0] || null)}
+                  <div className="min-w-0 w-full overflow-visible rounded-lg border border-dashed border-border/80 bg-muted/20 p-3">
+                    <ElectricityPortfolioAdminForm
+                      organizationId={editingElectricityId}
+                      values={elecFormValues}
+                      setValues={setElecFormValues}
+                      headers={splitHeader(ELECTRICITY_CSV_HEADER)}
+                      profileImageControl={
+                        <div className="space-y-1">
+                          <span className="block text-[11px] text-text">Profile image (optional)</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="w-full text-[11px] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-1 file:text-primary-foreground"
+                            onChange={(e) => setElectricityImageFile(e.target.files?.[0] ?? null)}
+                          />
+                        </div>
+                      }
                     />
                   </div>
-                  <div className="md:col-span-2">
+                  <div>
                     <button
                       type="submit"
                       disabled={creating}
@@ -5836,6 +5841,9 @@ export default function DepartmentAdminPage() {
                                     if (!vals[nameKey]) vals[nameKey] = o.name;
                                     if (!vals[latKey]) vals[latKey] = o.latitude != null ? String(o.latitude) : '';
                                     if (!vals[lngKey]) vals[lngKey] = o.longitude != null ? String(o.longitude) : '';
+                                    ELECTRICITY_PORTFOLIO_EXTRA_KEYS.forEach((key) => {
+                                      vals[key] = v(p[key]);
+                                    });
 
                                     setElecFormValues(vals);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
