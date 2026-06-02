@@ -28,8 +28,6 @@ const EXTRA_IMAGE_KEYS = [
   'staff_6_photo',
   'staff_7_photo',
   'staff_8_photo',
-  'electricity_customer_care_photo',
-  'electricity_emergency_contact_photo',
   'electricity_infra_voltage_image',
   'electricity_infra_capacity_image',
   'electricity_infra_transformer_image',
@@ -234,27 +232,6 @@ export function ElectricityPortfolioAdminForm({
                     />
                   );
                 })}
-              </div>
-            </div>
-          ) : null}
-          {activeSection === 'Contacts' ? (
-            <div className="space-y-2 md:col-span-2 rounded border border-dashed border-border p-2">
-              <p className="text-[11px] font-medium text-text">Contact photos</p>
-              <div className="grid gap-2 md:grid-cols-2">
-                <ImgSlot
-                  label="Customer care photo"
-                  organizationId={organizationId}
-                  assetType="electricity_contact_photo"
-                  url={values.electricity_customer_care_photo || ''}
-                  onUrl={(v) => patch({ electricity_customer_care_photo: v })}
-                />
-                <ImgSlot
-                  label="Emergency contact photo"
-                  organizationId={organizationId}
-                  assetType="electricity_contact_photo"
-                  url={values.electricity_emergency_contact_photo || ''}
-                  onUrl={(v) => patch({ electricity_emergency_contact_photo: v })}
-                />
               </div>
             </div>
           ) : null}
