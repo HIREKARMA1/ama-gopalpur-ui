@@ -162,6 +162,52 @@ const CONSTITUENCY_BLOCK_OPTIONS = [
   { value: 'BERHAMPUR_URBAN_I', label: 'Berhampur Urban-I' },
 ] as const;
 
+const ROAD_MANUAL_GP_WARDS_BY_BLOCK: Record<string, string[]> = {
+  KUKUDAKHANDI: [
+    'LOCHAPADA',
+    'NIMAKHANDI',
+    'HUGULAPATA',
+    'BORIGAM',
+    'GURUNTHI',
+  ],
+  RANGEILUNDA: [
+    'BADAKUSASTALLI',
+    'BHABINIPUR',
+    'BISWANATHPUR',
+    'BOXIPALLI',
+    'CHANDAPUR',
+    'CHIKARADA',
+    'DURA',
+    'GOUNJU',
+    'GOLANBANDHA',
+    'GOLANTHARA',
+    'HALADIAPADAR',
+    'HATTIPADA',
+    'INDRAKHI',
+    'KAMALAPUR',
+    'KARAPALLI',
+    'KELUAPALLI',
+    'KOLATHIGAM',
+    'KONISI',
+    'KOTHARSINGI',
+    'LOUDIGAM',
+    'LUHAJHARA',
+    'MANTRIDI',
+    'MARKANDI',
+    'MENDRAJPUR',
+    'NARAYANPUR',
+    'PADMAPUR',
+    'PHULTA',
+    'RANDHA',
+    'RANGEILUNDA',
+    'RANGIPUR',
+    'SASANAPADARA',
+    'SATAKUTUNI',
+    'Gopalpur NAC',
+  ],
+  BERHAMPUR_URBAN_I: ['37', '38', '39', '40', '41', '42'],
+};
+
 function normalizeConstituencyBlock(raw: string | null | undefined): string {
   const v = (raw || '')
     .toUpperCase()
@@ -715,18 +761,34 @@ export function ConstituencyMap({
     if (selectedDepartmentCode?.toUpperCase() !== 'ROADS') {
       return [{ value: 'ALL', label: t('map.filter.allGpWard', language) }];
     }
+    const selectedBlockKey = normalizeConstituencyBlock(selectedBlockFilter);
+    const sourceRoads =
+      selectedBlockKey && selectedBlockKey !== 'ALL'
+        ? roadsByBlock
+        : roads;
+    const manualGpWards =
+      selectedBlockKey && selectedBlockKey !== 'ALL'
+        ? (ROAD_MANUAL_GP_WARDS_BY_BLOCK[selectedBlockKey] ?? [])
+        : Object.values(ROAD_MANUAL_GP_WARDS_BY_BLOCK).flat();
     const values = Array.from(
       new Set(
-        roads
-          .map((road) => String(road.properties?.gpWard ?? '').trim())
-          .filter((value) => value.length > 0),
+        [...sourceRoads.map((road) => String(road.properties?.gpWard ?? '').trim()), ...manualGpWards].filter(
+          (value) => value.length > 0,
+        ),
       ),
     ).sort((a, b) => a.localeCompare(b));
     return [
       { value: 'ALL', label: t('map.filter.allGpWard', language) },
       ...values.map((value) => ({ value, label: value })),
     ];
-  }, [selectedDepartmentCode, language, roads]);
+  }, [selectedDepartmentCode, language, roads, roadsByBlock, selectedBlockFilter]);
+
+  useEffect(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'ROADS') return;
+    if (selectedGpWardFilter === 'ALL') return;
+    const exists = roadGpWardOptions.some((option) => option.value === selectedGpWardFilter);
+    if (!exists) setSelectedGpWardFilter('ALL');
+  }, [selectedDepartmentCode, selectedGpWardFilter, roadGpWardOptions]);
 
   const roadsByBlockAndGpWard = useMemo(() => {
     if (selectedGpWardFilter === 'ALL') return roadsByBlock;
@@ -1747,11 +1809,10 @@ export function ConstituencyMap({
                               setSelectedBlockFilter(o.value);
                               setIsMobileBlockDropdownOpen(false);
                             }}
-                            className={`block w-full border-b border-slate-100 px-3 py-2 text-left text-sm last:border-b-0 ${
-                              active
+                            className={`block w-full border-b border-slate-100 px-3 py-2 text-left text-sm last:border-b-0 ${active
                                 ? 'bg-primary/10 font-medium text-primary'
                                 : 'text-slate-700 hover:bg-slate-50'
-                            }`}
+                              }`}
                           >
                             {o.label}
                           </button>
@@ -1792,11 +1853,10 @@ export function ConstituencyMap({
                               setSelectedGpWardFilter(o.value);
                               setIsMobileGpWardDropdownOpen(false);
                             }}
-                            className={`block w-full border-b border-slate-100 px-3 py-2 text-left text-sm last:border-b-0 ${
-                              active
+                            className={`block w-full border-b border-slate-100 px-3 py-2 text-left text-sm last:border-b-0 ${active
                                 ? 'bg-primary/10 font-medium text-primary'
                                 : 'text-slate-700 hover:bg-slate-50'
-                            }`}
+                              }`}
                           >
                             {o.label}
                           </button>
@@ -1958,8 +2018,8 @@ export function ConstituencyMap({
             const [lng, lat] = first;
             const name = selectedRoad.properties?.name ?? selectedRoad.properties?.roadName ?? 'Road';
             const code = selectedRoad.properties?.code ?? '';
-              const block = selectedRoad.properties?.block ?? '';
-              const gpWard = String(selectedRoad.properties?.gpWard ?? '');
+            const block = selectedRoad.properties?.block ?? '';
+            const gpWard = String(selectedRoad.properties?.gpWard ?? '');
             const roadType = normalizeRoadLegendSector(
               String(selectedRoad.properties?.roadSector ?? ''),
               String(selectedRoad.properties?.code ?? ''),

@@ -36,6 +36,7 @@ import {
   DRAINAGE_TABLE_COLUMNS,
   getDrainTableColumnValue,
 } from '../../../lib/drainageOrganization';
+import { isGpRoadSector, roadDedupeKeyFromOrg, roadImportDedupeKey } from '../../../lib/roadsOrganization';
 import { compressImage } from '../../../lib/imageCompression';
 import {
   EducationPsPortfolioAdminForm,
@@ -47,6 +48,10 @@ import {
   HealthPortfolioAdminForm,
   normalizeHealthFacilityCardsForSave,
 } from '../../../components/admin/HealthPortfolioAdminForm';
+import {
+  ElectricityPortfolioAdminForm,
+  ELECTRICITY_PORTFOLIO_EXTRA_KEYS,
+} from '../../../components/admin/ElectricityPortfolioAdminForm';
 import {
   MinorIrrigationPortfolioAdminForm,
   MINOR_IRRIGATION_PORTFOLIO_EMPTY_FORM,
@@ -123,8 +128,125 @@ const EDUCATION_DEGREE_CSV_HEADER = (() => {
   }
   return `${out.join(',')}\n`;
 })();
-const ELECTRICITY_CSV_HEADER =
-  'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID/CODE,OWNERSHIP,PARENT ORGANIZATION,HIERARCHY LEVEL,HOST INSTITUTION (IF TRAINING CENTER),ESTABLISHED YEAR,COMMISSIONED YEAR (SUBSTATIONS),FULL ADDRESS,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE DESIGNATION,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,OFFICE HOURS,TOLL-FREE/CUSTOMER CARE NUMBER,HELPLINE AVAILABLE (YES/NO),VOLTAGE LEVEL PRIMARY (kV),VOLTAGE LEVEL SECONDARY (kV),INSTALLED CAPACITY (MVA),NO OF TRANSFORMERS,TRANSFORMER RATINGS MVA (COMMA SEPARATED),NO OF INCOMING FEEDERS,NO OF OUTGOING FEEDERS,TOTAL FEEDERS,BAYS (COUNT),SWITCHGEAR TYPE (GIS/AIS/HYBRID),33kV FEEDER LENGTH (KM),11kV FEEDER LENGTH (KM),LT LINE LENGTH (KM),NO OF DISTRIBUTION TRANSFORMERS (DTs),DT TOTAL CAPACITY (kVA),FEEDER METERING (YES/NO),FEEDER METERS (COUNT),DT METERING (YES/NO),DT METERS (COUNT),SMART METERS INSTALLED (COUNT),PREPAID METERS (COUNT),CONSUMER METERS TOTAL (COUNT),CONSUMERS UNDER JURISDICTION (APPROX),CONSUMERS DOMESTIC (COUNT),CONSUMERS COMMERCIAL (COUNT),CONSUMERS INDUSTRIAL (COUNT),CONSUMERS AGRICULTURAL (COUNT),CONSUMERS OTHER (COUNT),HT CONSUMERS (COUNT),LT CONSUMERS (COUNT),CONNECTED LOAD (MW),AT&C LOSS PERCENT,BILLING EFFICIENCY PERCENT,COLLECTION EFFICIENCY PERCENT,HOURS OF SUPPLY RURAL,HOURS OF SUPPLY URBAN,COMPLAINTS REGISTERED LAST YEAR,COMPLAINTS REDRESSED LAST YEAR,CONSUMER CARE COUNTER (YES/NO),BILLING FACILITY (YES/NO),ONLINE PAYMENT (YES/NO),MOBILE APP (YES/NO),ONLINE COMPLAINT PORTAL (YES/NO),CUSTOMER CARE EMAIL,GRIEVANCE REDRESSAL FORUM (YES/NO),TOTAL STAFF (COUNT),ENGINEERS (COUNT),TECHNICAL STAFF (COUNT),LINEMEN (COUNT),CONTRACT STAFF (COUNT),ADMIN/OFFICE STAFF (COUNT),VILLAGES/LOCALITIES COVERED (COUNT),GPs COVERED (COUNT),AREA COVERED SQ KM,BUILDING TYPE (OWN/RENTED),TOTAL FLOORS,OFFICE AREA SQ FT,TRAINING CENTER (YES/NO),TRAINING CAPACITY SEATS,WORKSHOP/GARAGE (YES/NO),STORE (YES/NO),DG SET (YES/NO),SOLAR (YES/NO),VEHICLES (COUNT),TWO-WHEELERS (COUNT),ANNUAL REVENUE CR (APPROX),BILLING CR LAST YEAR,DATA AS ON (YYYY-MM-DD),REMARKS/DESCRIPTION\n';
+const ELECTRICITY_CSV_COLUMNS = [
+  'NAME OF ELECTRICITY OFFICE',
+  'TYPE OF INSTITUTION',
+  'OWNERSHIP',
+  'IN-CHARGE NAME',
+  'IN-CHARGE DESIGNATION',
+  'IN-CHARGE MOBILE NUMBER',
+  'IN-CHARGE EMAIL',
+  'OFFICE EMAIL',
+  'WEBSITE URL',
+  'CUSTOMER CARE / TOLL-FREE NUMBER',
+  'IS HELPLINE AVAILABLE',
+  'CUSTOMER CARE EMAIL',
+  'AREA / ZONE COVERED BY THIS OFFICE',
+  'EMERGENCY HELPLINE NUMBER 1',
+  'EMERGENCY HELPLINE NUMBER 2',
+  'HOST INSTITUTION',
+  'ESTABLISHED YEAR',
+  'BLOCK / ULB NAME',
+  'GP / WARD NAME',
+  'VILLAGE / LOCALITY NAME',
+  'FULL POSTAL ADDRESS',
+  'PIN CODE',
+  'LATITUDE',
+  'LONGITUDE',
+  'STAFF 1 FULL NAME',
+  'ROLE / DESIGNATION 1',
+  'QUALIFICATION 1',
+  'GENDER 1',
+  'MOBILE NUMBER 1',
+  'EMAIL 1',
+  'DATE OF JOINING 1',
+  'JOB TYPE 1',
+  'STAFF 2 FULL NAME',
+  'ROLE / DESIGNATION 2',
+  'QUALIFICATION 2',
+  'GENDER 2',
+  'MOBILE NUMBER 2',
+  'EMAIL 2',
+  'DATE OF JOINING 2',
+  'JOB TYPE 2',
+  'STAFF 3 FULL NAME',
+  'ROLE / DESIGNATION 3',
+  'QUALIFICATION 3',
+  'GENDER 3',
+  'MOBILE NUMBER 3',
+  'EMAIL 3',
+  'DATE OF JOINING 3',
+  'JOB TYPE 3',
+  'STAFF 4 FULL NAME',
+  'ROLE / DESIGNATION 4',
+  'QUALIFICATION 4',
+  'GENDER 4',
+  'MOBILE NUMBER 4',
+  'EMAIL 4',
+  'DATE OF JOINING 4',
+  'JOB TYPE 4',
+  'STAFF 5 FULL NAME',
+  'ROLE / DESIGNATION 5',
+  'QUALIFICATION 5',
+  'GENDER 5',
+  'MOBILE NUMBER 5',
+  'EMAIL 5',
+  'DATE OF JOINING 5',
+  'JOB TYPE 5',
+  'STAFF 6 FULL NAME',
+  'ROLE / DESIGNATION 6',
+  'QUALIFICATION 6',
+  'GENDER 6',
+  'MOBILE NUMBER 6',
+  'EMAIL 6',
+  'DATE OF JOINING 6',
+  'JOB TYPE 6',
+  'STAFF 7 FULL NAME',
+  'ROLE / DESIGNATION 7',
+  'QUALIFICATION 7',
+  'GENDER 7',
+  'MOBILE NUMBER 7',
+  'EMAIL 7',
+  'DATE OF JOINING 7',
+  'JOB TYPE 7',
+  'STAFF 8 FULL NAME',
+  'ROLE / DESIGNATION 8',
+  'QUALIFICATION 8',
+  'GENDER 8',
+  'MOBILE NUMBER 8',
+  'EMAIL 8',
+  'DATE OF JOINING 8',
+  'JOB TYPE 8',
+  'PRIMARY VOLTAGE LEVEL (KV)',
+  'SECONDARY VOLTAGE LEVEL (KV)',
+  'INSTALLED CAPACITY (MVA)',
+  'NUMBER OF MAIN TRANSFORMERS',
+  'TRANSFORMER RATINGS',
+  'NUMBER OF INCOMING FEEDERS',
+  'NUMBER OF OUTGOING FEEDERS',
+  'TOTAL FEEDERS',
+  'NUMBER OF BAYS',
+  'SWITCHGEAR TYPE',
+  '33 KV FEEDER LENGTH (KM)',
+  '11 KV FEEDER LENGTH (KM)',
+  'LT LINE LENGTH (KM)',
+  'NUMBER OF DISTRIBUTION TRANSFORMERS (DTS)',
+  'TOTAL DT CAPACITY (KVA)',
+  'FEEDER METERING',
+  'NUMBER OF FEEDER METERS',
+  'DT METERING',
+  'NUMBER OF DT METERS',
+  'HIGH TENSION HT CONSUMERS COUNT',
+  'LOW TENSION LT CONSUMERS COUNT',
+] as const;
+
+const ELECTRICITY_CSV_HEADER = `${ELECTRICITY_CSV_COLUMNS.join(',')}\n`;
+const ELECTRICITY_NAME_COLUMN = 'NAME OF ELECTRICITY OFFICE';
+const ELECTRICITY_LATITUDE_COLUMN = 'LATITUDE';
+const ELECTRICITY_LONGITUDE_COLUMN = 'LONGITUDE';
+const ELECTRICITY_BLOCK_COLUMN = 'BLOCK / ULB NAME';
+const ELECTRICITY_GP_WARD_COLUMN = 'GP / WARD NAME';
+const ELECTRICITY_VILLAGE_COLUMN = 'VILLAGE / LOCALITY NAME';
 
 const ARCS_CSV_HEADER =
   'SL NO,BLOCK/ULB,SOCIETY NAME,REGISTRATION NUMBER,JURISDICTION TYPE (RURAL/URBAN/MIXED),AREA OF OPERATION,STATE,DISTRICT,ESTABLISHED YEAR,FULL ADDRESS,PIN CODE,LATITUDE,LONGITUDE,SECRETARY NAME,OFFICE PHONE,OFFICE EMAIL,FUNCTIONING OR NOT,AUDIT COMPLETED SOCIETIES (LAST FY),ELECTIONS CONDUCTED (LAST FY),TOTAL MEMBERSHIP,MEMBERSHIP SC,MEMBERSHIP ST,MEMBERSHIP OBC,MEMBERSHIP GEN,MEMBERSHIP WOMEN,INSPECTORS/EXTENSION OFFICERS (COUNT),COMPUTERIZATION STATUS (YES/NO),ONLINE REGISTRATION FACILITY (YES/NO),DIGITIZED RECORDS (YES/NO),FILE TRACKING SYSTEM (YES/NO)\n';
@@ -145,7 +267,7 @@ const IRRIGATION_CSV_HEADER =
 const AGRICULTURE_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID,HOST INSTITUTION/AFFILIATING BODY,ESTABLISHED YEAR,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,CAMPUS AREA (ACRES),TRAINING HALL (YES/NO),TRAINING HALL CAPACITY (SEATS),SOIL TESTING (YES/NO),SOIL SAMPLES TESTED PER YEAR,SEED DISTRIBUTION (YES/NO),SEED PROCESSING UNIT (YES/NO),SEED STORAGE CAPACITY (MT),DEMO UNITS (COMMA SEPARATED),DEMO FARM (YES/NO),DEMO FARM AREA (ACRES),GREENHOUSE/POLYHOUSE (YES/NO),IRRIGATION FACILITY (YES/NO),MACHINERY/CUSTOM HIRING (YES/NO),COMPUTER/IT LAB (YES/NO),LIBRARY (YES/NO),KEY SCHEMES (COMMA SEPARATED),TOTAL STAFF (COUNT),SCIENTISTS/OFFICERS (COUNT),TECHNICAL STAFF (COUNT),EXTENSION WORKERS (COUNT),FARMER TRAINING CAPACITY (PER BATCH),TRAINING PROGRAMMES CONDUCTED LAST YEAR,ON-FARM TRIALS/FLD LAST YEAR,VILLAGES/GPS COVERED (COUNT),SOIL HEALTH CARDS ISSUED LAST YEAR,FARMERS SERVED LAST YEAR (APPROX),REMARKS/DESCRIPTION\n';
 const ROADS_CSV_HEADER =
-  'block,GP/WARD,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED,REMARKS\n';
+  'block,GP/WARD,VILLAGE,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED,REMARKS\n';
 
 const splitHeader = (header: string): string[] =>
   header.trim().replace(/\n$/, '').split(',').map((h) => h.trim());
@@ -665,6 +787,7 @@ export default function DepartmentAdminPage() {
       'Road Name',
       'Block',
       'GP/Ward',
+      'Village',
       'Road Code',
       'Road Sector',
       'Name of Division',
@@ -712,6 +835,7 @@ export default function DepartmentAdminPage() {
     const map: Record<string, unknown> = {
       Block: attrs.block,
       'GP/Ward': attrs.gp_ward,
+      Village: attrs.village,
       'Road Code': attrs.road_code,
       'Road Sector': attrs.road_sector,
       'Name of Division': attrs.name_of_division,
@@ -1274,6 +1398,7 @@ export default function DepartmentAdminPage() {
         'Road Name',
         'Block',
         'GP/Ward',
+        'Village',
         'Road Code',
         'Road Sector',
         'Name of Division',
@@ -1291,6 +1416,7 @@ export default function DepartmentAdminPage() {
           stringify(o.name),
           stringify(o.attributes?.block),
           stringify(o.attributes?.gp_ward),
+          stringify(o.attributes?.village),
           stringify(o.attributes?.road_code),
           stringify(o.attributes?.road_sector),
           stringify(o.attributes?.name_of_division),
@@ -1490,6 +1616,7 @@ export default function DepartmentAdminPage() {
         const indexes = {
           block: idx('block', 'ulb_block'),
           gpWard: idx('gp/ward', 'gp ward', 'gp_ward', 'ward', 'gp'),
+          village: idx('village', 'village name', 'village_name'),
           roadName: idx('road name', 'road_name', 'name of road', 'name'),
           roadCode: idx('road code', 'road_code', 'code'),
           roadSector: idx('road sector(nh/sh/pwd/rd/ps/gp)', 'road sector'),
@@ -1517,15 +1644,18 @@ export default function DepartmentAdminPage() {
           return;
         }
 
-        const existing = await organizationsApi.listByDepartment(me.department_id, { skip: 0, limit: 1000 });
-        const existingKeys = new Set(
-          existing.map((org) => {
-            const attrs = (org.attributes ?? {}) as Record<string, unknown>;
-            const code = String(attrs.road_code ?? '').trim().toUpperCase();
-            const name = String(org.name ?? '').trim().toUpperCase();
-            return `${name}__${code}`;
-          }),
-        );
+        const existingKeys = new Set<string>();
+        {
+          const pageSize = 1000;
+          let skip = 0;
+          while (true) {
+            const batch = await organizationsApi.listByDepartment(me.department_id, { skip, limit: pageSize });
+            for (const org of batch) existingKeys.add(roadDedupeKeyFromOrg(org));
+            if (batch.length < pageSize) break;
+            skip += pageSize;
+            if (skip > 100000) break;
+          }
+        }
 
         const get = (cols: string[], position: number) => (position >= 0 && position < cols.length ? cols[position] : '');
         let imported = 0;
@@ -1552,13 +1682,25 @@ export default function DepartmentAdminPage() {
               endLng = endLng || derived.endLng;
             }
           }
-          if (!startLat || !startLng || !endLat || !endLng) {
-            errors.push(`Row ${i + 1}: provide start/end coordinates, or a valid PATH COORDINATES value.`);
+          const roadSector = get(cols, indexes.roadSector);
+          const gpSummaryOnly = isGpRoadSector(roadSector);
+          if (!gpSummaryOnly && (!startLat || !startLng || !endLat || !endLng)) {
+            errors.push(`Row ${i + 1}: provide start/end coordinates, or a valid PATH COORDINATES value (not required for GP roads).`);
             continue;
           }
 
           const roadCode = get(cols, indexes.roadCode);
-          const dedupeKey = `${roadName.trim().toUpperCase()}__${roadCode.trim().toUpperCase()}`;
+          const block = get(cols, indexes.block);
+          const gpWard = get(cols, indexes.gpWard);
+          const village = get(cols, indexes.village);
+          const dedupeKey = roadImportDedupeKey({
+            name: roadName,
+            roadCode,
+            block,
+            gpWard,
+            village,
+            roadSector,
+          });
           if (existingKeys.has(dedupeKey)) {
             skippedDuplicates += 1;
             continue;
@@ -1569,9 +1711,17 @@ export default function DepartmentAdminPage() {
           const eLat = toNumberOrNull(endLat);
           const eLng = toNumberOrNull(endLng);
           const centerLat =
-            sLat != null && eLat != null ? Number(((sLat + eLat) / 2).toFixed(6)) : sLat ?? eLat ?? null;
+            !gpSummaryOnly && sLat != null && eLat != null
+              ? Number(((sLat + eLat) / 2).toFixed(6))
+              : gpSummaryOnly
+                ? null
+                : sLat ?? eLat ?? null;
           const centerLng =
-            sLng != null && eLng != null ? Number(((sLng + eLng) / 2).toFixed(6)) : sLng ?? eLng ?? null;
+            !gpSummaryOnly && sLng != null && eLng != null
+              ? Number(((sLng + eLng) / 2).toFixed(6))
+              : gpSummaryOnly
+                ? null
+                : sLng ?? eLng ?? null;
           try {
             await organizationsApi.create({
               department_id: me.department_id,
@@ -1580,28 +1730,28 @@ export default function DepartmentAdminPage() {
               latitude: centerLat,
               longitude: centerLng,
               address: get(cols, indexes.block) || undefined,
-              description: get(cols, indexes.roadSector)
-                ? `Road sector: ${get(cols, indexes.roadSector)}`
-                : undefined,
+              description: roadSector ? `Road sector: ${roadSector}` : undefined,
               attributes: {
                 block: get(cols, indexes.block) || null,
                 gp_ward: get(cols, indexes.gpWard) || null,
+                village: get(cols, indexes.village) || null,
                 road_code: roadCode || null,
-                road_sector: get(cols, indexes.roadSector) || null,
+                road_sector: roadSector || null,
                 name_of_division: get(cols, indexes.nameOfDivision) || null,
                 scheme: get(cols, indexes.scheme) || null,
                 length_km: get(cols, indexes.lengthKm) || null,
-                path_coordinates: pathCoordinates || null,
-                start_lat: startLat || null,
-                start_lng: startLng || null,
-                end_lat: endLat || null,
-                end_lng: endLng || null,
+                path_coordinates: gpSummaryOnly ? null : pathCoordinates || null,
+                start_lat: gpSummaryOnly ? null : startLat || null,
+                start_lng: gpSummaryOnly ? null : startLng || null,
+                end_lat: gpSummaryOnly ? null : endLat || null,
+                end_lng: gpSummaryOnly ? null : endLng || null,
                 point_a_name: get(cols, indexes.pointAName) || null,
                 point_b_name: get(cols, indexes.pointBName) || null,
                 year_of_construction: get(cols, indexes.yearOfConstruction) || null,
                 last_maintenance_date: get(cols, indexes.lastMaintenanceDate) || null,
                 issues: get(cols, indexes.issues) || null,
                 remarks: get(cols, indexes.remarks) || null,
+                summary_only: gpSummaryOnly ? 'true' : null,
                 updated_at: new Date().toISOString(),
               },
             });
@@ -3915,10 +4065,10 @@ export default function DepartmentAdminPage() {
               <section className="rounded-lg border border-border bg-background p-4">
                 <h2 className="text-sm font-semibold text-text">Manual Electricity entry</h2>
                 <p className="mt-1 text-xs text-text-muted">
-                  Add a single Electricity office/center manually. Fields mirror the CSV columns.
+                  Manage Electricity data section-wise (identity, location, contacts, staff, infrastructure, consumers) with portfolio image uploads.
                 </p>
                 <form
-                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  className="mt-3 space-y-3 text-xs"
                   onSubmit={async (e) => {
                     e.preventDefault();
                     if (!me?.department_id) {
@@ -3926,14 +4076,14 @@ export default function DepartmentAdminPage() {
                       return;
                     }
                     const headers = splitHeader(ELECTRICITY_CSV_HEADER);
-                    const nameKey = snakeFromHeader('NAME OF OFFICE/CENTER');
-                    const latKey = snakeFromHeader('LATITUDE');
-                    const lngKey = snakeFromHeader('LONGITUDE');
+                    const nameKey = snakeFromHeader(ELECTRICITY_NAME_COLUMN);
+                    const latKey = snakeFromHeader(ELECTRICITY_LATITUDE_COLUMN);
+                    const lngKey = snakeFromHeader(ELECTRICITY_LONGITUDE_COLUMN);
                     const name = (elecFormValues[nameKey] || '').trim();
                     const latStr = elecFormValues[latKey] || '';
                     const lngStr = elecFormValues[lngKey] || '';
                     if (!name || !latStr.trim() || !lngStr.trim()) {
-                      setError('Name of Office/Center, Latitude and Longitude are required.');
+                      setError('Name of Electricity Office, Latitude and Longitude are required.');
                       return;
                     }
                     setCreating(true);
@@ -3944,9 +4094,9 @@ export default function DepartmentAdminPage() {
                       if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
                         throw new Error('Latitude and Longitude must be valid numbers.');
                       }
-                      const blockKey = snakeFromHeader('BLOCK/ULB');
-                      const gpKey = snakeFromHeader('GP/WARD');
-                      const villageKey = snakeFromHeader('VILLAGE/LOCALITY');
+                      const blockKey = snakeFromHeader(ELECTRICITY_BLOCK_COLUMN);
+                      const gpKey = snakeFromHeader(ELECTRICITY_GP_WARD_COLUMN);
+                      const villageKey = snakeFromHeader(ELECTRICITY_VILLAGE_COLUMN);
                       const block = elecFormValues[blockKey] || '';
                       const gp = elecFormValues[gpKey] || '';
                       const village = elecFormValues[villageKey] || '';
@@ -3982,6 +4132,12 @@ export default function DepartmentAdminPage() {
                           profileData[key] = val;
                         }
                       });
+                      ELECTRICITY_PORTFOLIO_EXTRA_KEYS.forEach((key) => {
+                        const val = elecFormValues[key];
+                        if (val != null && String(val).trim() !== '') {
+                          profileData[key] = val;
+                        }
+                      });
                       profileData[latKey] = lat;
                       profileData[lngKey] = lng;
                       await electricityApi.putProfile(org.id, profileData);
@@ -4000,31 +4156,26 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  {splitHeader(ELECTRICITY_CSV_HEADER).map((header) => {
-                    const key = snakeFromHeader(header);
-                    return (
-                      <div key={key} className="space-y-1">
-                        <label className="block text-text">{header}</label>
-                        <input
-                          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
-                          value={elecFormValues[key] ?? ''}
-                          onChange={(e) =>
-                            setElecFormValues((prev) => ({ ...prev, [key]: e.target.value }))
-                          }
-                        />
-                      </div>
-                    );
-                  })}
-                  <div className="md:col-span-2 space-y-1">
-                    <label className="block text-text font-medium">Profile Image</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="w-full text-xs text-text file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                      onChange={(e) => setElectricityImageFile(e.target.files?.[0] || null)}
+                  <div className="min-w-0 w-full overflow-visible rounded-lg border border-dashed border-border/80 bg-muted/20 p-3">
+                    <ElectricityPortfolioAdminForm
+                      organizationId={editingElectricityId}
+                      values={elecFormValues}
+                      setValues={setElecFormValues}
+                      headers={splitHeader(ELECTRICITY_CSV_HEADER)}
+                      profileImageControl={
+                        <div className="space-y-1">
+                          <span className="block text-[11px] text-text">Profile image (optional)</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="w-full text-[11px] file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-1 file:text-primary-foreground"
+                            onChange={(e) => setElectricityImageFile(e.target.files?.[0] ?? null)}
+                          />
+                        </div>
+                      }
                     />
                   </div>
-                  <div className="md:col-span-2">
+                  <div>
                     <button
                       type="submit"
                       disabled={creating}
@@ -4285,7 +4436,7 @@ export default function DepartmentAdminPage() {
                   : deptCode === 'HEALTH'
                     ? 'Upload Health minister CSV. Organizations and profiles will be created or updated by NAME, LATITUDE, LONGITUDE.'
                     : deptCode === 'ELECTRICITY'
-                      ? 'Upload Electricity CSV. Organizations and profiles will be created or updated by NAME OF OFFICE/CENTER, LATITUDE, LONGITUDE.'
+                      ? 'Upload Electricity CSV. Organizations and profiles will be created or updated by NAME OF ELECTRICITY OFFICE, LATITUDE, LONGITUDE.'
                       : deptCode === 'ARCS'
                         ? 'Upload ARCS CSV or Excel (.xlsx) template. Societies are keyed by REGISTRATION NUMBER when present, else SOCIETY NAME and coordinates. Excel must use sheet assistant_registrar_cooperative (rows from line 4).'
                         : deptCode === 'WATCO_RWSS'
@@ -4295,7 +4446,7 @@ export default function DepartmentAdminPage() {
                             : deptCode === 'REVENUE_LAND'
                               ? 'Upload Tahasil portfolio CSV. Organizations will be created/updated by TAHSIL_NAME (or OFFICE NAME), LATITUDE, LONGITUDE, and all additional attributes are saved to profile.'
                               : deptCode === 'ROADS'
-                                ? 'Upload Roads CSV. Organizations will be created from ROAD NAME plus start/end coordinates (or PATH COORDINATES).'
+                                ? 'Upload Roads CSV. Map roads (NH/SH/PWD/RD/PS) need coordinates. GP roads need only ROAD NAME, BLOCK, GP/WARD, VILLAGE, and ROAD SECTOR=GP — road code and point names are optional.'
                                 : deptCode === 'DRAINAGE'
                                   ? 'Upload Drainage CSV without re-saving from Excel. For checking data in Excel use templates/drainage/bahana_drains_review.csv (no path column).'
                               : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
@@ -4805,7 +4956,7 @@ export default function DepartmentAdminPage() {
                       {deptCode === 'ELECTRICITY' && (
                         <>
                           {splitHeader(ELECTRICITY_CSV_HEADER).map((header) => {
-                            if (header === 'NAME OF OFFICE/CENTER') return null;
+                            if (header === ELECTRICITY_NAME_COLUMN) return null;
                             return (
                               <th
                                 key={header}
@@ -4948,6 +5099,7 @@ export default function DepartmentAdminPage() {
                               <>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.block)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.gp_ward)}</td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.village)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.road_code)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.road_sector)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.name_of_division)}</td>
@@ -5174,7 +5326,7 @@ export default function DepartmentAdminPage() {
                             {deptCode === 'ELECTRICITY' && (
                               <>
                                 {splitHeader(ELECTRICITY_CSV_HEADER).map((header) => {
-                                  if (header === 'NAME OF OFFICE/CENTER') return null;
+                                  if (header === ELECTRICITY_NAME_COLUMN) return null;
                                   const key = snakeFromHeader(header);
                                   const val = electricityProfiles[o.id] ? electricityProfiles[o.id][key] : undefined;
                                   if (key === 'latitude') {
@@ -5713,12 +5865,15 @@ export default function DepartmentAdminPage() {
                                       vals[k] = v(p[k]);
                                     });
                                     // Ensure name and coordinates are set from organization if missing in profile
-                                    const nameKey = snakeFromHeader('NAME OF OFFICE/CENTER');
-                                    const latKey = snakeFromHeader('LATITUDE');
-                                    const lngKey = snakeFromHeader('LONGITUDE');
+                                    const nameKey = snakeFromHeader(ELECTRICITY_NAME_COLUMN);
+                                    const latKey = snakeFromHeader(ELECTRICITY_LATITUDE_COLUMN);
+                                    const lngKey = snakeFromHeader(ELECTRICITY_LONGITUDE_COLUMN);
                                     if (!vals[nameKey]) vals[nameKey] = o.name;
                                     if (!vals[latKey]) vals[latKey] = o.latitude != null ? String(o.latitude) : '';
                                     if (!vals[lngKey]) vals[lngKey] = o.longitude != null ? String(o.longitude) : '';
+                                    ELECTRICITY_PORTFOLIO_EXTRA_KEYS.forEach((key) => {
+                                      vals[key] = v(p[key]);
+                                    });
 
                                     setElecFormValues(vals);
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -5746,7 +5901,7 @@ export default function DepartmentAdminPage() {
                                     vals.office_phone = v(p.office_phone);
                                     vals.office_email = v(p.office_email);
                                     vals.secretary_name = v(p.secretary_name);
-                                    vals.arcs_tagline = v(p.arcs_tagline);
+                      vals.arcs_tagline = v(p.arcs_tagline);
                                     vals.arcs_about = v(p.arcs_about);
                                     vals.arcs_about_image = v(p.arcs_about_image);
                                     vals.arcs_secretary_image = v(p.arcs_secretary_image);
@@ -6334,7 +6489,7 @@ export default function DepartmentAdminPage() {
                     )}
                     {!organizationsForTable.length && (
                       <tr>
-                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 22 : deptCode === 'HEALTH' ? 28 : deptCode === 'EDUCATION' ? 62 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 3 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 3 : deptCode === 'REVENUE_LAND' ? 12 : deptCode === 'ROADS' ? 17 : deptCode === 'DRAINAGE' ? 14 : 11}>
+                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 22 : deptCode === 'HEALTH' ? 28 : deptCode === 'EDUCATION' ? 62 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 3 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 3 : deptCode === 'REVENUE_LAND' ? 12 : deptCode === 'ROADS' ? 18 : deptCode === 'DRAINAGE' ? 14 : 11}>
                           {orgs.length
                             ? 'No matching rows for current search/filter.'
                             : 'No organizations yet for your department.'}

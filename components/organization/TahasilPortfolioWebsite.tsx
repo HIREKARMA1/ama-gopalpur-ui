@@ -872,8 +872,6 @@ export function TahasilPortfolioWebsite({
 
         <PsGallerySection gallery={galleryItems} />
 
-        <PsContactSection org={org} profile={contactProfile} language={lang} />
-
         {useLazyParcels || parcelRows.length > 0 ? (
           <section className="py-2 md:py-4">
             <h2 className={SECTION_H2}>{trStatic('Government land parcels', 'ସରକାରୀ ଜମି ପାର୍ସେଲ୍')}</h2>
@@ -1147,6 +1145,8 @@ export function TahasilPortfolioWebsite({
             </div>
           </section>
         ) : null}
+
+        <PsContactSection org={org} profile={contactProfile} language={lang} />
       </main>
     </div>
   );

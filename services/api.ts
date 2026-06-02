@@ -247,6 +247,16 @@ export const organizationsApi = {
       body: form,
     });
   },
+  /** Electricity portfolio image; stored under Departments/Electricity/{Org}/electricity-portfolio/{section}/ */
+  uploadElectricityPortfolioAsset: (id: number, file: File, assetType: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('asset_type', assetType);
+    return apiFetch<{ url: string }>(`/api/v1/organizations/${id}/electricity-portfolio-asset`, {
+      method: 'POST',
+      body: form,
+    });
+  },
   /** Agriculture facility portfolio image; stored under Departments/Agriculture/{Org}/ag-portfolio/{section}/ */
   uploadAgriculturePortfolioAsset: (id: number, file: File, assetType: string) => {
     const form = new FormData();

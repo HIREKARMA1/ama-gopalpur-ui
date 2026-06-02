@@ -105,12 +105,7 @@ export function DepartmentSidebar({
           <p className="text-sm text-slate-300">{t('sidebar.loading', language)}</p>
         ) : (
           <ul className="space-y-3">
-            {departments
-              .filter((dept) => {
-                const code = (dept.code || '').toUpperCase();
-                return code !== 'ELECTRICITY';
-              })
-              .map((dept) => {
+            {departments.map((dept) => {
               const isSelected = dept.id === selectedId;
               const count = countByDepartmentId[dept.id];
               const countDisplay = count != null ? formatLocaleDigits(count, language) : null;
