@@ -123,8 +123,125 @@ const EDUCATION_DEGREE_CSV_HEADER = (() => {
   }
   return `${out.join(',')}\n`;
 })();
-const ELECTRICITY_CSV_HEADER =
-  'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID/CODE,OWNERSHIP,PARENT ORGANIZATION,HIERARCHY LEVEL,HOST INSTITUTION (IF TRAINING CENTER),ESTABLISHED YEAR,COMMISSIONED YEAR (SUBSTATIONS),FULL ADDRESS,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE DESIGNATION,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,OFFICE HOURS,TOLL-FREE/CUSTOMER CARE NUMBER,HELPLINE AVAILABLE (YES/NO),VOLTAGE LEVEL PRIMARY (kV),VOLTAGE LEVEL SECONDARY (kV),INSTALLED CAPACITY (MVA),NO OF TRANSFORMERS,TRANSFORMER RATINGS MVA (COMMA SEPARATED),NO OF INCOMING FEEDERS,NO OF OUTGOING FEEDERS,TOTAL FEEDERS,BAYS (COUNT),SWITCHGEAR TYPE (GIS/AIS/HYBRID),33kV FEEDER LENGTH (KM),11kV FEEDER LENGTH (KM),LT LINE LENGTH (KM),NO OF DISTRIBUTION TRANSFORMERS (DTs),DT TOTAL CAPACITY (kVA),FEEDER METERING (YES/NO),FEEDER METERS (COUNT),DT METERING (YES/NO),DT METERS (COUNT),SMART METERS INSTALLED (COUNT),PREPAID METERS (COUNT),CONSUMER METERS TOTAL (COUNT),CONSUMERS UNDER JURISDICTION (APPROX),CONSUMERS DOMESTIC (COUNT),CONSUMERS COMMERCIAL (COUNT),CONSUMERS INDUSTRIAL (COUNT),CONSUMERS AGRICULTURAL (COUNT),CONSUMERS OTHER (COUNT),HT CONSUMERS (COUNT),LT CONSUMERS (COUNT),CONNECTED LOAD (MW),AT&C LOSS PERCENT,BILLING EFFICIENCY PERCENT,COLLECTION EFFICIENCY PERCENT,HOURS OF SUPPLY RURAL,HOURS OF SUPPLY URBAN,COMPLAINTS REGISTERED LAST YEAR,COMPLAINTS REDRESSED LAST YEAR,CONSUMER CARE COUNTER (YES/NO),BILLING FACILITY (YES/NO),ONLINE PAYMENT (YES/NO),MOBILE APP (YES/NO),ONLINE COMPLAINT PORTAL (YES/NO),CUSTOMER CARE EMAIL,GRIEVANCE REDRESSAL FORUM (YES/NO),TOTAL STAFF (COUNT),ENGINEERS (COUNT),TECHNICAL STAFF (COUNT),LINEMEN (COUNT),CONTRACT STAFF (COUNT),ADMIN/OFFICE STAFF (COUNT),VILLAGES/LOCALITIES COVERED (COUNT),GPs COVERED (COUNT),AREA COVERED SQ KM,BUILDING TYPE (OWN/RENTED),TOTAL FLOORS,OFFICE AREA SQ FT,TRAINING CENTER (YES/NO),TRAINING CAPACITY SEATS,WORKSHOP/GARAGE (YES/NO),STORE (YES/NO),DG SET (YES/NO),SOLAR (YES/NO),VEHICLES (COUNT),TWO-WHEELERS (COUNT),ANNUAL REVENUE CR (APPROX),BILLING CR LAST YEAR,DATA AS ON (YYYY-MM-DD),REMARKS/DESCRIPTION\n';
+const ELECTRICITY_CSV_COLUMNS = [
+  'NAME OF ELECTRICITY OFFICE',
+  'TYPE OF INSTITUTION',
+  'OWNERSHIP',
+  'IN-CHARGE NAME',
+  'IN-CHARGE DESIGNATION',
+  'IN-CHARGE MOBILE NUMBER',
+  'IN-CHARGE EMAIL',
+  'OFFICE EMAIL',
+  'WEBSITE URL',
+  'CUSTOMER CARE / TOLL-FREE NUMBER',
+  'IS HELPLINE AVAILABLE',
+  'CUSTOMER CARE EMAIL',
+  'AREA / ZONE COVERED BY THIS OFFICE',
+  'EMERGENCY HELPLINE NUMBER 1',
+  'EMERGENCY HELPLINE NUMBER 2',
+  'HOST INSTITUTION',
+  'ESTABLISHED YEAR',
+  'BLOCK / ULB NAME',
+  'GP / WARD NAME',
+  'VILLAGE / LOCALITY NAME',
+  'FULL POSTAL ADDRESS',
+  'PIN CODE',
+  'LATITUDE',
+  'LONGITUDE',
+  'STAFF 1 FULL NAME',
+  'ROLE / DESIGNATION 1',
+  'QUALIFICATION 1',
+  'GENDER 1',
+  'MOBILE NUMBER 1',
+  'EMAIL 1',
+  'DATE OF JOINING 1',
+  'JOB TYPE 1',
+  'STAFF 2 FULL NAME',
+  'ROLE / DESIGNATION 2',
+  'QUALIFICATION 2',
+  'GENDER 2',
+  'MOBILE NUMBER 2',
+  'EMAIL 2',
+  'DATE OF JOINING 2',
+  'JOB TYPE 2',
+  'STAFF 3 FULL NAME',
+  'ROLE / DESIGNATION 3',
+  'QUALIFICATION 3',
+  'GENDER 3',
+  'MOBILE NUMBER 3',
+  'EMAIL 3',
+  'DATE OF JOINING 3',
+  'JOB TYPE 3',
+  'STAFF 4 FULL NAME',
+  'ROLE / DESIGNATION 4',
+  'QUALIFICATION 4',
+  'GENDER 4',
+  'MOBILE NUMBER 4',
+  'EMAIL 4',
+  'DATE OF JOINING 4',
+  'JOB TYPE 4',
+  'STAFF 5 FULL NAME',
+  'ROLE / DESIGNATION 5',
+  'QUALIFICATION 5',
+  'GENDER 5',
+  'MOBILE NUMBER 5',
+  'EMAIL 5',
+  'DATE OF JOINING 5',
+  'JOB TYPE 5',
+  'STAFF 6 FULL NAME',
+  'ROLE / DESIGNATION 6',
+  'QUALIFICATION 6',
+  'GENDER 6',
+  'MOBILE NUMBER 6',
+  'EMAIL 6',
+  'DATE OF JOINING 6',
+  'JOB TYPE 6',
+  'STAFF 7 FULL NAME',
+  'ROLE / DESIGNATION 7',
+  'QUALIFICATION 7',
+  'GENDER 7',
+  'MOBILE NUMBER 7',
+  'EMAIL 7',
+  'DATE OF JOINING 7',
+  'JOB TYPE 7',
+  'STAFF 8 FULL NAME',
+  'ROLE / DESIGNATION 8',
+  'QUALIFICATION 8',
+  'GENDER 8',
+  'MOBILE NUMBER 8',
+  'EMAIL 8',
+  'DATE OF JOINING 8',
+  'JOB TYPE 8',
+  'PRIMARY VOLTAGE LEVEL (KV)',
+  'SECONDARY VOLTAGE LEVEL (KV)',
+  'INSTALLED CAPACITY (MVA)',
+  'NUMBER OF MAIN TRANSFORMERS',
+  'TRANSFORMER RATINGS',
+  'NUMBER OF INCOMING FEEDERS',
+  'NUMBER OF OUTGOING FEEDERS',
+  'TOTAL FEEDERS',
+  'NUMBER OF BAYS',
+  'SWITCHGEAR TYPE',
+  '33 KV FEEDER LENGTH (KM)',
+  '11 KV FEEDER LENGTH (KM)',
+  'LT LINE LENGTH (KM)',
+  'NUMBER OF DISTRIBUTION TRANSFORMERS (DTS)',
+  'TOTAL DT CAPACITY (KVA)',
+  'FEEDER METERING',
+  'NUMBER OF FEEDER METERS',
+  'DT METERING',
+  'NUMBER OF DT METERS',
+  'HIGH TENSION HT CONSUMERS COUNT',
+  'LOW TENSION LT CONSUMERS COUNT',
+] as const;
+
+const ELECTRICITY_CSV_HEADER = `${ELECTRICITY_CSV_COLUMNS.join(',')}\n`;
+const ELECTRICITY_NAME_COLUMN = 'NAME OF ELECTRICITY OFFICE';
+const ELECTRICITY_LATITUDE_COLUMN = 'LATITUDE';
+const ELECTRICITY_LONGITUDE_COLUMN = 'LONGITUDE';
+const ELECTRICITY_BLOCK_COLUMN = 'BLOCK / ULB NAME';
+const ELECTRICITY_GP_WARD_COLUMN = 'GP / WARD NAME';
+const ELECTRICITY_VILLAGE_COLUMN = 'VILLAGE / LOCALITY NAME';
 
 const ARCS_CSV_HEADER =
   'SL NO,BLOCK/ULB,SOCIETY NAME,REGISTRATION NUMBER,JURISDICTION TYPE (RURAL/URBAN/MIXED),AREA OF OPERATION,STATE,DISTRICT,ESTABLISHED YEAR,FULL ADDRESS,PIN CODE,LATITUDE,LONGITUDE,SECRETARY NAME,OFFICE PHONE,OFFICE EMAIL,FUNCTIONING OR NOT,AUDIT COMPLETED SOCIETIES (LAST FY),ELECTIONS CONDUCTED (LAST FY),TOTAL MEMBERSHIP,MEMBERSHIP SC,MEMBERSHIP ST,MEMBERSHIP OBC,MEMBERSHIP GEN,MEMBERSHIP WOMEN,INSPECTORS/EXTENSION OFFICERS (COUNT),COMPUTERIZATION STATUS (YES/NO),ONLINE REGISTRATION FACILITY (YES/NO),DIGITIZED RECORDS (YES/NO),FILE TRACKING SYSTEM (YES/NO)\n';
@@ -3926,14 +4043,14 @@ export default function DepartmentAdminPage() {
                       return;
                     }
                     const headers = splitHeader(ELECTRICITY_CSV_HEADER);
-                    const nameKey = snakeFromHeader('NAME OF OFFICE/CENTER');
-                    const latKey = snakeFromHeader('LATITUDE');
-                    const lngKey = snakeFromHeader('LONGITUDE');
+                    const nameKey = snakeFromHeader(ELECTRICITY_NAME_COLUMN);
+                    const latKey = snakeFromHeader(ELECTRICITY_LATITUDE_COLUMN);
+                    const lngKey = snakeFromHeader(ELECTRICITY_LONGITUDE_COLUMN);
                     const name = (elecFormValues[nameKey] || '').trim();
                     const latStr = elecFormValues[latKey] || '';
                     const lngStr = elecFormValues[lngKey] || '';
                     if (!name || !latStr.trim() || !lngStr.trim()) {
-                      setError('Name of Office/Center, Latitude and Longitude are required.');
+                      setError('Name of Electricity Office, Latitude and Longitude are required.');
                       return;
                     }
                     setCreating(true);
@@ -3944,9 +4061,9 @@ export default function DepartmentAdminPage() {
                       if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
                         throw new Error('Latitude and Longitude must be valid numbers.');
                       }
-                      const blockKey = snakeFromHeader('BLOCK/ULB');
-                      const gpKey = snakeFromHeader('GP/WARD');
-                      const villageKey = snakeFromHeader('VILLAGE/LOCALITY');
+                      const blockKey = snakeFromHeader(ELECTRICITY_BLOCK_COLUMN);
+                      const gpKey = snakeFromHeader(ELECTRICITY_GP_WARD_COLUMN);
+                      const villageKey = snakeFromHeader(ELECTRICITY_VILLAGE_COLUMN);
                       const block = elecFormValues[blockKey] || '';
                       const gp = elecFormValues[gpKey] || '';
                       const village = elecFormValues[villageKey] || '';
@@ -4285,7 +4402,7 @@ export default function DepartmentAdminPage() {
                   : deptCode === 'HEALTH'
                     ? 'Upload Health minister CSV. Organizations and profiles will be created or updated by NAME, LATITUDE, LONGITUDE.'
                     : deptCode === 'ELECTRICITY'
-                      ? 'Upload Electricity CSV. Organizations and profiles will be created or updated by NAME OF OFFICE/CENTER, LATITUDE, LONGITUDE.'
+                      ? 'Upload Electricity CSV. Organizations and profiles will be created or updated by NAME OF ELECTRICITY OFFICE, LATITUDE, LONGITUDE.'
                       : deptCode === 'ARCS'
                         ? 'Upload ARCS CSV or Excel (.xlsx) template. Societies are keyed by REGISTRATION NUMBER when present, else SOCIETY NAME and coordinates. Excel must use sheet assistant_registrar_cooperative (rows from line 4).'
                         : deptCode === 'WATCO_RWSS'
@@ -4805,7 +4922,7 @@ export default function DepartmentAdminPage() {
                       {deptCode === 'ELECTRICITY' && (
                         <>
                           {splitHeader(ELECTRICITY_CSV_HEADER).map((header) => {
-                            if (header === 'NAME OF OFFICE/CENTER') return null;
+                            if (header === ELECTRICITY_NAME_COLUMN) return null;
                             return (
                               <th
                                 key={header}
@@ -5174,7 +5291,7 @@ export default function DepartmentAdminPage() {
                             {deptCode === 'ELECTRICITY' && (
                               <>
                                 {splitHeader(ELECTRICITY_CSV_HEADER).map((header) => {
-                                  if (header === 'NAME OF OFFICE/CENTER') return null;
+                                  if (header === ELECTRICITY_NAME_COLUMN) return null;
                                   const key = snakeFromHeader(header);
                                   const val = electricityProfiles[o.id] ? electricityProfiles[o.id][key] : undefined;
                                   if (key === 'latitude') {
@@ -5713,9 +5830,9 @@ export default function DepartmentAdminPage() {
                                       vals[k] = v(p[k]);
                                     });
                                     // Ensure name and coordinates are set from organization if missing in profile
-                                    const nameKey = snakeFromHeader('NAME OF OFFICE/CENTER');
-                                    const latKey = snakeFromHeader('LATITUDE');
-                                    const lngKey = snakeFromHeader('LONGITUDE');
+                                    const nameKey = snakeFromHeader(ELECTRICITY_NAME_COLUMN);
+                                    const latKey = snakeFromHeader(ELECTRICITY_LATITUDE_COLUMN);
+                                    const lngKey = snakeFromHeader(ELECTRICITY_LONGITUDE_COLUMN);
                                     if (!vals[nameKey]) vals[nameKey] = o.name;
                                     if (!vals[latKey]) vals[latKey] = o.latitude != null ? String(o.latitude) : '';
                                     if (!vals[lngKey]) vals[lngKey] = o.longitude != null ? String(o.longitude) : '';
@@ -5746,7 +5863,7 @@ export default function DepartmentAdminPage() {
                                     vals.office_phone = v(p.office_phone);
                                     vals.office_email = v(p.office_email);
                                     vals.secretary_name = v(p.secretary_name);
-                                    vals.arcs_tagline = v(p.arcs_tagline);
+                      vals.arcs_tagline = v(p.arcs_tagline);
                                     vals.arcs_about = v(p.arcs_about);
                                     vals.arcs_about_image = v(p.arcs_about_image);
                                     vals.arcs_secretary_image = v(p.arcs_secretary_image);
