@@ -25,6 +25,8 @@ import {
   getDrainLineKindFromOrg,
   getDrainTableColumnValue,
 } from '../../lib/drainageOrganization';
+import { parseRoadsProgressRows } from '../../lib/roadsProgressTable';
+import { RoadsProgressTableSection } from './RoadsProgressTableSection';
 import {
   buildDedupedRoadFilterOptions,
   roadMatchesBlockFilter,
@@ -116,6 +118,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     contact_email: '',
     office_hours_en: '',
   };
+
+  const roadsProgressRows = useMemo(
+    () => (isRoadsDept ? parseRoadsProgressRows(summary) : []),
+    [isRoadsDept, summary],
+  );
 
   const highlightCards = resolveEffectiveHighlightCards(summary, organizations, department.code).map(
     (card) => ({
@@ -327,6 +334,10 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           departmentCode={department.code || ''}
           highlightCards={highlightCards}
         />
+
+        {isRoadsDept ? (
+          <RoadsProgressTableSection rows={roadsProgressRows} language={language} />
+        ) : null}
 
         <section>
           <h2 className="text-xl font-bold sm:text-2xl">

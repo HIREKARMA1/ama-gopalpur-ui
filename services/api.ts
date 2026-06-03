@@ -87,6 +87,19 @@ export interface DepartmentSummaryHighlightCard {
   legend_key?: string | null;
 }
 
+/** Roads department summary — upgradation / proposal tracking by FY (admin-edited). */
+export interface RoadsProgressRow {
+  sl_no?: string | null;
+  total_pwd_road?: string | null;
+  total_rd_road?: string | null;
+  total_gp_road?: string | null;
+  upgraded_gp_to_rd?: string | null;
+  upgraded_rd_to_pwd?: string | null;
+  fy?: string | null;
+  proposal_sent?: string | null;
+  proposal_approved?: string | null;
+}
+
 export interface DepartmentSummaryContent {
   about_image?: string | null;
   department_name_od?: string | null;
@@ -102,6 +115,7 @@ export interface DepartmentSummaryContent {
   strategic_priorities?: string[];
   key_statistics?: DepartmentSummaryStat[];
   highlight_cards?: DepartmentSummaryHighlightCard[];
+  roads_progress_rows?: RoadsProgressRow[];
 }
 
 export interface User {
