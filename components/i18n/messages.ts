@@ -1237,7 +1237,7 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'roads.type.pwd': { en: 'PWD', or: 'PWD' },
   'roads.type.rd': { en: 'RD', or: 'ଗ୍ରାମୀଣ ରାସ୍ତା' },
   'roads.type.ps': { en: 'PS', or: 'ପଞ୍ଚାୟତ ସମିତି' },
-  'roads.type.gp': { en: 'GP', or: 'ଗ୍ରାମ ପଞ୍ଚାୟତ' },
+  'roads.type.gp': { en: 'GP road', or: 'ଜିପି ରୋଡ୍' },
   'roads.type.other': { en: 'Other', or: 'ଅନ୍ୟ' },
   'watco.type.megaEsr': { en: 'MEGA ESR', or: 'ମେଗା ESR' },
   'watco.type.existingEsr': { en: 'EXISTING ESR', or: 'ବିଦ୍ୟମାନ ESR' },
