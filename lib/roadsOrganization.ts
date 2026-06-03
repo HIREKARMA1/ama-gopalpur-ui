@@ -123,8 +123,33 @@ export function roadDedupeKeyFromOrg(org: Organization): string {
   });
 }
 
+/** Gopalpur constituency blocks shown in road summary / map filters. */
+export const ROADS_CONSTITUENCY_BLOCKS = [
+  { value: 'RANGEILUNDA', label: 'Rangeilunda' },
+  { value: 'KUKUDAKHANDI', label: 'Kukudakhandi' },
+  { value: 'BERHAMPUR_URBAN_I', label: 'Berhampur Urban-I' },
+] as const;
+
+export function normalizeConstituencyBlock(raw: string | null | undefined): string {
+  const v = (raw || '')
+    .toUpperCase()
+    .replace(/[_-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!v) return '';
+  if (v.includes('RANGEILUNDA') || v.includes('RANGAILUNDA')) return 'RANGEILUNDA';
+  if (v.includes('KUKUDAKHANDI')) return 'KUKUDAKHANDI';
+  if (v.includes('BERHAMPUR') && v.includes('URBAN')) return 'BERHAMPUR_URBAN_I';
+  return '';
+}
+
 export function roadOrgBlock(org: Organization): string {
   return String((org.attributes ?? {}).block ?? '').trim();
+}
+
+export function roadMatchesBlockFilter(org: Organization, filterValue: string): boolean {
+  if (filterValue === 'ALL') return true;
+  return normalizeConstituencyBlock(roadOrgBlock(org)) === filterValue;
 }
 
 export function roadOrgGpWard(org: Organization): string {

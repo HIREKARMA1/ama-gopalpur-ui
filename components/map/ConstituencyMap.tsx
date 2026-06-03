@@ -38,6 +38,7 @@ import { MapViewToolbar } from './MapViewToolbar';
 import { MapBlockFilter } from './MapBlockFilter';
 import {
   buildDedupedRoadFilterOptions,
+  normalizeConstituencyBlock,
   normalizeRoadLocationKey,
 } from '../../lib/roadsOrganization';
 
@@ -211,19 +212,6 @@ const ROAD_MANUAL_GP_WARDS_BY_BLOCK: Record<string, string[]> = {
   ],
   BERHAMPUR_URBAN_I: ['37', '38', '39', '40', '41', '42'],
 };
-
-function normalizeConstituencyBlock(raw: string | null | undefined): string {
-  const v = (raw || '')
-    .toUpperCase()
-    .replace(/[_-]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (!v) return '';
-  if (v.includes('RANGEILUNDA')) return 'RANGEILUNDA';
-  if (v.includes('KUKUDAKHANDI')) return 'KUKUDAKHANDI';
-  if (v.includes('BERHAMPUR') && v.includes('URBAN')) return 'BERHAMPUR_URBAN_I';
-  return '';
-}
 
 function translateIrrigationCategory(label: string, lang: 'en' | 'or'): string {
   const v = (label || '').trim();

@@ -27,8 +27,9 @@ import {
 } from '../../lib/drainageOrganization';
 import {
   buildDedupedRoadFilterOptions,
+  roadMatchesBlockFilter,
   roadMatchesLocationFilter,
-  roadOrgBlock,
+  ROADS_CONSTITUENCY_BLOCKS,
   roadOrgGpWard,
   roadOrgVillage,
 } from '../../lib/roadsOrganization';
@@ -150,7 +151,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
 
   const roadsScopedForGpOptions = useMemo(() => {
     if (!isRoadsDept) return [];
-    return topOrganizations.filter((org) => roadMatchesLocationFilter(roadOrgBlock(org), roadBlockFilter));
+    return topOrganizations.filter((org) => roadMatchesBlockFilter(org, roadBlockFilter));
   }, [isRoadsDept, topOrganizations, roadBlockFilter]);
 
   const roadsScopedForVillageOptions = useMemo(() => {
@@ -167,8 +168,8 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
 
   const roadBlockOptions = useMemo(() => {
     if (!isRoadsDept) return [];
-    return buildDedupedRoadFilterOptions(topOrganizations.map(roadOrgBlock));
-  }, [isRoadsDept, topOrganizations]);
+    return ROADS_CONSTITUENCY_BLOCKS.map((b) => ({ value: b.value, label: b.label }));
+  }, [isRoadsDept]);
 
   const roadGpOptions = useMemo(() => {
     if (!isRoadsDept) return [];
@@ -228,7 +229,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       const matchesRoadFilters =
         !isRoadsDept ||
         (roadMatchesLocationFilter(categoryLabel, roadTypeFilter) &&
-          roadMatchesLocationFilter(roadOrgBlock(org), roadBlockFilter) &&
+          roadMatchesBlockFilter(org, roadBlockFilter) &&
           roadMatchesLocationFilter(roadOrgGpWard(org), roadGpFilter) &&
           roadMatchesLocationFilter(roadOrgVillage(org), roadVillageFilter));
 
