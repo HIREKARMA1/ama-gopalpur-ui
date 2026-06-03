@@ -36,7 +36,7 @@ const EXTRA_IMAGE_KEYS = [
   'electricity_infra_consumers_image',
 ] as const;
 
-const EXTRA_TEXT_KEYS = ['electricity_about', 'electricity_tagline'] as const;
+const EXTRA_TEXT_KEYS = ['electricity_about', 'electricity_tagline', 'electricity_in_charge_message'] as const;
 
 const SECTION_ORDER = [
   'Identity',
@@ -186,12 +186,21 @@ export function ElectricityPortfolioAdminForm({
       {activeSection === 'Identity' && (
         <div className="grid gap-3 md:grid-cols-2">
           <div className="space-y-1 md:col-span-2">
-            <label className="block text-text">About / Description</label>
+            <label className="block text-text">About the electricity office</label>
             <textarea
               rows={3}
               className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
               value={values.electricity_about ?? ''}
               onChange={(e) => patch({ electricity_about: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1 md:col-span-2">
+            <label className="block text-text">In-charge message</label>
+            <textarea
+              rows={3}
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+              value={values.electricity_in_charge_message ?? ''}
+              onChange={(e) => patch({ electricity_in_charge_message: e.target.value })}
             />
           </div>
           <div className="space-y-1 md:col-span-2">
