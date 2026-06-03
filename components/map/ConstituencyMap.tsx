@@ -36,6 +36,10 @@ import { MapCalloutCard, MapCalloutMetaMuted, MapCalloutMetaRow } from './MapCal
 import { MapLegendPanel, MapLegendRow } from './MapLegend';
 import { MapViewToolbar } from './MapViewToolbar';
 import { MapBlockFilter } from './MapBlockFilter';
+import {
+  buildDedupedRoadFilterOptions,
+  normalizeRoadLocationKey,
+} from '../../lib/roadsOrganization';
 
 const EDUCATION_TYPE_KEYS: Record<string, MessageKey> = {
   PRIMARY_SCHOOL: 'map.edu.primarySchool',
@@ -770,30 +774,29 @@ export function ConstituencyMap({
       selectedBlockKey && selectedBlockKey !== 'ALL'
         ? (ROAD_MANUAL_GP_WARDS_BY_BLOCK[selectedBlockKey] ?? [])
         : Object.values(ROAD_MANUAL_GP_WARDS_BY_BLOCK).flat();
-    const values = Array.from(
-      new Set(
-        [...sourceRoads.map((road) => String(road.properties?.gpWard ?? '').trim()), ...manualGpWards].filter(
-          (value) => value.length > 0,
-        ),
-      ),
-    ).sort((a, b) => a.localeCompare(b));
-    return [
-      { value: 'ALL', label: t('map.filter.allGpWard', language) },
-      ...values.map((value) => ({ value, label: value })),
-    ];
+    const deduped = buildDedupedRoadFilterOptions([
+      ...sourceRoads.map((road) => String(road.properties?.gpWard ?? '')),
+      ...manualGpWards,
+    ]);
+    return [{ value: 'ALL', label: t('map.filter.allGpWard', language) }, ...deduped];
   }, [selectedDepartmentCode, language, roads, roadsByBlock, selectedBlockFilter]);
 
   useEffect(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'ROADS') return;
     if (selectedGpWardFilter === 'ALL') return;
     const exists = roadGpWardOptions.some((option) => option.value === selectedGpWardFilter);
-    if (!exists) setSelectedGpWardFilter('ALL');
+    if (!exists) {
+      const normalized = normalizeRoadLocationKey(selectedGpWardFilter);
+      const match = roadGpWardOptions.find((o) => o.value === normalized);
+      setSelectedGpWardFilter(match ? match.value : 'ALL');
+    }
   }, [selectedDepartmentCode, selectedGpWardFilter, roadGpWardOptions]);
 
   const roadsByBlockAndGpWard = useMemo(() => {
     if (selectedGpWardFilter === 'ALL') return roadsByBlock;
+    const filterKey = normalizeRoadLocationKey(selectedGpWardFilter);
     return roadsByBlock.filter(
-      (road) => String(road.properties?.gpWard ?? '').trim() === selectedGpWardFilter,
+      (road) => normalizeRoadLocationKey(String(road.properties?.gpWard ?? '')) === filterKey,
     );
   }, [roadsByBlock, selectedGpWardFilter]);
 

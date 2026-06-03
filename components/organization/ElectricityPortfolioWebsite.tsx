@@ -9,7 +9,6 @@ import {
   PsFacilitiesCarouselSection,
   PsFacultySection,
   PsGallerySection,
-  PsHeroSection,
   PsPersonCardsSection,
   asString,
   displayText,
@@ -92,12 +91,8 @@ export function ElectricityPortfolioWebsite({
   const lang = (language === 'or' ? 'od' : 'en') as Lang;
   const profile = electricityProfile || {};
 
-  const heroSlides = useMemo(() => {
-    const fromGallery = parseArray<string>(profile.gallery_images)
-      .map((x) => asString(x))
-      .filter(Boolean);
-    return (fromGallery.length ? fromGallery : images).slice(0, 3);
-  }, [profile.gallery_images, images]);
+  const officeName =
+    asString(profile.name_of_electricity_office) || org.name || tr('Electricity office', 'ବିଦ୍ୟୁତ କାର୍ଯ୍ୟାଳୟ');
 
   const locationLine = [
     asString(profile.block_ulb_name),
@@ -114,6 +109,7 @@ export function ElectricityPortfolioWebsite({
       hero_primary_tagline_en:
         asString(profile.type_of_institution) || tr('Electricity Services', 'ବିଦ୍ୟୁତ ସେବା'),
       about_short_en:
+        asString(profile.electricity_about) ||
         asString(profile.remarks_description) ||
         asString(profile.area_zone_covered_by_this_office) ||
         '',
@@ -121,8 +117,11 @@ export function ElectricityPortfolioWebsite({
       esst_year: asString(profile.established_year),
       school_type_en: asString(profile.type_of_institution) || tr('Electricity Office', 'ବିଦ୍ୟୁତ କାର୍ଯ୍ୟାଳୟ'),
       location_en: locationLine || asString(profile.full_postal_address) || asString(org.address),
+      headmaster_message_en:
+        asString(profile.electricity_in_charge_message) || asString(profile.electricity_about) || '',
       name_of_hm: asString(profile.in_charge_name),
       hm_designation: asString(profile.in_charge_designation),
+      headmaster_photo: asString(profile.electricity_in_charge_photo),
       headmaster_contact: asString(profile.in_charge_mobile_number),
       headmaster_email: asString(profile.in_charge_email),
       contact_address_en: asString(profile.full_postal_address) || asString(org.address),
@@ -238,18 +237,28 @@ export function ElectricityPortfolioWebsite({
     [monthlyReports],
   );
 
+  const aboutSliderImages = useMemo(() => {
+    const campus = asString(profile.electricity_campus_image);
+    return campus ? [campus] : [];
+  }, [profile.electricity_campus_image]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 via-slate-50 to-white text-slate-800">
-      <PsHeroSection org={org} profile={psProfile} language={lang} sliderImages={heroSlides} />
-
       <main className="mx-auto max-w-[1280px] space-y-10 px-4 py-8 sm:px-6 lg:px-8">
         <PsAboutSection
           org={org}
           profile={psProfile}
           language={lang}
-          sliderImages={heroSlides}
+          sliderImages={aboutSliderImages}
           hideVisionMission
           hideExtendedLeaderBio
+          aboutTitleOverride={
+            lang === 'od' ? 'ବିଦ୍ୟୁତ କାର୍ଯ୍ୟାଳୟ ବିଷୟରେ' : `About ${officeName}`
+          }
+          leaderLabels={{
+            title: tr('In-charge', 'ଇନ୍-ଚାର୍ଜ'),
+            messageHeading: tr("In-charge's message", 'ଇନ୍-ଚାର୍ଜଙ୍କ ବାର୍ତ୍ତା'),
+          }}
         />
         {departmentName ? (
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{departmentName}</p>
