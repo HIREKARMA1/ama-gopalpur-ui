@@ -36,6 +36,10 @@ import { MapCalloutCard, MapCalloutMetaMuted, MapCalloutMetaRow } from './MapCal
 import { MapLegendPanel, MapLegendRow } from './MapLegend';
 import { MapViewToolbar } from './MapViewToolbar';
 import { MapBlockFilter } from './MapBlockFilter';
+import {
+  buildDedupedRoadFilterOptions,
+  normalizeRoadLocationKey,
+} from '../../lib/roadsOrganization';
 
 const EDUCATION_TYPE_KEYS: Record<string, MessageKey> = {
   PRIMARY_SCHOOL: 'map.edu.primarySchool',
@@ -207,43 +211,6 @@ const ROAD_MANUAL_GP_WARDS_BY_BLOCK: Record<string, string[]> = {
   ],
   BERHAMPUR_URBAN_I: ['37', '38', '39', '40', '41', '42'],
 };
-
-/** Case-insensitive key for GP/Ward dedupe and filtering. */
-function normalizeGpWardKey(raw: string | null | undefined): string {
-  return String(raw ?? '')
-    .trim()
-    .replace(/\s+/g, ' ')
-    .toUpperCase();
-}
-
-/** One display label per GP/Ward key — prefer mixed case over ALL CAPS. */
-function canonicalGpWardLabel(variants: string[]): string {
-  const trimmed = variants.map((v) => v.trim()).filter(Boolean);
-  if (!trimmed.length) return '';
-  const mixed = trimmed.find((v) => v !== v.toUpperCase());
-  if (mixed) return mixed;
-  return trimmed[0]
-    .toLowerCase()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function buildDedupedGpWardOptions(rawValues: string[]): { value: string; label: string }[] {
-  const groups = new Map<string, string[]>();
-  for (const raw of rawValues) {
-    const t = raw.trim();
-    if (!t) continue;
-    const key = normalizeGpWardKey(t);
-    const list = groups.get(key) ?? [];
-    list.push(t);
-    groups.set(key, list);
-  }
-  return [...groups.entries()]
-    .map(([key, variants]) => ({
-      value: key,
-      label: canonicalGpWardLabel(variants),
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
-}
 
 function normalizeConstituencyBlock(raw: string | null | undefined): string {
   const v = (raw || '')
@@ -807,7 +774,7 @@ export function ConstituencyMap({
       selectedBlockKey && selectedBlockKey !== 'ALL'
         ? (ROAD_MANUAL_GP_WARDS_BY_BLOCK[selectedBlockKey] ?? [])
         : Object.values(ROAD_MANUAL_GP_WARDS_BY_BLOCK).flat();
-    const deduped = buildDedupedGpWardOptions([
+    const deduped = buildDedupedRoadFilterOptions([
       ...sourceRoads.map((road) => String(road.properties?.gpWard ?? '')),
       ...manualGpWards,
     ]);
@@ -819,7 +786,7 @@ export function ConstituencyMap({
     if (selectedGpWardFilter === 'ALL') return;
     const exists = roadGpWardOptions.some((option) => option.value === selectedGpWardFilter);
     if (!exists) {
-      const normalized = normalizeGpWardKey(selectedGpWardFilter);
+      const normalized = normalizeRoadLocationKey(selectedGpWardFilter);
       const match = roadGpWardOptions.find((o) => o.value === normalized);
       setSelectedGpWardFilter(match ? match.value : 'ALL');
     }
@@ -827,9 +794,9 @@ export function ConstituencyMap({
 
   const roadsByBlockAndGpWard = useMemo(() => {
     if (selectedGpWardFilter === 'ALL') return roadsByBlock;
-    const filterKey = normalizeGpWardKey(selectedGpWardFilter);
+    const filterKey = normalizeRoadLocationKey(selectedGpWardFilter);
     return roadsByBlock.filter(
-      (road) => normalizeGpWardKey(String(road.properties?.gpWard ?? '')) === filterKey,
+      (road) => normalizeRoadLocationKey(String(road.properties?.gpWard ?? '')) === filterKey,
     );
   }, [roadsByBlock, selectedGpWardFilter]);
 
