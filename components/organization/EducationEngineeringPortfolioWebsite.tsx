@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Organization } from '../../services/api';
+import { isDegreeCollegeLike } from '../../lib/educationSubDepartments';
 import {
   asString,
   parseArray,
@@ -331,7 +332,7 @@ export function EducationEngineeringPortfolioWebsite({
   const subDepartment = (org.sub_department || '').toUpperCase();
   const isIti = subDepartment === 'ITI';
   const isUniversity = subDepartment === 'UNIVERSITY';
-  const isDegreeCollege = subDepartment === 'DEGREE_COLLEGE';
+  const isDegreeCollege = isDegreeCollegeLike(subDepartment);
   const institutionLabel = isUniversity
     ? 'University'
     : isDegreeCollege

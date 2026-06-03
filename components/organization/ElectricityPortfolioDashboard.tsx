@@ -47,7 +47,6 @@ import {
     ResponsiveContainer,
     Legend,
 } from 'recharts';
-import { ImageSlider } from './ImageSlider';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
 import { GOPALPUR_BOUNDS, AWC_MARKER_ICON } from '../../lib/mapConfig';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -579,11 +578,7 @@ export function ElectricityPortfolioDashboard({
 
     return (
         <div className="min-h-screen bg-slate-50/30 text-slate-800 font-sans pb-16">
-            <section className="w-full">
-                <ImageSlider images={images} altPrefix={org.name} className="h-[410px] sm:h-[400px]" />
-            </section>
-
-            <header className="mx-auto max-w-[1920px] px-4 pt-6 pb-4 sm:px-6 lg:px-8">
+            <header className="mx-auto max-w-[1920px] px-4 pt-8 pb-4 sm:px-6 lg:px-8">
                 <h1 className="text-xl font-bold tracking-tight text-[#1e293b] sm:text-3xl lg:text-[32px]">
                     {t('electricity.dashboard.title', language)}
                 </h1>

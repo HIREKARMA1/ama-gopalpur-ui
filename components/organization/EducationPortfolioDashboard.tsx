@@ -83,6 +83,7 @@ import { t } from '../i18n/messages';
 import { getEducationProfileLabel, EDUCATION_PROFILE_KEYS } from '../../lib/profileLabels';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
 import { GOPALPUR_BOUNDS, EDUCATION_TYPE_LABELS } from '../../lib/mapConfig';
+import { isDegreeCollegeLike } from '../../lib/educationSubDepartments';
 import { Loader } from '../common/Loader';
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
@@ -490,10 +491,10 @@ export function EducationPortfolioDashboard({
     v == null ? null : typeof v === 'object' ? undefined : (v as string | number);
 
   // Stats for the top row
-  const isCollege = ['ENGINEERING_COLLEGE', 'ITI', 'UNIVERSITY', 'DIPLOMA_COLLEGE', 'DEGREE_COLLEGE'].includes(org.sub_department || '');
+  const isCollege = ['ENGINEERING_COLLEGE', 'ITI', 'UNIVERSITY', 'DIPLOMA_COLLEGE', 'DEGREE_COLLEGE', 'SSS'].includes(org.sub_department || '');
   const isUniversity = org.sub_department === 'UNIVERSITY';
-  const isUniversityLike = isUniversity || org.sub_department === 'DEGREE_COLLEGE';
-  const hidePlacementTab = org.sub_department === 'DEGREE_COLLEGE';
+  const isUniversityLike = isUniversity || isDegreeCollegeLike(org.sub_department);
+  const hidePlacementTab = isDegreeCollegeLike(org.sub_department);
 
   useEffect(() => {
     if (hidePlacementTab && detailTab === 'placement') {
@@ -504,7 +505,7 @@ export function EducationPortfolioDashboard({
   // Calculate total intake for colleges
   const totalIntake = useMemo(() => {
     // ITI uses total_seats_all_trades directly (handled separately in topStats)
-    if (org.sub_department === 'UNIVERSITY' || org.sub_department === 'DEGREE_COLLEGE') {
+    if (org.sub_department === 'UNIVERSITY' || isDegreeCollegeLike(org.sub_department)) {
       // For universities, use sanctioned UG + PG intake (with fallbacks)
       const ug =
         Number(educationProfile['total_sanctioned_intake_ug'] ?? educationProfile['total_sanctioned_student_intake_ug'] ?? 0);
@@ -530,7 +531,7 @@ export function EducationPortfolioDashboard({
   }, [educationProfile, org.sub_department]);
 
   const topStats = isCollege ? (
-    org.sub_department === 'DEGREE_COLLEGE'
+    isDegreeCollegeLike(org.sub_department)
       ? [
           {
             label: t('edu.stat.totalIntake', language),

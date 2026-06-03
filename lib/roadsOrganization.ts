@@ -122,3 +122,88 @@ export function roadDedupeKeyFromOrg(org: Organization): string {
     roadSector: String(attrs.road_sector ?? ''),
   });
 }
+
+/** Gopalpur constituency blocks shown in road summary / map filters. */
+export const ROADS_CONSTITUENCY_BLOCKS = [
+  { value: 'RANGEILUNDA', label: 'Rangeilunda' },
+  { value: 'KUKUDAKHANDI', label: 'Kukudakhandi' },
+  { value: 'BERHAMPUR_URBAN_I', label: 'Berhampur Urban-I' },
+] as const;
+
+export function normalizeConstituencyBlock(raw: string | null | undefined): string {
+  const v = (raw || '')
+    .toUpperCase()
+    .replace(/[_-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!v) return '';
+  if (v.includes('RANGEILUNDA') || v.includes('RANGAILUNDA')) return 'RANGEILUNDA';
+  if (v.includes('KUKUDAKHANDI')) return 'KUKUDAKHANDI';
+  if (v.includes('BERHAMPUR') && v.includes('URBAN')) return 'BERHAMPUR_URBAN_I';
+  return '';
+}
+
+export function roadOrgBlock(org: Organization): string {
+  return String((org.attributes ?? {}).block ?? '').trim();
+}
+
+export function roadMatchesBlockFilter(org: Organization, filterValue: string): boolean {
+  if (filterValue === 'ALL') return true;
+  return normalizeConstituencyBlock(roadOrgBlock(org)) === filterValue;
+}
+
+export function roadOrgGpWard(org: Organization): string {
+  const attrs = (org.attributes ?? {}) as Record<string, unknown>;
+  return String(attrs.gp_ward ?? attrs.gpward ?? attrs.gp_ward_name ?? '').trim();
+}
+
+export function roadOrgVillage(org: Organization): string {
+  const attrs = (org.attributes ?? {}) as Record<string, unknown>;
+  return String(attrs.village ?? attrs.village_name ?? '').trim();
+}
+
+/** Case-insensitive key for location / type filter dedupe and matching. */
+export function normalizeRoadLocationKey(raw: string | null | undefined): string {
+  return String(raw ?? '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toUpperCase();
+}
+
+function canonicalRoadLocationLabel(variants: string[]): string {
+  const trimmed = variants.map((v) => v.trim()).filter(Boolean);
+  if (!trimmed.length) return '';
+  const mixed = trimmed.find((v) => v !== v.toUpperCase());
+  if (mixed) return mixed;
+  return trimmed[0]
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function buildDedupedRoadFilterOptions(rawValues: string[]): { value: string; label: string }[] {
+  const groups = new Map<string, string[]>();
+  for (const raw of rawValues) {
+    const t = raw.trim();
+    if (!t) continue;
+    const key = normalizeRoadLocationKey(t);
+    const list = groups.get(key) ?? [];
+    list.push(t);
+    groups.set(key, list);
+  }
+  return [...groups.entries()]
+    .map(([key, variants]) => ({
+      value: key,
+      label: canonicalRoadLocationLabel(variants),
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+}
+
+export function roadMatchesLocationFilter(
+  raw: string,
+  filterValue: string,
+): boolean {
+  if (filterValue === 'ALL') return true;
+  const t = raw.trim();
+  if (!t) return false;
+  return normalizeRoadLocationKey(t) === filterValue;
+}

@@ -25,6 +25,14 @@ import {
   getDrainLineKindFromOrg,
   getDrainTableColumnValue,
 } from '../../lib/drainageOrganization';
+import {
+  buildDedupedRoadFilterOptions,
+  roadMatchesBlockFilter,
+  roadMatchesLocationFilter,
+  ROADS_CONSTITUENCY_BLOCKS,
+  roadOrgGpWard,
+  roadOrgVillage,
+} from '../../lib/roadsOrganization';
 
 type Props = {
   department: Department;
@@ -119,6 +127,10 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const topOrganizations = [...organizations].sort((a, b) => a.name.localeCompare(b.name));
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [roadTypeFilter, setRoadTypeFilter] = useState('ALL');
+  const [roadBlockFilter, setRoadBlockFilter] = useState('ALL');
+  const [roadGpFilter, setRoadGpFilter] = useState('ALL');
+  const [roadVillageFilter, setRoadVillageFilter] = useState('ALL');
   const [sortKey, setSortKey] = useState<'name' | 'category' | 'address'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -136,6 +148,38 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       ),
     ).sort((a, b) => a.localeCompare(b));
   }, [topOrganizations, department.code, isDrainageDept]);
+
+  const roadsScopedForGpOptions = useMemo(() => {
+    if (!isRoadsDept) return [];
+    return topOrganizations.filter((org) => roadMatchesBlockFilter(org, roadBlockFilter));
+  }, [isRoadsDept, topOrganizations, roadBlockFilter]);
+
+  const roadsScopedForVillageOptions = useMemo(() => {
+    if (!isRoadsDept) return [];
+    return roadsScopedForGpOptions.filter((org) => roadMatchesLocationFilter(roadOrgGpWard(org), roadGpFilter));
+  }, [isRoadsDept, roadsScopedForGpOptions, roadGpFilter]);
+
+  const roadTypeOptions = useMemo(() => {
+    if (!isRoadsDept) return [];
+    return buildDedupedRoadFilterOptions(
+      topOrganizations.map((o) => organizationListingCategory(o, department.code)),
+    );
+  }, [isRoadsDept, topOrganizations, department.code]);
+
+  const roadBlockOptions = useMemo(() => {
+    if (!isRoadsDept) return [];
+    return ROADS_CONSTITUENCY_BLOCKS.map((b) => ({ value: b.value, label: b.label }));
+  }, [isRoadsDept]);
+
+  const roadGpOptions = useMemo(() => {
+    if (!isRoadsDept) return [];
+    return buildDedupedRoadFilterOptions(roadsScopedForGpOptions.map(roadOrgGpWard));
+  }, [isRoadsDept, roadsScopedForGpOptions]);
+
+  const roadVillageOptions = useMemo(() => {
+    if (!isRoadsDept) return [];
+    return buildDedupedRoadFilterOptions(roadsScopedForVillageOptions.map(roadOrgVillage));
+  }, [isRoadsDept, roadsScopedForVillageOptions]);
 
   const filteredOrganizations = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -181,9 +225,29 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       const matchesCategory =
         categoryFilter === 'ALL' ||
         (isDrainageDept ? drainKind === categoryFilter : categoryLabel === categoryFilter);
-      return matchesSearch && matchesCategory;
+
+      const matchesRoadFilters =
+        !isRoadsDept ||
+        (roadMatchesLocationFilter(categoryLabel, roadTypeFilter) &&
+          roadMatchesBlockFilter(org, roadBlockFilter) &&
+          roadMatchesLocationFilter(roadOrgGpWard(org), roadGpFilter) &&
+          roadMatchesLocationFilter(roadOrgVillage(org), roadVillageFilter));
+
+      return matchesSearch && matchesCategory && matchesRoadFilters;
     });
-  }, [topOrganizations, searchTerm, categoryFilter, isRoadsDept, isArcsDept, isDrainageDept, department.code]);
+  }, [
+    topOrganizations,
+    searchTerm,
+    categoryFilter,
+    isRoadsDept,
+    isArcsDept,
+    isDrainageDept,
+    department.code,
+    roadTypeFilter,
+    roadBlockFilter,
+    roadGpFilter,
+    roadVillageFilter,
+  ]);
 
   const sortedOrganizations = useMemo(() => {
     const rows = [...filteredOrganizations];
@@ -268,50 +332,145 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           <h2 className="text-xl font-bold sm:text-2xl">
             {isRoadsDept ? trStatic('Road Listing', 'ରୋଡ୍ ତାଲିକା') : tr('dept.summary.section.organizationListing')}
           </h2>
-          <div className="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 md:grid-cols-3">
-            <input
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder={tr('dept.summary.search.placeholder')}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
-            />
-            <select
-              value={categoryFilter}
-              onChange={(e) => {
-                setCategoryFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              aria-label={
-                isArcsDept
-                  ? tr('dept.summary.table.jurisdictionType')
-                  : isDrainageDept
-                    ? tr('dept.summary.drainage.allDrainTypes')
-                    : tr('dept.summary.search.allCategories')
-              }
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-            >
-              <option value="ALL">
-                {isArcsDept
-                  ? tr('dept.summary.search.allJurisdictionTypes')
-                  : isDrainageDept
-                    ? tr('dept.summary.drainage.allDrainTypes')
-                    : tr('dept.summary.search.allCategories')}
-              </option>
-              {categoryOptions.map((opt) => (
-                <option key={`cat-${opt}`} value={opt}>
-                  {isDrainageDept
-                    ? (() => {
-                      const key = drainageTypeMessageKey(opt);
-                      return key ? tr(key) : opt;
-                    })()
-                    : opt}
+          {isRoadsDept ? (
+            <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+              <input
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder={trStatic(
+                  'Search road name, block, GP, village…',
+                  'ରୋଡ୍ ନାମ, ବ୍ଲକ୍, ଜିପି, ଗ୍ରାମ ଖୋଜନ୍ତୁ…',
+                )}
+                aria-label={trStatic('Search roads', 'ରୋଡ୍ ଖୋଜନ୍ତୁ')}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+                  {trStatic('Road type', 'ରୋଡ୍ ପ୍ରକାର')}
+                  <select
+                    value={roadTypeFilter}
+                    onChange={(e) => {
+                      setRoadTypeFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+                  >
+                    <option value="ALL">{trStatic('All road types', 'ସମସ୍ତ ରୋଡ୍ ପ୍ରକାର')}</option>
+                    {roadTypeOptions.map((opt) => (
+                      <option key={`road-type-${opt.value}`} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+                  {trStatic('Block', 'ବ୍ଲକ୍')}
+                  <select
+                    value={roadBlockFilter}
+                    onChange={(e) => {
+                      setRoadBlockFilter(e.target.value);
+                      setRoadGpFilter('ALL');
+                      setRoadVillageFilter('ALL');
+                      setCurrentPage(1);
+                    }}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+                  >
+                    <option value="ALL">{trStatic('All blocks', 'ସମସ୍ତ ବ୍ଲକ୍')}</option>
+                    {roadBlockOptions.map((opt) => (
+                      <option key={`road-block-${opt.value}`} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+                  {trStatic('GP/Ward', 'ଜିପି/ୱାର୍ଡ')}
+                  <select
+                    value={roadGpFilter}
+                    onChange={(e) => {
+                      setRoadGpFilter(e.target.value);
+                      setRoadVillageFilter('ALL');
+                      setCurrentPage(1);
+                    }}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+                  >
+                    <option value="ALL">{trStatic('All GP/Ward', 'ସମସ୍ତ ଜିପି/ୱାର୍ଡ')}</option>
+                    {roadGpOptions.map((opt) => (
+                      <option key={`road-gp-${opt.value}`} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+                  {trStatic('Village', 'ଗ୍ରାମ')}
+                  <select
+                    value={roadVillageFilter}
+                    onChange={(e) => {
+                      setRoadVillageFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+                  >
+                    <option value="ALL">{trStatic('All villages', 'ସମସ୍ତ ଗ୍ରାମ')}</option>
+                    {roadVillageOptions.map((opt) => (
+                      <option key={`road-village-${opt.value}`} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 md:grid-cols-3">
+              <input
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder={tr('dept.summary.search.placeholder')}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              />
+              <select
+                value={categoryFilter}
+                onChange={(e) => {
+                  setCategoryFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                aria-label={
+                  isArcsDept
+                    ? tr('dept.summary.table.jurisdictionType')
+                    : isDrainageDept
+                      ? tr('dept.summary.drainage.allDrainTypes')
+                      : tr('dept.summary.search.allCategories')
+                }
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="ALL">
+                  {isArcsDept
+                    ? tr('dept.summary.search.allJurisdictionTypes')
+                    : isDrainageDept
+                      ? tr('dept.summary.drainage.allDrainTypes')
+                      : tr('dept.summary.search.allCategories')}
                 </option>
-              ))}
-            </select>
-          </div>
+                {categoryOptions.map((opt) => (
+                  <option key={`cat-${opt}`} value={opt}>
+                    {isDrainageDept
+                      ? (() => {
+                        const key = drainageTypeMessageKey(opt);
+                        return key ? tr(key) : opt;
+                      })()
+                      : opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="mt-4 overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">

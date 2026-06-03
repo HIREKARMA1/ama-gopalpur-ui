@@ -73,6 +73,12 @@ import {
   emptyAwcProfileExtras,
   extrasToPartialProfile,
 } from '../../../components/admin/AwcPortfolioAdminForm';
+import {
+  isEducationSchoolSubDept,
+  isDegreeCollegeLike,
+  isEngineeringPortfolioSubDept,
+  type EducationSchoolSubDept,
+} from '../../../lib/educationSubDepartments';
 
 /** ICDS minister CSV: all attributes for AWC profile (no SL NO; use system-generated org id). */
 const ICDS_CSV_HEADER =
@@ -292,6 +298,7 @@ const getEducationHeadersForSubDept = (subDept: string): string[] => {
     case 'UNIVERSITY':
       return splitHeader(EDUCATION_UNIVERSITY_CSV_HEADER);
     case 'DEGREE_COLLEGE':
+    case 'SSS':
       return splitHeader(EDUCATION_DEGREE_CSV_HEADER);
     default:
       return [];
@@ -301,28 +308,17 @@ const getEducationHeadersForSubDept = (subDept: string): string[] => {
 /** Table filter + grid: skip CSV columns that duplicate the first org-name column. */
 const getEducationTableHeadersForSubDept = (subDept: string): string[] => {
   const headers = getEducationHeadersForSubDept(subDept);
-  if (subDept === 'DEGREE_COLLEGE') {
+  if (isDegreeCollegeLike(subDept)) {
     return headers.filter((h) => h !== 'COLLEGE NAME');
   }
   return headers;
 };
-
-const EDUCATION_SCHOOL_SUB_DEPTS = [
-  'PS',
-  'UPS',
-  'HS',
-  'HSS',
-  'SSS',
-  // 'OTHER', // temporarily disabled by request
-] as const;
-type EducationSchoolSubDept = (typeof EDUCATION_SCHOOL_SUB_DEPTS)[number];
 
 const SCHOOL_SUB_DEPT_TO_ORG_TYPE: Record<EducationSchoolSubDept, string> = {
   PS: 'PRIMARY_SCHOOL',
   UPS: 'UPPER_PRIMARY_SCHOOL',
   HS: 'HIGH_SCHOOL',
   HSS: 'HIGHER_SECONDARY',
-  SSS: 'SENIOR_SECONDARY',
 };
 
 const SCHOOL_CLASS_FIELDS_BY_SUB_DEPT: Record<EducationSchoolSubDept, string[]> = {
@@ -330,7 +326,6 @@ const SCHOOL_CLASS_FIELDS_BY_SUB_DEPT: Record<EducationSchoolSubDept, string[]> 
   UPS: ['class_vi', 'class_vii', 'class_viii'],
   HS: ['class_viii', 'class_ix', 'class_x'],
   HSS: ['class_xi', 'class_xii'],
-  SSS: ['class_xi', 'class_xii'],
 };
 
 const SCHOOL_CLASS_LABELS: Record<string, string> = {
@@ -358,10 +353,6 @@ function educationSchoolCsvHeader(subDept: string): string {
     .map((k) => SCHOOL_CLASS_LABELS[k])
     .join(',');
   return `${EDUCATION_CSV_COMMON_PREFIX},${classHeaders},${EDUCATION_CSV_COMMON_SUFFIX}\n`;
-}
-
-function isEducationSchoolSubDept(value: string): value is EducationSchoolSubDept {
-  return (EDUCATION_SCHOOL_SUB_DEPTS as readonly string[]).includes(value);
 }
 
 /** ICDS AWC org table — labels match thead / row cells in this page. */
@@ -750,7 +741,7 @@ export default function DepartmentAdminPage() {
       ];
     }
     return [
-      educationSubDept === 'DEGREE_COLLEGE' ? 'College Name' : 'Institution Name',
+      isDegreeCollegeLike(educationSubDept) ? 'College Name' : 'Institution Name',
       ...getEducationTableHeadersForSubDept(educationSubDept),
     ];
   }, [deptCode, educationSubDept]);
@@ -1481,6 +1472,8 @@ export default function DepartmentAdminPage() {
           result = await educationApi.bulkUniversitiesCsv(file);
         } else if (educationSubDept === 'DEGREE_COLLEGE') {
           result = await educationApi.bulkDegreeCollegesCsv(file);
+        } else if (educationSubDept === 'SSS') {
+          result = await educationApi.bulkSssCsv(file);
         } else if (educationSubDept === 'DIPLOMA_COLLEGE') {
           result = await educationApi.bulkDiplomaCollegesCsv(file);
         } else {
@@ -1815,15 +1808,20 @@ export default function DepartmentAdminPage() {
       } else if (educationSubDept === 'ITI') {
         csvContent = EDUCATION_ITI_CSV_HEADER;
         filename = 'education_iti_colleges_template.csv';
-      } else if (educationSubDept === 'UNIVERSITY' || educationSubDept === 'DEGREE_COLLEGE') {
+      } else if (
+        educationSubDept === 'UNIVERSITY' ||
+        isDegreeCollegeLike(educationSubDept)
+      ) {
         csvContent =
-          educationSubDept === 'DEGREE_COLLEGE'
+          isDegreeCollegeLike(educationSubDept)
             ? EDUCATION_DEGREE_CSV_HEADER
             : EDUCATION_UNIVERSITY_CSV_HEADER;
         filename =
           educationSubDept === 'UNIVERSITY'
             ? 'education_universities_template.csv'
-            : 'education_degree_colleges_template.csv';
+            : educationSubDept === 'SSS'
+              ? 'education_sss_template.csv'
+              : 'education_degree_colleges_template.csv';
       } else if (educationSubDept === 'DIPLOMA_COLLEGE') {
         csvContent = EDUCATION_DIPLOMA_CSV_HEADER;
         filename = 'education_diploma_colleges_template.csv';
@@ -3564,7 +3562,9 @@ export default function DepartmentAdminPage() {
                           ? 'University'
                           : educationSubDept === 'DEGREE_COLLEGE'
                             ? 'Degree College'
-                            : 'Education'}{' '}
+                            : educationSubDept === 'SSS'
+                              ? 'SSS'
+                              : 'Education'}{' '}
                   entry
                 </h2>
                 <p className="mt-1 text-xs text-text-muted">
@@ -3586,7 +3586,7 @@ export default function DepartmentAdminPage() {
                           ? 'ITI NAME'
                           : educationSubDept === 'DIPLOMA_COLLEGE'
                             ? 'COLLEGE NAME'
-                            : educationSubDept === 'DEGREE_COLLEGE'
+                            : isDegreeCollegeLike(educationSubDept)
                               ? 'COLLEGE NAME'
                             : educationSubDept === 'UNIVERSITY'
                               ? 'UNIVERSITY NAME'
@@ -3664,7 +3664,7 @@ export default function DepartmentAdminPage() {
                           profileData[key] = val;
                         }
                       });
-                      if (['ENGINEERING_COLLEGE', 'UNIVERSITY', 'DEGREE_COLLEGE', 'ITI'].includes(educationSubDept)) {
+                      if (isEngineeringPortfolioSubDept(educationSubDept)) {
                         const extraKeys = [
                           'hero_primary_tagline_en',
                           'hero_slide_1',
@@ -3683,7 +3683,7 @@ export default function DepartmentAdminPage() {
                           'vision_text_en',
                           'mission_text_en',
                           'name_of_deans_pic_fic_oic_registrar',
-                          ...(educationSubDept === 'DEGREE_COLLEGE' ? [] : (['placement_cell'] as const)),
+                          ...(isDegreeCollegeLike(educationSubDept) ? [] : (['placement_cell'] as const)),
                           'placement_officer_name',
                           'placement_officer_contact',
                           'placement_officer_email',
@@ -3714,7 +3714,7 @@ export default function DepartmentAdminPage() {
                           const v = eduFormValues[k];
                           if (v != null && String(v).trim() !== '') profileData[k] = v;
                         });
-                        if (educationSubDept === 'UNIVERSITY' || educationSubDept === 'DEGREE_COLLEGE') {
+                        if (educationSubDept === 'UNIVERSITY' || isDegreeCollegeLike(educationSubDept)) {
                           const leadName = String(eduFormValues.name_of_hm || '').trim();
                           if (leadName) profileData.principal_name = leadName;
                           const leadContact = String(eduFormValues.headmaster_contact || '').trim();
@@ -3724,7 +3724,7 @@ export default function DepartmentAdminPage() {
                           const leadPhoto = String(eduFormValues.headmaster_photo || '').trim();
                           if (leadPhoto) profileData.principal_photo = leadPhoto;
                         }
-                        if (educationSubDept === 'DEGREE_COLLEGE') {
+                        if (isDegreeCollegeLike(educationSubDept)) {
                           const displayCollege = String(
                             eduFormValues.name_of_college || eduFormValues[snakeFromHeader('COLLEGE NAME')] || '',
                           ).trim();
@@ -3766,7 +3766,7 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  {['ENGINEERING_COLLEGE', 'UNIVERSITY', 'DEGREE_COLLEGE', 'ITI'].includes(educationSubDept) ? (
+                  {isEngineeringPortfolioSubDept(educationSubDept) ? (
                     <EducationEngineeringPortfolioAdminForm
                       organizationId={editingEducationId}
                       values={eduFormValues}
@@ -3774,7 +3774,7 @@ export default function DepartmentAdminPage() {
                       institutionLabel={
                         educationSubDept === 'UNIVERSITY'
                           ? 'University'
-                          : educationSubDept === 'DEGREE_COLLEGE'
+                          : isDegreeCollegeLike(educationSubDept)
                             ? 'College'
                             : educationSubDept === 'ITI'
                               ? 'ITI'
@@ -3782,7 +3782,7 @@ export default function DepartmentAdminPage() {
                       }
                       headRoleLabel={educationSubDept === 'UNIVERSITY' ? 'Vice Chancellor' : 'Principal'}
                       isIti={educationSubDept === 'ITI'}
-                      hidePlacementSection={educationSubDept === 'DEGREE_COLLEGE'}
+                      hidePlacementSection={isDegreeCollegeLike(educationSubDept)}
                       profileImageControl={
                         <div className="space-y-1">
                           <label className="block text-text font-medium">Profile Image</label>
@@ -4738,7 +4738,7 @@ export default function DepartmentAdminPage() {
                           deptCode === 'EDUCATION'
                             ? isEducationSchoolSubDept(educationSubDept)
                               ? 'School Name'
-                              : educationSubDept === 'DEGREE_COLLEGE'
+                              : isDegreeCollegeLike(educationSubDept)
                                 ? 'College Name'
                                 : 'Institution Name'
                             : deptCode === 'HEALTH'
@@ -6082,7 +6082,7 @@ export default function DepartmentAdminPage() {
                                       const key = snakeFromHeader(h);
                                       values[key] = v(p?.[key] ?? o.attributes?.[key]);
                                     });
-                                    if (['ENGINEERING_COLLEGE', 'UNIVERSITY', 'DEGREE_COLLEGE', 'ITI'].includes(educationSubDept)) {
+                                    if (isEngineeringPortfolioSubDept(educationSubDept)) {
                                       values.hero_primary_tagline_en = v(p?.hero_primary_tagline_en);
                                       values.hero_slide_1 = v(p?.hero_slide_1);
                                       values.hero_slide_2 = v(p?.hero_slide_2);
@@ -6100,7 +6100,7 @@ export default function DepartmentAdminPage() {
                                       values.vision_text_en = v(p?.vision_text_en);
                                       values.mission_text_en = v(p?.mission_text_en);
                                       values.name_of_deans_pic_fic_oic_registrar = v(p?.name_of_deans_pic_fic_oic_registrar);
-                                      if (educationSubDept !== 'DEGREE_COLLEGE') values.placement_cell = v(p?.placement_cell);
+                                      if (!isDegreeCollegeLike(educationSubDept)) values.placement_cell = v(p?.placement_cell);
                                       values.placement_officer_name = v(p?.placement_officer_name);
                                       values.placement_officer_contact = v(p?.placement_officer_contact);
                                       values.placement_officer_email = v(p?.placement_officer_email);
@@ -6140,7 +6140,7 @@ export default function DepartmentAdminPage() {
                                       educationSubDept === 'ENGINEERING_COLLEGE' ? 'NAME OF COLLEGE' :
                                         educationSubDept === 'ITI' ? 'ITI NAME' :
                                           educationSubDept === 'DIPLOMA_COLLEGE' ? 'COLLEGE NAME' :
-                                            educationSubDept === 'DEGREE_COLLEGE' ? 'COLLEGE NAME' :
+                                            isDegreeCollegeLike(educationSubDept) ? 'COLLEGE NAME' :
                                             educationSubDept === 'UNIVERSITY'
                                               ? 'UNIVERSITY NAME'
                                               : '';
@@ -6148,7 +6148,7 @@ export default function DepartmentAdminPage() {
                                       const nameKey = snakeFromHeader(nameHeader);
                                       if (!values[nameKey]) values[nameKey] = o.name;
                                     }
-                                    if (educationSubDept === 'DEGREE_COLLEGE') {
+                                    if (isDegreeCollegeLike(educationSubDept)) {
                                       const collegeKey = snakeFromHeader('COLLEGE NAME');
                                       const uniKey = snakeFromHeader('UNIVERSITY NAME');
                                       if (!String(values[collegeKey] ?? '').trim()) {
@@ -6163,7 +6163,7 @@ export default function DepartmentAdminPage() {
                                       }
                                       values.name_of_college = v(p?.name_of_college) || values[collegeKey] || values.name_of_college || o.name;
                                     }
-                                    if (educationSubDept === 'UNIVERSITY' || educationSubDept === 'DEGREE_COLLEGE') {
+                                    if (educationSubDept === 'UNIVERSITY' || isDegreeCollegeLike(educationSubDept)) {
                                       const adminCards = Array.isArray(p?.engineering_admin_cards)
                                         ? (p.engineering_admin_cards as Record<string, unknown>[])
                                         : [];

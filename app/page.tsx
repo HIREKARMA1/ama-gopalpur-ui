@@ -21,6 +21,7 @@ import {
   Organization,
 } from '../services/api';
 import { orgToDrainFeature } from '../lib/drainageOrganization';
+import { fetchAllOrganizationsForDepartment } from '../lib/departmentSummaryHighlights';
 
 function parsePathCoordinates(raw: string | null | undefined): [number, number][] {
   const s = (raw || '').trim();
@@ -271,15 +272,15 @@ function HomePageContent() {
 
     setLoading(true);
     if (isRoads) {
-      organizationsApi
-        .listByDepartment(dept.id, { limit: 1000 })
+      fetchAllOrganizationsForDepartment(dept.id)
         .then((data) => {
-          const all = data
+          const mapRoads = data
             .map((org) => orgToRoadFeature(org))
             .filter((feature): feature is RoadFeature => feature != null);
-          setRoads(all);
+          setRoads(mapRoads);
           setDrains([]);
-          setOrganizations([]);
+          // Keep full org list for GP road legend counts (summary-only roads have no map line).
+          setOrganizations(data);
           setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: data.length }));
         })
         .finally(() => setLoading(false));
