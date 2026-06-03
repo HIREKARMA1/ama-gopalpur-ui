@@ -1,9 +1,6 @@
 import { useMemo, useState } from 'react';
-import { CiShare1 } from 'react-icons/ci';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import { Info, X } from 'lucide-react';
 import type { Department, Organization } from '../../services/api';
-import { buildOrganizationProfilePath } from '../../lib/organizationRoute';
 import {
   PsAboutSection,
   type Lang,
@@ -13,6 +10,29 @@ import { t, type MessageKey } from '../i18n/messages';
 import { Navbar } from '../layout/Navbar';
 import { DepartmentHighlightsSection } from './DepartmentHighlightsSection';
 import { getDepartmentLabel } from './DepartmentSidebar';
+import {
+  ARCS_SUMMARY_TABLE_COLUMNS,
+  legendHighlightTitle,
+  normalizeLegendParam,
+  organizationListingArcsAttribute,
+  organizationListingCategory,
+  resolveEffectiveHighlightCards,
+} from '../../lib/departmentSummaryHighlights';
+import {
+  DRAINAGE_SUMMARY_TABLE_COLUMNS,
+  drainageSummaryColumnLabel,
+  drainageTypeMessageKey,
+  getDrainLineKindFromOrg,
+  getDrainTableColumnValue,
+} from '../../lib/drainageOrganization';
+import {
+  buildDedupedRoadFilterOptions,
+  roadMatchesBlockFilter,
+  roadMatchesLocationFilter,
+  ROADS_CONSTITUENCY_BLOCKS,
+  roadOrgGpWard,
+  roadOrgVillage,
+} from '../../lib/roadsOrganization';
 
 type Props = {
   department: Department;
@@ -22,7 +42,10 @@ type Props = {
 
 export function DepartmentSummaryPage({ department, organizationCount, organizations }: Props) {
   const { language } = useLanguage();
-  const isRoadsDept = (department.code || '').toUpperCase() === 'ROADS';
+  const deptCode = (department.code || '').toUpperCase();
+  const isRoadsDept = deptCode === 'ROADS';
+  const isArcsDept = deptCode === 'ARCS';
+  const isDrainageDept = deptCode === 'DRAINAGE';
   const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
   const localizedSummaryText = (en?: string | null, od?: string | null) => {
     const enText = (en || '').trim();
@@ -94,80 +117,143 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     office_hours_en: '',
   };
 
-  const legendRows = buildLegendRows(organizations, department.code);
-  const highlightCards = [
-    ...(summary?.highlight_cards ?? [])
-      .map((c) => ({
-        title: (c.title || '').trim(),
-        count: (c.value || '').trim(),
-        legendKey: normalizeLegendParam(c.title || ''),
-      }))
-      .filter((c) => c.title && c.count),
-    ...legendRows.map((row) => ({
-      title: row.label,
-      count: String(row.count),
-      legendKey: normalizeLegendParam(row.rawLabel),
-    })),
-  ];
+  const highlightCards = resolveEffectiveHighlightCards(summary, organizations, department.code).map(
+    (card) => ({
+      title: legendHighlightTitle(card, department.code, language),
+      count: card.value,
+      legendKey: normalizeLegendParam(card.legend_key || card.title),
+    }),
+  );
   const topOrganizations = [...organizations].sort((a, b) => a.name.localeCompare(b.name));
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [roadTypeFilter, setRoadTypeFilter] = useState('ALL');
+  const [roadBlockFilter, setRoadBlockFilter] = useState('ALL');
+  const [roadGpFilter, setRoadGpFilter] = useState('ALL');
+  const [roadVillageFilter, setRoadVillageFilter] = useState('ALL');
   const [sortKey, setSortKey] = useState<'name' | 'category' | 'address'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
-  const [streetViewOrg, setStreetViewOrg] = useState<Organization | null>(null);
-  const [isStreetInfoOpen, setIsStreetInfoOpen] = useState(false);
   const pageSize = 15;
 
-  const categoryOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          topOrganizations
-            .map(
-              (o) =>
-              ((isRoadsDept
-                ? ((o.attributes?.road_sector as string) || '')
-                : '') ||
-                o.sub_department ||
-                  (o.attributes?.category as string) ||
-                  (o.attributes?.institution_type as string) ||
-                  '') as string,
-            )
-            .map((s) => s.trim())
-            .filter(Boolean),
-        ),
-      ).sort((a, b) => a.localeCompare(b)),
-    [topOrganizations, isRoadsDept],
-  );
+  const categoryOptions = useMemo(() => {
+    if (isDrainageDept) {
+      return ['MAIN', 'BRANCH'] as const;
+    }
+    return Array.from(
+      new Set(
+        topOrganizations
+          .map((o) => organizationListingCategory(o, department.code))
+          .filter(Boolean),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+  }, [topOrganizations, department.code, isDrainageDept]);
+
+  const roadsScopedForGpOptions = useMemo(() => {
+    if (!isRoadsDept) return [];
+    return topOrganizations.filter((org) => roadMatchesBlockFilter(org, roadBlockFilter));
+  }, [isRoadsDept, topOrganizations, roadBlockFilter]);
+
+  const roadsScopedForVillageOptions = useMemo(() => {
+    if (!isRoadsDept) return [];
+    return roadsScopedForGpOptions.filter((org) => roadMatchesLocationFilter(roadOrgGpWard(org), roadGpFilter));
+  }, [isRoadsDept, roadsScopedForGpOptions, roadGpFilter]);
+
+  const roadTypeOptions = useMemo(() => {
+    if (!isRoadsDept) return [];
+    return buildDedupedRoadFilterOptions(
+      topOrganizations.map((o) => organizationListingCategory(o, department.code)),
+    );
+  }, [isRoadsDept, topOrganizations, department.code]);
+
+  const roadBlockOptions = useMemo(() => {
+    if (!isRoadsDept) return [];
+    return ROADS_CONSTITUENCY_BLOCKS.map((b) => ({ value: b.value, label: b.label }));
+  }, [isRoadsDept]);
+
+  const roadGpOptions = useMemo(() => {
+    if (!isRoadsDept) return [];
+    return buildDedupedRoadFilterOptions(roadsScopedForGpOptions.map(roadOrgGpWard));
+  }, [isRoadsDept, roadsScopedForGpOptions]);
+
+  const roadVillageOptions = useMemo(() => {
+    if (!isRoadsDept) return [];
+    return buildDedupedRoadFilterOptions(roadsScopedForVillageOptions.map(roadOrgVillage));
+  }, [isRoadsDept, roadsScopedForVillageOptions]);
 
   const filteredOrganizations = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     return topOrganizations.filter((org) => {
-      const categoryLabel = organizationCategory(org);
+      const categoryLabel = organizationListingCategory(org, department.code);
       const address = (org.address || '').toString();
       const attrs = (org.attributes ?? {}) as Record<string, unknown>;
       const roadCode = String(attrs.road_code ?? '').toLowerCase();
       const roadBlock = String(attrs.block ?? '').toLowerCase();
-      const roadRemarks = String(attrs.remarks ?? '').toLowerCase();
+      const roadGpWard = String(attrs.gp_ward ?? attrs.gpward ?? attrs.gp_ward_name ?? '').toLowerCase();
+      const roadVillage = String(attrs.village ?? attrs.village_name ?? '').toLowerCase();
+      const roadLength = String(attrs.length_km ?? '').toLowerCase();
+
+      const arcsSearchText = isArcsDept
+        ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => organizationListingArcsAttribute(org, col.keys).toLowerCase()).join(' ')
+        : '';
+
+      const drainageSearchText = isDrainageDept
+        ? [
+          org.name,
+          ...DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => getDrainTableColumnValue(org, col)),
+        ]
+          .join(' ')
+          .toLowerCase()
+        : '';
 
       const matchesSearch =
         !q ||
         org.name.toLowerCase().includes(q) ||
         categoryLabel.toLowerCase().includes(q) ||
         address.toLowerCase().includes(q) ||
+        (isArcsDept && arcsSearchText.includes(q)) ||
+        (isDrainageDept && drainageSearchText.includes(q)) ||
         (isRoadsDept &&
-          (roadCode.includes(q) || roadBlock.includes(q) || roadRemarks.includes(q)));
-      const matchesCategory = categoryFilter === 'ALL' || categoryLabel === categoryFilter;
-      return matchesSearch && matchesCategory;
+          (
+            roadCode.includes(q) ||
+            roadBlock.includes(q) ||
+            roadGpWard.includes(q) ||
+            roadVillage.includes(q) ||
+            roadLength.includes(q)
+          ));
+      const drainKind = isDrainageDept ? getDrainLineKindFromOrg(org) : '';
+      const matchesCategory =
+        categoryFilter === 'ALL' ||
+        (isDrainageDept ? drainKind === categoryFilter : categoryLabel === categoryFilter);
+
+      const matchesRoadFilters =
+        !isRoadsDept ||
+        (roadMatchesLocationFilter(categoryLabel, roadTypeFilter) &&
+          roadMatchesBlockFilter(org, roadBlockFilter) &&
+          roadMatchesLocationFilter(roadOrgGpWard(org), roadGpFilter) &&
+          roadMatchesLocationFilter(roadOrgVillage(org), roadVillageFilter));
+
+      return matchesSearch && matchesCategory && matchesRoadFilters;
     });
-  }, [topOrganizations, searchTerm, categoryFilter, isRoadsDept]);
+  }, [
+    topOrganizations,
+    searchTerm,
+    categoryFilter,
+    isRoadsDept,
+    isArcsDept,
+    isDrainageDept,
+    department.code,
+    roadTypeFilter,
+    roadBlockFilter,
+    roadGpFilter,
+    roadVillageFilter,
+  ]);
 
   const sortedOrganizations = useMemo(() => {
     const rows = [...filteredOrganizations];
     rows.sort((a, b) => {
-      const aCategory = organizationCategory(a);
-      const bCategory = organizationCategory(b);
+      const aCategory = organizationListingCategory(a, department.code);
+      const bCategory = organizationListingCategory(b, department.code);
       const aAddress = (a.address || '') as string;
       const bAddress = (b.address || '') as string;
       const factor = sortDir === 'asc' ? 1 : -1;
@@ -177,7 +263,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       return aAddress.localeCompare(bAddress) * factor;
     });
     return rows;
-  }, [filteredOrganizations, sortKey, sortDir]);
+  }, [filteredOrganizations, sortKey, sortDir, department.code]);
 
   const totalPages = Math.max(1, Math.ceil(sortedOrganizations.length / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -200,83 +286,6 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     overviewText ||
     '—',
   );
-  const streetViewPosition = useMemo(() => {
-    if (!streetViewOrg) return null as { lat: number; lng: number } | null;
-    return roadStreetViewPosition(streetViewOrg);
-  }, [streetViewOrg]);
-  const streetViewEmbedUrl = useMemo(() => {
-    if (!streetViewPosition) return '';
-    const { lat, lng } = streetViewPosition;
-    return `https://www.google.com/maps?q=&layer=c&cbll=${lat},${lng}&cbp=11,0,0,0,0&output=svembed`;
-  }, [streetViewPosition]);
-  const selectedRoadStreetInfo = useMemo(() => {
-    if (!streetViewOrg) return null as null | {
-      name: string;
-      code: string;
-      block: string;
-      sector: string;
-      year: string;
-      pointA: string;
-      pointB: string;
-      lengthKm: string;
-      type: string;
-      nameOfDivision: string;
-      scheme: string;
-      lastMaintenanceDate: string;
-      issues: string;
-      remarks: string;
-    };
-    const attrs = (streetViewOrg.attributes ?? {}) as Record<string, unknown>;
-    const path = parseRoadPathCoordinates(attrs.path_coordinates);
-    const name = streetViewOrg.name || 'Road';
-    const code = String(attrs.road_code ?? '').trim();
-    const block = String(attrs.block ?? '').trim();
-    const type = String(attrs.road_sector ?? '').trim();
-    const nameOfDivision = String(attrs.name_of_division ?? '').trim();
-    const scheme = String(attrs.scheme ?? '').trim();
-    const yearRaw = Number(attrs.year_of_construction);
-    const year = Number.isFinite(yearRaw) ? String(yearRaw) : '';
-    const pointAName = String(attrs.point_a_name ?? '').trim();
-    const pointBName = String(attrs.point_b_name ?? '').trim();
-    const inferredPair = (() => {
-      const match = name.match(/^\s*(.+?)\s+to\s+(.+?)\s*$/i);
-      if (!match) return null;
-      return { a: match[1].trim(), b: match[2].trim() };
-    })();
-    const start = path[0];
-    const end = path.length ? path[path.length - 1] : undefined;
-    const pointA =
-      pointAName ||
-      inferredPair?.a ||
-      (start ? `${start[1].toFixed(5)}, ${start[0].toFixed(5)}` : 'Requested from Road Dept');
-    const pointB =
-      pointBName ||
-      inferredPair?.b ||
-      (end ? `${end[1].toFixed(5)}, ${end[0].toFixed(5)}` : 'Requested from Road Dept');
-    const providedLength = Number(attrs.length_km);
-    const computedLength =
-      path.length > 1 ? pathLengthKm(path) : null;
-    const lengthKm = Number.isFinite(providedLength)
-      ? providedLength
-      : computedLength;
-    return {
-      name,
-      code,
-      block,
-      sector: type,
-      year,
-      pointA,
-      pointB,
-      lengthKm: lengthKm != null ? lengthKm.toFixed(2) : 'N/A',
-      type,
-      nameOfDivision,
-      scheme,
-      lastMaintenanceDate: String(attrs.last_maintenance_date ?? '').trim(),
-      issues: String(attrs.issues ?? '').trim(),
-      remarks: String(attrs.remarks ?? '').trim(),
-    };
-  }, [streetViewOrg]);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 via-slate-50 to-white text-slate-800">
       <Navbar />
@@ -313,40 +322,155 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         <DepartmentHighlightsSection
           sectionTitle={tr('dept.summary.section.highlights')}
           emptyText={tr('dept.summary.empty.highlights')}
-          infoText={trStatic('Click any node to view matching organizations.', 'ଯେକୌଣସି ନୋଡ୍‌କୁ ଦବାନ୍ତୁ ଏବଂ ସମ୍ବନ୍ଧିତ ସଂଗଠନ ଦେଖନ୍ତୁ।')}
+          infoText={tr('dept.summary.highlights.clickHint')}
           departmentName={localizedDepartmentName}
           departmentCode={department.code || ''}
           highlightCards={highlightCards}
         />
 
         <section>
-          <h2 className="text-xl font-bold sm:text-2xl">{tr('dept.summary.section.organizationListing')}</h2>
-          <div className="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 md:grid-cols-3">
-            <input
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder={tr('dept.summary.search.placeholder')}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
-            />
-            <select
-              value={categoryFilter}
-              onChange={(e) => {
-                setCategoryFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-            >
-              <option value="ALL">{tr('dept.summary.search.allCategories')}</option>
-              {categoryOptions.map((opt) => (
-                <option key={`cat-${opt}`} value={opt}>
-                  {opt}
+          <h2 className="text-xl font-bold sm:text-2xl">
+            {isRoadsDept ? trStatic('Road Listing', 'ରୋଡ୍ ତାଲିକା') : tr('dept.summary.section.organizationListing')}
+          </h2>
+          {isRoadsDept ? (
+            <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+              <input
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder={trStatic(
+                  'Search road name, block, GP, village…',
+                  'ରୋଡ୍ ନାମ, ବ୍ଲକ୍, ଜିପି, ଗ୍ରାମ ଖୋଜନ୍ତୁ…',
+                )}
+                aria-label={trStatic('Search roads', 'ରୋଡ୍ ଖୋଜନ୍ତୁ')}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+                  {trStatic('Road type', 'ରୋଡ୍ ପ୍ରକାର')}
+                  <select
+                    value={roadTypeFilter}
+                    onChange={(e) => {
+                      setRoadTypeFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+                  >
+                    <option value="ALL">{trStatic('All road types', 'ସମସ୍ତ ରୋଡ୍ ପ୍ରକାର')}</option>
+                    {roadTypeOptions.map((opt) => (
+                      <option key={`road-type-${opt.value}`} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+                  {trStatic('Block', 'ବ୍ଲକ୍')}
+                  <select
+                    value={roadBlockFilter}
+                    onChange={(e) => {
+                      setRoadBlockFilter(e.target.value);
+                      setRoadGpFilter('ALL');
+                      setRoadVillageFilter('ALL');
+                      setCurrentPage(1);
+                    }}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+                  >
+                    <option value="ALL">{trStatic('All blocks', 'ସମସ୍ତ ବ୍ଲକ୍')}</option>
+                    {roadBlockOptions.map((opt) => (
+                      <option key={`road-block-${opt.value}`} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+                  {trStatic('GP/Ward', 'ଜିପି/ୱାର୍ଡ')}
+                  <select
+                    value={roadGpFilter}
+                    onChange={(e) => {
+                      setRoadGpFilter(e.target.value);
+                      setRoadVillageFilter('ALL');
+                      setCurrentPage(1);
+                    }}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+                  >
+                    <option value="ALL">{trStatic('All GP/Ward', 'ସମସ୍ତ ଜିପି/ୱାର୍ଡ')}</option>
+                    {roadGpOptions.map((opt) => (
+                      <option key={`road-gp-${opt.value}`} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+                  {trStatic('Village', 'ଗ୍ରାମ')}
+                  <select
+                    value={roadVillageFilter}
+                    onChange={(e) => {
+                      setRoadVillageFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+                  >
+                    <option value="ALL">{trStatic('All villages', 'ସମସ୍ତ ଗ୍ରାମ')}</option>
+                    {roadVillageOptions.map((opt) => (
+                      <option key={`road-village-${opt.value}`} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 md:grid-cols-3">
+              <input
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder={tr('dept.summary.search.placeholder')}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              />
+              <select
+                value={categoryFilter}
+                onChange={(e) => {
+                  setCategoryFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                aria-label={
+                  isArcsDept
+                    ? tr('dept.summary.table.jurisdictionType')
+                    : isDrainageDept
+                      ? tr('dept.summary.drainage.allDrainTypes')
+                      : tr('dept.summary.search.allCategories')
+                }
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="ALL">
+                  {isArcsDept
+                    ? tr('dept.summary.search.allJurisdictionTypes')
+                    : isDrainageDept
+                      ? tr('dept.summary.drainage.allDrainTypes')
+                      : tr('dept.summary.search.allCategories')}
                 </option>
-              ))}
-            </select>
-          </div>
+                {categoryOptions.map((opt) => (
+                  <option key={`cat-${opt}`} value={opt}>
+                    {isDrainageDept
+                      ? (() => {
+                        const key = drainageTypeMessageKey(opt);
+                        return key ? tr(key) : opt;
+                      })()
+                      : opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="mt-4 overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
@@ -357,36 +481,63 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     </th>
                     <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
                       <button type="button" onClick={() => onSort('name')} className="inline-flex items-center gap-1 hover:text-slate-700">
-                        {tr('dept.summary.table.organization')} <SortIcon active={sortKey === 'name'} direction={sortDir} />
+                        {isRoadsDept ? trStatic('Road', 'ରୋଡ୍') : tr('dept.summary.table.organization')} <SortIcon active={sortKey === 'name'} direction={sortDir} />
                       </button>
                     </th>
                     <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
                       <button type="button" onClick={() => onSort('category')} className="inline-flex items-center gap-1 hover:text-slate-700">
-                        {tr('dept.summary.table.subDepartmentCategory')} <SortIcon active={sortKey === 'category'} direction={sortDir} />
+                        {isArcsDept
+                          ? tr('dept.summary.table.jurisdictionType')
+                          : isDrainageDept
+                            ? tr('dept.summary.drainage.drainType')
+                            : isRoadsDept
+                              ? trStatic('Road type', 'ରୋଡ୍ ପ୍ରକାର')
+                              : tr('dept.summary.table.subDepartmentCategory')}{' '}
+                        <SortIcon active={sortKey === 'category'} direction={sortDir} />
                       </button>
                     </th>
-                    <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                      <button type="button" onClick={() => onSort('address')} className="inline-flex items-center gap-1 hover:text-slate-700">
-                        {tr('dept.summary.table.address')} <SortIcon active={sortKey === 'address'} direction={sortDir} />
-                      </button>
-                    </th>
+                    {isArcsDept
+                      ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => (
+                        <th
+                          key={col.id}
+                          className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500"
+                        >
+                          {tr(col.labelKey)}
+                        </th>
+                      ))
+                      : null}
+                    {isDrainageDept
+                      ? DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => (
+                        <th
+                          key={col}
+                          className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500"
+                        >
+                          {drainageSummaryColumnLabel(col, language)}
+                        </th>
+                      ))
+                      : isRoadsDept ? null : (
+                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
+                          <button type="button" onClick={() => onSort('address')} className="inline-flex items-center gap-1 hover:text-slate-700">
+                            {tr('dept.summary.table.address')} <SortIcon active={sortKey === 'address'} direction={sortDir} />
+                          </button>
+                        </th>
+                      )}
                     {isRoadsDept ? (
                       <>
                         <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                          {trStatic('Road code', 'ରୋଡ୍ କୋଡ୍')}
+                          {trStatic('Block', 'ବ୍ଲକ୍')}
                         </th>
                         <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                          {trStatic('Remarks', 'ରିମାର୍କସ୍')}
+                          {trStatic('GP/Ward', 'ଜିପି/ୱାର୍ଡ')}
                         </th>
                         <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                          {trStatic('Street View', 'ସ୍ଟ୍ରିଟ ଭ୍ୟୁ')}
+                          {trStatic('Village', 'ଗ୍ରାମ')}
+                        </th>
+                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
+                          {trStatic('Length (km)', 'ଦୈର୍ଘ୍ୟ (କି.ମି.)')}
                         </th>
                       </>
-                    ) : (
-                      <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                        {tr('dept.summary.table.portfolio')}
-                      </th>
-                    )}
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -398,52 +549,77 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                         </td>
                         <td className="px-4 py-2.5 text-xs font-medium text-slate-800">{org.name}</td>
                         <td className="px-4 py-2.5 text-sm text-slate-600">
-                          {organizationCategory(org) || '—'}
+                          {isDrainageDept
+                            ? (() => {
+                              const kind = getDrainLineKindFromOrg(org);
+                              const key = drainageTypeMessageKey(kind);
+                              return key ? tr(key) : kind || '—';
+                            })()
+                            : organizationListingCategory(org, department.code) || '—'}
                         </td>
-                        <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
-                          <span className="line-clamp-1">{org.address || '—'}</span>
-                        </td>
+                        {isArcsDept
+                          ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => (
+                            <td key={`${org.id}-${col.id}`} className="px-4 py-2.5 text-sm text-slate-600">
+                              {organizationListingArcsAttribute(org, col.keys) || '—'}
+                            </td>
+                          ))
+                          : null}
+                        {isDrainageDept
+                          ? DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => (
+                            <td key={`${org.id}-${col}`} className="px-4 py-2.5 text-sm text-slate-600">
+                              <span className={col === 'Remarks' ? 'line-clamp-2' : ''}>
+                                {getDrainTableColumnValue(org, col) || '—'}
+                              </span>
+                            </td>
+                          ))
+                          : isRoadsDept ? null : (
+                            <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
+                              <span className="line-clamp-1">{org.address || '—'}</span>
+                            </td>
+                          )}
                         {isRoadsDept ? (
                           <>
                             <td className="px-4 py-2.5 text-sm text-slate-600">
-                              {String((org.attributes as Record<string, unknown> | null)?.road_code ?? '—')}
-                            </td>
-                            <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
                               <span className="line-clamp-1">
-                                {String((org.attributes as Record<string, unknown> | null)?.remarks ?? '—')}
+                                {String((org.attributes as Record<string, unknown> | null)?.block ?? '—')}
                               </span>
                             </td>
-                            <td className="px-4 py-2.5 text-slate-700">
-                              <a
-                                href={buildRoadStreetViewPath(org)}
-                                className="inline-flex items-center text-base font-semibold text-slate-500 hover:text-slate-800"
-                                aria-label={`Open street view for ${org.name}`}
-                                title={trStatic('Open street view', 'ସ୍ଟ୍ରିଟ ଭ୍ୟୁ ଖୋଲନ୍ତୁ')}
-                              >
-                                <CiShare1 className="text-lg" />
-                              </a>
+                            <td className="px-4 py-2.5 text-sm text-slate-600">
+                              <span className="line-clamp-1">
+                                {String(
+                                  (org.attributes as Record<string, unknown> | null)?.gp_ward ??
+                                  (org.attributes as Record<string, unknown> | null)?.gpward ??
+                                  (org.attributes as Record<string, unknown> | null)?.gp_ward_name ??
+                                  '—',
+                                )}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-sm text-slate-600">
+                              <span className="line-clamp-1">
+                                {String(
+                                  (org.attributes as Record<string, unknown> | null)?.village ??
+                                  (org.attributes as Record<string, unknown> | null)?.village_name ??
+                                  '—',
+                                )}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-sm text-slate-600">
+                              <span className="line-clamp-1">
+                                {String((org.attributes as Record<string, unknown> | null)?.length_km ?? '—')}
+                              </span>
                             </td>
                           </>
-                        ) : (
-                          <td className="px-4 py-2.5 text-slate-700">
-                            <a
-                              href={buildOrganizationProfilePath(org.id, {
-                                departmentCode: department.code || 'department',
-                                organizationName: org.name,
-                              })}
-                              className="inline-flex items-center text-base font-semibold text-slate-500 hover:text-slate-800"
-                              aria-label={`Open portfolio for ${org.name}`}
-                              title={tr('dept.summary.table.openPortfolio')}
-                            >
-                              <CiShare1 className="text-lg" />
-                            </a>
-                          </td>
-                        )}
+                        ) : null}
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td className="px-4 py-3 text-slate-600" colSpan={isRoadsDept ? 7 : 5}>
+                      <td
+                        className="px-4 py-3 text-slate-600"
+                        colSpan={
+                          isRoadsDept ? 7 : isArcsDept ? 7 : isDrainageDept ? 10 : 4
+                        }
+                      >
                         {tr('dept.summary.empty.organizations')}
                       </td>
                     </tr>
@@ -475,11 +651,10 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     key={`page-${p}`}
                     type="button"
                     onClick={() => setCurrentPage(p)}
-                    className={`h-6 min-w-6 rounded border px-1.5 text-sm ${
-                      p === safeCurrentPage
+                    className={`h-6 min-w-6 rounded border px-1.5 text-sm ${p === safeCurrentPage
                         ? 'border-orange-300 bg-orange-50 text-orange-700'
                         : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     {p}
                   </button>
@@ -497,149 +672,8 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           </div>
         </section>
       </main>
-      {streetViewOrg && streetViewPosition && (
-        <div className="fixed inset-0 z-[2000] bg-black">
-          {selectedRoadStreetInfo && (
-            <button
-              type="button"
-              onClick={() => setIsStreetInfoOpen(true)}
-              className="absolute left-0 top-20 z-[2010] flex h-10 w-10 items-center justify-center rounded-r-md border border-white/20 bg-black/65 text-white transition-colors hover:bg-black/75"
-              aria-label="Open road information"
-              title="Road information"
-            >
-              <Info size={16} strokeWidth={2.4} />
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => {
-              setStreetViewOrg(null);
-              setIsStreetInfoOpen(false);
-            }}
-            className="absolute right-[10px] top-16 z-[2010] flex h-10 w-10 items-center justify-center rounded-sm border border-black/10 bg-[#3a3d40] text-white transition-colors hover:bg-[#2f3133]"
-            aria-label="Close street view"
-            title="Close"
-          >
-            <X size={16} strokeWidth={2.5} />
-          </button>
-          <iframe
-            title={`Street view - ${streetViewOrg.name}`}
-            src={streetViewEmbedUrl}
-            className="h-full w-full border-0"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
-          />
-          {selectedRoadStreetInfo && isStreetInfoOpen && (
-            <div className="absolute left-0 top-20 z-[2020] w-[min(360px,calc(100vw-0.5rem))] max-h-[calc(100vh-7.5rem)] overflow-y-auto rounded-r-md border border-white/15 bg-black/70 p-3 text-white shadow-lg backdrop-blur-sm">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-sm font-semibold">{selectedRoadStreetInfo.name}</h3>
-                <button
-                  type="button"
-                  onClick={() => setIsStreetInfoOpen(false)}
-                  className="flex h-7 w-7 items-center justify-center rounded border border-white/20 bg-white/10 text-white hover:bg-white/20"
-                  aria-label="Close road information"
-                  title="Close"
-                >
-                  <X size={14} strokeWidth={2.5} />
-                </button>
-              </div>
-              <div className="mt-2 space-y-1 text-[11px] leading-4 text-white/90">
-                <p><span className="font-semibold">Starting point:</span> {selectedRoadStreetInfo.pointA}</p>
-                <p><span className="font-semibold">Ending point:</span> {selectedRoadStreetInfo.pointB}</p>
-                <p><span className="font-semibold">Total distance:</span> {selectedRoadStreetInfo.lengthKm} km</p>
-                <p><span className="font-semibold">Type of road:</span> {selectedRoadStreetInfo.type || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Name of division:</span> {selectedRoadStreetInfo.nameOfDivision || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Scheme:</span> {selectedRoadStreetInfo.scheme || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Year of construction:</span> {selectedRoadStreetInfo.year || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Road code:</span> {selectedRoadStreetInfo.code || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Block:</span> {selectedRoadStreetInfo.block || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Last maintenance:</span> {selectedRoadStreetInfo.lastMaintenanceDate || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Issues observed:</span> {selectedRoadStreetInfo.issues || 'Requested from Road Dept'}</p>
-                <p><span className="font-semibold">Remarks:</span> {selectedRoadStreetInfo.remarks || 'Requested from Road Dept'}</p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
-}
-
-function organizationCategory(org: Organization): string {
-  return (
-    (org.attributes?.road_sector as string) ||
-    org.sub_department ||
-    (org.attributes?.category as string) ||
-    (org.attributes?.institution_type as string) ||
-    ''
-  );
-}
-
-function parseRoadPathCoordinates(raw: unknown): Array<[number, number]> {
-  const s = String(raw ?? '').trim();
-  if (!s) return [];
-  try {
-    const parsed = JSON.parse(s);
-    if (Array.isArray(parsed)) {
-      return parsed
-        .filter((pt) => Array.isArray(pt) && pt.length >= 2)
-        .map((pt) => [Number(pt[0]), Number(pt[1])] as [number, number])
-        .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
-    }
-  } catch {
-    // ignore, try legacy formats
-  }
-  return s
-    .split(';')
-    .map((pair) => pair.trim())
-    .filter(Boolean)
-    .map((pair) => {
-      const [lngStr = '', latStr = ''] = pair.split(/\s+/);
-      return [Number(lngStr), Number(latStr)] as [number, number];
-    })
-    .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
-}
-
-function roadStreetViewPosition(org: Organization): { lat: number; lng: number } | null {
-  const attrs = (org.attributes ?? {}) as Record<string, unknown>;
-  const path = parseRoadPathCoordinates(attrs.path_coordinates);
-  const mid = path.length ? path[Math.floor(path.length / 2)] : null;
-  const startLat = Number(attrs.start_lat ?? NaN);
-  const startLng = Number(attrs.start_lng ?? NaN);
-  const endLat = Number(attrs.end_lat ?? NaN);
-  const endLng = Number(attrs.end_lng ?? NaN);
-  const fallback =
-    Number.isFinite(startLat) && Number.isFinite(startLng)
-      ? [startLng, startLat]
-      : Number.isFinite(endLat) && Number.isFinite(endLng)
-        ? [endLng, endLat]
-        : org.latitude != null && org.longitude != null
-          ? [org.longitude, org.latitude]
-          : null;
-  const spot = mid || (fallback as [number, number] | null);
-  if (!spot) return null;
-  const [lng, lat] = spot;
-  return { lat, lng };
-}
-
-function haversineKm(a: [number, number], b: [number, number]): number {
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const [lng1, lat1] = a;
-  const [lng2, lat2] = b;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const rLat1 = toRad(lat1);
-  const rLat2 = toRad(lat2);
-  const h =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(rLat1) * Math.cos(rLat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-}
-
-function pathLengthKm(coords: [number, number][]): number | null {
-  if (coords.length < 2) return null;
-  return coords.slice(1).reduce((sum, c, i) => sum + haversineKm(coords[i], c), 0);
 }
 
 function pageWindow(currentPage: number, totalPages: number): number[] {
@@ -673,69 +707,6 @@ function SortIcon({
   );
 }
 
-function buildLegendRows(organizations: Organization[], departmentCode?: string): { label: string; rawLabel: string; count: number }[] {
-  const code = (departmentCode || '').toUpperCase();
-  const bucket = new Map<string, number>();
-  const add = (label?: string | null) => {
-    const l = (label || '').trim();
-    if (!l) return;
-    bucket.set(l, (bucket.get(l) || 0) + 1);
-  };
-
-  for (const org of organizations) {
-    if (code === 'EDUCATION') {
-      add(org.sub_department || org.type);
-      continue;
-    }
-    if (code === 'HEALTH') {
-      add((org.attributes?.category as string) || org.type);
-      continue;
-    }
-    if (code === 'AGRICULTURE') {
-      add(org.sub_department || (org.attributes?.sub_department as string) || org.type);
-      continue;
-    }
-    if (code === 'ELECTRICITY') {
-      add((org.attributes?.institution_type as string) || org.type);
-      continue;
-    }
-    if (code === 'ARCS') {
-      add((org.attributes?.jurisdiction_type as string) || org.type);
-      continue;
-    }
-    if (code === 'WATCO_RWSS') {
-      add((org.attributes?.station_type as string) || org.type);
-      continue;
-    }
-    if (code === 'ROADS') {
-      add(
-        (org.attributes?.road_sector as string) ||
-          org.sub_department ||
-          (org.attributes?.category as string) ||
-          org.type,
-      );
-      continue;
-    }
-    if (code === 'MINOR_IRRIGATION') {
-      add((org.attributes?.category_type as string) || org.type);
-      continue;
-    }
-    if (code === 'IRRIGATION') {
-      add((org.attributes?.category as string) || org.type);
-      continue;
-    }
-    if (code === 'REVENUE_LAND') {
-      add(org.sub_department || (org.attributes?.land_type as string) || org.type);
-      continue;
-    }
-    add(org.sub_department || org.type);
-  }
-
-  return Array.from(bucket.entries())
-    .map(([label, count]) => ({ label: label.replace(/_/g, ' '), rawLabel: label, count }))
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
-}
-
 function toParagraphs(text: string): string[] {
   return String(text || '')
     .split(/\n\s*\n/g)
@@ -743,26 +714,3 @@ function toParagraphs(text: string): string[] {
     .filter(Boolean);
 }
 
-function normalizeLegendParam(label: string): string {
-  return String(label || '')
-    .trim()
-    .replace(/\s+/g, '_')
-    .toUpperCase();
-}
-
-function buildRoadStreetViewPath(org: Organization): string {
-  const roadName = String(org.name || '').trim();
-  const roadNameSlug = roadName
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .replace(/-{2,}/g, '-');
-  const params = new URLSearchParams();
-  params.set('dept', 'ROADS');
-  params.set('road', String(org.id));
-  if (roadNameSlug) params.set('road_name', roadNameSlug);
-  params.set('sv', '1');
-  return `/?${params.toString()}`;
-}

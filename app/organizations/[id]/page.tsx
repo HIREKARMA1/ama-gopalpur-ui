@@ -36,7 +36,7 @@ import { EducationPortfolioDashboard } from '../../../components/organization/Ed
 import { EducationPsPortfolioWebsite } from '../../../components/organization/EducationPsPortfolioWebsite';
 import { EducationEngineeringPortfolioWebsite } from '../../../components/organization/EducationEngineeringPortfolioWebsite';
 import { HealthPortfolioDashboard } from '../../../components/organization/HealthPortfolioDashboard';
-import { ElectricityPortfolioDashboard } from '../../../components/organization/ElectricityPortfolioDashboard';
+import { ElectricityPortfolioWebsite } from '../../../components/organization/ElectricityPortfolioWebsite';
 import { ArcsPortfolioWebsite } from '../../../components/organization/ArcsPortfolioWebsite';
 import { WaterPortfolioDashboard } from '../../../components/organization/WaterPortfolioDashboard';
 import { RevenueLandPortfolioDashboard } from '../../../components/organization/RevenueLandPortfolioDashboard';
@@ -523,13 +523,14 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
     return (
       <div className="page-container">
         <Navbar />
-        <ElectricityPortfolioDashboard
+        <ElectricityPortfolioWebsite
           org={org}
-          electricityMaster={electricityMaster}
           electricityProfile={electricityProfile}
+          electricityMaster={electricityMaster}
           staff={electricityStaff}
           dailyReports={electricityDaily}
           monthlyReports={electricityMonthly}
+          departmentName={departments.find((d) => d.id === org.department_id)?.name}
           images={images}
         />
       </div>

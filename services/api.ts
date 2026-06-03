@@ -83,6 +83,8 @@ export interface DepartmentSummaryHighlightCard {
   value: string;
   description?: string | null;
   image?: string | null;
+  /** Map legend filter (e.g. MAIN, BRANCH for drainage). */
+  legend_key?: string | null;
 }
 
 export interface DepartmentSummaryContent {
@@ -241,6 +243,16 @@ export const organizationsApi = {
     form.append('file', file);
     form.append('asset_type', assetType);
     return apiFetch<{ url: string }>(`/api/v1/organizations/${id}/health-portfolio-asset`, {
+      method: 'POST',
+      body: form,
+    });
+  },
+  /** Electricity portfolio image; stored under Departments/Electricity/{Org}/electricity-portfolio/{section}/ */
+  uploadElectricityPortfolioAsset: (id: number, file: File, assetType: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('asset_type', assetType);
+    return apiFetch<{ url: string }>(`/api/v1/organizations/${id}/electricity-portfolio-asset`, {
       method: 'POST',
       body: form,
     });
@@ -872,6 +884,25 @@ export const arcsApi = {
     const form = new FormData();
     form.append('file', file);
     return apiFetch<{ imported: number; errors: string[] }>('/api/v1/arcs/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+};
+
+export const drainageApi = {
+  bulkCsv: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/drainage/bulk-csv', {
+      method: 'POST',
+      body: form,
+    });
+  },
+  bulkGeojson: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ imported: number; errors: string[] }>('/api/v1/drainage/bulk-geojson', {
       method: 'POST',
       body: form,
     });

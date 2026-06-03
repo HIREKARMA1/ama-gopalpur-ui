@@ -20,8 +20,8 @@ import {
   Department,
   Organization,
 } from '../services/api';
-
-const DRAINAGE_DATA_PATHS = ['/data/drainage/bahana.json', 'data/drainage/bahana.json'] as const;
+import { orgToDrainFeature } from '../lib/drainageOrganization';
+import { fetchAllOrganizationsForDepartment } from '../lib/departmentSummaryHighlights';
 
 function parsePathCoordinates(raw: string | null | undefined): [number, number][] {
   const s = (raw || '').trim();
@@ -272,45 +272,31 @@ function HomePageContent() {
 
     setLoading(true);
     if (isRoads) {
+      fetchAllOrganizationsForDepartment(dept.id)
+        .then((data) => {
+          const mapRoads = data
+            .map((org) => orgToRoadFeature(org))
+            .filter((feature): feature is RoadFeature => feature != null);
+          setRoads(mapRoads);
+          setDrains([]);
+          // Keep full org list for GP road legend counts (summary-only roads have no map line).
+          setOrganizations(data);
+          setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: data.length }));
+        })
+        .finally(() => setLoading(false));
+    } else if (isDrainage) {
       organizationsApi
         .listByDepartment(dept.id, { limit: 1000 })
         .then((data) => {
           const all = data
-            .map((org) => orgToRoadFeature(org))
-            .filter((feature): feature is RoadFeature => feature != null);
-          setRoads(all);
-          setDrains([]);
+            .map((org) => orgToDrainFeature(org))
+            .filter((feature): feature is DrainFeature => feature != null);
+          setDrains(all);
+          setRoads([]);
           setOrganizations([]);
           setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: all.length }));
         })
         .finally(() => setLoading(false));
-    } else if (isDrainage) {
-      (async () => {
-        let all: DrainFeature[] = [];
-        for (const path of DRAINAGE_DATA_PATHS) {
-          try {
-            const res = await fetch(path);
-            if (!res.ok) {
-              // eslint-disable-next-line no-console
-              console.warn(`Drainage map data not found at ${path}: ${res.status}`);
-              continue;
-            }
-            const fc = await res.json();
-            if (fc?.features?.length) {
-              all = fc.features;
-              break;
-            }
-          } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn(`Failed to load drainage map data from ${path}`, e);
-          }
-        }
-
-        setDrains(all);
-        setRoads([]);
-        setOrganizations([]);
-        setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: all.length }));
-      })().finally(() => setLoading(false));
     } else {
       organizationsApi
         .listByDepartment(dept.id, {
