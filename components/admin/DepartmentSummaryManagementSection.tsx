@@ -10,6 +10,8 @@ import {
 import { DepartmentHighlightsEditor } from './DepartmentHighlightsEditor';
 import { DepartmentMapSummaryEditor } from './DepartmentMapSummaryEditor';
 import { DepartmentSummaryEditor } from './DepartmentSummaryEditor';
+import { RoadsProgressTableEditor } from './RoadsProgressTableEditor';
+import { parseRoadsProgressRows } from '../../lib/roadsProgressTable';
 
 type Props = {
   department: Department;
@@ -41,6 +43,12 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
   const displayCards = useMemo(
     () => resolveEffectiveHighlightCards(department.department_summary, organizations, department.code),
     [department.department_summary, department.code, organizations],
+  );
+
+  const isRoadsDept = (department.code || '').toUpperCase() === 'ROADS';
+  const roadsProgressRows = useMemo(
+    () => parseRoadsProgressRows(department.department_summary),
+    [department.department_summary],
   );
 
   return (
@@ -88,6 +96,18 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
           onDepartmentUpdated(updated);
         }}
       />
+      {isRoadsDept ? (
+        <RoadsProgressTableEditor
+          departmentId={department.id}
+          initialRows={roadsProgressRows}
+          onSave={async ({ roads_progress_rows }) => {
+            const updated = await departmentsApi.updateSummary(department.id, {
+              department_summary: { roads_progress_rows },
+            });
+            onDepartmentUpdated(updated);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
