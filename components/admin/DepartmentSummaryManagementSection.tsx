@@ -10,6 +10,7 @@ import {
 import { DepartmentHighlightsEditor } from './DepartmentHighlightsEditor';
 import { DepartmentMapSummaryEditor } from './DepartmentMapSummaryEditor';
 import { DepartmentSummaryEditor } from './DepartmentSummaryEditor';
+import { DepartmentSummaryMinistersEditor } from './DepartmentSummaryMinistersEditor';
 import { RoadsProgressTableEditor } from './RoadsProgressTableEditor';
 import { parseRoadsProgressRows } from '../../lib/roadsProgressTable';
 
@@ -72,6 +73,18 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
         savingKey="admin.dept.mapSummary.saving"
         savedKey="admin.dept.mapSummary.saved"
         errorKey="admin.dept.mapSummary.error"
+      />
+      <DepartmentSummaryMinistersEditor
+        departmentId={department.id}
+        initialValue={department.department_summary}
+        onUploadPhoto={async (file) => {
+          const res = await departmentsApi.uploadSummaryMinisterImage(department.id, file);
+          return res.url;
+        }}
+        onSave={async (department_summary) => {
+          const updated = await departmentsApi.updateSummary(department.id, { department_summary });
+          onDepartmentUpdated(updated);
+        }}
       />
       <DepartmentSummaryEditor
         departmentId={department.id}
