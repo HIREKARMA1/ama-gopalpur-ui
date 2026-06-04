@@ -62,18 +62,23 @@ export function HighlightsCyclicDiagram({
   // For a single item, show a compact fallback card.
   if (!hasEnough) {
     return (
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {items.map((item, idx) => {
           const pal = PALETTE[idx % PALETTE.length]!;
           return (
             <a
               key={`${item.title}-${idx}`}
               href={makeHref(item)}
-              className="block rounded-xl border p-4 shadow-sm"
+              className="group block rounded-2xl border-2 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               style={{ borderColor: pal.stroke, backgroundColor: pal.fill }}
             >
-              <p className="text-sm font-medium text-slate-600">{item.title}</p>
-              <p className="mt-1 text-3xl font-bold leading-tight text-slate-900">{item.count}</p>
+              <p className="text-sm font-semibold text-slate-600">{item.title}</p>
+              <p className="mt-2 text-3xl font-extrabold tabular-nums leading-tight text-slate-900 group-hover:text-orange-900">
+                {item.count}
+              </p>
+              <p className="mt-3 text-xs font-medium text-slate-500 opacity-0 transition group-hover:opacity-100">
+                View on map →
+              </p>
             </a>
           );
         })}
@@ -128,20 +133,18 @@ export function HighlightsCyclicDiagram({
   const desktopCenterLineHeight = desktopCenterFont + 2;
   const desktopCenterTextStartY = desktopCy - ((desktopCenterLines.length - 1) * desktopCenterLineHeight) / 2;
 
-  return (
-    <div className="px-1">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-slate-700">{centerLabel}</p>
-          <p className="mt-1 text-xs text-slate-500">{infoText}</p>
-        </div>
-      </div>
+  const diagramHeightClass =
+    n <= 3 ? 'h-[300px] sm:h-[340px] md:h-[380px]' : n <= 5 ? 'h-[360px] sm:h-[400px] md:h-[440px]' : 'h-[400px] md:h-[500px]';
 
-      <div className="mt-3">
+  return (
+    <div className="rounded-xl border border-slate-100 bg-gradient-to-b from-slate-50/90 via-white to-slate-50/50 p-3 sm:p-5">
+      <div className={`mx-auto w-full max-w-4xl ${diagramHeightClass}`}>
         <svg
           viewBox={`0 0 ${mobileViewW} ${mobileViewH}`}
           width="100%"
-          className="h-[400px] sm:hidden"
+          height="100%"
+          preserveAspectRatio="xMidYMid meet"
+          className="h-full w-full sm:hidden"
           role="img"
           aria-label="Cyclic department highlights diagram"
         >
@@ -233,7 +236,9 @@ export function HighlightsCyclicDiagram({
         <svg
           viewBox={`0 0 ${desktopViewW} ${desktopViewH}`}
           width="100%"
-          className="hidden h-[430px] sm:block md:h-[500px]"
+          height="100%"
+          preserveAspectRatio="xMidYMid meet"
+          className="hidden h-full w-full sm:block"
           role="img"
           aria-label="Cyclic department highlights diagram"
         >
@@ -326,6 +331,26 @@ export function HighlightsCyclicDiagram({
           })}
         </svg>
       </div>
+
+      {n <= 6 ? (
+        <ul className="mt-4 flex flex-wrap justify-center gap-2 border-t border-slate-100 pt-4 sm:hidden">
+          {nodes.map((item, i) => {
+            const pal = PALETTE[i % PALETTE.length]!;
+            return (
+              <li key={`pill-${item.legendKey}`}>
+                <a
+                  href={makeHref(item)}
+                  className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow"
+                  style={{ borderColor: pal.stroke, backgroundColor: pal.fill }}
+                >
+                  <span>{item.title}</span>
+                  <span className="tabular-nums text-slate-900">{item.count}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
     </div>
   );
 }

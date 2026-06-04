@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { Search } from 'lucide-react';
+import { DepartmentSummaryHero } from './DepartmentSummaryHero';
+import { DepartmentSummarySection } from './DepartmentSummarySection';
 import type { Department, Organization } from '../../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t, type MessageKey } from '../i18n/messages';
@@ -253,23 +256,53 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     overviewText ||
     '—',
   );
+  const hasOverview = summaryParagraphs.length > 0 && overviewText !== '—';
+  const listingTitle = isRoadsDept
+    ? trStatic('Road listing', 'ରୋଡ୍ ତାଲିକା')
+    : tr('dept.summary.section.organizationListing');
+  const listingSubtitle = isRoadsDept
+    ? trStatic('Search and filter constituency roads by type, block, GP, and village.', 'ରୋଡ୍ ପ୍ରକାର, ବ୍ଲକ୍, ଜିପି ଓ ଗ୍ରାମ ଅନୁସାରେ ଖୋଜନ୍ତୁ।')
+    : tr('dept.summary.search.placeholder');
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-slate-50 to-white text-slate-800">
+    <div className="min-h-screen bg-slate-100/80 text-slate-800">
       <Navbar />
 
-      <main className="mx-auto max-w-[1280px] space-y-10 px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-[1280px] space-y-6 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8">
+        <DepartmentSummaryHero
+          departmentName={localizedDepartmentName}
+          organizationCount={organizationCount}
+          overviewLabel={trStatic('Department overview', 'ବିଭାଗ ସମୀକ୍ଷା')}
+          statLabel={localizedDepartmentName}
+          constituencyLabel={trStatic('Gopalpur Constituency', 'ଗୋପାଳପୁର ନିର୍ବାଚନ ମଣ୍ଡଳୀ')}
+        />
+
         {summaryMinisters.length > 0 ? (
           <DepartmentSummaryMinistersSection ministers={summaryMinisters} language={summaryLang} />
         ) : null}
 
-        <section>
-          <h2 className="text-xl font-bold sm:text-2xl">{tr('dept.summary.section.summary')}</h2>
-          <div className="mt-4 space-y-4 text-sm leading-relaxed text-slate-700 md:text-base">
-            {summaryParagraphs.map((para, idx) => (
-              <p key={`summary-para-${idx}`}>{para}</p>
-            ))}
-          </div>
-        </section>
+        <DepartmentSummarySection
+          title={tr('dept.summary.section.summary')}
+          subtitle={
+            language === 'or'
+              ? 'ବିଭାଗର ସଂକ୍ଷିପ୍ତ ବର୍ଣ୍ଣନା'
+              : 'Brief description of this department'
+          }
+        >
+          {hasOverview ? (
+            <div className="space-y-4 text-sm leading-relaxed text-slate-700 md:text-base">
+              {summaryParagraphs.map((para, idx) => (
+                <p key={`summary-para-${idx}`}>{para}</p>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center text-sm text-slate-500">
+              {language === 'or'
+                ? 'ବିଭାଗ ସାରାଂଶ ଏପର୍ଯ୍ୟନ୍ତ ଯୋଗ କରାଯାଇ ନାହିଁ।'
+                : 'No department summary has been added yet.'}
+            </p>
+          )}
+        </DepartmentSummarySection>
 
         <DepartmentHighlightsSection
           sectionTitle={tr('dept.summary.section.highlights')}
@@ -284,27 +317,28 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           <RoadsProgressTableSection rows={roadsProgressRows} language={language} />
         ) : null}
 
-        <section>
-          <h2 className="text-xl font-bold sm:text-2xl">
-            {isRoadsDept ? trStatic('Road Listing', 'ରୋଡ୍ ତାଲିକା') : tr('dept.summary.section.organizationListing')}
-          </h2>
-          {isRoadsDept ? (
-            <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
-              <input
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder={trStatic(
-                  'Search road name, block, GP, village…',
-                  'ରୋଡ୍ ନାମ, ବ୍ଲକ୍, ଜିପି, ଗ୍ରାମ ଖୋଜନ୍ତୁ…',
-                )}
-                aria-label={trStatic('Search roads', 'ରୋଡ୍ ଖୋଜନ୍ତୁ')}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-              />
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+        <DepartmentSummarySection title={listingTitle} subtitle={listingSubtitle} flush>
+          <div className="space-y-4 border-b border-slate-100 bg-slate-50/50 p-4 sm:p-5">
+            {isRoadsDept ? (
+              <>
+                <label className="relative block">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    placeholder={trStatic(
+                      'Search road name, block, GP, village…',
+                      'ରୋଡ୍ ନାମ, ବ୍ଲକ୍, ଜିପି, ଗ୍ରାମ ଖୋଜନ୍ତୁ…',
+                    )}
+                    aria-label={trStatic('Search roads', 'ରୋଡ୍ ଖୋଜନ୍ତୁ')}
+                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm shadow-sm outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
+                  />
+                </label>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {trStatic('Road type', 'ରୋଡ୍ ପ୍ରକାର')}
                   <select
                     value={roadTypeFilter}
@@ -312,7 +346,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                       setRoadTypeFilter(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
                   >
                     <option value="ALL">{trStatic('All road types', 'ସମସ୍ତ ରୋଡ୍ ପ୍ରକାର')}</option>
                     {roadTypeOptions.map((opt) => (
@@ -322,7 +356,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     ))}
                   </select>
                 </label>
-                <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+                <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {trStatic('Block', 'ବ୍ଲକ୍')}
                   <select
                     value={roadBlockFilter}
@@ -332,7 +366,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                       setRoadVillageFilter('ALL');
                       setCurrentPage(1);
                     }}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
                   >
                     <option value="ALL">{trStatic('All blocks', 'ସମସ୍ତ ବ୍ଲକ୍')}</option>
                     {roadBlockOptions.map((opt) => (
@@ -342,7 +376,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     ))}
                   </select>
                 </label>
-                <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+                <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {trStatic('GP/Ward', 'ଜିପି/ୱାର୍ଡ')}
                   <select
                     value={roadGpFilter}
@@ -351,7 +385,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                       setRoadVillageFilter('ALL');
                       setCurrentPage(1);
                     }}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
                   >
                     <option value="ALL">{trStatic('All GP/Ward', 'ସମସ୍ତ ଜିପି/ୱାର୍ଡ')}</option>
                     {roadGpOptions.map((opt) => (
@@ -361,7 +395,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     ))}
                   </select>
                 </label>
-                <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+                <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {trStatic('Village', 'ଗ୍ରାମ')}
                   <select
                     value={roadVillageFilter}
@@ -369,7 +403,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                       setRoadVillageFilter(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
                   >
                     <option value="ALL">{trStatic('All villages', 'ସମସ୍ତ ଗ୍ରାମ')}</option>
                     {roadVillageOptions.map((opt) => (
@@ -380,33 +414,36 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                   </select>
                 </label>
               </div>
-            </div>
-          ) : (
-            <div className="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 md:grid-cols-3">
-              <input
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder={tr('dept.summary.search.placeholder')}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
-              />
-              <select
-                value={categoryFilter}
-                onChange={(e) => {
-                  setCategoryFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                aria-label={
-                  isArcsDept
-                    ? tr('dept.summary.table.jurisdictionType')
-                    : isDrainageDept
-                      ? tr('dept.summary.drainage.allDrainTypes')
-                      : tr('dept.summary.search.allCategories')
-                }
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-              >
+              </>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-3">
+                <label className="relative md:col-span-2">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    placeholder={tr('dept.summary.search.placeholder')}
+                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm shadow-sm outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
+                  />
+                </label>
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => {
+                    setCategoryFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  aria-label={
+                    isArcsDept
+                      ? tr('dept.summary.table.jurisdictionType')
+                      : isDrainageDept
+                        ? tr('dept.summary.drainage.allDrainTypes')
+                        : tr('dept.summary.search.allCategories')
+                  }
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
+                >
                 <option value="ALL">
                   {isArcsDept
                     ? tr('dept.summary.search.allJurisdictionTypes')
@@ -425,23 +462,23 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                   </option>
                 ))}
               </select>
-            </div>
-          )}
-          <div className="mt-4 overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm">
-            <div className="overflow-x-auto">
+              </div>
+            )}
+          </div>
+          <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
+                <thead className="sticky top-0 z-[1] bg-slate-50/95 backdrop-blur-sm">
+                  <tr className="border-b border-slate-200">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                       {tr('dept.summary.table.slNo')}
                     </th>
-                    <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                      <button type="button" onClick={() => onSort('name')} className="inline-flex items-center gap-1 hover:text-slate-700">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      <button type="button" onClick={() => onSort('name')} className="inline-flex items-center gap-1 hover:text-orange-700">
                         {isRoadsDept ? trStatic('Road', 'ରୋଡ୍') : tr('dept.summary.table.organization')} <SortIcon active={sortKey === 'name'} direction={sortDir} />
                       </button>
                     </th>
-                    <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                      <button type="button" onClick={() => onSort('category')} className="inline-flex items-center gap-1 hover:text-slate-700">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      <button type="button" onClick={() => onSort('category')} className="inline-flex items-center gap-1 hover:text-orange-700">
                         {isArcsDept
                           ? tr('dept.summary.table.jurisdictionType')
                           : isDrainageDept
@@ -456,7 +493,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                       ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => (
                         <th
                           key={col.id}
-                          className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500"
+                          className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
                         >
                           {tr(col.labelKey)}
                         </th>
@@ -466,45 +503,45 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                       ? DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => (
                         <th
                           key={col}
-                          className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500"
+                          className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
                         >
                           {drainageSummaryColumnLabel(col, language)}
                         </th>
                       ))
                       : isRoadsDept ? null : (
-                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
-                          <button type="button" onClick={() => onSort('address')} className="inline-flex items-center gap-1 hover:text-slate-700">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          <button type="button" onClick={() => onSort('address')} className="inline-flex items-center gap-1 hover:text-orange-700">
                             {tr('dept.summary.table.address')} <SortIcon active={sortKey === 'address'} direction={sortDir} />
                           </button>
                         </th>
                       )}
                     {isRoadsDept ? (
                       <>
-                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                           {trStatic('Block', 'ବ୍ଲକ୍')}
                         </th>
-                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                           {trStatic('GP/Ward', 'ଜିପି/ୱାର୍ଡ')}
                         </th>
-                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                           {trStatic('Village', 'ଗ୍ରାମ')}
                         </th>
-                        <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wide text-slate-500">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                           {trStatic('Length (km)', 'ଦୈର୍ଘ୍ୟ (କି.ମି.)')}
                         </th>
                       </>
                     ) : null}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100">
                   {pagedOrganizations.length ? (
                     pagedOrganizations.map((org, idx) => (
-                      <tr key={org.id} className="border-t border-slate-100/90 bg-white hover:bg-slate-50/70">
-                        <td className="px-4 py-2.5 text-sm text-slate-600">
+                      <tr key={org.id} className="bg-white transition-colors hover:bg-orange-50/25">
+                        <td className="px-4 py-3 text-sm tabular-nums text-slate-500">
                           {(safeCurrentPage - 1) * pageSize + idx + 1}
                         </td>
-                        <td className="px-4 py-2.5 text-xs font-medium text-slate-800">{org.name}</td>
-                        <td className="px-4 py-2.5 text-sm text-slate-600">
+                        <td className="max-w-[320px] px-4 py-3 text-sm font-semibold text-slate-900">{org.name}</td>
+                        <td className="px-4 py-3 text-sm text-slate-600">
                           {isDrainageDept
                             ? (() => {
                               const kind = getDrainLineKindFromOrg(org);
@@ -515,32 +552,32 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                         </td>
                         {isArcsDept
                           ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => (
-                            <td key={`${org.id}-${col.id}`} className="px-4 py-2.5 text-sm text-slate-600">
+                            <td key={`${org.id}-${col.id}`} className="px-4 py-3 text-sm text-slate-600">
                               {organizationListingArcsAttribute(org, col.keys) || '—'}
                             </td>
                           ))
                           : null}
                         {isDrainageDept
                           ? DRAINAGE_SUMMARY_TABLE_COLUMNS.map((col) => (
-                            <td key={`${org.id}-${col}`} className="px-4 py-2.5 text-sm text-slate-600">
+                            <td key={`${org.id}-${col}`} className="px-4 py-3 text-sm text-slate-600">
                               <span className={col === 'Remarks' ? 'line-clamp-2' : ''}>
                                 {getDrainTableColumnValue(org, col) || '—'}
                               </span>
                             </td>
                           ))
                           : isRoadsDept ? null : (
-                            <td className="max-w-[280px] px-4 py-2.5 text-sm text-slate-600">
+                            <td className="max-w-[280px] px-4 py-3 text-sm text-slate-600">
                               <span className="line-clamp-1">{org.address || '—'}</span>
                             </td>
                           )}
                         {isRoadsDept ? (
                           <>
-                            <td className="px-4 py-2.5 text-sm text-slate-600">
+                            <td className="px-4 py-3 text-sm text-slate-600">
                               <span className="line-clamp-1">
                                 {String((org.attributes as Record<string, unknown> | null)?.block ?? '—')}
                               </span>
                             </td>
-                            <td className="px-4 py-2.5 text-sm text-slate-600">
+                            <td className="px-4 py-3 text-sm text-slate-600">
                               <span className="line-clamp-1">
                                 {String(
                                   (org.attributes as Record<string, unknown> | null)?.gp_ward ??
@@ -550,7 +587,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                                 )}
                               </span>
                             </td>
-                            <td className="px-4 py-2.5 text-sm text-slate-600">
+                            <td className="px-4 py-3 text-sm text-slate-600">
                               <span className="line-clamp-1">
                                 {String(
                                   (org.attributes as Record<string, unknown> | null)?.village ??
@@ -559,7 +596,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                                 )}
                               </span>
                             </td>
-                            <td className="px-4 py-2.5 text-sm text-slate-600">
+                            <td className="px-4 py-3 text-sm text-slate-600">
                               <span className="line-clamp-1">
                                 {String((org.attributes as Record<string, unknown> | null)?.length_km ?? '—')}
                               </span>
@@ -571,7 +608,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                   ) : (
                     <tr>
                       <td
-                        className="px-4 py-3 text-slate-600"
+                        className="px-4 py-10 text-center text-sm text-slate-500"
                         colSpan={
                           isRoadsDept ? 7 : isArcsDept ? 7 : isDrainageDept ? 10 : 4
                         }
@@ -582,22 +619,21 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                   )}
                 </tbody>
               </table>
-            </div>
           </div>
-          <div className="mt-3 flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-            <p>
+          <div className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/60 px-4 py-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <p className="font-medium">
               {tr('dept.summary.pagination.showing', {
                 start: (safeCurrentPage - 1) * pageSize + (pagedOrganizations.length ? 1 : 0),
                 end: (safeCurrentPage - 1) * pageSize + pagedOrganizations.length,
                 total: sortedOrganizations.length,
               })}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 disabled={safeCurrentPage <= 1}
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                className="rounded border border-slate-300 px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {tr('dept.summary.pagination.previous')}
               </button>
@@ -607,10 +643,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     key={`page-${p}`}
                     type="button"
                     onClick={() => setCurrentPage(p)}
-                    className={`h-6 min-w-6 rounded border px-1.5 text-sm ${p === safeCurrentPage
-                        ? 'border-orange-300 bg-orange-50 text-orange-700'
-                        : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100'
-                      }`}
+                    className={`min-h-8 min-w-8 rounded-lg border px-2 text-sm font-medium transition ${
+                      p === safeCurrentPage
+                        ? 'border-orange-400 bg-orange-500 text-white shadow-sm'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-orange-200 hover:bg-orange-50'
+                    }`}
                   >
                     {p}
                   </button>
@@ -620,13 +657,13 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                 type="button"
                 disabled={safeCurrentPage >= totalPages}
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                className="rounded border border-slate-300 px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {tr('dept.summary.pagination.next')}
               </button>
             </div>
           </div>
-        </section>
+        </DepartmentSummarySection>
       </main>
     </div>
   );

@@ -1,4 +1,5 @@
 import { HighlightsCyclicDiagram } from './HighlightsCyclicDiagram';
+import { DepartmentSummarySection } from './DepartmentSummarySection';
 
 type HighlightCard = {
   title: string;
@@ -22,20 +23,21 @@ export function DepartmentHighlightsSection({
   highlightCards: HighlightCard[];
 }) {
   return (
-    <section>
-      <h2 className="text-xl font-bold sm:text-2xl">{sectionTitle}</h2>
-      <div className="mt-4">
-        <HighlightsCyclicDiagram
-          items={highlightCards}
-          centerLabel={departmentName}
-          infoText={infoText}
-          emptyText={<p className="text-sm text-slate-600">{emptyText}</p>}
-          makeHref={(item) =>
-            `/?dept=${encodeURIComponent(departmentCode || '')}&legend=${encodeURIComponent(item.legendKey)}`
-          }
-        />
-      </div>
-    </section>
+    <DepartmentSummarySection title={sectionTitle} subtitle={infoText}>
+      <HighlightsCyclicDiagram
+        items={highlightCards}
+        centerLabel={departmentName}
+        infoText={infoText}
+        emptyText={
+          <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center text-sm text-slate-500">
+            {emptyText}
+          </p>
+        }
+        makeHref={(item) =>
+          `/?dept=${encodeURIComponent(departmentCode || '')}&legend=${encodeURIComponent(item.legendKey)}`
+        }
+      />
+    </DepartmentSummarySection>
   );
 }
 
