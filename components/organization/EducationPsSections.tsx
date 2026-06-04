@@ -43,6 +43,16 @@ export function asString(v: unknown): string {
   return String(v).trim();
 }
 
+/** Comma-separated string or array-like value → list of trimmed strings. */
+export function asList(v: unknown): string[] {
+  const s = asString(v);
+  if (!s) return [];
+  return s
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 /** Unicode em dash — shown when backend has no value (template / empty slots). */
 export const EMPTY = '—';
 
