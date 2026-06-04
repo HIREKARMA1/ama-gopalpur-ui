@@ -636,6 +636,7 @@ export type MessageKey =
   | 'dept.summary.leader.title'
   | 'dept.summary.leader.messageHeading'
   | 'dept.summary.section.summary'
+  | 'dept.summary.section.ministers'
   | 'dept.summary.section.highlights'
   | 'dept.summary.section.organizationListing'
   | 'dept.summary.empty.highlights'
@@ -1390,6 +1391,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'dept.summary.section.summary': {
     en: 'Department summary',
     or: 'ବିଭାଗ ସାରାଂଶ',
+  },
+  'dept.summary.section.ministers': {
+    en: 'Ministers',
+    or: 'ମନ୍ତ୍ରୀ',
   },
   'dept.summary.section.highlights': {
     en: 'Department highlights',

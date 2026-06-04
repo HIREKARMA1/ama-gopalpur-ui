@@ -100,11 +100,23 @@ export interface RoadsProgressRow {
   proposal_approved?: string | null;
 }
 
+export interface DepartmentSummaryMinister {
+  id?: string;
+  name?: string | null;
+  name_od?: string | null;
+  designation?: string | null;
+  designation_od?: string | null;
+  message?: string | null;
+  message_od?: string | null;
+  photo_url?: string | null;
+}
+
 export interface DepartmentSummaryContent {
   about_image?: string | null;
   department_name_od?: string | null;
   minister_name?: string | null;
   minister_name_od?: string | null;
+  summary_ministers?: DepartmentSummaryMinister[];
   headline?: string | null;
   overview?: string | null;
   overview_od?: string | null;
@@ -167,6 +179,14 @@ export const departmentsApi = {
     const form = new FormData();
     form.append('file', file);
     return apiFetch<{ url: string }>(`/api/v1/departments/${departmentId}/summary-about-image`, {
+      method: 'POST',
+      body: form,
+    });
+  },
+  uploadSummaryMinisterImage: (departmentId: number, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch<{ url: string }>(`/api/v1/departments/${departmentId}/summary-minister-image`, {
       method: 'POST',
       body: form,
     });

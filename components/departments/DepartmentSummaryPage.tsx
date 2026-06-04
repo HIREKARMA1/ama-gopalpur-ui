@@ -1,14 +1,12 @@
 import { useMemo, useState } from 'react';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import type { Department, Organization } from '../../services/api';
-import {
-  PsAboutSection,
-  type Lang,
-} from '../organization/EducationPsSections';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t, type MessageKey } from '../i18n/messages';
 import { Navbar } from '../layout/Navbar';
 import { DepartmentHighlightsSection } from './DepartmentHighlightsSection';
+import { DepartmentSummaryMinistersSection } from './DepartmentSummaryMinistersSection';
+import { resolveSummaryMinisters, toSummaryLang } from '../../lib/departmentSummaryMinisters';
 import { getDepartmentLabel } from './DepartmentSidebar';
 import {
   ARCS_SUMMARY_TABLE_COLUMNS,
@@ -55,7 +53,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     if (language === 'or') return odText || enText;
     return enText || odText;
   };
-  const lang = language as Lang;
+  const summaryLang = toSummaryLang(language);
   const tr = (key: MessageKey, vars?: Record<string, string | number>) => {
     let text = t(key, language);
     if (vars) {
@@ -74,50 +72,12 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     ) || sidebarLocalizedDepartmentName;
   const overviewText =
     localizedSummaryText(summary?.overview, summary?.overview_od) || '—';
-  const ministerMessageText =
-    localizedSummaryText(summary?.minister_message, summary?.minister_message_od) || '—';
-  const ministerNameText =
-    localizedSummaryText(summary?.minister_name || 'Shri Bibhuti Bhusan Jena', summary?.minister_name_od) ||
-    'Shri Bibhuti Bhusan Jena';
+  const summaryMinisters = useMemo(
+    () => resolveSummaryMinisters(summary ?? undefined, summaryLang),
+    [summary, summaryLang],
+  );
   const stats = summary?.key_statistics ?? [];
   const list = (items?: string[]) => (items ?? []).filter(Boolean).slice(0, 12);
-
-  const virtualOrg: Organization = {
-    id: department.id,
-    department_id: department.id,
-    name: localizedDepartmentName,
-    type: 'OTHER',
-    description: department.description ?? null,
-    latitude: null,
-    longitude: null,
-    address: null,
-    sub_department: null,
-    attributes: null,
-    cover_image_key: null,
-  };
-
-  const profile: Record<string, unknown> = {
-    school_name_en: localizedDepartmentName,
-    hero_primary_tagline_en: summary?.headline || `${localizedDepartmentName} ${trStatic('Department', 'ବିଭାଗ')}`,
-    about_short_en: overviewText,
-    about_image: summary?.about_image || '',
-    headmaster_message_en: ministerMessageText,
-    name_of_hm: ministerNameText,
-    hm_designation:
-      language === 'or'
-        ? 'ବାଣିଜ୍ୟ, ପରିବହନ, ଇସ୍ପାତ ଓ ଖଣି ମନ୍ତ୍ରୀ, ଓଡ଼ିଶା ସରକାର'
-        : 'Minister of Commerce, Transport, Steel & Mine, Government of Odisha',
-    headmaster_photo: 'https://ama-gopalpur.s3.ap-south-1.amazonaws.com/Bibhuti_Bhusan_Jena.png',
-    esst_year: '',
-    school_type_en: trStatic('Government Department', 'ସରକାରୀ ବିଭାଗ'),
-    location_en: trStatic('Gopalpur Constituency', 'ଗୋପାଳପୁର ନିର୍ବାଚନ ମଣ୍ଡଳୀ'),
-    vision_text_en: '',
-    mission_text_en: '',
-    contact_address_en: trStatic('Gopalpur Constituency, Odisha', 'ଗୋପାଳପୁର ନିର୍ବାଚନ ମଣ୍ଡଳୀ, ଓଡ଼ିଶା'),
-    contact_phone: '',
-    contact_email: '',
-    office_hours_en: '',
-  };
 
   const roadsProgressRows = useMemo(
     () => (isRoadsDept ? parseRoadsProgressRows(summary) : []),
@@ -298,24 +258,9 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       <Navbar />
 
       <main className="mx-auto max-w-[1280px] space-y-10 px-4 py-8 sm:px-6 lg:px-8">
-        <PsAboutSection
-          org={virtualOrg}
-          profile={profile}
-          language={lang}
-          sliderImages={[]}
-          aboutTitleOverride={localizedDepartmentName}
-          hideAboutMeta
-          hideAboutText
-          hideAboutImage
-          hideLeaderMeta
-          hideDesignationLabel
-          hideVisionMission
-          hideExtendedLeaderBio
-          leaderLabels={{
-            title: tr('dept.summary.leader.title'),
-            messageHeading: tr('dept.summary.leader.messageHeading'),
-          }}
-        />
+        {summaryMinisters.length > 0 ? (
+          <DepartmentSummaryMinistersSection ministers={summaryMinisters} language={summaryLang} />
+        ) : null}
 
         <section>
           <h2 className="text-xl font-bold sm:text-2xl">{tr('dept.summary.section.summary')}</h2>
