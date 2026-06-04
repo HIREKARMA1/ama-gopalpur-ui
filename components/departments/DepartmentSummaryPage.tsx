@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { Search } from 'lucide-react';
 import { DepartmentSummaryHero } from './DepartmentSummaryHero';
@@ -49,6 +50,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const isRoadsDept = deptCode === 'ROADS';
   const isArcsDept = deptCode === 'ARCS';
   const isDrainageDept = deptCode === 'DRAINAGE';
+  const showPortfolioColumn = !isDrainageDept && !isRoadsDept;
   const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
   const localizedSummaryText = (en?: string | null, od?: string | null) => {
     const enText = (en || '').trim();
@@ -105,6 +107,13 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 15;
+
+  const listingTableColSpan = useMemo(() => {
+    if (isRoadsDept) return 7;
+    if (isDrainageDept) return 3 + DRAINAGE_SUMMARY_TABLE_COLUMNS.length;
+    if (isArcsDept) return 3 + ARCS_SUMMARY_TABLE_COLUMNS.length + (showPortfolioColumn ? 1 : 0);
+    return 4 + (showPortfolioColumn ? 1 : 0);
+  }, [isRoadsDept, isDrainageDept, isArcsDept, showPortfolioColumn]);
 
   const categoryOptions = useMemo(() => {
     if (isDrainageDept) {
@@ -531,6 +540,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                         </th>
                       </>
                     ) : null}
+                    {showPortfolioColumn ? (
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        {tr('dept.summary.table.portfolio')}
+                      </th>
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -603,15 +617,23 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                             </td>
                           </>
                         ) : null}
+                        {showPortfolioColumn ? (
+                          <td className="px-4 py-3 text-sm">
+                            <Link
+                              href={`/organizations/${org.id}`}
+                              className="inline-flex font-semibold text-orange-600 underline-offset-2 transition hover:text-orange-800 hover:underline"
+                            >
+                              {tr('dept.summary.table.openPortfolio')}
+                            </Link>
+                          </td>
+                        ) : null}
                       </tr>
                     ))
                   ) : (
                     <tr>
                       <td
                         className="px-4 py-10 text-center text-sm text-slate-500"
-                        colSpan={
-                          isRoadsDept ? 7 : isArcsDept ? 7 : isDrainageDept ? 10 : 4
-                        }
+                        colSpan={listingTableColSpan}
                       >
                         {tr('dept.summary.empty.organizations')}
                       </td>
