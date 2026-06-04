@@ -213,6 +213,11 @@ export function EducationEngineeringPortfolioAdminForm({
   headRoleLabel = 'Principal',
   isIti = false,
   hidePlacementSection = false,
+  showPerCollegePlacementLink = false,
+  showSubDeptPlacementLink = false,
+  subDeptPlacementUrl = '',
+  onSubDeptPlacementUrlChange,
+  educationSubDeptLabel = '',
 }: {
   organizationId: number | null;
   values: EngineeringFormFields;
@@ -222,6 +227,13 @@ export function EducationEngineeringPortfolioAdminForm({
   headRoleLabel?: string;
   isIti?: boolean;
   hidePlacementSection?: boolean;
+  /** Per-institution placement URL (engineering colleges only). */
+  showPerCollegePlacementLink?: boolean;
+  /** Shared placement-cell URL for the current education sub-department. */
+  showSubDeptPlacementLink?: boolean;
+  subDeptPlacementUrl?: string;
+  onSubDeptPlacementUrlChange?: (url: string) => void;
+  educationSubDeptLabel?: string;
 }) {
   const [activeSection, setActiveSection] = useState<SectionId>('hero');
   const patch = (p: Record<string, string | undefined>) =>
@@ -651,6 +663,23 @@ export function EducationEngineeringPortfolioAdminForm({
       {activeSection === 'placement' && !hidePlacementSection ? (
         <SectionBox title="Training and Placement">
           <div className="grid gap-2 md:grid-cols-2">
+            {showSubDeptPlacementLink && onSubDeptPlacementUrlChange ? (
+              <div className="space-y-1 md:col-span-2">
+                <label className="block text-text">Placement cell link</label>
+                <p className="text-[11px] text-text-muted">
+                  {showPerCollegePlacementLink
+                    ? `Default redirect for all ${educationSubDeptLabel || 'this sub-department'} institutions. Saved when you save this organization. Override per college below.`
+                    : `Shared placement-cell redirect for all ${educationSubDeptLabel || 'this sub-department'} institutions. Saved when you save this organization.`}
+                </p>
+                <input
+                  type="url"
+                  className="w-full rounded border border-border px-2 py-1"
+                  placeholder="https://example.edu/placement/"
+                  value={subDeptPlacementUrl}
+                  onChange={(e) => onSubDeptPlacementUrlChange(e.target.value)}
+                />
+              </div>
+            ) : null}
             <ImgSlot
               label="Placement officer photo"
               organizationId={organizationId}
@@ -666,7 +695,21 @@ export function EducationEngineeringPortfolioAdminForm({
             <div className="space-y-1"><label className="block text-text">Experience (To)</label><input type="date" className="w-full rounded border border-border px-2 py-1" value={values[KEY.placementOfficerExpTo] || ''} onChange={(e) => patch({ [KEY.placementOfficerExpTo]: e.target.value })} /></div>
             <div className="space-y-1"><label className="block text-text">Placement percentage (last year)</label><input className="w-full rounded border border-border px-2 py-1" value={values[KEY.placementPct] || ''} onChange={(e) => patch({ [KEY.placementPct]: e.target.value })} /></div>
             <div className="space-y-1"><label className="block text-text">Highest package (LPA)</label><input className="w-full rounded border border-border px-2 py-1" value={values[KEY.highestPackage] || ''} onChange={(e) => patch({ [KEY.highestPackage]: e.target.value })} /></div>
-            <div className="space-y-1 md:col-span-2"><label className="block text-text">Placement records URL (external redirect)</label><input type="url" className="w-full rounded border border-border px-2 py-1" placeholder="https://example.edu/placement-record/" value={values[KEY.placementRecordsUrl] || ''} onChange={(e) => patch({ [KEY.placementRecordsUrl]: e.target.value })} /></div>
+            {showPerCollegePlacementLink ? (
+              <div className="space-y-1 md:col-span-2">
+                <label className="block text-text">Placement cell link (this college)</label>
+                <p className="text-[11px] text-text-muted">
+                  Overrides the sub-department default above. Leave blank to use the shared link.
+                </p>
+                <input
+                  type="url"
+                  className="w-full rounded border border-border px-2 py-1"
+                  placeholder="https://example.edu/placement-record/"
+                  value={values[KEY.placementRecordsUrl] || ''}
+                  onChange={(e) => patch({ [KEY.placementRecordsUrl]: e.target.value })}
+                />
+              </div>
+            ) : null}
             <div className="space-y-1"><label className="block text-text">Placement partners</label><input className="w-full rounded border border-border px-2 py-1" placeholder="Comma separated" value={values[KEY.placementPartners] || ''} onChange={(e) => patch({ [KEY.placementPartners]: e.target.value })} /></div>
           </div>
         </SectionBox>

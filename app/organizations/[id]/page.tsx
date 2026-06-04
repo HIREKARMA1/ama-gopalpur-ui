@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Navbar } from '../../../components/layout/Navbar';
-import { isEngineeringPortfolioSubDept } from '../../../lib/educationSubDepartments';
+import { isDiplomaPortfolioSubDept, isEngineeringPortfolioSubDept } from '../../../lib/educationSubDepartments';
+import { EducationDiplomaPortfolioWebsite } from '../../../components/organization/EducationDiplomaPortfolioWebsite';
 import {
   organizationsApi,
   departmentsApi,
@@ -355,8 +356,25 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
         </div>
       );
     }
+    if (isDiplomaPortfolioSubDept(org.sub_department)) {
+      const lang = String((educationProfile as Record<string, unknown>)?.language || 'en').toLowerCase() === 'od' ? 'od' : 'en';
+      const educationDept = departments.find((d) => d.id === org.department_id);
+      return (
+        <div className="page-container">
+          <Navbar />
+          <EducationDiplomaPortfolioWebsite
+            org={org}
+            profile={educationProfile}
+            images={images}
+            language={lang}
+            departmentSummary={educationDept?.department_summary ?? null}
+          />
+        </div>
+      );
+    }
     if (isEngineeringPortfolioSubDept(org.sub_department)) {
       const lang = String((educationProfile as Record<string, unknown>)?.language || 'en').toLowerCase() === 'od' ? 'od' : 'en';
+      const educationDept = departments.find((d) => d.id === org.department_id);
       return (
         <div className="page-container">
           <Navbar />
@@ -365,6 +383,7 @@ export default function OrganizationProfilePage({ params }: { params: { id: stri
             profile={educationProfile}
             images={images}
             language={lang}
+            departmentSummary={educationDept?.department_summary ?? null}
           />
         </div>
       );
