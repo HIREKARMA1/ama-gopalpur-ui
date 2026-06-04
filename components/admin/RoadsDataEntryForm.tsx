@@ -248,7 +248,7 @@ export function RoadsDataEntryForm({
       </p>
       <p className="mt-1 text-[11px] text-text-muted">
         {isSummaryOnlySector
-          ? 'GP and Municipality roads are summary-only (not on map). Required: road name, road type, Block, GP/Ward. Road code, village, length, and point names are optional.'
+          ? 'GP and Municipality roads are summary-only (not on map). Required: road name, road type, Block, GP/Ward (village required for GP only). Road code, length, and point names are optional.'
           : 'For NH/SH/PWD/RD/PS roads shown on the map, provide path coordinates or start/end coordinates.'}
       </p>
       <form onSubmit={submit} className="mt-3 grid gap-3 text-xs md:grid-cols-2">

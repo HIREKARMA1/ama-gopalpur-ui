@@ -13,6 +13,12 @@ import {
 import { SuperAdminDashboardLayout } from '../../../../components/layout/SuperAdminDashboardLayout';
 import { useLanguage } from '../../../../components/i18n/LanguageContext';
 import { t } from '../../../../components/i18n/messages';
+import {
+  isSummaryOnlyRoadSector,
+  ROAD_SECTOR_CSV_HEADER_ALIASES,
+  roadImportDedupeKey,
+  validateSummaryOnlyRoadImportRow,
+} from '../../../../lib/roadsOrganization';
 
 type RoadEntry = {
   id: number;
@@ -42,6 +48,7 @@ type RoadEntry = {
 type RoadCsvRow = {
   block: string;
   gpWard: string;
+  village: string;
   roadName: string;
   roadCode: string;
   roadSector: string;
@@ -61,7 +68,7 @@ type RoadCsvRow = {
 };
 
 const ROAD_TEMPLATE_HEADER =
-  'block,GP/WARD,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP/Municipality),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED';
+  'block,GP/WARD,VILLAGE,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP/Municipality),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED';
 
 const PAGE_SIZE = 20;
 
@@ -151,13 +158,10 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
   const indexes = {
     block: idx('block', 'ulb_block'),
     gpWard: idx('gp/ward', 'gp ward', 'gp_ward', 'ward', 'gp'),
+    village: idx('village', 'village name', 'village_name'),
     roadName: idx('road name', 'road_name', 'name of road', 'name'),
     roadCode: idx('road code', 'road_code', 'code'),
-    roadSector: idx(
-      'road sector(nh/sh/pwd/rd/ps/gp)',
-      'road sector',
-      'type',
-    ),
+    roadSector: idx(...ROAD_SECTOR_CSV_HEADER_ALIASES),
     nameOfDivision: idx('name of division', 'name_of_division', 'division name', 'division'),
     scheme: idx('scheme', 'scheme_name'),
     lengthKm: idx('length(in km)', 'length in km', 'length_km', 'length'),
@@ -198,6 +202,8 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
     const roadName = get(indexes.roadName);
     const block = get(indexes.block);
     const gpWard = get(indexes.gpWard);
+    const village = get(indexes.village);
+    const roadSector = get(indexes.roadSector);
     let startLat = get(indexes.startLat);
     let startLng = get(indexes.startLng);
     let endLat = get(indexes.endLat);
@@ -209,6 +215,20 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
       continue;
     }
 
+    const summaryOnlyValidation = validateSummaryOnlyRoadImportRow({
+      block,
+      gpWard,
+      village,
+      roadName,
+      roadSector,
+    });
+    if (summaryOnlyValidation) {
+      errors.push(`Row ${rowNumber}: ${summaryOnlyValidation}`);
+      continue;
+    }
+
+    const summaryOnlyRoad = isSummaryOnlyRoadSector(roadSector);
+
     if ((!startLat || !startLng || !endLat || !endLng) && pathCoordinates) {
       const derived = parseStartEndFromPathCoordinates(pathCoordinates);
       if (derived) {
@@ -219,9 +239,9 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
       }
     }
 
-    if (!startLat || !startLng || !endLat || !endLng) {
+    if (!summaryOnlyRoad && (!startLat || !startLng || !endLat || !endLng)) {
       errors.push(
-        `Row ${rowNumber}: provide start/end coordinates, or a valid PATH COORDINATES value.`,
+        `Row ${rowNumber}: provide start/end coordinates, or a valid PATH COORDINATES value (not required for GP or Municipality roads).`,
       );
       continue;
     }
@@ -229,9 +249,10 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
     rows.push({
       block,
       gpWard,
+      village,
       roadName,
       roadCode: get(indexes.roadCode),
-      roadSector: get(indexes.roadSector),
+      roadSector,
       nameOfDivision: get(indexes.nameOfDivision),
       scheme: get(indexes.scheme),
       lengthKm: get(indexes.lengthKm),
@@ -426,15 +447,24 @@ export default function RoadsMonitoringPage() {
     const departmentId = me?.department_id;
     if (!departmentId) throw new Error('Department not set for this user');
 
+    const summaryOnlyRoad = isSummaryOnlyRoadSector(row.roadSector);
     const sLat = toNumberOrNull(row.startLat);
     const sLng = toNumberOrNull(row.startLng);
     const eLat = toNumberOrNull(row.endLat);
     const eLng = toNumberOrNull(row.endLng);
 
     const centerLat =
-      sLat != null && eLat != null ? Number(((sLat + eLat) / 2).toFixed(6)) : sLat ?? eLat ?? null;
+      !summaryOnlyRoad && sLat != null && eLat != null
+        ? Number(((sLat + eLat) / 2).toFixed(6))
+        : summaryOnlyRoad
+          ? null
+          : sLat ?? eLat ?? null;
     const centerLng =
-      sLng != null && eLng != null ? Number(((sLng + eLng) / 2).toFixed(6)) : sLng ?? eLng ?? null;
+      !summaryOnlyRoad && sLng != null && eLng != null
+        ? Number(((sLng + eLng) / 2).toFixed(6))
+        : summaryOnlyRoad
+          ? null
+          : sLng ?? eLng ?? null;
 
     return {
       department_id: departmentId,
@@ -447,21 +477,23 @@ export default function RoadsMonitoringPage() {
       attributes: {
         block: row.block || null,
         gp_ward: row.gpWard || null,
+        village: row.village || null,
         road_code: row.roadCode || null,
         road_sector: row.roadSector || null,
         name_of_division: row.nameOfDivision || null,
         scheme: row.scheme || null,
         length_km: row.lengthKm || null,
-        path_coordinates: row.pathCoordinates || null,
-        start_lat: row.startLat || null,
-        start_lng: row.startLng || null,
-        end_lat: row.endLat || null,
-        end_lng: row.endLng || null,
+        path_coordinates: summaryOnlyRoad ? null : row.pathCoordinates || null,
+        start_lat: summaryOnlyRoad ? null : row.startLat || null,
+        start_lng: summaryOnlyRoad ? null : row.startLng || null,
+        end_lat: summaryOnlyRoad ? null : row.endLat || null,
+        end_lng: summaryOnlyRoad ? null : row.endLng || null,
         point_a_name: row.pointAName || null,
         point_b_name: row.pointBName || null,
         year_of_construction: row.yearOfConstruction || null,
         last_maintenance_date: row.lastMaintenanceDate || null,
         issues: row.issues || null,
+        summary_only: summaryOnlyRoad ? 'true' : null,
         updated_at: new Date().toISOString(),
       },
     };
@@ -502,6 +534,7 @@ export default function RoadsMonitoringPage() {
       const formRow: RoadCsvRow = {
         block,
         gpWard,
+        village: '',
         roadName,
         roadCode,
         roadSector,
@@ -614,9 +647,14 @@ export default function RoadsMonitoringPage() {
       const existingKeys = new Set(
         existing.map((org) => {
           const attrs = (org.attributes ?? {}) as Record<string, unknown>;
-          const code = String(attrs.road_code ?? '').trim().toUpperCase();
-          const name = String(org.name ?? '').trim().toUpperCase();
-          return `${name}__${code}`;
+          return roadImportDedupeKey({
+            name: org.name ?? '',
+            roadCode: String(attrs.road_code ?? ''),
+            block: String(attrs.block ?? ''),
+            gpWard: String(attrs.gp_ward ?? attrs.gpward ?? ''),
+            village: String(attrs.village ?? attrs.village_name ?? ''),
+            roadSector: String(attrs.road_sector ?? ''),
+          });
         }),
       );
 
@@ -625,7 +663,14 @@ export default function RoadsMonitoringPage() {
       const importErrors: string[] = [...errors];
 
       for (let i = 0; i < rows.length; i += 1) {
-        const key = `${rows[i].roadName.trim().toUpperCase()}__${rows[i].roadCode.trim().toUpperCase()}`;
+        const key = roadImportDedupeKey({
+          name: rows[i].roadName,
+          roadCode: rows[i].roadCode,
+          block: rows[i].block,
+          gpWard: rows[i].gpWard,
+          village: rows[i].village,
+          roadSector: rows[i].roadSector,
+        });
         if (existingKeys.has(key)) {
           skippedDuplicates += 1;
           continue;
@@ -933,6 +978,11 @@ export default function RoadsMonitoringPage() {
 
         <section className="rounded-xl border border-slate-200 bg-slate-50 p-4">
           <h3 className="mb-2 text-sm font-semibold text-slate-800">Bulk Upload Roads (CSV)</h3>
+          <p className="mb-3 text-xs text-slate-600">
+            Map roads (NH/SH/PWD/RD/PS) need coordinates. GP roads need block, GP/WARD, VILLAGE, ROAD NAME,
+            and ROAD SECTOR=GP. Municipality roads need block, GP/WARD, ROAD NAME, and ROAD SECTOR=Municipality
+            (village optional).
+          </p>
           <form onSubmit={handleBulkUpload} className="flex flex-wrap items-center gap-3 text-xs">
             <button
               type="button"

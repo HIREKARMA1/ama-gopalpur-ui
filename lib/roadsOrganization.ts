@@ -34,6 +34,35 @@ export function isSummaryOnlyRoadSector(raw: unknown): boolean {
   return isGpRoadSector(raw) || isMunicipalityRoadSector(raw);
 }
 
+/** Bulk CSV: GP / Municipality rows need location fields (no coordinates). */
+export function validateSummaryOnlyRoadImportRow(parts: {
+  block?: string;
+  gpWard?: string;
+  village?: string;
+  roadName?: string;
+  roadSector?: string;
+}): string | null {
+  if (!isSummaryOnlyRoadSector(parts.roadSector)) return null;
+  if (!String(parts.roadName ?? '').trim()) return 'ROAD NAME is required';
+  if (!String(parts.roadSector ?? '').trim()) return 'ROAD SECTOR is required (use GP or Municipality)';
+  const isGp = isGpRoadSector(parts.roadSector);
+  const isMunicipality = isMunicipalityRoadSector(parts.roadSector);
+  const sectorLabel = isMunicipality && !isGp ? 'Municipality' : isGp && !isMunicipality ? 'GP' : 'GP/Municipality';
+  if (!String(parts.block ?? '').trim()) return `BLOCK is required for ${sectorLabel} roads`;
+  if (!String(parts.gpWard ?? '').trim()) return `GP/WARD is required for ${sectorLabel} roads`;
+  if (isGp && !String(parts.village ?? '').trim()) return 'VILLAGE is required for GP roads';
+  return null;
+}
+
+/** Header aliases for ROAD SECTOR column in minister CSV templates. */
+export const ROAD_SECTOR_CSV_HEADER_ALIASES = [
+  'road sector(nh/sh/pwd/rd/ps/gp/municipality)',
+  'road sector(nh/sh/pwd/rd/ps/gp)',
+  'road_sector',
+  'road sector',
+  'type',
+] as const;
+
 export function parseRoadPathCoordinates(raw: string): [number, number][] {
   const s = (raw || '').trim();
   if (!s) return [];

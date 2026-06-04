@@ -44,8 +44,10 @@ import {
 } from '../../../lib/drainageOrganization';
 import {
   isSummaryOnlyRoadSector,
+  ROAD_SECTOR_CSV_HEADER_ALIASES,
   roadDedupeKeyFromOrg,
   roadImportDedupeKey,
+  validateSummaryOnlyRoadImportRow,
 } from '../../../lib/roadsOrganization';
 import { compressImage } from '../../../lib/imageCompression';
 import {
@@ -1635,7 +1637,7 @@ export default function DepartmentAdminPage() {
           village: idx('village', 'village name', 'village_name'),
           roadName: idx('road name', 'road_name', 'name of road', 'name'),
           roadCode: idx('road code', 'road_code', 'code'),
-          roadSector: idx('road sector(nh/sh/pwd/rd/ps/gp)', 'road sector'),
+          roadSector: idx(...ROAD_SECTOR_CSV_HEADER_ALIASES),
           nameOfDivision: idx('name of division', 'name_of_division', 'division name', 'division'),
           scheme: idx('scheme', 'scheme_name'),
           lengthKm: idx('length(in km)', 'length in km', 'length_km', 'length'),
@@ -1700,15 +1702,27 @@ export default function DepartmentAdminPage() {
           }
           const roadSector = get(cols, indexes.roadSector);
           const summaryOnlyRoad = isSummaryOnlyRoadSector(roadSector);
-          if (!summaryOnlyRoad && (!startLat || !startLng || !endLat || !endLng)) {
-            errors.push(`Row ${i + 1}: provide start/end coordinates, or a valid PATH COORDINATES value (not required for GP or Municipality roads).`);
-            continue;
-          }
-
           const roadCode = get(cols, indexes.roadCode);
           const block = get(cols, indexes.block);
           const gpWard = get(cols, indexes.gpWard);
           const village = get(cols, indexes.village);
+
+          const summaryOnlyValidation = validateSummaryOnlyRoadImportRow({
+            block,
+            gpWard,
+            village,
+            roadName,
+            roadSector,
+          });
+          if (summaryOnlyValidation) {
+            errors.push(`Row ${i + 1}: ${summaryOnlyValidation}`);
+            continue;
+          }
+
+          if (!summaryOnlyRoad && (!startLat || !startLng || !endLat || !endLng)) {
+            errors.push(`Row ${i + 1}: provide start/end coordinates, or a valid PATH COORDINATES value (not required for GP or Municipality roads).`);
+            continue;
+          }
           const dedupeKey = roadImportDedupeKey({
             name: roadName,
             roadCode,
@@ -4529,7 +4543,7 @@ export default function DepartmentAdminPage() {
                             : deptCode === 'REVENUE_LAND'
                               ? 'Upload Tahasil portfolio CSV. Organizations will be created/updated by TAHSIL_NAME (or OFFICE NAME), LATITUDE, LONGITUDE, and all additional attributes are saved to profile.'
                               : deptCode === 'ROADS'
-                                ? 'Upload Roads CSV. Map roads (NH/SH/PWD/RD/PS) need coordinates. GP and Municipality roads need only ROAD NAME, BLOCK, GP/WARD, VILLAGE, and ROAD SECTOR=GP or Municipality — road code and point names are optional.'
+                                ? 'Upload Roads CSV. Map roads (NH/SH/PWD/RD/PS) need coordinates. GP roads need ROAD NAME, BLOCK, GP/WARD, VILLAGE, and ROAD SECTOR=GP. Municipality roads need ROAD NAME, BLOCK, GP/WARD, and ROAD SECTOR=Municipality (village optional). Road code and point names are optional for both.'
                                 : deptCode === 'DRAINAGE'
                                   ? 'Upload Drainage CSV without re-saving from Excel. For checking data in Excel use templates/drainage/bahana_drains_review.csv (no path column).'
                               : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}
