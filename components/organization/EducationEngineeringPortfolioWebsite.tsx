@@ -1,8 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Organization } from '../../services/api';
+import { Organization, type DepartmentSummaryContent } from '../../services/api';
 import { isDegreeCollegeLike } from '../../lib/educationSubDepartments';
+import {
+  resolvePlacementRecordsUrl,
+  showEngineeringPlacementRecordsLink,
+} from '../../lib/placementConfig';
 import { TrainingPlacementSection } from './education/TrainingPlacementSection';
 import {
   asList,
@@ -24,6 +28,7 @@ type EngineeringPortfolioProps = {
   profile: Record<string, unknown>;
   images?: string[];
   language?: Lang;
+  departmentSummary?: DepartmentSummaryContent | null;
 };
 
 function yesNo(v: unknown) {
@@ -255,8 +260,12 @@ export function EducationEngineeringPortfolioWebsite({
   profile,
   images = [],
   language = 'en',
+  departmentSummary = null,
 }: EngineeringPortfolioProps) {
   const subDepartment = (org.sub_department || '').toUpperCase();
+  const placementRecordsUrl = showEngineeringPlacementRecordsLink(subDepartment)
+    ? resolvePlacementRecordsUrl(profile, subDepartment, departmentSummary)
+    : null;
   const isIti = subDepartment === 'ITI';
   const isUniversity = subDepartment === 'UNIVERSITY';
   const isDegreeCollege = isDegreeCollegeLike(subDepartment);
@@ -356,7 +365,13 @@ export function EducationEngineeringPortfolioWebsite({
           ]}
         />
 
-        {!isDegreeCollege ? <TrainingPlacementSection profile={profile} isIti={isIti} /> : null}
+        {!isDegreeCollege ? (
+          <TrainingPlacementSection
+            profile={profile}
+            isIti={isIti}
+            placementRecordsUrl={placementRecordsUrl}
+          />
+        ) : null}
 
         {studentLifeCards.length ? (
           <PsFacilitiesCarouselSection

@@ -26,7 +26,7 @@ export function DepartmentSummaryHero({
           <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">{departmentName}</h1>
           <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-600">
             <MapPinned className="h-4 w-4 shrink-0 text-orange-600/80" aria-hidden />
-            Gopalpur Constituency
+            {constituencyLabel}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3 rounded-xl border border-white/80 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-sm">

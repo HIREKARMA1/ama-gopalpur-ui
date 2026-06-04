@@ -29,6 +29,12 @@ import { useLanguage } from '../../../components/i18n/LanguageContext';
 import { t } from '../../../components/i18n/messages';
 import { Loader } from '../../../components/common/Loader';
 import { DepartmentSummaryManagementSection } from '../../../components/admin/DepartmentSummaryManagementSection';
+import {
+  getEducationPlacementLink,
+  isEducationPlacementLinkSubDept,
+  mergeEducationPlacementLink,
+  educationPlacementLinkSubDeptLabel,
+} from '../../../lib/educationPlacementLinks';
 import { RoadsDataEntryForm } from '../../../components/admin/RoadsDataEntryForm';
 import { DrainageDataEntryForm } from '../../../components/admin/DrainageDataEntryForm';
 import {
@@ -453,6 +459,7 @@ export default function DepartmentAdminPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [deptCode, setDeptCode] = useState<string | null>(null);
   const [educationSubDept, setEducationSubDept] = useState<string>('PS');
+  const [subDeptPlacementUrl, setSubDeptPlacementUrl] = useState('');
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1140,6 +1147,15 @@ export default function DepartmentAdminPage() {
       setEduFormValues({});
     }
   }, [deptCode, educationSubDept]);
+
+  useEffect(() => {
+    if (deptCode !== 'EDUCATION' || !me?.department_id || !isEducationPlacementLinkSubDept(educationSubDept)) {
+      setSubDeptPlacementUrl('');
+      return;
+    }
+    const dept = departments.find((d) => d.id === me.department_id);
+    setSubDeptPlacementUrl(getEducationPlacementLink(dept?.department_summary, educationSubDept) ?? '');
+  }, [deptCode, educationSubDept, me?.department_id, departments]);
 
   useEffect(() => {
     if (deptCode !== 'HEALTH' || orgs.length === 0) return;
@@ -3752,6 +3768,25 @@ export default function DepartmentAdminPage() {
                       profileData[latKey] = lat;
                       profileData[lngKey] = lng;
                       await educationApi.putProfile(org.id, profileData);
+                      if (
+                        isEducationPlacementLinkSubDept(educationSubDept) &&
+                        me?.department_id
+                      ) {
+                        const dept = departments.find((d) => d.id === me.department_id);
+                        if (dept) {
+                          const merged = mergeEducationPlacementLink(
+                            dept.department_summary ?? undefined,
+                            educationSubDept,
+                            subDeptPlacementUrl,
+                          );
+                          const updatedDept = await departmentsApi.updateSummary(dept.id, {
+                            department_summary: merged,
+                          });
+                          setDepartments((prev) =>
+                            prev.map((d) => (d.id === updatedDept.id ? updatedDept : d)),
+                          );
+                        }
+                      }
                       if (educationOtherImageFile) {
                         const compressed = await compressImage(educationOtherImageFile, { maxSizeMB: 0.5 });
                         await organizationsApi.uploadCoverImage(org.id, compressed);
@@ -3784,6 +3819,11 @@ export default function DepartmentAdminPage() {
                       headRoleLabel={educationSubDept === 'UNIVERSITY' ? 'Vice Chancellor' : 'Principal'}
                       isIti={educationSubDept === 'ITI'}
                       hidePlacementSection={isDegreeCollegeLike(educationSubDept)}
+                      showPerCollegePlacementLink={educationSubDept === 'ENGINEERING_COLLEGE'}
+                      showSubDeptPlacementLink={isEducationPlacementLinkSubDept(educationSubDept)}
+                      subDeptPlacementUrl={subDeptPlacementUrl}
+                      onSubDeptPlacementUrlChange={setSubDeptPlacementUrl}
+                      educationSubDeptLabel={educationPlacementLinkSubDeptLabel(educationSubDept)}
                       profileImageControl={
                         <div className="space-y-1">
                           <label className="block text-text font-medium">Profile Image</label>

@@ -128,6 +128,8 @@ export interface DepartmentSummaryContent {
   key_statistics?: DepartmentSummaryStat[];
   highlight_cards?: DepartmentSummaryHighlightCard[];
   roads_progress_rows?: RoadsProgressRow[];
+  /** Per education sub-department placement-cell redirect URLs (ENGINEERING_COLLEGE, ITI, etc.). */
+  education_placement_links?: Record<string, string>;
 }
 
 export interface User {

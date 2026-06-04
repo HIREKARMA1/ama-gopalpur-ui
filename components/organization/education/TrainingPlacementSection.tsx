@@ -1,15 +1,20 @@
 'use client';
 
 import { ExternalLink } from 'lucide-react';
-import { resolvePlacementRecordsUrl } from '../../../lib/placementConfig';
 import { asList, asString } from '../EducationPsSections';
 
 type TrainingPlacementSectionProps = {
   profile: Record<string, unknown>;
   isIti?: boolean;
+  /** Resolved placement-cell URL (engineering colleges only). */
+  placementRecordsUrl?: string | null;
 };
 
-export function TrainingPlacementSection({ profile, isIti = false }: TrainingPlacementSectionProps) {
+export function TrainingPlacementSection({
+  profile,
+  isIti = false,
+  placementRecordsUrl = null,
+}: TrainingPlacementSectionProps) {
   const officerName = asString(profile.placement_officer_name);
   const officerPhoto = asString(profile.placement_officer_photo);
   const officerQualification = asString(profile.placement_officer_qualification);
@@ -20,7 +25,6 @@ export function TrainingPlacementSection({ profile, isIti = false }: TrainingPla
   const placementPercentage = asString(profile.placement_percentage_last_year || profile.placement_percentage);
   const highestPackage = asString(profile.highest_package_lpa);
   const placementPartners = asList(profile.placement_partners);
-  const placementRecordsUrl = resolvePlacementRecordsUrl(profile);
   const sectionTitle = isIti ? 'Apprenticeship and Placement' : 'Training and Placement';
 
   return (
