@@ -42,7 +42,13 @@ import {
   DRAINAGE_TABLE_COLUMNS,
   getDrainTableColumnValue,
 } from '../../../lib/drainageOrganization';
-import { isGpRoadSector, roadDedupeKeyFromOrg, roadImportDedupeKey } from '../../../lib/roadsOrganization';
+import {
+  isSummaryOnlyRoadSector,
+  ROAD_SECTOR_CSV_HEADER_ALIASES,
+  roadDedupeKeyFromOrg,
+  roadImportDedupeKey,
+  validateSummaryOnlyRoadImportRow,
+} from '../../../lib/roadsOrganization';
 import { compressImage } from '../../../lib/imageCompression';
 import {
   EducationPsPortfolioAdminForm,
@@ -282,7 +288,7 @@ const IRRIGATION_CSV_HEADER =
 const AGRICULTURE_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID,HOST INSTITUTION/AFFILIATING BODY,ESTABLISHED YEAR,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,CAMPUS AREA (ACRES),TRAINING HALL (YES/NO),TRAINING HALL CAPACITY (SEATS),SOIL TESTING (YES/NO),SOIL SAMPLES TESTED PER YEAR,SEED DISTRIBUTION (YES/NO),SEED PROCESSING UNIT (YES/NO),SEED STORAGE CAPACITY (MT),DEMO UNITS (COMMA SEPARATED),DEMO FARM (YES/NO),DEMO FARM AREA (ACRES),GREENHOUSE/POLYHOUSE (YES/NO),IRRIGATION FACILITY (YES/NO),MACHINERY/CUSTOM HIRING (YES/NO),COMPUTER/IT LAB (YES/NO),LIBRARY (YES/NO),KEY SCHEMES (COMMA SEPARATED),TOTAL STAFF (COUNT),SCIENTISTS/OFFICERS (COUNT),TECHNICAL STAFF (COUNT),EXTENSION WORKERS (COUNT),FARMER TRAINING CAPACITY (PER BATCH),TRAINING PROGRAMMES CONDUCTED LAST YEAR,ON-FARM TRIALS/FLD LAST YEAR,VILLAGES/GPS COVERED (COUNT),SOIL HEALTH CARDS ISSUED LAST YEAR,FARMERS SERVED LAST YEAR (APPROX),REMARKS/DESCRIPTION\n';
 const ROADS_CSV_HEADER =
-  'block,GP/WARD,VILLAGE,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED,REMARKS\n';
+  'block,GP/WARD,VILLAGE,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP/Municipality),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED,REMARKS\n';
 
 const splitHeader = (header: string): string[] =>
   header.trim().replace(/\n$/, '').split(',').map((h) => h.trim());
@@ -1631,7 +1637,7 @@ export default function DepartmentAdminPage() {
           village: idx('village', 'village name', 'village_name'),
           roadName: idx('road name', 'road_name', 'name of road', 'name'),
           roadCode: idx('road code', 'road_code', 'code'),
-          roadSector: idx('road sector(nh/sh/pwd/rd/ps/gp)', 'road sector'),
+          roadSector: idx(...ROAD_SECTOR_CSV_HEADER_ALIASES),
           nameOfDivision: idx('name of division', 'name_of_division', 'division name', 'division'),
           scheme: idx('scheme', 'scheme_name'),
           lengthKm: idx('length(in km)', 'length in km', 'length_km', 'length'),
@@ -1695,16 +1701,28 @@ export default function DepartmentAdminPage() {
             }
           }
           const roadSector = get(cols, indexes.roadSector);
-          const gpSummaryOnly = isGpRoadSector(roadSector);
-          if (!gpSummaryOnly && (!startLat || !startLng || !endLat || !endLng)) {
-            errors.push(`Row ${i + 1}: provide start/end coordinates, or a valid PATH COORDINATES value (not required for GP roads).`);
-            continue;
-          }
-
+          const summaryOnlyRoad = isSummaryOnlyRoadSector(roadSector);
           const roadCode = get(cols, indexes.roadCode);
           const block = get(cols, indexes.block);
           const gpWard = get(cols, indexes.gpWard);
           const village = get(cols, indexes.village);
+
+          const summaryOnlyValidation = validateSummaryOnlyRoadImportRow({
+            block,
+            gpWard,
+            village,
+            roadName,
+            roadSector,
+          });
+          if (summaryOnlyValidation) {
+            errors.push(`Row ${i + 1}: ${summaryOnlyValidation}`);
+            continue;
+          }
+
+          if (!summaryOnlyRoad && (!startLat || !startLng || !endLat || !endLng)) {
+            errors.push(`Row ${i + 1}: provide start/end coordinates, or a valid PATH COORDINATES value (not required for GP or Municipality roads).`);
+            continue;
+          }
           const dedupeKey = roadImportDedupeKey({
             name: roadName,
             roadCode,
@@ -1723,15 +1741,15 @@ export default function DepartmentAdminPage() {
           const eLat = toNumberOrNull(endLat);
           const eLng = toNumberOrNull(endLng);
           const centerLat =
-            !gpSummaryOnly && sLat != null && eLat != null
+            !summaryOnlyRoad && sLat != null && eLat != null
               ? Number(((sLat + eLat) / 2).toFixed(6))
-              : gpSummaryOnly
+              : summaryOnlyRoad
                 ? null
                 : sLat ?? eLat ?? null;
           const centerLng =
-            !gpSummaryOnly && sLng != null && eLng != null
+            !summaryOnlyRoad && sLng != null && eLng != null
               ? Number(((sLng + eLng) / 2).toFixed(6))
-              : gpSummaryOnly
+              : summaryOnlyRoad
                 ? null
                 : sLng ?? eLng ?? null;
           try {
@@ -1752,18 +1770,18 @@ export default function DepartmentAdminPage() {
                 name_of_division: get(cols, indexes.nameOfDivision) || null,
                 scheme: get(cols, indexes.scheme) || null,
                 length_km: get(cols, indexes.lengthKm) || null,
-                path_coordinates: gpSummaryOnly ? null : pathCoordinates || null,
-                start_lat: gpSummaryOnly ? null : startLat || null,
-                start_lng: gpSummaryOnly ? null : startLng || null,
-                end_lat: gpSummaryOnly ? null : endLat || null,
-                end_lng: gpSummaryOnly ? null : endLng || null,
+                path_coordinates: summaryOnlyRoad ? null : pathCoordinates || null,
+                start_lat: summaryOnlyRoad ? null : startLat || null,
+                start_lng: summaryOnlyRoad ? null : startLng || null,
+                end_lat: summaryOnlyRoad ? null : endLat || null,
+                end_lng: summaryOnlyRoad ? null : endLng || null,
                 point_a_name: get(cols, indexes.pointAName) || null,
                 point_b_name: get(cols, indexes.pointBName) || null,
                 year_of_construction: get(cols, indexes.yearOfConstruction) || null,
                 last_maintenance_date: get(cols, indexes.lastMaintenanceDate) || null,
                 issues: get(cols, indexes.issues) || null,
                 remarks: get(cols, indexes.remarks) || null,
-                summary_only: gpSummaryOnly ? 'true' : null,
+                summary_only: summaryOnlyRoad ? 'true' : null,
                 updated_at: new Date().toISOString(),
               },
             });
@@ -4525,7 +4543,7 @@ export default function DepartmentAdminPage() {
                             : deptCode === 'REVENUE_LAND'
                               ? 'Upload Tahasil portfolio CSV. Organizations will be created/updated by TAHSIL_NAME (or OFFICE NAME), LATITUDE, LONGITUDE, and all additional attributes are saved to profile.'
                               : deptCode === 'ROADS'
-                                ? 'Upload Roads CSV. Map roads (NH/SH/PWD/RD/PS) need coordinates. GP roads need only ROAD NAME, BLOCK, GP/WARD, VILLAGE, and ROAD SECTOR=GP — road code and point names are optional.'
+                                ? 'Upload Roads CSV. Map roads (NH/SH/PWD/RD/PS) need coordinates. GP roads need ROAD NAME, BLOCK, GP/WARD, VILLAGE, and ROAD SECTOR=GP. Municipality roads need ROAD NAME, BLOCK, GP/WARD, and ROAD SECTOR=Municipality (village optional). Road code and point names are optional for both.'
                                 : deptCode === 'DRAINAGE'
                                   ? 'Upload Drainage CSV without re-saving from Excel. For checking data in Excel use templates/drainage/bahana_drains_review.csv (no path column).'
                               : 'Upload ICDS AWC CSV (same format as backend import). Existing AWC organizations for this department will be replaced.'}

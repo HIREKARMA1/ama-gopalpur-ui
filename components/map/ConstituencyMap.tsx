@@ -39,6 +39,7 @@ import { MapBlockFilter } from './MapBlockFilter';
 import {
   buildDedupedRoadFilterOptions,
   isGpRoadSector,
+  isMunicipalityRoadSector,
   normalizeConstituencyBlock,
   normalizeRoadLocationKey,
 } from '../../lib/roadsOrganization';
@@ -95,6 +96,7 @@ function normalizeRoadLegendSector(raw: string | null | undefined, codeRaw?: str
   if (sector.includes('PWD') || sector.includes('R&B')) return 'PWD';
   if (sector.includes('RD')) return 'RD';
   if (sector.includes('PS')) return 'PS';
+  if (sector.includes('MUNICIPAL')) return 'MUNICIPALITY';
   if (sector.includes('GP')) return 'GP';
   return sector || 'OTHER';
 }
@@ -107,6 +109,7 @@ function roadLegendColor(typeKey: string): string {
   if (canonical === 'RD') return '#34a853';
   if (canonical === 'PS') return '#9333ea';
   if (canonical === 'GP') return '#0ea5e9';
+  if (canonical === 'MUNICIPALITY') return '#e11d48';
   if (canonical === 'OTHER') return '#6b7280';
   let hash = 0;
   for (let i = 0; i < typeKey.length; i += 1) hash = (hash * 31 + typeKey.charCodeAt(i)) >>> 0;
@@ -120,6 +123,7 @@ const ROAD_LEGEND_LABEL_KEYS: Record<string, MessageKey> = {
   RD: 'roads.type.rd',
   PS: 'roads.type.ps',
   GP: 'roads.type.gp',
+  MUNICIPALITY: 'roads.type.municipality',
   OTHER: 'roads.type.other',
 };
 
@@ -801,12 +805,19 @@ export function ConstituencyMap({
     });
   }, [selectedDepartmentCode, organizationsByBlock, selectedGpWardFilter]);
 
-  const gpRoadSummaryCount = useMemo(() => {
-    if (selectedDepartmentCode?.toUpperCase() !== 'ROADS') return 0;
-    return roadOrganizationsScoped.filter((org) => {
+  const summaryOnlyRoadCounts = useMemo(() => {
+    if (selectedDepartmentCode?.toUpperCase() !== 'ROADS') {
+      return { GP: 0, MUNICIPALITY: 0 };
+    }
+    let gp = 0;
+    let municipality = 0;
+    for (const org of roadOrganizationsScoped) {
       const attrs = (org.attributes ?? {}) as Record<string, unknown>;
-      return isGpRoadSector(attrs.road_sector);
-    }).length;
+      const sector = attrs.road_sector;
+      if (isGpRoadSector(sector)) gp += 1;
+      else if (isMunicipalityRoadSector(sector)) municipality += 1;
+    }
+    return { GP: gp, MUNICIPALITY: municipality };
   }, [selectedDepartmentCode, roadOrganizationsScoped]);
 
   const roadLegendTypes = useMemo(() => {
@@ -819,11 +830,12 @@ export function ConstituencyMap({
             road.properties?.code as string,
           ),
         )
-        .filter((v) => v.length > 0 && v !== 'GP'),
+        .filter((v) => v.length > 0 && v !== 'GP' && v !== 'MUNICIPALITY'),
     );
-    if (gpRoadSummaryCount > 0) types.add('GP');
+    if (summaryOnlyRoadCounts.GP > 0) types.add('GP');
+    if (summaryOnlyRoadCounts.MUNICIPALITY > 0) types.add('MUNICIPALITY');
     return Array.from(types).sort();
-  }, [roadsByBlockAndGpWard, selectedDepartmentCode, gpRoadSummaryCount]);
+  }, [roadsByBlockAndGpWard, selectedDepartmentCode, summaryOnlyRoadCounts]);
 
   const roadTypeCounts = useMemo(() => {
     const acc: Record<string, number> = {};
@@ -832,12 +844,15 @@ export function ConstituencyMap({
         road.properties?.roadSector as string,
         road.properties?.code as string,
       );
-      if (!type || type === 'GP') continue;
+      if (!type || type === 'GP' || type === 'MUNICIPALITY') continue;
       acc[type] = (acc[type] ?? 0) + 1;
     }
-    if (gpRoadSummaryCount > 0) acc.GP = gpRoadSummaryCount;
+    if (summaryOnlyRoadCounts.GP > 0) acc.GP = summaryOnlyRoadCounts.GP;
+    if (summaryOnlyRoadCounts.MUNICIPALITY > 0) {
+      acc.MUNICIPALITY = summaryOnlyRoadCounts.MUNICIPALITY;
+    }
     return acc;
-  }, [roadsByBlockAndGpWard, gpRoadSummaryCount]);
+  }, [roadsByBlockAndGpWard, summaryOnlyRoadCounts]);
 
   const isRoadsDept = selectedDepartmentCode?.toUpperCase() === 'ROADS';
   const isDrainageDept = selectedDepartmentCode?.toUpperCase() === 'DRAINAGE';
@@ -2610,7 +2625,11 @@ export function ConstituencyMap({
           })}
         </MapLegendPanel>
       )}
-      {isRoadsDept && (roadsByBlockAndGpWard.length > 0 || gpRoadSummaryCount > 0) && roadLegendTypes.length > 0 && (
+      {isRoadsDept &&
+        (roadsByBlockAndGpWard.length > 0 ||
+          summaryOnlyRoadCounts.GP > 0 ||
+          summaryOnlyRoadCounts.MUNICIPALITY > 0) &&
+        roadLegendTypes.length > 0 && (
         <MapLegendPanel className="pointer-events-auto z-[45] md:max-w-[220px]">
           {roadLegendTypes.map((type) => {
             const isSelected = roadLegendFilterType === type;
