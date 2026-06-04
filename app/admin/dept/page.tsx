@@ -48,7 +48,9 @@ import {
   EducationPsPortfolioAdminForm,
   type PsPortfolioOrgFields,
 } from '../../../components/admin/EducationPsPortfolioAdminForm';
+import { EducationDiplomaPortfolioAdminForm } from '../../../components/admin/EducationDiplomaPortfolioAdminForm';
 import { EducationEngineeringPortfolioAdminForm } from '../../../components/admin/EducationEngineeringPortfolioAdminForm';
+import { applyDiplomaPortfolioExtrasToProfile, loadDiplomaPortfolioFormExtras } from '../../../lib/diplomaPortfolioExtras';
 import { ArcsPortfolioAdminForm, ARCS_FIELD_LIMITS, CharCount } from '../../../components/admin/ArcsPortfolioAdminForm';
 import {
   HealthPortfolioAdminForm,
@@ -82,6 +84,7 @@ import {
 import {
   isEducationSchoolSubDept,
   isDegreeCollegeLike,
+  isDiplomaPortfolioSubDept,
   isEngineeringPortfolioSubDept,
   type EducationSchoolSubDept,
 } from '../../../lib/educationSubDepartments';
@@ -1944,7 +1947,13 @@ export default function DepartmentAdminPage() {
         router.push('/');
       }}
     >
-      <div className="mx-auto max-w-6xl space-y-4">
+      <div
+        className={
+          deptCode === 'EDUCATION' && isDiplomaPortfolioSubDept(educationSubDept)
+            ? 'w-full max-w-none space-y-4'
+            : 'mx-auto max-w-6xl space-y-4'
+        }
+      >
         {loading && !me ? (
           <div className="flex min-h-[60vh] items-center justify-center">
             <Loader />
@@ -3565,7 +3574,11 @@ export default function DepartmentAdminPage() {
             )}
 
             {deptCode === 'EDUCATION' && !isEducationSchoolSubDept(educationSubDept) && (
-              <section className="rounded-lg border border-border bg-background p-4">
+              <section
+                className={`rounded-lg border border-border bg-background p-4 ${
+                  isDiplomaPortfolioSubDept(educationSubDept) ? 'w-full' : ''
+                }`}
+              >
                 <h2 className="text-sm font-semibold text-text">
                   Manual{' '}
                   {educationSubDept === 'ENGINEERING_COLLEGE'
@@ -3587,7 +3600,11 @@ export default function DepartmentAdminPage() {
                   Add a single institution manually. All columns from the selected CSV template are available below.
                 </p>
                 <form
-                  className="mt-3 grid gap-3 text-xs md:grid-cols-2"
+                  className={
+                    isDiplomaPortfolioSubDept(educationSubDept)
+                      ? 'mt-3 flex w-full flex-col gap-3 text-xs'
+                      : 'mt-3 grid gap-3 text-xs md:grid-cols-2'
+                  }
                   onSubmit={async (e) => {
                     e.preventDefault();
                     if (!me?.department_id) {
@@ -3680,7 +3697,9 @@ export default function DepartmentAdminPage() {
                           profileData[key] = val;
                         }
                       });
-                      if (isEngineeringPortfolioSubDept(educationSubDept)) {
+                      if (isDiplomaPortfolioSubDept(educationSubDept)) {
+                        applyDiplomaPortfolioExtrasToProfile(profileData, eduFormValues, parseJsonArray);
+                      } else if (isEngineeringPortfolioSubDept(educationSubDept)) {
                         const extraKeys = [
                           'hero_primary_tagline_en',
                           'hero_slide_1',
@@ -3802,7 +3821,26 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  {isEngineeringPortfolioSubDept(educationSubDept) ? (
+                  {isDiplomaPortfolioSubDept(educationSubDept) ? (
+                    <EducationDiplomaPortfolioAdminForm
+                      organizationId={editingEducationId}
+                      values={eduFormValues}
+                      setValues={setEduFormValues}
+                      subDeptPlacementUrl={subDeptPlacementUrl}
+                      onSubDeptPlacementUrlChange={setSubDeptPlacementUrl}
+                      profileImageControl={
+                        <div className="space-y-1">
+                          <label className="block text-text font-medium">Profile Image</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="w-full text-xs text-text file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                            onChange={(e) => setEducationOtherImageFile(e.target.files?.[0] || null)}
+                          />
+                        </div>
+                      }
+                    />
+                  ) : isEngineeringPortfolioSubDept(educationSubDept) ? (
                     <EducationEngineeringPortfolioAdminForm
                       organizationId={editingEducationId}
                       values={eduFormValues}
@@ -3866,7 +3904,7 @@ export default function DepartmentAdminPage() {
                     </>
                   )}
 
-                  <div className="md:col-span-2">
+                  <div className={isDiplomaPortfolioSubDept(educationSubDept) ? '' : 'md:col-span-2'}>
                     <button
                       type="submit"
                       disabled={creating}
@@ -6123,7 +6161,9 @@ export default function DepartmentAdminPage() {
                                       const key = snakeFromHeader(h);
                                       values[key] = v(p?.[key] ?? o.attributes?.[key]);
                                     });
-                                    if (isEngineeringPortfolioSubDept(educationSubDept)) {
+                                    if (isDiplomaPortfolioSubDept(educationSubDept)) {
+                                      loadDiplomaPortfolioFormExtras(values, p, v);
+                                    } else if (isEngineeringPortfolioSubDept(educationSubDept)) {
                                       values.hero_primary_tagline_en = v(p?.hero_primary_tagline_en);
                                       values.hero_slide_1 = v(p?.hero_slide_1);
                                       values.hero_slide_2 = v(p?.hero_slide_2);

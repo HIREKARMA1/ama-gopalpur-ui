@@ -14,6 +14,9 @@ export const ENGINEERING_PORTFOLIO_SUB_DEPTS = [
   'SSS',
 ] as const;
 
+/** Diploma colleges (polytechnic) — dedicated portfolio website and admin tabs. */
+export const DIPLOMA_PORTFOLIO_SUB_DEPTS = ['DIPLOMA_COLLEGE'] as const;
+
 export function isEducationSchoolSubDept(value: string): value is EducationSchoolSubDept {
   return (EDUCATION_SCHOOL_SUB_DEPTS as readonly string[]).includes(value);
 }
@@ -26,4 +29,13 @@ export function isDegreeCollegeLike(subDept: string | null | undefined): boolean
 export function isEngineeringPortfolioSubDept(subDept: string | null | undefined): boolean {
   const u = (subDept || '').toUpperCase();
   return (ENGINEERING_PORTFOLIO_SUB_DEPTS as readonly string[]).includes(u);
+}
+
+export function isDiplomaPortfolioSubDept(subDept: string | null | undefined): boolean {
+  const u = (subDept || '').toUpperCase();
+  return (DIPLOMA_PORTFOLIO_SUB_DEPTS as readonly string[]).includes(u);
+}
+
+export function isEducationPortfolioSubDept(subDept: string | null | undefined): boolean {
+  return isEngineeringPortfolioSubDept(subDept) || isDiplomaPortfolioSubDept(subDept);
 }
