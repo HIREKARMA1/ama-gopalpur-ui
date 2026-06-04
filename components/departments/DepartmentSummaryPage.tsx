@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { Search } from 'lucide-react';
@@ -31,11 +31,14 @@ import { parseRoadsProgressRows } from '../../lib/roadsProgressTable';
 import { RoadsProgressTableSection } from './RoadsProgressTableSection';
 import {
   buildDedupedRoadFilterOptions,
+  constituencyBlocksForRoadTypeFilter,
   roadMatchesBlockFilter,
   roadMatchesLocationFilter,
-  ROADS_CONSTITUENCY_BLOCKS,
   roadOrgGpWard,
   roadOrgVillage,
+  roadTypeFilterIsGp,
+  roadTypeFilterIsMunicipality,
+  ROADS_GP_EXCLUDED_BLOCK,
 } from '../../lib/roadsOrganization';
 
 type Props = {
@@ -145,10 +148,26 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     );
   }, [isRoadsDept, topOrganizations, department.code]);
 
+  const roadTypeIsMunicipality = isRoadsDept && roadTypeFilterIsMunicipality(roadTypeFilter);
+  const roadTypeIsGp = isRoadsDept && roadTypeFilterIsGp(roadTypeFilter);
+
   const roadBlockOptions = useMemo(() => {
     if (!isRoadsDept) return [];
-    return ROADS_CONSTITUENCY_BLOCKS.map((b) => ({ value: b.value, label: b.label }));
-  }, [isRoadsDept]);
+    return constituencyBlocksForRoadTypeFilter(roadTypeFilter).map((b) => ({
+      value: b.value,
+      label: b.label,
+    }));
+  }, [isRoadsDept, roadTypeFilter]);
+
+  useEffect(() => {
+    if (!isRoadsDept) return;
+    if (roadTypeIsMunicipality && roadVillageFilter !== 'ALL') {
+      setRoadVillageFilter('ALL');
+    }
+    if (roadTypeIsGp && roadBlockFilter === ROADS_GP_EXCLUDED_BLOCK) {
+      setRoadBlockFilter('ALL');
+    }
+  }, [isRoadsDept, roadTypeIsMunicipality, roadTypeIsGp, roadBlockFilter, roadVillageFilter]);
 
   const roadGpOptions = useMemo(() => {
     if (!isRoadsDept) return [];
@@ -205,12 +224,18 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         categoryFilter === 'ALL' ||
         (isDrainageDept ? drainKind === categoryFilter : categoryLabel === categoryFilter);
 
+      const effectiveBlockFilter =
+        isRoadsDept && roadTypeIsGp && roadBlockFilter === ROADS_GP_EXCLUDED_BLOCK
+          ? 'ALL'
+          : roadBlockFilter;
+      const effectiveVillageFilter = isRoadsDept && roadTypeIsMunicipality ? 'ALL' : roadVillageFilter;
+
       const matchesRoadFilters =
         !isRoadsDept ||
         (roadMatchesLocationFilter(categoryLabel, roadTypeFilter) &&
-          roadMatchesBlockFilter(org, roadBlockFilter) &&
+          roadMatchesBlockFilter(org, effectiveBlockFilter) &&
           roadMatchesLocationFilter(roadOrgGpWard(org), roadGpFilter) &&
-          roadMatchesLocationFilter(roadOrgVillage(org), roadVillageFilter));
+          roadMatchesLocationFilter(roadOrgVillage(org), effectiveVillageFilter));
 
       return matchesSearch && matchesCategory && matchesRoadFilters;
     });
@@ -226,6 +251,8 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     roadBlockFilter,
     roadGpFilter,
     roadVillageFilter,
+    roadTypeIsGp,
+    roadTypeIsMunicipality,
   ]);
 
   const sortedOrganizations = useMemo(() => {
@@ -352,7 +379,17 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                   <select
                     value={roadTypeFilter}
                     onChange={(e) => {
-                      setRoadTypeFilter(e.target.value);
+                      const nextType = e.target.value;
+                      setRoadTypeFilter(nextType);
+                      if (roadTypeFilterIsMunicipality(nextType)) {
+                        setRoadVillageFilter('ALL');
+                      }
+                      if (
+                        roadTypeFilterIsGp(nextType) &&
+                        roadBlockFilter === ROADS_GP_EXCLUDED_BLOCK
+                      ) {
+                        setRoadBlockFilter('ALL');
+                      }
                       setCurrentPage(1);
                     }}
                     className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
@@ -404,15 +441,20 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     ))}
                   </select>
                 </label>
-                <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <label
+                  className={`flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide ${
+                    roadTypeIsMunicipality ? 'text-slate-400' : 'text-slate-500'
+                  }`}
+                >
                   {trStatic('Village', 'ଗ୍ରାମ')}
                   <select
                     value={roadVillageFilter}
+                    disabled={roadTypeIsMunicipality}
                     onChange={(e) => {
                       setRoadVillageFilter(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
                   >
                     <option value="ALL">{trStatic('All villages', 'ସମସ୍ତ ଗ୍ରାମ')}</option>
                     {roadVillageOptions.map((opt) => (

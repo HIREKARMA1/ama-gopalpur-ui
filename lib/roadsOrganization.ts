@@ -181,6 +181,26 @@ export const ROADS_CONSTITUENCY_BLOCKS = [
   { value: 'BERHAMPUR_URBAN_I', label: 'Berhampur Urban-I' },
 ] as const;
 
+/** Block hidden from summary listing when road type filter is GP. */
+export const ROADS_GP_EXCLUDED_BLOCK = 'BERHAMPUR_URBAN_I' as const;
+
+/** True when road-type filter value is Municipality (not ALL). */
+export function roadTypeFilterIsMunicipality(filterValue: string): boolean {
+  if (filterValue === 'ALL') return false;
+  return isMunicipalityRoadSector(filterValue);
+}
+
+/** True when road-type filter value is GP (not ALL). */
+export function roadTypeFilterIsGp(filterValue: string): boolean {
+  if (filterValue === 'ALL') return false;
+  return isGpRoadSector(filterValue) && !isMunicipalityRoadSector(filterValue);
+}
+
+export function constituencyBlocksForRoadTypeFilter(roadTypeFilter: string) {
+  if (!roadTypeFilterIsGp(roadTypeFilter)) return [...ROADS_CONSTITUENCY_BLOCKS];
+  return ROADS_CONSTITUENCY_BLOCKS.filter((b) => b.value !== ROADS_GP_EXCLUDED_BLOCK);
+}
+
 export function normalizeConstituencyBlock(raw: string | null | undefined): string {
   const v = (raw || '')
     .toUpperCase()
