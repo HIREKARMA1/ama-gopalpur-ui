@@ -252,6 +252,10 @@ export function ElectricityPortfolioWebsite({
           sliderImages={aboutSliderImages}
           hideVisionMission
           hideExtendedLeaderBio
+          hideAboutText
+          hideLeaderMessage
+          hideLeaderPhoto
+          hideDesignationLabel
           aboutTitleOverride={
             lang === 'od' ? 'ବିଦ୍ୟୁତ କାର୍ଯ୍ୟାଳୟ ବିଷୟରେ' : `About ${officeName}`
           }
@@ -268,6 +272,7 @@ export function ElectricityPortfolioWebsite({
           title={tr('Key contacts', 'ମୁଖ୍ୟ ଯୋଗାଯୋଗ')}
           people={keyContacts}
           gridClassName="md:grid-cols-2 xl:grid-cols-2"
+          hideImages
         />
 
         <PsFacilitiesCarouselSection
@@ -282,6 +287,7 @@ export function ElectricityPortfolioWebsite({
           sectionTitle={tr('Staff directory', 'କର୍ମଚାରୀ ତାଲିକା')}
           subjectLabel={tr('Job type', 'ଚାକିରି ପ୍ରକାର')}
           showAttendance={false}
+          hidePhotos
           emptyStateMessage={tr('No staff records added yet.', 'ଏପର୍ଯ୍ୟନ୍ତ କର୍ମଚାରୀ ରେକର୍ଡ ଯୋଡାଯାଇନାହିଁ।')}
         />
 

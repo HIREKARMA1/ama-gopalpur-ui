@@ -12,6 +12,57 @@ export function isGpRoadSector(raw: unknown): boolean {
   return s.split(/[/,|]/).some((part) => part.trim() === 'GP');
 }
 
+/** True when road sector is Municipality (summary listing; map line optional). */
+export function isMunicipalityRoadSector(raw: unknown): boolean {
+  const s = String(raw ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, ' ');
+  if (!s) return false;
+  if (s === 'MUNICIPALITY' || s === 'MUNICIPAL' || s === 'MUNICIPAL ROAD' || s === 'MUNICIPAL ROADS') {
+    return true;
+  }
+  if (s.includes('MUNICIPALITY') || s.includes('MUNICIPAL')) return true;
+  return s.split(/[/,|]/).some((part) => {
+    const p = part.trim();
+    return p === 'MUNICIPALITY' || p === 'MUNICIPAL';
+  });
+}
+
+/** GP or Municipality roads may be listed without map geometry. */
+export function isSummaryOnlyRoadSector(raw: unknown): boolean {
+  return isGpRoadSector(raw) || isMunicipalityRoadSector(raw);
+}
+
+/** Bulk CSV: GP / Municipality rows need location fields (no coordinates). */
+export function validateSummaryOnlyRoadImportRow(parts: {
+  block?: string;
+  gpWard?: string;
+  village?: string;
+  roadName?: string;
+  roadSector?: string;
+}): string | null {
+  if (!isSummaryOnlyRoadSector(parts.roadSector)) return null;
+  if (!String(parts.roadName ?? '').trim()) return 'ROAD NAME is required';
+  if (!String(parts.roadSector ?? '').trim()) return 'ROAD SECTOR is required (use GP or Municipality)';
+  const isGp = isGpRoadSector(parts.roadSector);
+  const isMunicipality = isMunicipalityRoadSector(parts.roadSector);
+  const sectorLabel = isMunicipality && !isGp ? 'Municipality' : isGp && !isMunicipality ? 'GP' : 'GP/Municipality';
+  if (!String(parts.block ?? '').trim()) return `BLOCK is required for ${sectorLabel} roads`;
+  if (!String(parts.gpWard ?? '').trim()) return `GP/WARD is required for ${sectorLabel} roads`;
+  if (isGp && !String(parts.village ?? '').trim()) return 'VILLAGE is required for GP roads';
+  return null;
+}
+
+/** Header aliases for ROAD SECTOR column in minister CSV templates. */
+export const ROAD_SECTOR_CSV_HEADER_ALIASES = [
+  'road sector(nh/sh/pwd/rd/ps/gp/municipality)',
+  'road sector(nh/sh/pwd/rd/ps/gp)',
+  'road_sector',
+  'road sector',
+  'type',
+] as const;
+
 export function parseRoadPathCoordinates(raw: string): [number, number][] {
   const s = (raw || '').trim();
   if (!s) return [];
@@ -76,11 +127,11 @@ export function organizationHasRoadMapGeometry(org: Organization): boolean {
   );
 }
 
-/** GP (or flagged) roads listed on summary only — not shown on map. */
+/** GP, Municipality, or flagged roads listed on summary only — not shown on map. */
 export function isSummaryOnlyGpRoad(org: Organization): boolean {
   const attrs = (org.attributes ?? {}) as Record<string, unknown>;
   if (String(attrs.summary_only ?? '').toLowerCase() === 'true') return true;
-  return isGpRoadSector(attrs.road_sector) && !organizationHasRoadMapGeometry(org);
+  return isSummaryOnlyRoadSector(attrs.road_sector) && !organizationHasRoadMapGeometry(org);
 }
 
 function normKeyPart(value: unknown): string {

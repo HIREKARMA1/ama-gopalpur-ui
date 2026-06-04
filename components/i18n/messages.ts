@@ -555,6 +555,7 @@ export type MessageKey =
   | 'roads.type.rd'
   | 'roads.type.ps'
   | 'roads.type.gp'
+  | 'roads.type.municipality'
   | 'roads.type.other'
   | 'watco.type.megaEsr'
   | 'watco.type.existingEsr'
@@ -1239,6 +1240,7 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'roads.type.rd': { en: 'RD', or: 'ଗ୍ରାମୀଣ ରାସ୍ତା' },
   'roads.type.ps': { en: 'PS', or: 'ପଞ୍ଚାୟତ ସମିତି' },
   'roads.type.gp': { en: 'GP road', or: 'ଜିପି ରୋଡ୍' },
+  'roads.type.municipality': { en: 'Municipality', or: 'ନଗର ପାଳିକା' },
   'roads.type.other': { en: 'Other', or: 'ଅନ୍ୟ' },
   'watco.type.megaEsr': { en: 'MEGA ESR', or: 'ମେଗା ESR' },
   'watco.type.existingEsr': { en: 'EXISTING ESR', or: 'ବିଦ୍ୟମାନ ESR' },
