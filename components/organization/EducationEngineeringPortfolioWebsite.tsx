@@ -5,6 +5,7 @@ import { Organization } from '../../services/api';
 import { isDegreeCollegeLike } from '../../lib/educationSubDepartments';
 import { TrainingPlacementSection } from './education/TrainingPlacementSection';
 import {
+  asList,
   asString,
   parseArray,
   type FacilityCard,
@@ -31,15 +32,6 @@ function yesNo(v: unknown) {
   if (['yes', 'y', 'true', '1'].includes(raw)) return 'Yes';
   if (['no', 'n', 'false', '0'].includes(raw)) return 'No';
   return asString(v);
-}
-
-function asList(v: unknown): string[] {
-  const s = asString(v);
-  if (!s) return [];
-  return s
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
 }
 
 function DetailSection({ title, items }: { title: string; items: Array<{ label: string; value: unknown }> }) {
