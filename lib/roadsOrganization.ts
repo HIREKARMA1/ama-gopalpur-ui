@@ -12,6 +12,28 @@ export function isGpRoadSector(raw: unknown): boolean {
   return s.split(/[/,|]/).some((part) => part.trim() === 'GP');
 }
 
+/** True when road sector is Municipality (summary listing; map line optional). */
+export function isMunicipalityRoadSector(raw: unknown): boolean {
+  const s = String(raw ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, ' ');
+  if (!s) return false;
+  if (s === 'MUNICIPALITY' || s === 'MUNICIPAL' || s === 'MUNICIPAL ROAD' || s === 'MUNICIPAL ROADS') {
+    return true;
+  }
+  if (s.includes('MUNICIPALITY') || s.includes('MUNICIPAL')) return true;
+  return s.split(/[/,|]/).some((part) => {
+    const p = part.trim();
+    return p === 'MUNICIPALITY' || p === 'MUNICIPAL';
+  });
+}
+
+/** GP or Municipality roads may be listed without map geometry. */
+export function isSummaryOnlyRoadSector(raw: unknown): boolean {
+  return isGpRoadSector(raw) || isMunicipalityRoadSector(raw);
+}
+
 export function parseRoadPathCoordinates(raw: string): [number, number][] {
   const s = (raw || '').trim();
   if (!s) return [];
@@ -76,11 +98,11 @@ export function organizationHasRoadMapGeometry(org: Organization): boolean {
   );
 }
 
-/** GP (or flagged) roads listed on summary only — not shown on map. */
+/** GP, Municipality, or flagged roads listed on summary only — not shown on map. */
 export function isSummaryOnlyGpRoad(org: Organization): boolean {
   const attrs = (org.attributes ?? {}) as Record<string, unknown>;
   if (String(attrs.summary_only ?? '').toLowerCase() === 'true') return true;
-  return isGpRoadSector(attrs.road_sector) && !organizationHasRoadMapGeometry(org);
+  return isSummaryOnlyRoadSector(attrs.road_sector) && !organizationHasRoadMapGeometry(org);
 }
 
 function normKeyPart(value: unknown): string {

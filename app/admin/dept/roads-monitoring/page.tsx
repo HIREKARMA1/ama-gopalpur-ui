@@ -61,7 +61,7 @@ type RoadCsvRow = {
 };
 
 const ROAD_TEMPLATE_HEADER =
-  'block,GP/WARD,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED';
+  'block,GP/WARD,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP/Municipality),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED';
 
 const PAGE_SIZE = 20;
 
@@ -855,7 +855,7 @@ export default function RoadsMonitoringPage() {
               <input className="w-full rounded border px-3 py-2" value={roadCode} onChange={(e) => setRoadCode(e.target.value)} />
             </label>
             <label className="space-y-1">
-              <span className="font-medium text-slate-700">ROAD SECTOR(NH/SH/PWD/RD/PS/GP)</span>
+              <span className="font-medium text-slate-700">ROAD SECTOR(NH/SH/PWD/RD/PS/GP/Municipality)</span>
               <input className="w-full rounded border px-3 py-2" value={roadSector} onChange={(e) => setRoadSector(e.target.value)} />
             </label>
             <label className="space-y-1">

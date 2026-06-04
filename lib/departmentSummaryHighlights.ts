@@ -140,6 +140,7 @@ const ROAD_HIGHLIGHT_KEYS: Record<string, MessageKey> = {
   RD: 'roads.type.rd',
   PS: 'roads.type.ps',
   GP: 'roads.type.gp',
+  MUNICIPALITY: 'roads.type.municipality',
   OTHER: 'roads.type.other',
 };
 

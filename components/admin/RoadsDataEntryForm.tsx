@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { organizationsApi, type Organization } from '../../services/api';
-import { isGpRoadSector } from '../../lib/roadsOrganization';
+import { isSummaryOnlyRoadSector } from '../../lib/roadsOrganization';
 
 type Props = {
   departmentId: number;
@@ -32,7 +32,7 @@ function parsePathCoordinatePairs(value: string): Array<[number, number]> {
   return out;
 }
 
-const ROAD_SECTOR_OPTIONS = ['NH', 'SH', 'PWD', 'RD', 'PS', 'GP'] as const;
+const ROAD_SECTOR_OPTIONS = ['NH', 'SH', 'PWD', 'RD', 'PS', 'GP', 'MUNICIPALITY'] as const;
 
 export function RoadsDataEntryForm({
   departmentId,
@@ -65,7 +65,7 @@ export function RoadsDataEntryForm({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const isEditing = editingRoad != null;
-  const isGpSummaryOnly = useMemo(() => isGpRoadSector(roadSector), [roadSector]);
+  const isSummaryOnlySector = useMemo(() => isSummaryOnlyRoadSector(roadSector), [roadSector]);
 
   const reset = () => {
     setRoadName('');
@@ -152,7 +152,7 @@ export function RoadsDataEntryForm({
     let latitude: number | null = null;
     let longitude: number | null = null;
 
-    if (!isGpSummaryOnly) {
+    if (!isSummaryOnlySector) {
       if (!hasStartEnd && !hasPath) {
         setError('Provide start/end coordinates or a valid path coordinates value.');
         return;
@@ -197,7 +197,7 @@ export function RoadsDataEntryForm({
           name_of_division: nameOfDivision.trim() || null,
           scheme: scheme.trim() || null,
           length_km: lengthKm.trim() || null,
-          path_coordinates: isGpSummaryOnly ? null : pathCoordinates.trim() || null,
+          path_coordinates: isSummaryOnlySector ? null : pathCoordinates.trim() || null,
           start_lat: finalStartLat != null ? String(finalStartLat) : null,
           start_lng: finalStartLng != null ? String(finalStartLng) : null,
           end_lat: finalEndLat != null ? String(finalEndLat) : null,
@@ -208,7 +208,7 @@ export function RoadsDataEntryForm({
           last_maintenance_date: lastMaintenanceDate.trim() || null,
           issues: issues.trim() || null,
           remarks: remarks.trim() || null,
-          summary_only: isGpSummaryOnly ? 'true' : null,
+          summary_only: isSummaryOnlySector ? 'true' : null,
           updated_at: new Date().toISOString(),
         },
       };
@@ -247,8 +247,8 @@ export function RoadsDataEntryForm({
           : 'Add road records for the summary Road Listing table.'}
       </p>
       <p className="mt-1 text-[11px] text-text-muted">
-        {isGpSummaryOnly
-          ? 'GP roads are summary-only (not on map). Required: road name, road type GP, Block, GP/Ward. Road code, village, length, and point names are optional.'
+        {isSummaryOnlySector
+          ? 'GP and Municipality roads are summary-only (not on map). Required: road name, road type, Block, GP/Ward. Road code, village, length, and point names are optional.'
           : 'For NH/SH/PWD/RD/PS roads shown on the map, provide path coordinates or start/end coordinates.'}
       </p>
       <form onSubmit={submit} className="mt-3 grid gap-3 text-xs md:grid-cols-2">
@@ -258,7 +258,7 @@ export function RoadsDataEntryForm({
           value={roadName}
           onChange={(e) => setRoadName(e.target.value)}
         />
-        {!isGpSummaryOnly ? (
+        {!isSummaryOnlySector ? (
           <input
             className="rounded border border-border px-3 py-2"
             placeholder="Road code"
@@ -276,7 +276,11 @@ export function RoadsDataEntryForm({
             <option value="">Select type</option>
             {ROAD_SECTOR_OPTIONS.map((opt) => (
               <option key={opt} value={opt}>
-                {opt === 'GP' ? 'GP (summary listing only)' : opt}
+                {opt === 'GP'
+                  ? 'GP (summary listing only)'
+                  : opt === 'MUNICIPALITY'
+                    ? 'Municipality (summary listing only)'
+                    : opt}
               </option>
             ))}
           </select>
@@ -317,7 +321,7 @@ export function RoadsDataEntryForm({
           value={lengthKm}
           onChange={(e) => setLengthKm(e.target.value)}
         />
-        {!isGpSummaryOnly ? (
+        {!isSummaryOnlySector ? (
           <>
             <input
               className="rounded border border-border px-3 py-2"
@@ -333,7 +337,7 @@ export function RoadsDataEntryForm({
             />
           </>
         ) : null}
-        {!isGpSummaryOnly ? (
+        {!isSummaryOnlySector ? (
           <>
             <input
               className="rounded border border-border px-3 py-2"
