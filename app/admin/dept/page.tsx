@@ -3692,6 +3692,7 @@ export default function DepartmentAdminPage() {
                           'placement_officer_experience_from',
                           'placement_officer_experience_to',
                           'placement_partners',
+                          'placement_records_url',
                           'placement_description',
                           'placement_percentage_last_year',
                           'highest_package_lpa',
@@ -6109,6 +6110,7 @@ export default function DepartmentAdminPage() {
                                       values.placement_officer_experience_from = v(p?.placement_officer_experience_from);
                                       values.placement_officer_experience_to = v(p?.placement_officer_experience_to);
                                       values.placement_partners = v(p?.placement_partners);
+                                      values.placement_records_url = v(p?.placement_records_url);
                                       values.placement_description = v(p?.placement_description);
                                       values.placement_percentage_last_year = v(p?.placement_percentage_last_year);
                                       values.highest_package_lpa = v(p?.highest_package_lpa);
