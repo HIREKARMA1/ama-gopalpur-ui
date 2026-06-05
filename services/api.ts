@@ -87,6 +87,15 @@ export interface DepartmentSummaryHighlightCard {
   legend_key?: string | null;
 }
 
+/** Electricity department summary — substation and consumer totals (admin-edited). */
+export interface ElectricityConsumerStatsRow {
+  sl_no?: string | null;
+  total_substation?: string | null;
+  total_consumer?: string | null;
+  total_domestic_consumer?: string | null;
+  total_commercial_consumer?: string | null;
+}
+
 /** Roads department summary — upgradation / proposal tracking by FY (admin-edited). */
 export interface RoadsProgressRow {
   sl_no?: string | null;
@@ -127,6 +136,7 @@ export interface DepartmentSummaryContent {
   strategic_priorities?: string[];
   key_statistics?: DepartmentSummaryStat[];
   highlight_cards?: DepartmentSummaryHighlightCard[];
+  electricity_consumer_stats_rows?: ElectricityConsumerStatsRow[];
   roads_progress_rows?: RoadsProgressRow[];
   /** Per education sub-department placement-cell redirect URLs (ENGINEERING_COLLEGE, ITI, etc.). */
   education_placement_links?: Record<string, string>;
