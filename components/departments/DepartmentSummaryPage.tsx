@@ -27,6 +27,8 @@ import {
   getDrainLineKindFromOrg,
   getDrainTableColumnValue,
 } from '../../lib/drainageOrganization';
+import { parseElectricityConsumerStatsRows } from '../../lib/electricityConsumerStatsTable';
+import { ElectricityConsumerStatsTableSection } from './ElectricityConsumerStatsTableSection';
 import { parseRoadsProgressRows } from '../../lib/roadsProgressTable';
 import { RoadsProgressTableSection } from './RoadsProgressTableSection';
 import {
@@ -50,6 +52,7 @@ type Props = {
 export function DepartmentSummaryPage({ department, organizationCount, organizations }: Props) {
   const { language } = useLanguage();
   const deptCode = (department.code || '').toUpperCase();
+  const isElectricityDept = deptCode === 'ELECTRICITY';
   const isRoadsDept = deptCode === 'ROADS';
   const isArcsDept = deptCode === 'ARCS';
   const isDrainageDept = deptCode === 'DRAINAGE';
@@ -86,6 +89,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   );
   const stats = summary?.key_statistics ?? [];
   const list = (items?: string[]) => (items ?? []).filter(Boolean).slice(0, 12);
+
+  const electricityConsumerStatsRows = useMemo(
+    () => (isElectricityDept ? parseElectricityConsumerStatsRows(summary) : []),
+    [isElectricityDept, summary],
+  );
 
   const roadsProgressRows = useMemo(
     () => (isRoadsDept ? parseRoadsProgressRows(summary) : []),
@@ -348,6 +356,10 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           departmentCode={department.code || ''}
           highlightCards={highlightCards}
         />
+
+        {isElectricityDept ? (
+          <ElectricityConsumerStatsTableSection rows={electricityConsumerStatsRows} language={language} />
+        ) : null}
 
         {isRoadsDept ? (
           <RoadsProgressTableSection rows={roadsProgressRows} language={language} />

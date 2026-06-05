@@ -11,6 +11,8 @@ import { DepartmentHighlightsEditor } from './DepartmentHighlightsEditor';
 import { DepartmentMapSummaryEditor } from './DepartmentMapSummaryEditor';
 import { DepartmentSummaryEditor } from './DepartmentSummaryEditor';
 import { DepartmentSummaryMinistersEditor } from './DepartmentSummaryMinistersEditor';
+import { ElectricityConsumerStatsTableEditor } from './ElectricityConsumerStatsTableEditor';
+import { parseElectricityConsumerStatsRows } from '../../lib/electricityConsumerStatsTable';
 import { RoadsProgressTableEditor } from './RoadsProgressTableEditor';
 import { parseRoadsProgressRows } from '../../lib/roadsProgressTable';
 
@@ -46,7 +48,13 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
     [department.department_summary, department.code, organizations],
   );
 
-  const isRoadsDept = (department.code || '').toUpperCase() === 'ROADS';
+  const deptCode = (department.code || '').toUpperCase();
+  const isElectricityDept = deptCode === 'ELECTRICITY';
+  const isRoadsDept = deptCode === 'ROADS';
+  const electricityConsumerStatsRows = useMemo(
+    () => parseElectricityConsumerStatsRows(department.department_summary),
+    [department.department_summary],
+  );
   const roadsProgressRows = useMemo(
     () => parseRoadsProgressRows(department.department_summary),
     [department.department_summary],
@@ -109,6 +117,18 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
           onDepartmentUpdated(updated);
         }}
       />
+      {isElectricityDept ? (
+        <ElectricityConsumerStatsTableEditor
+          departmentId={department.id}
+          initialRows={electricityConsumerStatsRows}
+          onSave={async ({ electricity_consumer_stats_rows }) => {
+            const updated = await departmentsApi.updateSummary(department.id, {
+              department_summary: { electricity_consumer_stats_rows },
+            });
+            onDepartmentUpdated(updated);
+          }}
+        />
+      ) : null}
       {isRoadsDept ? (
         <RoadsProgressTableEditor
           departmentId={department.id}
