@@ -15,6 +15,8 @@ import { ElectricityConsumerStatsTableEditor } from './ElectricityConsumerStatsT
 import { parseElectricityConsumerStatsRows } from '../../lib/electricityConsumerStatsTable';
 import { IrrigationConsumerStatsTableEditor } from './IrrigationConsumerStatsTableEditor';
 import { parseIrrigationConsumerStatsRows } from '../../lib/irrigationConsumerStatsTable';
+import { MinorIrrigationConsumerStatsTableEditor } from './MinorIrrigationConsumerStatsTableEditor';
+import { parseMinorIrrigationConsumerStatsRows } from '../../lib/minorIrrigationConsumerStatsTable';
 import { RoadsProgressTableEditor } from './RoadsProgressTableEditor';
 import { parseRoadsProgressRows } from '../../lib/roadsProgressTable';
 
@@ -53,6 +55,7 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
   const deptCode = (department.code || '').toUpperCase();
   const isElectricityDept = deptCode === 'ELECTRICITY';
   const isIrrigationDept = deptCode === 'IRRIGATION';
+  const isMinorIrrigationDept = deptCode === 'MINOR_IRRIGATION';
   const isRoadsDept = deptCode === 'ROADS';
   const electricityConsumerStatsRows = useMemo(
     () => parseElectricityConsumerStatsRows(department.department_summary),
@@ -60,6 +63,10 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
   );
   const irrigationConsumerStatsRows = useMemo(
     () => parseIrrigationConsumerStatsRows(department.department_summary),
+    [department.department_summary],
+  );
+  const minorIrrigationConsumerStatsRows = useMemo(
+    () => parseMinorIrrigationConsumerStatsRows(department.department_summary),
     [department.department_summary],
   );
   const roadsProgressRows = useMemo(
@@ -143,6 +150,18 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
           onSave={async ({ irrigation_consumer_stats_rows }) => {
             const updated = await departmentsApi.updateSummary(department.id, {
               department_summary: { irrigation_consumer_stats_rows },
+            });
+            onDepartmentUpdated(updated);
+          }}
+        />
+      ) : null}
+      {isMinorIrrigationDept ? (
+        <MinorIrrigationConsumerStatsTableEditor
+          departmentId={department.id}
+          initialRows={minorIrrigationConsumerStatsRows}
+          onSave={async ({ minor_irrigation_consumer_stats_rows }) => {
+            const updated = await departmentsApi.updateSummary(department.id, {
+              department_summary: { minor_irrigation_consumer_stats_rows },
             });
             onDepartmentUpdated(updated);
           }}

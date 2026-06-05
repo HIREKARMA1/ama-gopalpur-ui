@@ -44,6 +44,8 @@ import {
 } from '../../lib/roadsOrganization';
 import { parseIrrigationConsumerStatsRows } from '../../lib/irrigationConsumerStatsTable';
 import { IrrigationConsumerStatsTableSection } from './IrrigationConsumerStatsTableSection';
+import { parseMinorIrrigationConsumerStatsRows } from '../../lib/minorIrrigationConsumerStatsTable';
+import { MinorIrrigationConsumerStatsTableSection } from './MinorIrrigationConsumerStatsTableSection';
 
 type Props = {
   department: Department;
@@ -56,6 +58,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const deptCode = (department.code || '').toUpperCase();
   const isElectricityDept = deptCode === 'ELECTRICITY';
   const isIrrigationDept = deptCode === 'IRRIGATION';
+  const isMinorIrrigationDept = deptCode === 'MINOR_IRRIGATION';
   const isRoadsDept = deptCode === 'ROADS';
   const isArcsDept = deptCode === 'ARCS';
   const isDrainageDept = deptCode === 'DRAINAGE';
@@ -101,6 +104,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const irrigationConsumerStatsRows = useMemo(
     () => (isIrrigationDept ? parseIrrigationConsumerStatsRows(summary) : []),
     [isIrrigationDept, summary],
+  );
+
+  const minorIrrigationConsumerStatsRows = useMemo(
+    () => (isMinorIrrigationDept ? parseMinorIrrigationConsumerStatsRows(summary) : []),
+    [isMinorIrrigationDept, summary],
   );
 
   const roadsProgressRows = useMemo(
@@ -371,6 +379,13 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
 
         {isIrrigationDept ? (
           <IrrigationConsumerStatsTableSection rows={irrigationConsumerStatsRows} language={language} />
+        ) : null}
+
+        {isMinorIrrigationDept ? (
+          <MinorIrrigationConsumerStatsTableSection
+            rows={minorIrrigationConsumerStatsRows}
+            language={language}
+          />
         ) : null}
 
         {isRoadsDept ? (
