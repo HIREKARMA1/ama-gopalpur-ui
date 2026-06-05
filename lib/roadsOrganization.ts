@@ -278,3 +278,41 @@ export function roadMatchesLocationFilter(
   if (!t) return false;
   return normalizeRoadLocationKey(t) === filterValue;
 }
+
+/** True when road sector is PWD or RD (maintenance columns on public summary). */
+export function isPwdOrRdRoadSector(raw: unknown): boolean {
+  const s = String(raw ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, ' ');
+  if (!s) return false;
+  if (s === 'PWD' || s === 'RD') return true;
+  return s.split(/[/,|]/).some((part) => {
+    const p = part.trim();
+    return p === 'PWD' || p === 'RD';
+  });
+}
+
+/** Public summary: show length / repaired / condition columns for this filter (not GP/Municipality-only views). */
+export function roadsSummaryFilterShowsMaintenanceColumns(roadTypeFilter: string): boolean {
+  if (roadTypeFilter === 'ALL') return true;
+  if (roadTypeFilterIsGp(roadTypeFilter) || roadTypeFilterIsMunicipality(roadTypeFilter)) return false;
+  return isPwdOrRdRoadSector(roadTypeFilter);
+}
+
+/** Public summary: row should display maintenance column values (PWD/RD only). */
+export function roadOrgShowsMaintenanceColumns(org: Organization): boolean {
+  const attrs = (org.attributes ?? {}) as Record<string, unknown>;
+  if (isSummaryOnlyRoadSector(attrs.road_sector)) return false;
+  return isPwdOrRdRoadSector(attrs.road_sector);
+}
+
+export function roadLastRepairedDate(attrs: Record<string, unknown> | null | undefined): string {
+  if (!attrs) return '';
+  return String(attrs.last_repaired_date ?? attrs.last_maintenance_date ?? '').trim();
+}
+
+export function roadPresentCondition(attrs: Record<string, unknown> | null | undefined): string {
+  if (!attrs) return '';
+  return String(attrs.present_condition ?? '').trim();
+}

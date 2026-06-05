@@ -38,6 +38,8 @@ type RoadEntry = {
   pointAName: string;
   pointBName: string;
   yearOfConstruction: string;
+  lastRepairedDate: string;
+  presentCondition: string;
   lastMaintenanceDate: string;
   issues: string;
   latitude: number | null;
@@ -63,12 +65,14 @@ type RoadCsvRow = {
   pointAName: string;
   pointBName: string;
   yearOfConstruction: string;
+  lastRepairedDate: string;
+  presentCondition: string;
   lastMaintenanceDate: string;
   issues: string;
 };
 
 const ROAD_TEMPLATE_HEADER =
-  'block,GP/WARD,VILLAGE,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP/Municipality),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED';
+  'block,GP/WARD,VILLAGE,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP/Municipality),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST REPAIRED DATE,PRESENT CONDITION,ISSUES OBSERVED';
 
 const PAGE_SIZE = 20;
 
@@ -173,7 +177,13 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
     pointAName: idx('point a name', 'point_a_name', 'start_point_name', 'starting_point_name'),
     pointBName: idx('point b name', 'point_b_name', 'end_point_name', 'ending_point_name'),
     yearOfConstruction: idx('year of construction', 'year_of_construction', 'construction_year'),
-    lastMaintenanceDate: idx('last maintenance date', 'last_maintenance_date'),
+    lastRepairedDate: idx(
+      'last repaired date',
+      'last_repaired_date',
+      'last maintenance date',
+      'last_maintenance_date',
+    ),
+    presentCondition: idx('present condition', 'present_condition'),
     issues: idx('issues observed', 'issues', 'issues_observed'),
   };
 
@@ -264,7 +274,9 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
       pointAName: get(indexes.pointAName),
       pointBName: get(indexes.pointBName),
       yearOfConstruction: get(indexes.yearOfConstruction),
-      lastMaintenanceDate: get(indexes.lastMaintenanceDate),
+      lastRepairedDate: get(indexes.lastRepairedDate),
+      presentCondition: get(indexes.presentCondition),
+      lastMaintenanceDate: get(indexes.lastRepairedDate),
       issues: get(indexes.issues),
     });
   }
@@ -311,7 +323,8 @@ export default function RoadsMonitoringPage() {
   const [pointAName, setPointAName] = useState('');
   const [pointBName, setPointBName] = useState('');
   const [yearOfConstruction, setYearOfConstruction] = useState('');
-  const [lastMaintenanceDate, setLastMaintenanceDate] = useState('');
+  const [lastRepairedDate, setLastRepairedDate] = useState('');
+  const [presentCondition, setPresentCondition] = useState('');
   const [issues, setIssues] = useState('');
   const csvInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -377,6 +390,8 @@ export default function RoadsMonitoringPage() {
           pointAName: String(attrs.point_a_name ?? ''),
           pointBName: String(attrs.point_b_name ?? ''),
           yearOfConstruction: String(attrs.year_of_construction ?? ''),
+          lastRepairedDate: String(attrs.last_repaired_date ?? attrs.last_maintenance_date ?? ''),
+          presentCondition: String(attrs.present_condition ?? ''),
           lastMaintenanceDate: String(attrs.last_maintenance_date ?? ''),
           issues: String(attrs.issues ?? ''),
           latitude: org.latitude ?? null,
@@ -438,7 +453,8 @@ export default function RoadsMonitoringPage() {
     setPointAName('');
     setPointBName('');
     setYearOfConstruction('');
-    setLastMaintenanceDate('');
+    setLastRepairedDate('');
+    setPresentCondition('');
     setIssues('');
     setEditingRoadId(null);
   };
@@ -491,7 +507,9 @@ export default function RoadsMonitoringPage() {
         point_a_name: row.pointAName || null,
         point_b_name: row.pointBName || null,
         year_of_construction: row.yearOfConstruction || null,
-        last_maintenance_date: row.lastMaintenanceDate || null,
+        last_repaired_date: row.lastRepairedDate || null,
+        present_condition: row.presentCondition || null,
+        last_maintenance_date: row.lastRepairedDate || row.lastMaintenanceDate || null,
         issues: row.issues || null,
         summary_only: summaryOnlyRoad ? 'true' : null,
         updated_at: new Date().toISOString(),
@@ -549,7 +567,9 @@ export default function RoadsMonitoringPage() {
         pointAName,
         pointBName,
         yearOfConstruction,
-        lastMaintenanceDate,
+        lastRepairedDate,
+        presentCondition,
+        lastMaintenanceDate: lastRepairedDate,
         issues,
       };
       if (editingRoadId) {
@@ -589,7 +609,8 @@ export default function RoadsMonitoringPage() {
     setPointAName(row.pointAName);
     setPointBName(row.pointBName);
     setYearOfConstruction(row.yearOfConstruction);
-    setLastMaintenanceDate(row.lastMaintenanceDate);
+    setLastRepairedDate(row.lastRepairedDate || row.lastMaintenanceDate);
+    setPresentCondition(row.presentCondition);
     setIssues(row.issues);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -948,8 +969,12 @@ export default function RoadsMonitoringPage() {
               <input className="w-full rounded border px-3 py-2" value={yearOfConstruction} onChange={(e) => setYearOfConstruction(e.target.value)} />
             </label>
             <label className="space-y-1">
-              <span className="font-medium text-slate-700">Last maintenance date</span>
-              <input type="date" className="w-full rounded border px-3 py-2" value={lastMaintenanceDate} onChange={(e) => setLastMaintenanceDate(e.target.value)} />
+              <span className="font-medium text-slate-700">Last repaired date</span>
+              <input type="date" className="w-full rounded border px-3 py-2" value={lastRepairedDate} onChange={(e) => setLastRepairedDate(e.target.value)} />
+            </label>
+            <label className="space-y-1">
+              <span className="font-medium text-slate-700">Present condition</span>
+              <input className="w-full rounded border px-3 py-2" value={presentCondition} onChange={(e) => setPresentCondition(e.target.value)} />
             </label>
             <label className="space-y-1 lg:col-span-3">
               <span className="font-medium text-slate-700">Issues observed</span>
@@ -1125,13 +1150,15 @@ export default function RoadsMonitoringPage() {
                   <th className="px-3 py-2 text-left">Starting point</th>
                   <th className="px-3 py-2 text-left">Ending point</th>
                   <th className="px-3 py-2 text-left">Construction year</th>
+                  <th className="px-3 py-2 text-left">Last repaired date</th>
+                  <th className="px-3 py-2 text-left">Present condition</th>
                   <th className="px-3 py-2 text-left">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {paginated.length === 0 && (
                   <tr>
-                    <td colSpan={18} className="px-4 py-10 text-center italic text-slate-400">
+                    <td colSpan={20} className="px-4 py-10 text-center italic text-slate-400">
                       No road records found.
                     </td>
                   </tr>
@@ -1154,6 +1181,8 @@ export default function RoadsMonitoringPage() {
                     <td className="px-3 py-2">{row.pointAName || '—'}</td>
                     <td className="px-3 py-2">{row.pointBName || '—'}</td>
                     <td className="px-3 py-2">{row.yearOfConstruction || '—'}</td>
+                    <td className="px-3 py-2">{row.lastRepairedDate || '—'}</td>
+                    <td className="px-3 py-2">{row.presentCondition || '—'}</td>
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
                         <button

@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { organizationsApi, type Organization } from '../../services/api';
-import { isSummaryOnlyRoadSector } from '../../lib/roadsOrganization';
+import { isPwdOrRdRoadSector, isSummaryOnlyRoadSector } from '../../lib/roadsOrganization';
 
 type Props = {
   departmentId: number;
@@ -58,7 +58,8 @@ export function RoadsDataEntryForm({
   const [pointAName, setPointAName] = useState('');
   const [pointBName, setPointBName] = useState('');
   const [yearOfConstruction, setYearOfConstruction] = useState('');
-  const [lastMaintenanceDate, setLastMaintenanceDate] = useState('');
+  const [lastRepairedDate, setLastRepairedDate] = useState('');
+  const [presentCondition, setPresentCondition] = useState('');
   const [issues, setIssues] = useState('');
   const [remarks, setRemarks] = useState('');
   const [saving, setSaving] = useState(false);
@@ -66,6 +67,10 @@ export function RoadsDataEntryForm({
   const [saved, setSaved] = useState(false);
   const isEditing = editingRoad != null;
   const isSummaryOnlySector = useMemo(() => isSummaryOnlyRoadSector(roadSector), [roadSector]);
+  const showsMaintenanceFields = useMemo(
+    () => isPwdOrRdRoadSector(roadSector),
+    [roadSector],
+  );
 
   const reset = () => {
     setRoadName('');
@@ -85,7 +90,8 @@ export function RoadsDataEntryForm({
     setPointAName('');
     setPointBName('');
     setYearOfConstruction('');
-    setLastMaintenanceDate('');
+    setLastRepairedDate('');
+    setPresentCondition('');
     setIssues('');
     setRemarks('');
   };
@@ -117,7 +123,10 @@ export function RoadsDataEntryForm({
     setPointAName(String(attrs.point_a_name ?? ''));
     setPointBName(String(attrs.point_b_name ?? ''));
     setYearOfConstruction(String(attrs.year_of_construction ?? ''));
-    setLastMaintenanceDate(String(attrs.last_maintenance_date ?? ''));
+    setLastRepairedDate(
+      String(attrs.last_repaired_date ?? attrs.last_maintenance_date ?? ''),
+    );
+    setPresentCondition(String(attrs.present_condition ?? ''));
     setIssues(String(attrs.issues ?? ''));
     setRemarks(String(attrs.remarks ?? ''));
     setError(null);
@@ -196,7 +205,7 @@ export function RoadsDataEntryForm({
           road_sector: roadSector.trim() || null,
           name_of_division: nameOfDivision.trim() || null,
           scheme: scheme.trim() || null,
-          length_km: lengthKm.trim() || null,
+          length_km: showsMaintenanceFields ? lengthKm.trim() || null : null,
           path_coordinates: isSummaryOnlySector ? null : pathCoordinates.trim() || null,
           start_lat: finalStartLat != null ? String(finalStartLat) : null,
           start_lng: finalStartLng != null ? String(finalStartLng) : null,
@@ -205,7 +214,9 @@ export function RoadsDataEntryForm({
           point_a_name: pointAName.trim() || null,
           point_b_name: pointBName.trim() || null,
           year_of_construction: yearOfConstruction.trim() || null,
-          last_maintenance_date: lastMaintenanceDate.trim() || null,
+          last_repaired_date: showsMaintenanceFields ? lastRepairedDate.trim() || null : null,
+          present_condition: showsMaintenanceFields ? presentCondition.trim() || null : null,
+          last_maintenance_date: showsMaintenanceFields ? lastRepairedDate.trim() || null : null,
           issues: issues.trim() || null,
           remarks: remarks.trim() || null,
           summary_only: isSummaryOnlySector ? 'true' : null,
@@ -315,12 +326,14 @@ export function RoadsDataEntryForm({
           value={village}
           onChange={(e) => setVillage(e.target.value)}
         />
-        <input
-          className="rounded border border-border px-3 py-2"
-          placeholder="Length (in km)"
-          value={lengthKm}
-          onChange={(e) => setLengthKm(e.target.value)}
-        />
+        {showsMaintenanceFields ? (
+          <input
+            className="rounded border border-border px-3 py-2"
+            placeholder="Length (in km)"
+            value={lengthKm}
+            onChange={(e) => setLengthKm(e.target.value)}
+          />
+        ) : null}
         {!isSummaryOnlySector ? (
           <>
             <input
@@ -377,15 +390,25 @@ export function RoadsDataEntryForm({
           value={yearOfConstruction}
           onChange={(e) => setYearOfConstruction(e.target.value)}
         />
-        <label className="flex flex-col gap-1 text-[11px] text-text-muted">
-          <span>Last maintenance</span>
-          <input
-            type="date"
-            className="rounded border border-border px-3 py-2 text-xs text-text"
-            value={lastMaintenanceDate}
-            onChange={(e) => setLastMaintenanceDate(e.target.value)}
-          />
-        </label>
+        {showsMaintenanceFields ? (
+          <>
+            <label className="flex flex-col gap-1 text-[11px] text-text-muted">
+              <span>Last repaired date</span>
+              <input
+                type="date"
+                className="rounded border border-border px-3 py-2 text-xs text-text"
+                value={lastRepairedDate}
+                onChange={(e) => setLastRepairedDate(e.target.value)}
+              />
+            </label>
+            <input
+              className="rounded border border-border px-3 py-2"
+              placeholder="Present condition"
+              value={presentCondition}
+              onChange={(e) => setPresentCondition(e.target.value)}
+            />
+          </>
+        ) : null}
         <input
           className="rounded border border-border px-3 py-2 md:col-span-2"
           placeholder="Issues observed"
