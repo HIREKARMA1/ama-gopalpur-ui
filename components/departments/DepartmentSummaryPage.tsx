@@ -27,6 +27,8 @@ import {
   getDrainLineKindFromOrg,
   getDrainTableColumnValue,
 } from '../../lib/drainageOrganization';
+import { parseElectricityConsumerStatsRows } from '../../lib/electricityConsumerStatsTable';
+import { ElectricityConsumerStatsTableSection } from './ElectricityConsumerStatsTableSection';
 import { parseRoadsProgressRows } from '../../lib/roadsProgressTable';
 import { RoadsProgressTableSection } from './RoadsProgressTableSection';
 import {
@@ -38,8 +40,16 @@ import {
   roadOrgVillage,
   roadTypeFilterIsGp,
   roadTypeFilterIsMunicipality,
+  roadLastRepairedDate,
+  roadOrgShowsMaintenanceColumns,
+  roadPresentCondition,
+  roadsSummaryFilterShowsMaintenanceColumns,
   ROADS_GP_EXCLUDED_BLOCK,
 } from '../../lib/roadsOrganization';
+import { parseIrrigationConsumerStatsRows } from '../../lib/irrigationConsumerStatsTable';
+import { IrrigationConsumerStatsTableSection } from './IrrigationConsumerStatsTableSection';
+import { parseMinorIrrigationConsumerStatsRows } from '../../lib/minorIrrigationConsumerStatsTable';
+import { MinorIrrigationConsumerStatsTableSection } from './MinorIrrigationConsumerStatsTableSection';
 
 type Props = {
   department: Department;
@@ -50,6 +60,9 @@ type Props = {
 export function DepartmentSummaryPage({ department, organizationCount, organizations }: Props) {
   const { language } = useLanguage();
   const deptCode = (department.code || '').toUpperCase();
+  const isElectricityDept = deptCode === 'ELECTRICITY';
+  const isIrrigationDept = deptCode === 'IRRIGATION';
+  const isMinorIrrigationDept = deptCode === 'MINOR_IRRIGATION';
   const isRoadsDept = deptCode === 'ROADS';
   const isArcsDept = deptCode === 'ARCS';
   const isDrainageDept = deptCode === 'DRAINAGE';
@@ -87,6 +100,21 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const stats = summary?.key_statistics ?? [];
   const list = (items?: string[]) => (items ?? []).filter(Boolean).slice(0, 12);
 
+  const electricityConsumerStatsRows = useMemo(
+    () => (isElectricityDept ? parseElectricityConsumerStatsRows(summary) : []),
+    [isElectricityDept, summary],
+  );
+
+  const irrigationConsumerStatsRows = useMemo(
+    () => (isIrrigationDept ? parseIrrigationConsumerStatsRows(summary) : []),
+    [isIrrigationDept, summary],
+  );
+
+  const minorIrrigationConsumerStatsRows = useMemo(
+    () => (isMinorIrrigationDept ? parseMinorIrrigationConsumerStatsRows(summary) : []),
+    [isMinorIrrigationDept, summary],
+  );
+
   const roadsProgressRows = useMemo(
     () => (isRoadsDept ? parseRoadsProgressRows(summary) : []),
     [isRoadsDept, summary],
@@ -111,12 +139,31 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 15;
 
+  const roadsMaintenanceColumnsVisible = useMemo(
+    () => isRoadsDept && roadsSummaryFilterShowsMaintenanceColumns(roadTypeFilter),
+    [isRoadsDept, roadTypeFilter],
+  );
+
+  const roadsVillageColumnVisible = useMemo(
+    () => isRoadsDept && !roadTypeFilterIsMunicipality(roadTypeFilter),
+    [isRoadsDept, roadTypeFilter],
+  );
+
   const listingTableColSpan = useMemo(() => {
-    if (isRoadsDept) return 7;
+    if (isRoadsDept) {
+      return 5 + (roadsVillageColumnVisible ? 1 : 0) + (roadsMaintenanceColumnsVisible ? 3 : 0);
+    }
     if (isDrainageDept) return 3 + DRAINAGE_SUMMARY_TABLE_COLUMNS.length;
     if (isArcsDept) return 3 + ARCS_SUMMARY_TABLE_COLUMNS.length + (showPortfolioColumn ? 1 : 0);
     return 4 + (showPortfolioColumn ? 1 : 0);
-  }, [isRoadsDept, isDrainageDept, isArcsDept, showPortfolioColumn]);
+  }, [
+    isRoadsDept,
+    isDrainageDept,
+    isArcsDept,
+    showPortfolioColumn,
+    roadsMaintenanceColumnsVisible,
+    roadsVillageColumnVisible,
+  ]);
 
   const categoryOptions = useMemo(() => {
     if (isDrainageDept) {
@@ -349,6 +396,21 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           highlightCards={highlightCards}
         />
 
+        {isElectricityDept ? (
+          <ElectricityConsumerStatsTableSection rows={electricityConsumerStatsRows} language={language} />
+        ) : null}
+
+        {isIrrigationDept ? (
+          <IrrigationConsumerStatsTableSection rows={irrigationConsumerStatsRows} language={language} />
+        ) : null}
+
+        {isMinorIrrigationDept ? (
+          <MinorIrrigationConsumerStatsTableSection
+            rows={minorIrrigationConsumerStatsRows}
+            language={language}
+          />
+        ) : null}
+
         {isRoadsDept ? (
           <RoadsProgressTableSection rows={roadsProgressRows} language={language} />
         ) : null}
@@ -574,12 +636,24 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                           {trStatic('GP/Ward', 'ଜିପି/ୱାର୍ଡ')}
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          {trStatic('Village', 'ଗ୍ରାମ')}
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          {trStatic('Length (km)', 'ଦୈର୍ଘ୍ୟ (କି.ମି.)')}
-                        </th>
+                        {roadsVillageColumnVisible ? (
+                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            {trStatic('Village', 'ଗ୍ରାମ')}
+                          </th>
+                        ) : null}
+                        {roadsMaintenanceColumnsVisible ? (
+                          <>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                              {trStatic('Length (km)', 'ଦୈର୍ଘ୍ୟ (କି.ମି.)')}
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                              {trStatic('Last repaired date', 'ଶେଷ ମରାମତି ତାରିଖ')}
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                              {trStatic('Present condition', 'ବର୍ତ୍ତମାନ ଅବସ୍ଥା')}
+                            </th>
+                          </>
+                        ) : null}
                       </>
                     ) : null}
                     {showPortfolioColumn ? (
@@ -643,20 +717,48 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                                 )}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-sm text-slate-600">
-                              <span className="line-clamp-1">
-                                {String(
-                                  (org.attributes as Record<string, unknown> | null)?.village ??
-                                  (org.attributes as Record<string, unknown> | null)?.village_name ??
-                                  '—',
-                                )}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-sm text-slate-600">
-                              <span className="line-clamp-1">
-                                {String((org.attributes as Record<string, unknown> | null)?.length_km ?? '—')}
-                              </span>
-                            </td>
+                            {roadsVillageColumnVisible ? (
+                              <td className="px-4 py-3 text-sm text-slate-600">
+                                <span className="line-clamp-1">
+                                  {String(
+                                    (org.attributes as Record<string, unknown> | null)?.village ??
+                                    (org.attributes as Record<string, unknown> | null)?.village_name ??
+                                    '—',
+                                  )}
+                                </span>
+                              </td>
+                            ) : null}
+                            {roadsMaintenanceColumnsVisible ? (
+                              <>
+                                <td className="px-4 py-3 text-sm text-slate-600">
+                                  <span className="line-clamp-1">
+                                    {roadOrgShowsMaintenanceColumns(org)
+                                      ? String(
+                                          (org.attributes as Record<string, unknown> | null)?.length_km ?? '—',
+                                        )
+                                      : '—'}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-sm text-slate-600">
+                                  <span className="line-clamp-1">
+                                    {roadOrgShowsMaintenanceColumns(org)
+                                      ? roadLastRepairedDate(
+                                          org.attributes as Record<string, unknown> | null,
+                                        ) || '—'
+                                      : '—'}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-sm text-slate-600">
+                                  <span className="line-clamp-1">
+                                    {roadOrgShowsMaintenanceColumns(org)
+                                      ? roadPresentCondition(
+                                          org.attributes as Record<string, unknown> | null,
+                                        ) || '—'
+                                      : '—'}
+                                  </span>
+                                </td>
+                              </>
+                            ) : null}
                           </>
                         ) : null}
                         {showPortfolioColumn ? (
