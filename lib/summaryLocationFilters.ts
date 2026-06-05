@@ -4,7 +4,15 @@ import {
   normalizeConstituencyBlock,
   roadMatchesLocationFilter,
   ROADS_CONSTITUENCY_BLOCKS,
+  ROADS_GP_EXCLUDED_BLOCK,
 } from './roadsOrganization';
+
+/** Urban block uses ward/locality only — hide village filter and column when selected. */
+export const SUMMARY_BLOCK_WITHOUT_VILLAGE = ROADS_GP_EXCLUDED_BLOCK;
+
+export function summaryBlockShowsVillageFilter(blockFilter: string): boolean {
+  return blockFilter !== SUMMARY_BLOCK_WITHOUT_VILLAGE;
+}
 
 /** Block / ULB from organization attributes (minister CSV conventions). */
 export function summaryOrgBlock(org: Organization): string {
