@@ -99,14 +99,20 @@ export interface ElectricityConsumerStatsRow {
 /** Roads department summary — upgradation / proposal tracking by FY (admin-edited). */
 export interface RoadsProgressRow {
   sl_no?: string | null;
+  fy?: string | null;
+  upgraded_gp_to_rd?: string | null;
+  upgraded_rd_to_pwd?: string | null;
+  proposal_l_no?: string | null;
+  proposal_sent_date?: string | null;
+  proposal_approved?: string | null;
+}
+
+/** Roads department summary — PWD / RD / GP road totals (admin-edited). */
+export interface RoadsNetworkTotalsRow {
+  sl_no?: string | null;
   total_pwd_road?: string | null;
   total_rd_road?: string | null;
   total_gp_road?: string | null;
-  upgraded_gp_to_rd?: string | null;
-  upgraded_rd_to_pwd?: string | null;
-  fy?: string | null;
-  proposal_sent?: string | null;
-  proposal_approved?: string | null;
 }
 
 /** Irrigation department summary — panchayat/ayacut/beneficiaries/crops totals (admin-edited). */
@@ -158,6 +164,7 @@ export interface DepartmentSummaryContent {
   irrigation_consumer_stats_rows?: IrrigationConsumerStatsRow[];
   minor_irrigation_consumer_stats_rows?: MinorIrrigationConsumerStatsRow[];
   roads_progress_rows?: RoadsProgressRow[];
+  roads_network_totals_rows?: RoadsNetworkTotalsRow[];
   /** Per education sub-department placement-cell redirect URLs (ENGINEERING_COLLEGE, ITI, etc.). */
   education_placement_links?: Record<string, string>;
 }

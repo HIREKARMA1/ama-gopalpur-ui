@@ -17,7 +17,9 @@ import { IrrigationConsumerStatsTableEditor } from './IrrigationConsumerStatsTab
 import { parseIrrigationConsumerStatsRows } from '../../lib/irrigationConsumerStatsTable';
 import { MinorIrrigationConsumerStatsTableEditor } from './MinorIrrigationConsumerStatsTableEditor';
 import { parseMinorIrrigationConsumerStatsRows } from '../../lib/minorIrrigationConsumerStatsTable';
+import { RoadsNetworkTotalsTableEditor } from './RoadsNetworkTotalsTableEditor';
 import { RoadsProgressTableEditor } from './RoadsProgressTableEditor';
+import { parseRoadsNetworkTotalsRows } from '../../lib/roadsNetworkTotalsTable';
 import { parseRoadsProgressRows } from '../../lib/roadsProgressTable';
 
 type Props = {
@@ -71,6 +73,10 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
   );
   const roadsProgressRows = useMemo(
     () => parseRoadsProgressRows(department.department_summary),
+    [department.department_summary],
+  );
+  const roadsNetworkTotalsRows = useMemo(
+    () => parseRoadsNetworkTotalsRows(department.department_summary),
     [department.department_summary],
   );
 
@@ -168,16 +174,28 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
         />
       ) : null}
       {isRoadsDept ? (
-        <RoadsProgressTableEditor
-          departmentId={department.id}
-          initialRows={roadsProgressRows}
-          onSave={async ({ roads_progress_rows }) => {
-            const updated = await departmentsApi.updateSummary(department.id, {
-              department_summary: { roads_progress_rows },
-            });
-            onDepartmentUpdated(updated);
-          }}
-        />
+        <>
+          <RoadsNetworkTotalsTableEditor
+            departmentId={department.id}
+            initialRows={roadsNetworkTotalsRows}
+            onSave={async ({ roads_network_totals_rows }) => {
+              const updated = await departmentsApi.updateSummary(department.id, {
+                department_summary: { roads_network_totals_rows },
+              });
+              onDepartmentUpdated(updated);
+            }}
+          />
+          <RoadsProgressTableEditor
+            departmentId={department.id}
+            initialRows={roadsProgressRows}
+            onSave={async ({ roads_progress_rows }) => {
+              const updated = await departmentsApi.updateSummary(department.id, {
+                department_summary: { roads_progress_rows },
+              });
+              onDepartmentUpdated(updated);
+            }}
+          />
+        </>
       ) : null}
     </div>
   );
