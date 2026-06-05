@@ -109,6 +109,24 @@ export interface RoadsProgressRow {
   proposal_approved?: string | null;
 }
 
+/** Irrigation department summary — panchayat/ayacut/beneficiaries/crops totals (admin-edited). */
+export interface IrrigationConsumerStatsRow {
+  sl_no?: string | null;
+  total_panchayat_covered?: string | null;
+  total_ayacut_area?: string | null;
+  total_beneficiaries?: string | null;
+  total_crops?: string | null;
+}
+
+/** Minor Irrigation department summary — panchayat/ayacut/beneficiaries/ayicutdar totals (admin-edited). */
+export interface MinorIrrigationConsumerStatsRow {
+  sl_no?: string | null;
+  total_panchayat_covered?: string | null;
+  total_ayacut_area?: string | null;
+  total_beneficiaries?: string | null;
+  no_of_ayicutdar_benefited?: string | null;
+}
+
 export interface DepartmentSummaryMinister {
   id?: string;
   name?: string | null;
@@ -137,6 +155,8 @@ export interface DepartmentSummaryContent {
   key_statistics?: DepartmentSummaryStat[];
   highlight_cards?: DepartmentSummaryHighlightCard[];
   electricity_consumer_stats_rows?: ElectricityConsumerStatsRow[];
+  irrigation_consumer_stats_rows?: IrrigationConsumerStatsRow[];
+  minor_irrigation_consumer_stats_rows?: MinorIrrigationConsumerStatsRow[];
   roads_progress_rows?: RoadsProgressRow[];
   /** Per education sub-department placement-cell redirect URLs (ENGINEERING_COLLEGE, ITI, etc.). */
   education_placement_links?: Record<string, string>;

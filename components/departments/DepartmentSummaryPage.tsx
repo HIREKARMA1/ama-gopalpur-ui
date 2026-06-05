@@ -42,6 +42,10 @@ import {
   roadTypeFilterIsMunicipality,
   ROADS_GP_EXCLUDED_BLOCK,
 } from '../../lib/roadsOrganization';
+import { parseIrrigationConsumerStatsRows } from '../../lib/irrigationConsumerStatsTable';
+import { IrrigationConsumerStatsTableSection } from './IrrigationConsumerStatsTableSection';
+import { parseMinorIrrigationConsumerStatsRows } from '../../lib/minorIrrigationConsumerStatsTable';
+import { MinorIrrigationConsumerStatsTableSection } from './MinorIrrigationConsumerStatsTableSection';
 
 type Props = {
   department: Department;
@@ -53,6 +57,8 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const { language } = useLanguage();
   const deptCode = (department.code || '').toUpperCase();
   const isElectricityDept = deptCode === 'ELECTRICITY';
+  const isIrrigationDept = deptCode === 'IRRIGATION';
+  const isMinorIrrigationDept = deptCode === 'MINOR_IRRIGATION';
   const isRoadsDept = deptCode === 'ROADS';
   const isArcsDept = deptCode === 'ARCS';
   const isDrainageDept = deptCode === 'DRAINAGE';
@@ -93,6 +99,16 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const electricityConsumerStatsRows = useMemo(
     () => (isElectricityDept ? parseElectricityConsumerStatsRows(summary) : []),
     [isElectricityDept, summary],
+  );
+
+  const irrigationConsumerStatsRows = useMemo(
+    () => (isIrrigationDept ? parseIrrigationConsumerStatsRows(summary) : []),
+    [isIrrigationDept, summary],
+  );
+
+  const minorIrrigationConsumerStatsRows = useMemo(
+    () => (isMinorIrrigationDept ? parseMinorIrrigationConsumerStatsRows(summary) : []),
+    [isMinorIrrigationDept, summary],
   );
 
   const roadsProgressRows = useMemo(
@@ -359,6 +375,17 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
 
         {isElectricityDept ? (
           <ElectricityConsumerStatsTableSection rows={electricityConsumerStatsRows} language={language} />
+        ) : null}
+
+        {isIrrigationDept ? (
+          <IrrigationConsumerStatsTableSection rows={irrigationConsumerStatsRows} language={language} />
+        ) : null}
+
+        {isMinorIrrigationDept ? (
+          <MinorIrrigationConsumerStatsTableSection
+            rows={minorIrrigationConsumerStatsRows}
+            language={language}
+          />
         ) : null}
 
         {isRoadsDept ? (
