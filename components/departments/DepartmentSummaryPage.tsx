@@ -34,10 +34,7 @@ import { RoadsProgressTableSection } from './RoadsProgressTableSection';
 import {
   buildDedupedRoadFilterOptions,
   constituencyBlocksForRoadTypeFilter,
-  roadMatchesBlockFilter,
   roadMatchesLocationFilter,
-  roadOrgGpWard,
-  roadOrgVillage,
   roadTypeFilterIsGp,
   roadTypeFilterIsMunicipality,
   roadLastRepairedDate,
@@ -50,6 +47,17 @@ import { parseIrrigationConsumerStatsRows } from '../../lib/irrigationConsumerSt
 import { IrrigationConsumerStatsTableSection } from './IrrigationConsumerStatsTableSection';
 import { parseMinorIrrigationConsumerStatsRows } from '../../lib/minorIrrigationConsumerStatsTable';
 import { MinorIrrigationConsumerStatsTableSection } from './MinorIrrigationConsumerStatsTableSection';
+import {
+  summaryBlockFilterOptions,
+  summaryLocationFilterOptions,
+  summaryLocationSearchText,
+  summaryMatchesBlockFilter,
+  summaryMatchesGpFilter,
+  summaryMatchesVillageFilter,
+  summaryOrgBlock,
+  summaryOrgGpWard,
+  summaryOrgVillage,
+} from '../../lib/summaryLocationFilters';
 
 type Props = {
   department: Department;
@@ -131,9 +139,9 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [roadTypeFilter, setRoadTypeFilter] = useState('ALL');
-  const [roadBlockFilter, setRoadBlockFilter] = useState('ALL');
-  const [roadGpFilter, setRoadGpFilter] = useState('ALL');
-  const [roadVillageFilter, setRoadVillageFilter] = useState('ALL');
+  const [locationBlockFilter, setLocationBlockFilter] = useState('ALL');
+  const [locationGpFilter, setLocationGpFilter] = useState('ALL');
+  const [locationVillageFilter, setLocationVillageFilter] = useState('ALL');
   const [sortKey, setSortKey] = useState<'name' | 'category' | 'address'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -149,13 +157,21 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     [isRoadsDept, roadTypeFilter],
   );
 
+  const locationColumnCount = isRoadsDept
+    ? (roadsVillageColumnVisible ? 3 : 2)
+    : 3;
+
   const listingTableColSpan = useMemo(() => {
     if (isRoadsDept) {
       return 5 + (roadsVillageColumnVisible ? 1 : 0) + (roadsMaintenanceColumnsVisible ? 3 : 0);
     }
-    if (isDrainageDept) return 3 + DRAINAGE_SUMMARY_TABLE_COLUMNS.length;
-    if (isArcsDept) return 3 + ARCS_SUMMARY_TABLE_COLUMNS.length + (showPortfolioColumn ? 1 : 0);
-    return 4 + (showPortfolioColumn ? 1 : 0);
+    if (isDrainageDept) {
+      return 3 + locationColumnCount + DRAINAGE_SUMMARY_TABLE_COLUMNS.length + (showPortfolioColumn ? 1 : 0);
+    }
+    if (isArcsDept) {
+      return 3 + locationColumnCount + ARCS_SUMMARY_TABLE_COLUMNS.length + (showPortfolioColumn ? 1 : 0);
+    }
+    return 3 + locationColumnCount + (showPortfolioColumn ? 1 : 0);
   }, [
     isRoadsDept,
     isDrainageDept,
@@ -163,6 +179,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     showPortfolioColumn,
     roadsMaintenanceColumnsVisible,
     roadsVillageColumnVisible,
+    locationColumnCount,
   ]);
 
   const categoryOptions = useMemo(() => {
@@ -178,15 +195,15 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     ).sort((a, b) => a.localeCompare(b));
   }, [topOrganizations, department.code, isDrainageDept]);
 
-  const roadsScopedForGpOptions = useMemo(() => {
-    if (!isRoadsDept) return [];
-    return topOrganizations.filter((org) => roadMatchesBlockFilter(org, roadBlockFilter));
-  }, [isRoadsDept, topOrganizations, roadBlockFilter]);
+  const scopedForGpOptions = useMemo(
+    () => topOrganizations.filter((org) => summaryMatchesBlockFilter(org, locationBlockFilter)),
+    [topOrganizations, locationBlockFilter],
+  );
 
-  const roadsScopedForVillageOptions = useMemo(() => {
-    if (!isRoadsDept) return [];
-    return roadsScopedForGpOptions.filter((org) => roadMatchesLocationFilter(roadOrgGpWard(org), roadGpFilter));
-  }, [isRoadsDept, roadsScopedForGpOptions, roadGpFilter]);
+  const scopedForVillageOptions = useMemo(
+    () => scopedForGpOptions.filter((org) => summaryMatchesGpFilter(org, locationGpFilter)),
+    [scopedForGpOptions, locationGpFilter],
+  );
 
   const roadTypeOptions = useMemo(() => {
     if (!isRoadsDept) return [];
@@ -208,23 +225,23 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
 
   useEffect(() => {
     if (!isRoadsDept) return;
-    if (roadTypeIsMunicipality && roadVillageFilter !== 'ALL') {
-      setRoadVillageFilter('ALL');
+    if (roadTypeIsMunicipality && locationVillageFilter !== 'ALL') {
+      setLocationVillageFilter('ALL');
     }
-    if (roadTypeIsGp && roadBlockFilter === ROADS_GP_EXCLUDED_BLOCK) {
-      setRoadBlockFilter('ALL');
+    if (roadTypeIsGp && locationBlockFilter === ROADS_GP_EXCLUDED_BLOCK) {
+      setLocationBlockFilter('ALL');
     }
-  }, [isRoadsDept, roadTypeIsMunicipality, roadTypeIsGp, roadBlockFilter, roadVillageFilter]);
+  }, [isRoadsDept, roadTypeIsMunicipality, roadTypeIsGp, locationBlockFilter, locationVillageFilter]);
 
-  const roadGpOptions = useMemo(() => {
-    if (!isRoadsDept) return [];
-    return buildDedupedRoadFilterOptions(roadsScopedForGpOptions.map(roadOrgGpWard));
-  }, [isRoadsDept, roadsScopedForGpOptions]);
+  const locationGpOptions = useMemo(
+    () => summaryLocationFilterOptions(scopedForGpOptions.map(summaryOrgGpWard)),
+    [scopedForGpOptions],
+  );
 
-  const roadVillageOptions = useMemo(() => {
-    if (!isRoadsDept) return [];
-    return buildDedupedRoadFilterOptions(roadsScopedForVillageOptions.map(roadOrgVillage));
-  }, [isRoadsDept, roadsScopedForVillageOptions]);
+  const locationVillageOptions = useMemo(
+    () => summaryLocationFilterOptions(scopedForVillageOptions.map(summaryOrgVillage)),
+    [scopedForVillageOptions],
+  );
 
   const filteredOrganizations = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -233,9 +250,6 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       const address = (org.address || '').toString();
       const attrs = (org.attributes ?? {}) as Record<string, unknown>;
       const roadCode = String(attrs.road_code ?? '').toLowerCase();
-      const roadBlock = String(attrs.block ?? '').toLowerCase();
-      const roadGpWard = String(attrs.gp_ward ?? attrs.gpward ?? attrs.gp_ward_name ?? '').toLowerCase();
-      const roadVillage = String(attrs.village ?? attrs.village_name ?? '').toLowerCase();
       const roadLength = String(attrs.length_km ?? '').toLowerCase();
 
       const arcsSearchText = isArcsDept
@@ -251,40 +265,39 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           .toLowerCase()
         : '';
 
+      const locationSearch = summaryLocationSearchText(org);
+
       const matchesSearch =
         !q ||
         org.name.toLowerCase().includes(q) ||
         categoryLabel.toLowerCase().includes(q) ||
         address.toLowerCase().includes(q) ||
+        locationSearch.includes(q) ||
         (isArcsDept && arcsSearchText.includes(q)) ||
         (isDrainageDept && drainageSearchText.includes(q)) ||
         (isRoadsDept &&
-          (
-            roadCode.includes(q) ||
-            roadBlock.includes(q) ||
-            roadGpWard.includes(q) ||
-            roadVillage.includes(q) ||
-            roadLength.includes(q)
-          ));
+          (roadCode.includes(q) || roadLength.includes(q)));
       const drainKind = isDrainageDept ? getDrainLineKindFromOrg(org) : '';
       const matchesCategory =
         categoryFilter === 'ALL' ||
         (isDrainageDept ? drainKind === categoryFilter : categoryLabel === categoryFilter);
 
       const effectiveBlockFilter =
-        isRoadsDept && roadTypeIsGp && roadBlockFilter === ROADS_GP_EXCLUDED_BLOCK
+        isRoadsDept && roadTypeIsGp && locationBlockFilter === ROADS_GP_EXCLUDED_BLOCK
           ? 'ALL'
-          : roadBlockFilter;
-      const effectiveVillageFilter = isRoadsDept && roadTypeIsMunicipality ? 'ALL' : roadVillageFilter;
+          : locationBlockFilter;
+      const effectiveVillageFilter =
+        isRoadsDept && roadTypeIsMunicipality ? 'ALL' : locationVillageFilter;
 
-      const matchesRoadFilters =
-        !isRoadsDept ||
-        (roadMatchesLocationFilter(categoryLabel, roadTypeFilter) &&
-          roadMatchesBlockFilter(org, effectiveBlockFilter) &&
-          roadMatchesLocationFilter(roadOrgGpWard(org), roadGpFilter) &&
-          roadMatchesLocationFilter(roadOrgVillage(org), effectiveVillageFilter));
+      const matchesRoadType =
+        !isRoadsDept || roadMatchesLocationFilter(categoryLabel, roadTypeFilter);
 
-      return matchesSearch && matchesCategory && matchesRoadFilters;
+      const matchesLocationFilters =
+        summaryMatchesBlockFilter(org, effectiveBlockFilter) &&
+        summaryMatchesGpFilter(org, locationGpFilter) &&
+        summaryMatchesVillageFilter(org, effectiveVillageFilter);
+
+      return matchesSearch && matchesCategory && matchesRoadType && matchesLocationFilters;
     });
   }, [
     topOrganizations,
@@ -295,9 +308,9 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     isDrainageDept,
     department.code,
     roadTypeFilter,
-    roadBlockFilter,
-    roadGpFilter,
-    roadVillageFilter,
+    locationBlockFilter,
+    locationGpFilter,
+    locationVillageFilter,
     roadTypeIsGp,
     roadTypeIsMunicipality,
   ]);
@@ -444,13 +457,13 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                       const nextType = e.target.value;
                       setRoadTypeFilter(nextType);
                       if (roadTypeFilterIsMunicipality(nextType)) {
-                        setRoadVillageFilter('ALL');
+                        setLocationVillageFilter('ALL');
                       }
                       if (
                         roadTypeFilterIsGp(nextType) &&
-                        roadBlockFilter === ROADS_GP_EXCLUDED_BLOCK
+                        locationBlockFilter === ROADS_GP_EXCLUDED_BLOCK
                       ) {
-                        setRoadBlockFilter('ALL');
+                        setLocationBlockFilter('ALL');
                       }
                       setCurrentPage(1);
                     }}
@@ -467,11 +480,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                 <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {trStatic('Block', 'ବ୍ଲକ୍')}
                   <select
-                    value={roadBlockFilter}
+                    value={locationBlockFilter}
                     onChange={(e) => {
-                      setRoadBlockFilter(e.target.value);
-                      setRoadGpFilter('ALL');
-                      setRoadVillageFilter('ALL');
+                      setLocationBlockFilter(e.target.value);
+                      setLocationGpFilter('ALL');
+                      setLocationVillageFilter('ALL');
                       setCurrentPage(1);
                     }}
                     className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
@@ -487,16 +500,16 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                 <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {trStatic('GP/Ward', 'ଜିପି/ୱାର୍ଡ')}
                   <select
-                    value={roadGpFilter}
+                    value={locationGpFilter}
                     onChange={(e) => {
-                      setRoadGpFilter(e.target.value);
-                      setRoadVillageFilter('ALL');
+                      setLocationGpFilter(e.target.value);
+                      setLocationVillageFilter('ALL');
                       setCurrentPage(1);
                     }}
                     className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
                   >
                     <option value="ALL">{trStatic('All GP/Ward', 'ସମସ୍ତ ଜିପି/ୱାର୍ଡ')}</option>
-                    {roadGpOptions.map((opt) => (
+                    {locationGpOptions.map((opt) => (
                       <option key={`road-gp-${opt.value}`} value={opt.value}>
                         {opt.label}
                       </option>
@@ -510,16 +523,16 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                 >
                   {trStatic('Village', 'ଗ୍ରାମ')}
                   <select
-                    value={roadVillageFilter}
+                    value={locationVillageFilter}
                     disabled={roadTypeIsMunicipality}
                     onChange={(e) => {
-                      setRoadVillageFilter(e.target.value);
+                      setLocationVillageFilter(e.target.value);
                       setCurrentPage(1);
                     }}
                     className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
                   >
                     <option value="ALL">{trStatic('All villages', 'ସମସ୍ତ ଗ୍ରାମ')}</option>
-                    {roadVillageOptions.map((opt) => (
+                    {locationVillageOptions.map((opt) => (
                       <option key={`road-village-${opt.value}`} value={opt.value}>
                         {opt.label}
                       </option>
@@ -529,8 +542,8 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
               </div>
               </>
             ) : (
-              <div className="grid gap-3 md:grid-cols-3">
-                <label className="relative md:col-span-2">
+              <>
+                <label className="relative block">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
                     value={searchTerm}
@@ -538,44 +551,106 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                       setSearchTerm(e.target.value);
                       setCurrentPage(1);
                     }}
-                    placeholder={tr('dept.summary.search.placeholder')}
+                    placeholder={trStatic(
+                      'Search name, block, GP, village…',
+                      'ନାମ, ବ୍ଲକ୍, ଜିପି, ଗ୍ରାମ ଖୋଜନ୍ତୁ…',
+                    )}
                     className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm shadow-sm outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
                   />
                 </label>
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => {
-                    setCategoryFilter(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  aria-label={
-                    isArcsDept
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {isArcsDept
                       ? tr('dept.summary.table.jurisdictionType')
                       : isDrainageDept
-                        ? tr('dept.summary.drainage.allDrainTypes')
-                        : tr('dept.summary.search.allCategories')
-                  }
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
-                >
-                <option value="ALL">
-                  {isArcsDept
-                    ? tr('dept.summary.search.allJurisdictionTypes')
-                    : isDrainageDept
-                      ? tr('dept.summary.drainage.allDrainTypes')
-                      : tr('dept.summary.search.allCategories')}
-                </option>
-                {categoryOptions.map((opt) => (
-                  <option key={`cat-${opt}`} value={opt}>
-                    {isDrainageDept
-                      ? (() => {
-                        const key = drainageTypeMessageKey(opt);
-                        return key ? tr(key) : opt;
-                      })()
-                      : opt}
-                  </option>
-                ))}
-              </select>
-              </div>
+                        ? tr('dept.summary.drainage.drainType')
+                        : tr('dept.summary.table.subDepartmentCategory')}
+                    <select
+                      value={categoryFilter}
+                      onChange={(e) => {
+                        setCategoryFilter(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
+                    >
+                      <option value="ALL">
+                        {isArcsDept
+                          ? tr('dept.summary.search.allJurisdictionTypes')
+                          : isDrainageDept
+                            ? tr('dept.summary.drainage.allDrainTypes')
+                            : tr('dept.summary.search.allCategories')}
+                      </option>
+                      {categoryOptions.map((opt) => (
+                        <option key={`cat-${opt}`} value={opt}>
+                          {isDrainageDept
+                            ? (() => {
+                              const key = drainageTypeMessageKey(opt);
+                              return key ? tr(key) : opt;
+                            })()
+                            : opt}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {trStatic('Block', 'ବ୍ଲକ୍')}
+                    <select
+                      value={locationBlockFilter}
+                      onChange={(e) => {
+                        setLocationBlockFilter(e.target.value);
+                        setLocationGpFilter('ALL');
+                        setLocationVillageFilter('ALL');
+                        setCurrentPage(1);
+                      }}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
+                    >
+                      <option value="ALL">{trStatic('All blocks', 'ସମସ୍ତ ବ୍ଲକ୍')}</option>
+                      {summaryBlockFilterOptions().map((opt) => (
+                        <option key={`loc-block-${opt.value}`} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {trStatic('GP/Ward', 'ଜିପି/ୱାର୍ଡ')}
+                    <select
+                      value={locationGpFilter}
+                      onChange={(e) => {
+                        setLocationGpFilter(e.target.value);
+                        setLocationVillageFilter('ALL');
+                        setCurrentPage(1);
+                      }}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
+                    >
+                      <option value="ALL">{trStatic('All GP/Ward', 'ସମସ୍ତ ଜିପି/ୱାର୍ଡ')}</option>
+                      {locationGpOptions.map((opt) => (
+                        <option key={`loc-gp-${opt.value}`} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {trStatic('Village', 'ଗ୍ରାମ')}
+                    <select
+                      value={locationVillageFilter}
+                      onChange={(e) => {
+                        setLocationVillageFilter(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
+                    >
+                      <option value="ALL">{trStatic('All villages', 'ସମସ୍ତ ଗ୍ରାମ')}</option>
+                      {locationVillageOptions.map((opt) => (
+                        <option key={`loc-village-${opt.value}`} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              </>
             )}
           </div>
           <div className="overflow-x-auto">
@@ -622,11 +697,17 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                         </th>
                       ))
                       : isRoadsDept ? null : (
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          <button type="button" onClick={() => onSort('address')} className="inline-flex items-center gap-1 hover:text-orange-700">
-                            {tr('dept.summary.table.address')} <SortIcon active={sortKey === 'address'} direction={sortDir} />
-                          </button>
-                        </th>
+                        <>
+                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            {trStatic('Block', 'ବ୍ଲକ୍')}
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            {trStatic('GP/Ward', 'ଜିପି/ୱାର୍ଡ')}
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            {trStatic('Village', 'ଗ୍ରାମ')}
+                          </th>
+                        </>
                       )}
                     {isRoadsDept ? (
                       <>
@@ -696,36 +777,29 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                             </td>
                           ))
                           : isRoadsDept ? null : (
-                            <td className="max-w-[280px] px-4 py-3 text-sm text-slate-600">
-                              <span className="line-clamp-1">{org.address || '—'}</span>
-                            </td>
+                            <>
+                              <td className="px-4 py-3 text-sm text-slate-600">
+                                <span className="line-clamp-1">{summaryOrgBlock(org) || '—'}</span>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-slate-600">
+                                <span className="line-clamp-1">{summaryOrgGpWard(org) || '—'}</span>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-slate-600">
+                                <span className="line-clamp-1">{summaryOrgVillage(org) || '—'}</span>
+                              </td>
+                            </>
                           )}
                         {isRoadsDept ? (
                           <>
                             <td className="px-4 py-3 text-sm text-slate-600">
-                              <span className="line-clamp-1">
-                                {String((org.attributes as Record<string, unknown> | null)?.block ?? '—')}
-                              </span>
+                              <span className="line-clamp-1">{summaryOrgBlock(org) || '—'}</span>
                             </td>
                             <td className="px-4 py-3 text-sm text-slate-600">
-                              <span className="line-clamp-1">
-                                {String(
-                                  (org.attributes as Record<string, unknown> | null)?.gp_ward ??
-                                  (org.attributes as Record<string, unknown> | null)?.gpward ??
-                                  (org.attributes as Record<string, unknown> | null)?.gp_ward_name ??
-                                  '—',
-                                )}
-                              </span>
+                              <span className="line-clamp-1">{summaryOrgGpWard(org) || '—'}</span>
                             </td>
                             {roadsVillageColumnVisible ? (
                               <td className="px-4 py-3 text-sm text-slate-600">
-                                <span className="line-clamp-1">
-                                  {String(
-                                    (org.attributes as Record<string, unknown> | null)?.village ??
-                                    (org.attributes as Record<string, unknown> | null)?.village_name ??
-                                    '—',
-                                  )}
-                                </span>
+                                <span className="line-clamp-1">{summaryOrgVillage(org) || '—'}</span>
                               </td>
                             ) : null}
                             {roadsMaintenanceColumnsVisible ? (
