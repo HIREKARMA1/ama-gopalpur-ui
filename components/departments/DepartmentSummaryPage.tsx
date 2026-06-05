@@ -13,6 +13,7 @@ import { DepartmentSummaryMinistersSection } from './DepartmentSummaryMinistersS
 import { resolveSummaryMinisters, toSummaryLang } from '../../lib/departmentSummaryMinisters';
 import { getDepartmentLabel } from './DepartmentSidebar';
 import {
+  agricultureCategoryDisplayLabel,
   ARCS_SUMMARY_TABLE_COLUMNS,
   legendHighlightTitle,
   normalizeLegendParam,
@@ -73,6 +74,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const isMinorIrrigationDept = deptCode === 'MINOR_IRRIGATION';
   const isRoadsDept = deptCode === 'ROADS';
   const isArcsDept = deptCode === 'ARCS';
+  const isAgricultureDept = deptCode === 'AGRICULTURE';
   const isDrainageDept = deptCode === 'DRAINAGE';
   const showPortfolioColumn = !isDrainageDept && !isRoadsDept;
   const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
@@ -91,6 +93,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       }
     }
     return text;
+  };
+  const categoryDisplayLabel = (raw: string) => {
+    if (!raw) return '';
+    if (isAgricultureDept) return agricultureCategoryDisplayLabel(raw, language);
+    return raw;
   };
   const summary = department.department_summary;
   const sidebarLocalizedDepartmentName = getDepartmentLabel(department, language);
@@ -247,6 +254,9 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     const q = searchTerm.trim().toLowerCase();
     return topOrganizations.filter((org) => {
       const categoryLabel = organizationListingCategory(org, department.code);
+      const categorySearchText = isAgricultureDept
+        ? `${categoryLabel} ${categoryDisplayLabel(categoryLabel)}`.toLowerCase()
+        : categoryLabel.toLowerCase();
       const address = (org.address || '').toString();
       const attrs = (org.attributes ?? {}) as Record<string, unknown>;
       const roadCode = String(attrs.road_code ?? '').toLowerCase();
@@ -270,7 +280,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       const matchesSearch =
         !q ||
         org.name.toLowerCase().includes(q) ||
-        categoryLabel.toLowerCase().includes(q) ||
+        categorySearchText.includes(q) ||
         address.toLowerCase().includes(q) ||
         locationSearch.includes(q) ||
         (isArcsDept && arcsSearchText.includes(q)) ||
@@ -587,7 +597,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                               const key = drainageTypeMessageKey(opt);
                               return key ? tr(key) : opt;
                             })()
-                            : opt}
+                            : categoryDisplayLabel(opt)}
                         </option>
                       ))}
                     </select>
@@ -759,7 +769,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                               const key = drainageTypeMessageKey(kind);
                               return key ? tr(key) : kind || '—';
                             })()
-                            : organizationListingCategory(org, department.code) || '—'}
+                            : categoryDisplayLabel(organizationListingCategory(org, department.code)) || '—'}
                         </td>
                         {isArcsDept
                           ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => (
