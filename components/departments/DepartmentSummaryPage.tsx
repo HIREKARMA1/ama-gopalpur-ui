@@ -30,7 +30,9 @@ import {
 } from '../../lib/drainageOrganization';
 import { parseElectricityConsumerStatsRows } from '../../lib/electricityConsumerStatsTable';
 import { ElectricityConsumerStatsTableSection } from './ElectricityConsumerStatsTableSection';
+import { parseRoadsNetworkTotalsRows } from '../../lib/roadsNetworkTotalsTable';
 import { parseRoadsProgressRows } from '../../lib/roadsProgressTable';
+import { RoadsNetworkTotalsTableSection } from './RoadsNetworkTotalsTableSection';
 import { RoadsProgressTableSection } from './RoadsProgressTableSection';
 import {
   buildDedupedRoadFilterOptions,
@@ -133,6 +135,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
 
   const roadsProgressRows = useMemo(
     () => (isRoadsDept ? parseRoadsProgressRows(summary) : []),
+    [isRoadsDept, summary],
+  );
+
+  const roadsNetworkTotalsRows = useMemo(
+    () => (isRoadsDept ? parseRoadsNetworkTotalsRows(summary) : []),
     [isRoadsDept, summary],
   );
 
@@ -453,7 +460,10 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         ) : null}
 
         {isRoadsDept ? (
-          <RoadsProgressTableSection rows={roadsProgressRows} language={language} />
+          <>
+            <RoadsNetworkTotalsTableSection rows={roadsNetworkTotalsRows} language={language} />
+            <RoadsProgressTableSection rows={roadsProgressRows} language={language} />
+          </>
         ) : null}
 
         <DepartmentSummarySection title={listingTitle} subtitle={listingSubtitle} flush>
