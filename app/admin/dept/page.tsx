@@ -294,7 +294,7 @@ const IRRIGATION_CSV_HEADER =
 const AGRICULTURE_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,NAME OF OFFICE/CENTER,INSTITUTION TYPE,INSTITUTION ID,HOST INSTITUTION/AFFILIATING BODY,ESTABLISHED YEAR,PIN CODE,LATITUDE,LONGITUDE,IN-CHARGE NAME,IN-CHARGE CONTACT,IN-CHARGE EMAIL,OFFICE PHONE,OFFICE EMAIL,WEBSITE,CAMPUS AREA (ACRES),TRAINING HALL (YES/NO),TRAINING HALL CAPACITY (SEATS),SOIL TESTING (YES/NO),SOIL SAMPLES TESTED PER YEAR,SEED DISTRIBUTION (YES/NO),SEED PROCESSING UNIT (YES/NO),SEED STORAGE CAPACITY (MT),DEMO UNITS (COMMA SEPARATED),DEMO FARM (YES/NO),DEMO FARM AREA (ACRES),GREENHOUSE/POLYHOUSE (YES/NO),IRRIGATION FACILITY (YES/NO),MACHINERY/CUSTOM HIRING (YES/NO),COMPUTER/IT LAB (YES/NO),LIBRARY (YES/NO),KEY SCHEMES (COMMA SEPARATED),TOTAL STAFF (COUNT),SCIENTISTS/OFFICERS (COUNT),TECHNICAL STAFF (COUNT),EXTENSION WORKERS (COUNT),FARMER TRAINING CAPACITY (PER BATCH),TRAINING PROGRAMMES CONDUCTED LAST YEAR,ON-FARM TRIALS/FLD LAST YEAR,VILLAGES/GPS COVERED (COUNT),SOIL HEALTH CARDS ISSUED LAST YEAR,FARMERS SERVED LAST YEAR (APPROX),REMARKS/DESCRIPTION\n';
 const ROADS_CSV_HEADER =
-  'block,GP/WARD,VILLAGE,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP/Municipality),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST MAINTENANCE DATE,ISSUES OBSERVED,REMARKS\n';
+  'block,GP/WARD,VILLAGE,ROAD NAME,ROAD CODE,ROAD SECTOR(NH/SH/PWD/RD/PS/GP/Municipality),NAME OF DIVISION,SCHEME,LENGTH(IN KM),PATH COORDINATES,start_lat,start_lng,end_lat,end_lng,POINT A NAME,POINT B NAME,YEAR OF CONSTRUCTION,LAST REPAIRED DATE,PRESENT CONDITION,ISSUES OBSERVED,REMARKS\n';
 
 const splitHeader = (header: string): string[] =>
   header.trim().replace(/\n$/, '').split(',').map((h) => h.trim());
@@ -806,6 +806,8 @@ export default function DepartmentAdminPage() {
       'Name of Division',
       'Scheme',
       'Length (KM)',
+      'Last Repaired Date',
+      'Present Condition',
       'Start Lat',
       'Start Lng',
       'End Lat',
@@ -854,6 +856,8 @@ export default function DepartmentAdminPage() {
       'Name of Division': attrs.name_of_division,
       Scheme: attrs.scheme,
       'Length (KM)': attrs.length_km,
+      'Last Repaired Date': attrs.last_repaired_date ?? attrs.last_maintenance_date,
+      'Present Condition': attrs.present_condition,
       'Start Lat': attrs.start_lat,
       'Start Lng': attrs.start_lng,
       'End Lat': attrs.end_lat,
@@ -1414,6 +1418,8 @@ export default function DepartmentAdminPage() {
         'Name of Division',
         'Scheme',
         'Length (KM)',
+        'Last Repaired Date',
+        'Present Condition',
         'Start Lat',
         'Start Lng',
         'End Lat',
@@ -1422,17 +1428,20 @@ export default function DepartmentAdminPage() {
         'Point B',
       ];
       organizationsForTable.forEach((o) => {
+        const attrs = (o.attributes ?? {}) as Record<string, unknown>;
         rows.push([
           stringify(o.name),
-          stringify(o.attributes?.block),
-          stringify(o.attributes?.gp_ward),
-          stringify(o.attributes?.village),
-          stringify(o.attributes?.road_code),
-          stringify(o.attributes?.road_sector),
-          stringify(o.attributes?.name_of_division),
-          stringify(o.attributes?.scheme),
-          stringify(o.attributes?.length_km),
-          stringify(o.attributes?.start_lat),
+          stringify(attrs.block),
+          stringify(attrs.gp_ward),
+          stringify(attrs.village),
+          stringify(attrs.road_code),
+          stringify(attrs.road_sector),
+          stringify(attrs.name_of_division),
+          stringify(attrs.scheme),
+          stringify(attrs.length_km),
+          stringify(attrs.last_repaired_date ?? attrs.last_maintenance_date),
+          stringify(attrs.present_condition),
+          stringify(attrs.start_lat),
           stringify(o.attributes?.start_lng),
           stringify(o.attributes?.end_lat),
           stringify(o.attributes?.end_lng),
@@ -1643,7 +1652,13 @@ export default function DepartmentAdminPage() {
           pointAName: idx('point a name', 'point_a_name', 'start_point_name', 'starting_point_name'),
           pointBName: idx('point b name', 'point_b_name', 'end_point_name', 'ending_point_name'),
           yearOfConstruction: idx('year of construction', 'year_of_construction', 'construction_year'),
-          lastMaintenanceDate: idx('last maintenance date', 'last_maintenance_date'),
+          lastRepairedDate: idx(
+            'last repaired date',
+            'last_repaired_date',
+            'last maintenance date',
+            'last_maintenance_date',
+          ),
+          presentCondition: idx('present condition', 'present_condition'),
           issues: idx('issues observed', 'issues', 'issues_observed'),
           remarks: idx('remarks', 'remark'),
         };
@@ -1764,6 +1779,8 @@ export default function DepartmentAdminPage() {
                 name_of_division: get(cols, indexes.nameOfDivision) || null,
                 scheme: get(cols, indexes.scheme) || null,
                 length_km: get(cols, indexes.lengthKm) || null,
+                last_repaired_date: get(cols, indexes.lastRepairedDate) || null,
+                present_condition: get(cols, indexes.presentCondition) || null,
                 path_coordinates: summaryOnlyRoad ? null : pathCoordinates || null,
                 start_lat: summaryOnlyRoad ? null : startLat || null,
                 start_lng: summaryOnlyRoad ? null : startLng || null,
@@ -1772,7 +1789,7 @@ export default function DepartmentAdminPage() {
                 point_a_name: get(cols, indexes.pointAName) || null,
                 point_b_name: get(cols, indexes.pointBName) || null,
                 year_of_construction: get(cols, indexes.yearOfConstruction) || null,
-                last_maintenance_date: get(cols, indexes.lastMaintenanceDate) || null,
+                last_maintenance_date: get(cols, indexes.lastRepairedDate) || null,
                 issues: get(cols, indexes.issues) || null,
                 remarks: get(cols, indexes.remarks) || null,
                 summary_only: summaryOnlyRoad ? 'true' : null,
@@ -5197,6 +5214,13 @@ export default function DepartmentAdminPage() {
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.name_of_division)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.scheme)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.length_km)}</td>
+                                <td className="px-2 py-1 text-text-muted">
+                                  {_(
+                                    (o.attributes as Record<string, unknown> | null)?.last_repaired_date ??
+                                      (o.attributes as Record<string, unknown> | null)?.last_maintenance_date,
+                                  )}
+                                </td>
+                                <td className="px-2 py-1 text-text-muted">{_(o.attributes?.present_condition)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.start_lat)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.start_lng)}</td>
                                 <td className="px-2 py-1 text-text-muted">{_(o.attributes?.end_lat)}</td>
@@ -6585,7 +6609,7 @@ export default function DepartmentAdminPage() {
                     )}
                     {!organizationsForTable.length && (
                       <tr>
-                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 22 : deptCode === 'HEALTH' ? 28 : deptCode === 'EDUCATION' ? 62 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 3 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 3 : deptCode === 'REVENUE_LAND' ? 12 : deptCode === 'ROADS' ? 18 : deptCode === 'DRAINAGE' ? 14 : deptCode === 'MINOR_IRRIGATION' ? minorIrrigationTableColSpan() : deptCode === 'IRRIGATION' ? splitHeader(IRRIGATION_CSV_HEADER).filter((h) => h !== 'WORK NAME').length + 3 : 11}>
+                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 22 : deptCode === 'HEALTH' ? 28 : deptCode === 'EDUCATION' ? 62 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 3 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 3 : deptCode === 'REVENUE_LAND' ? 12 : deptCode === 'ROADS' ? 20 : deptCode === 'DRAINAGE' ? 14 : deptCode === 'MINOR_IRRIGATION' ? minorIrrigationTableColSpan() : deptCode === 'IRRIGATION' ? splitHeader(IRRIGATION_CSV_HEADER).filter((h) => h !== 'WORK NAME').length + 3 : 11}>
                           {orgs.length
                             ? 'No matching rows for current search/filter.'
                             : 'No organizations yet for your department.'}
