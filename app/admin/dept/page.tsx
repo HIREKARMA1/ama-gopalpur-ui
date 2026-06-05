@@ -49,6 +49,15 @@ import {
   roadImportDedupeKey,
   validateSummaryOnlyRoadImportRow,
 } from '../../../lib/roadsOrganization';
+import {
+  getMinorIrrigationAllCsvHeaders,
+  getMinorIrrigationMinisterCsvHeaders,
+  minorIrrigationExportCell,
+  minorIrrigationSnakeFromHeader,
+  minorIrrigationTableCell,
+  minorIrrigationTableColSpan,
+  MINOR_IRRIGATION_CSV_HEADER,
+} from '../../../lib/minorIrrigationCsv';
 import { compressImage } from '../../../lib/imageCompression';
 import {
   EducationPsPortfolioAdminForm,
@@ -278,9 +287,6 @@ const REVENUE_LAND_CSV_HEADER =
 // Tahasil offices under Revenue Govt Land.
 const REVENUE_TAHASIL_OFFICE_CSV_HEADER =
   'SUB_DIVISION,BLOCK,VILLAGE/WARD,TAHSIL_NAME,TAHSIL_CODE,ESTABLISHED_YEAR,TAHSILDAR_NAME,CONTACT_NUMBER,EMAIL_ID,PIN_CODE,LATITUDE,LONGITUDE,TOTAL_AREA_SQ_KM,TOTAL_POPULATION,TOTAL_HOUSEHOLDS,TOTAL_VILLAGES,TOTAL_GRAM_PANCHAYATS,TOTAL_WARDS,URBAN_AREAS_COUNT,RURAL_AREAS_COUNT,TOTAL_REVENUE_VILLAGES,TOTAL_INHABITED_VILLAGES,TOTAL_UNINHABITED_VILLAGES,LARGEST_VILLAGE_NAME,SMALLEST_VILLAGE_NAME,TOTAL_PANCHAYAT_OFFICES,TOTAL_VILLAGE_ROADS_KM,TOTAL_WATER_BODIES,TOTAL_LAND_RECORDS,TOTAL_PRIVATE_LAND_ACRES,TOTAL_GOVERNMENT_LAND_ACRES,TOTAL_FOREST_LAND_ACRES,TOTAL_AGRICULTURAL_LAND_ACRES,TOTAL_RESIDENTIAL_LAND_ACRES,TOTAL_COMMERCIAL_LAND_ACRES,TOTAL_WASTE_LAND_ACRES,TOTAL_PLOT_RECORDS,TOTAL_KHATA_RECORDS,TOTAL_ROR_ISSUED,MUTATION_APPLICATIONS_RECEIVED_YEARLY,MUTATION_APPROVED,MUTATION_PENDING,MUTATION_REJECTED,AVG_MUTATION_PROCESSING_DAYS,TOTAL_ANNUAL_REVENUE,LAND_REVENUE_COLLECTION,STAMP_DUTY_COLLECTION,REGISTRATION_FEES,TAX_COLLECTION,PENALTY_COLLECTION,MONTHLY_REVENUE_TARGET,REVENUE_TARGET_ACHIEVED_PERCENT,CASTE_CERTIFICATES_ISSUED,INCOME_CERTIFICATES_ISSUED,RESIDENCE_CERTIFICATES_ISSUED,LEGAL_HEIR_CERTIFICATES,SOLVENCY_CERTIFICATES,TOTAL_CERTIFICATE_APPLICATIONS,CERTIFICATES_APPROVED,CERTIFICATES_PENDING,CERTIFICATES_REJECTED,AVG_CERTIFICATE_PROCESSING_DAYS,TOTAL_CASES_REGISTERED,CASES_RESOLVED,CASES_PENDING,OVERDUE_CASES,LAND_DISPUTE_CASES,CIVIL_CASES,CRIMINAL_CASES,AVG_CASE_RESOLUTION_DAYS,TOTAL_GRIEVANCES_RECEIVED,GRIEVANCES_RESOLVED,GRIEVANCES_PENDING,ONLINE_GRIEVANCES,OFFLINE_GRIEVANCES,AVG_GRIEVANCE_RESOLUTION_DAYS,TOTAL_SCHEMES_RUNNING,TOTAL_SCHEME_BENEFICIARIES,PMAY_BENEFICIARIES,MGNREGA_BENEFICIARIES,OLD_AGE_PENSION_BENEFICIARIES,DISABILITY_PENSION_BENEFICIARIES,WOMEN_WELFARE_SCHEME_BENEFICIARIES,STUDENT_SCHOLARSHIP_BENEFICIARIES,FUNDS_ALLOCATED,FUNDS_UTILIZED,FUNDS_REMAINING,TOTAL_SCHOOLS,TOTAL_COLLEGES,TOTAL_HOSPITALS,TOTAL_PRIMARY_HEALTH_CENTERS,TOTAL_ANGANWADI_CENTERS,TOTAL_POLICE_STATIONS,TOTAL_FIRE_STATIONS,TOTAL_BANKS,TOTAL_POST_OFFICES,TOTAL_MARKET_PLACES,TOTAL_ROADS_KM,TOTAL_BRIDGES,TOTAL_IRRIGATION_PROJECTS,TOTAL_WATER_SUPPLY_PROJECTS,TOTAL_STAFF,REVENUE_INSPECTORS_COUNT,AMIN_COUNT,CLERK_COUNT,DATA_ENTRY_OPERATORS,VACANT_POSTS,FILLED_POSTS,STAFF_TRAINED_IN_DIGITAL_SERVICES,TOTAL_COMPUTERS,INTERNET_AVAILABLE,CCTV_INSTALLED,ONLINE_SERVICES_AVAILABLE,TOTAL_ONLINE_APPLICATIONS,DIGITAL_RECORDS_PERCENTAGE,WEBSITE_AVAILABLE,ANNUAL_BUDGET_ALLOCATED,BUDGET_UTILIZED,BUDGET_REMAINING,DEVELOPMENT_EXPENDITURE,ADMIN_EXPENDITURE,WELFARE_EXPENDITURE,LITERACY_RATE_PERCENT,MALE_LITERACY_PERCENT,FEMALE_LITERACY_PERCENT,EMPLOYMENT_RATE_PERCENT,AGRICULTURE_DEPENDENT_PERCENT,IRRIGATED_LAND_PERCENT,DRINKING_WATER_COVERAGE_PERCENT,ELECTRICITY_COVERAGE_PERCENT,MAJOR_PROJECTS_RUNNING,UPCOMING_PROJECTS,KEY_CHALLENGES,ACHIEVEMENTS,AWARDS_RECEIVED,DESCRIPTION\n';
-
-const MINOR_IRRIGATION_CSV_HEADER =
-  'BLOCK/ULB,GP/WARD,VILLAGE/LOCALITY,MIP ID,NAME OF M.I.P,CATEGORY/TYPE,LATITUDE,LONGITUDE,LOCATION PRECISION (METER),CATCHMENT AREA (SQ KM),COMMAND AREA KHARIF (ACRES),COMMAND AREA RABI (ACRES),TOTAL AYACUT (ACRES),STORAGE CAPACITY (MCUM),MWL (FT),FRL (FT),TBL (FT),SPILLWAY TYPE,SPILLWAY WIDTH (FT),NO OF SLUICES,SLUICE TYPE,CONDITION,FUNCTIONALITY,MANAGED BY,LAST MAINTENANCE,SENSORS INSTALLED,LAST GEOTAGGED DATE,BENEFICIARY FARMERS COUNT,BENEFICIARY SC/ST COUNT,SANCTIONED AMT (LAKHS),EXPENDITURE (LAKHS),FOREST CLEARANCE (Y/N),REMARKS\n';
 
 const IRRIGATION_CSV_HEADER =
   'BLOCK/ULB,GP/WARD,VILLAGE/ LOCALITY,WORK NAME,CATEGORY,TYPE OF IRRIGATION (FLOW/LIFT/SOLAR),LATITUDE,LONGITUDE,LOCATION PRECISION (METER),CATCHMENT AREA (IN SQ KM.),COMMAND AREA / AYACUT (HA.),STORAGE CAPACITY (HAM.),WATER SPREAD AREA (HA.),CANAL/ DISTRIBUTORY LENGTH (KM),DESIGN DISCHARGE (CUSECS),INFLOW SOURCE (RIVER/RAIN/STREAM/ CANAL),YEAR OF COMMISSIONING,CURRENT PHYSICAL CONDITION (GOOD/REPAIR NEEDED/CRITICAL),FUNCTIONALITY STATUS (FUNCTIONAL/PARTIAL/NON-FUNCTIONAL),MANAGED BY (PANI PANCHAYAT/DEPT/WUA),NAME OF PANI PANCHAYAT / WUA,CONTACT PERSON (PRESIDENT),CONTACT NUMBER OF PRESIDENT,CONTACT PERSON (ENGINEER),CONTACT NUMBER OF ENGINEER,LAST MAINTENANCE/DESILTING YEAR,BENEFICIARY FARMERS COUNT,BENEFICIARY HOUSEHOLDS,WATER AVAILABILITY (MONTHS/YEAR),FUNDING SCHEME (MGNREGS/STATE/CENTRAL),REMARKS/HISTORICAL BACKGROUND\n';
@@ -1392,22 +1398,10 @@ export default function DepartmentAdminPage() {
         rows.push(DRAINAGE_TABLE_COLUMNS.map((col) => stringify(getDrainTableColumnValue(o, col))));
       });
     } else if (deptCode === 'MINOR_IRRIGATION') {
-      headers = splitHeader(MINOR_IRRIGATION_CSV_HEADER);
+      headers = getMinorIrrigationAllCsvHeaders();
       organizationsForTable.forEach((o) => {
         const data = minorIrrigationProfiles[o.id] as Record<string, unknown> | undefined;
-        rows.push(
-          headers.map((header) => {
-            const key = snakeFromHeader(header);
-            if (header === 'NAME OF M.I.P') return stringify(o.name);
-            if (header === 'LATITUDE') {
-              return o.latitude != null ? String(o.latitude) : stringify(data?.[key]);
-            }
-            if (header === 'LONGITUDE') {
-              return o.longitude != null ? String(o.longitude) : stringify(data?.[key]);
-            }
-            return stringify(data?.[key]);
-          }),
-        );
+        rows.push(headers.map((header) => minorIrrigationExportCell(o, data, header)));
       });
     } else if (deptCode === 'ROADS') {
       headers = [
@@ -2992,8 +2986,8 @@ export default function DepartmentAdminPage() {
                       }
 
                       const profileData: Record<string, unknown> = {};
-                      splitHeader(MINOR_IRRIGATION_CSV_HEADER).forEach((header) => {
-                        const key = snakeFromHeader(header);
+                      getMinorIrrigationMinisterCsvHeaders().forEach((header) => {
+                        const key = minorIrrigationSnakeFromHeader(header);
                         const val = minorFormValues[key];
                         if (val != null && String(val).trim() !== '') {
                           profileData[key] = val;
@@ -3064,8 +3058,8 @@ export default function DepartmentAdminPage() {
                     }
                   }}
                 >
-                  {splitHeader(MINOR_IRRIGATION_CSV_HEADER).map((header) => {
-                    const key = snakeFromHeader(header);
+                  {getMinorIrrigationMinisterCsvHeaders().map((header) => {
+                    const key = minorIrrigationSnakeFromHeader(header);
                     return (
                       <div key={key} className="space-y-1">
                         <label className="block text-text">{header}</label>
@@ -4539,7 +4533,7 @@ export default function DepartmentAdminPage() {
                         : deptCode === 'WATCO_RWSS'
                           ? 'Upload WATCO/RWSS water supply CSV. Schemes will be created or updated by STATION NAME, LATITUDE, LONGITUDE.'
                           : deptCode === 'MINOR_IRRIGATION'
-                            ? 'Upload Minor Irrigation CSV. Projects will be created or updated by NAME OF M.I.P, LATITUDE, LONGITUDE.'
+                            ? 'Upload Minor Irrigation CSV (minister + portfolio columns). Projects are keyed by NAME OF M.I.P, LATITUDE, LONGITUDE; all other minister and portfolio fields (images, JSON card arrays, contact) are saved to the profile.'
                             : deptCode === 'REVENUE_LAND'
                               ? 'Upload Tahasil portfolio CSV. Organizations will be created/updated by TAHSIL_NAME (or OFFICE NAME), LATITUDE, LONGITUDE, and all additional attributes are saved to profile.'
                               : deptCode === 'ROADS'
@@ -5082,12 +5076,13 @@ export default function DepartmentAdminPage() {
                       )}
                       {deptCode === 'MINOR_IRRIGATION' && (
                         <>
-                          {splitHeader(MINOR_IRRIGATION_CSV_HEADER).map((header) => {
+                          {getMinorIrrigationAllCsvHeaders().map((header) => {
                             if (header === 'NAME OF M.I.P') return null;
                             return (
                               <th
                                 key={header}
                                 className="px-2 py-1 text-left font-medium text-text whitespace-nowrap"
+                                title={header}
                               >
                                 {header}
                               </th>
@@ -5285,23 +5280,24 @@ export default function DepartmentAdminPage() {
                             )}
                             {deptCode === 'MINOR_IRRIGATION' && (
                               <>
-                                {splitHeader(MINOR_IRRIGATION_CSV_HEADER).map((header) => {
+                                {getMinorIrrigationAllCsvHeaders().map((header) => {
                                   if (header === 'NAME OF M.I.P') return null;
-                                  const key = snakeFromHeader(header);
-                                  const data = mp as Record<string, unknown> | undefined;
-                                  let val: unknown = data ? data[key] : undefined;
-                                  if (header === 'MIP ID') {
-                                    val = data ? data[key] : undefined;
-                                  }
-                                  if (header === 'LATITUDE') {
-                                    val = o.latitude != null ? o.latitude : val;
-                                  }
-                                  if (header === 'LONGITUDE') {
-                                    val = o.longitude != null ? o.longitude : val;
-                                  }
+                                  const cell = minorIrrigationTableCell(
+                                    o,
+                                    mp as Record<string, unknown> | undefined,
+                                    header,
+                                  );
                                   return (
-                                    <td key={key} className="px-2 py-1 text-text-muted">
-                                      {_(val)}
+                                    <td
+                                      key={`${o.id}-${header}`}
+                                      className="max-w-[220px] px-2 py-1 text-text-muted"
+                                      title={minorIrrigationExportCell(
+                                        o,
+                                        mp as Record<string, unknown> | undefined,
+                                        header,
+                                      )}
+                                    >
+                                      <span className="line-clamp-2 break-all">{_(cell)}</span>
                                     </td>
                                   );
                                 })}
@@ -5601,13 +5597,13 @@ export default function DepartmentAdminPage() {
                                     const v = (x: unknown) =>
                                       x != null && String(x).trim() !== '' ? String(x) : '';
                                     const vals: Record<string, string> = {};
-                                    splitHeader(MINOR_IRRIGATION_CSV_HEADER).forEach((header) => {
-                                      const k = snakeFromHeader(header);
+                                    getMinorIrrigationMinisterCsvHeaders().forEach((header) => {
+                                      const k = minorIrrigationSnakeFromHeader(header);
                                       vals[k] = v(existingProfile?.[k]);
                                     });
-                                    const nameKey = snakeFromHeader('NAME OF M.I.P');
-                                    const latKey = snakeFromHeader('LATITUDE');
-                                    const lngKey = snakeFromHeader('LONGITUDE');
+                                    const nameKey = minorIrrigationSnakeFromHeader('NAME OF M.I.P');
+                                    const latKey = minorIrrigationSnakeFromHeader('LATITUDE');
+                                    const lngKey = minorIrrigationSnakeFromHeader('LONGITUDE');
                                     if (!vals[nameKey]) vals[nameKey] = o.name;
                                     if (!vals[latKey] && o.latitude != null)
                                       vals[latKey] = String(o.latitude);
@@ -6589,7 +6585,7 @@ export default function DepartmentAdminPage() {
                     )}
                     {!organizationsForTable.length && (
                       <tr>
-                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 22 : deptCode === 'HEALTH' ? 28 : deptCode === 'EDUCATION' ? 62 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 3 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 3 : deptCode === 'REVENUE_LAND' ? 12 : deptCode === 'ROADS' ? 18 : deptCode === 'DRAINAGE' ? 14 : 11}>
+                        <td className="px-2 py-2 text-xs text-text-muted" colSpan={deptCode === 'ICDS' || deptCode === 'AWC_ICDS' ? 22 : deptCode === 'HEALTH' ? 28 : deptCode === 'EDUCATION' ? 62 : deptCode === 'ELECTRICITY' ? splitHeader(ELECTRICITY_CSV_HEADER).length + 3 : deptCode === 'ARCS' ? splitHeader(ARCS_CSV_HEADER).length + 3 : deptCode === 'REVENUE_LAND' ? 12 : deptCode === 'ROADS' ? 18 : deptCode === 'DRAINAGE' ? 14 : deptCode === 'MINOR_IRRIGATION' ? minorIrrigationTableColSpan() : deptCode === 'IRRIGATION' ? splitHeader(IRRIGATION_CSV_HEADER).filter((h) => h !== 'WORK NAME').length + 3 : 11}>
                           {orgs.length
                             ? 'No matching rows for current search/filter.'
                             : 'No organizations yet for your department.'}
