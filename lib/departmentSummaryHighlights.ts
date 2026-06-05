@@ -11,6 +11,48 @@ import { getDrainLineKindFromOrg } from './drainageOrganization';
 
 export type LegendRow = { label: string; rawLabel: string; count: number };
 
+function normalizeAgricultureInstitutionKey(raw: string | null | undefined): string {
+  return (raw || '').trim().toUpperCase().replace(/\s+/g, ' ');
+}
+
+const AGRICULTURE_INSTITUTION_I18N_KEY: Record<string, MessageKey> = {
+  'AGRICULTURE SERVICE CENTER': 'agriculture.type.serviceCenter',
+  'AGRICULTURE EXTENSION CENTER': 'agriculture.type.extensionCenter',
+  'AGRIL. & FARMERS EMPOWERMENT': 'agriculture.type.agrilFarmersEmpowerment',
+  'AGRIL & FARMERS EMPOWERMENT': 'agriculture.type.agrilFarmersEmpowerment',
+  'ODISHA STATE SEED CORPORATION': 'agriculture.type.odishaStateSeedCorporation',
+};
+
+function agricultureInstitutionI18nLookup(key: string): MessageKey | undefined {
+  const k = key.trim();
+  if (AGRICULTURE_INSTITUTION_I18N_KEY[k]) return AGRICULTURE_INSTITUTION_I18N_KEY[k];
+  const noDots = k.replace(/\./g, '').replace(/\s+/g, ' ');
+  if (AGRICULTURE_INSTITUTION_I18N_KEY[noDots]) return AGRICULTURE_INSTITUTION_I18N_KEY[noDots];
+  const ampToAnd = k.replace(/\s*&\s*/g, ' AND ');
+  if (AGRICULTURE_INSTITUTION_I18N_KEY[ampToAnd]) return AGRICULTURE_INSTITUTION_I18N_KEY[ampToAnd];
+  const relaxed = k.replace(/\./g, '').replace(/\s*&\s*/g, ' AND ');
+  if (AGRICULTURE_INSTITUTION_I18N_KEY[relaxed]) return AGRICULTURE_INSTITUTION_I18N_KEY[relaxed];
+  return undefined;
+}
+
+/** Raw institution key for agriculture orgs (matches map legend bucketing). */
+export function agricultureOrganizationCategoryKey(org: Organization): string {
+  return normalizeAgricultureInstitutionKey(
+    (org.sub_department as string) || (org.attributes?.sub_department as string) || '',
+  );
+}
+
+/** Localized agriculture category label (same labels as the constituency map legend). */
+export function agricultureCategoryDisplayLabel(rawKey: string, lang: 'en' | 'or'): string {
+  const key = normalizeAgricultureInstitutionKey(rawKey);
+  if (!key) return '';
+  const msgKey = agricultureInstitutionI18nLookup(key);
+  if (msgKey) return t(msgKey, lang);
+  return key
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function buildLegendRows(organizations: Organization[], departmentCode?: string): LegendRow[] {
   const code = (departmentCode || '').toUpperCase();
   const bucket = new Map<string, number>();
@@ -30,7 +72,7 @@ export function buildLegendRows(organizations: Organization[], departmentCode?: 
       continue;
     }
     if (code === 'AGRICULTURE') {
-      add(org.sub_department || (org.attributes?.sub_department as string) || org.type);
+      add(agricultureOrganizationCategoryKey(org) || org.type);
       continue;
     }
     if (code === 'ELECTRICITY') {
@@ -80,7 +122,9 @@ export function buildLegendRows(organizations: Organization[], departmentCode?: 
           ? 'Main'
           : code === 'DRAINAGE' && rawLabel === 'BRANCH'
             ? 'Branch'
-            : rawLabel.replace(/_/g, ' ');
+            : code === 'AGRICULTURE'
+              ? agricultureCategoryDisplayLabel(rawLabel, 'en')
+              : rawLabel.replace(/_/g, ' ');
       return { label, rawLabel, count };
     })
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
@@ -160,6 +204,9 @@ export function legendHighlightTitle(
     const key = ROAD_HIGHLIGHT_KEYS[legendKey];
     if (key) return t(key, lang);
   }
+  if (code === 'AGRICULTURE') {
+    return agricultureCategoryDisplayLabel(legendKey.replace(/_/g, ' '), lang) || (card.title || '').trim();
+  }
   return (card.title || '').trim();
 }
 
@@ -233,6 +280,9 @@ export function organizationListingCategory(org: Organization, departmentCode?: 
     const jurisdiction = String(org.attributes?.jurisdiction_type ?? '').trim();
     if (jurisdiction) return jurisdiction.replace(/_/g, ' ');
     return (org.type || '').trim();
+  }
+  if (code === 'AGRICULTURE') {
+    return agricultureOrganizationCategoryKey(org);
   }
   return (
     (org.attributes?.road_sector as string) ||

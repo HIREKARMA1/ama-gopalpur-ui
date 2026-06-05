@@ -13,6 +13,7 @@ import { DepartmentSummaryMinistersSection } from './DepartmentSummaryMinistersS
 import { resolveSummaryMinisters, toSummaryLang } from '../../lib/departmentSummaryMinisters';
 import { getDepartmentLabel } from './DepartmentSidebar';
 import {
+  agricultureCategoryDisplayLabel,
   ARCS_SUMMARY_TABLE_COLUMNS,
   legendHighlightTitle,
   normalizeLegendParam,
@@ -49,6 +50,7 @@ import { parseMinorIrrigationConsumerStatsRows } from '../../lib/minorIrrigation
 import { MinorIrrigationConsumerStatsTableSection } from './MinorIrrigationConsumerStatsTableSection';
 import {
   summaryBlockFilterOptions,
+  summaryBlockShowsVillageFilter,
   summaryLocationFilterOptions,
   summaryLocationSearchText,
   summaryMatchesBlockFilter,
@@ -73,6 +75,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const isMinorIrrigationDept = deptCode === 'MINOR_IRRIGATION';
   const isRoadsDept = deptCode === 'ROADS';
   const isArcsDept = deptCode === 'ARCS';
+  const isAgricultureDept = deptCode === 'AGRICULTURE';
   const isDrainageDept = deptCode === 'DRAINAGE';
   const showPortfolioColumn = !isDrainageDept && !isRoadsDept;
   const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
@@ -91,6 +94,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       }
     }
     return text;
+  };
+  const categoryDisplayLabel = (raw: string) => {
+    if (!raw) return '';
+    if (isAgricultureDept) return agricultureCategoryDisplayLabel(raw, language);
+    return raw;
   };
   const summary = department.department_summary;
   const sidebarLocalizedDepartmentName = getDepartmentLabel(department, language);
@@ -152,14 +160,21 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     [isRoadsDept, roadTypeFilter],
   );
 
+  const blockShowsVillageFilter = summaryBlockShowsVillageFilter(locationBlockFilter);
+
   const roadsVillageColumnVisible = useMemo(
-    () => isRoadsDept && !roadTypeFilterIsMunicipality(roadTypeFilter),
-    [isRoadsDept, roadTypeFilter],
+    () =>
+      isRoadsDept &&
+      !roadTypeFilterIsMunicipality(roadTypeFilter) &&
+      blockShowsVillageFilter,
+    [isRoadsDept, roadTypeFilter, blockShowsVillageFilter],
   );
+
+  const summaryVillageFilterVisible = blockShowsVillageFilter;
 
   const locationColumnCount = isRoadsDept
     ? (roadsVillageColumnVisible ? 3 : 2)
-    : 3;
+    : (summaryVillageFilterVisible ? 3 : 2);
 
   const listingTableColSpan = useMemo(() => {
     if (isRoadsDept) {
@@ -180,6 +195,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     roadsMaintenanceColumnsVisible,
     roadsVillageColumnVisible,
     locationColumnCount,
+    summaryVillageFilterVisible,
   ]);
 
   const categoryOptions = useMemo(() => {
@@ -224,14 +240,20 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   }, [isRoadsDept, roadTypeFilter]);
 
   useEffect(() => {
-    if (!isRoadsDept) return;
-    if (roadTypeIsMunicipality && locationVillageFilter !== 'ALL') {
+    if (!blockShowsVillageFilter && locationVillageFilter !== 'ALL') {
       setLocationVillageFilter('ALL');
     }
+    if (!isRoadsDept) return;
     if (roadTypeIsGp && locationBlockFilter === ROADS_GP_EXCLUDED_BLOCK) {
       setLocationBlockFilter('ALL');
     }
-  }, [isRoadsDept, roadTypeIsMunicipality, roadTypeIsGp, locationBlockFilter, locationVillageFilter]);
+  }, [
+    isRoadsDept,
+    roadTypeIsGp,
+    locationBlockFilter,
+    locationVillageFilter,
+    blockShowsVillageFilter,
+  ]);
 
   const locationGpOptions = useMemo(
     () => summaryLocationFilterOptions(scopedForGpOptions.map(summaryOrgGpWard)),
@@ -247,6 +269,9 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     const q = searchTerm.trim().toLowerCase();
     return topOrganizations.filter((org) => {
       const categoryLabel = organizationListingCategory(org, department.code);
+      const categorySearchText = isAgricultureDept
+        ? `${categoryLabel} ${categoryDisplayLabel(categoryLabel)}`.toLowerCase()
+        : categoryLabel.toLowerCase();
       const address = (org.address || '').toString();
       const attrs = (org.attributes ?? {}) as Record<string, unknown>;
       const roadCode = String(attrs.road_code ?? '').toLowerCase();
@@ -270,7 +295,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       const matchesSearch =
         !q ||
         org.name.toLowerCase().includes(q) ||
-        categoryLabel.toLowerCase().includes(q) ||
+        categorySearchText.includes(q) ||
         address.toLowerCase().includes(q) ||
         locationSearch.includes(q) ||
         (isArcsDept && arcsSearchText.includes(q)) ||
@@ -287,7 +312,9 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           ? 'ALL'
           : locationBlockFilter;
       const effectiveVillageFilter =
-        isRoadsDept && roadTypeIsMunicipality ? 'ALL' : locationVillageFilter;
+        !blockShowsVillageFilter || (isRoadsDept && roadTypeIsMunicipality)
+          ? 'ALL'
+          : locationVillageFilter;
 
       const matchesRoadType =
         !isRoadsDept || roadMatchesLocationFilter(categoryLabel, roadTypeFilter);
@@ -313,6 +340,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
     locationVillageFilter,
     roadTypeIsGp,
     roadTypeIsMunicipality,
+    blockShowsVillageFilter,
   ]);
 
   const sortedOrganizations = useMemo(() => {
@@ -448,7 +476,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm shadow-sm outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
                   />
                 </label>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div
+                  className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${
+                    roadsVillageColumnVisible ? 'lg:grid-cols-4' : 'lg:grid-cols-3'
+                  }`}
+                >
                 <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {trStatic('Road type', 'ରୋଡ୍ ପ୍ରକାର')}
                   <select
@@ -516,29 +548,26 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     ))}
                   </select>
                 </label>
-                <label
-                  className={`flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide ${
-                    roadTypeIsMunicipality ? 'text-slate-400' : 'text-slate-500'
-                  }`}
-                >
-                  {trStatic('Village', 'ଗ୍ରାମ')}
-                  <select
-                    value={locationVillageFilter}
-                    disabled={roadTypeIsMunicipality}
-                    onChange={(e) => {
-                      setLocationVillageFilter(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-                  >
-                    <option value="ALL">{trStatic('All villages', 'ସମସ୍ତ ଗ୍ରାମ')}</option>
-                    {locationVillageOptions.map((opt) => (
-                      <option key={`road-village-${opt.value}`} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {blockShowsVillageFilter && !roadTypeIsMunicipality ? (
+                  <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {trStatic('Village', 'ଗ୍ରାମ')}
+                    <select
+                      value={locationVillageFilter}
+                      onChange={(e) => {
+                        setLocationVillageFilter(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
+                    >
+                      <option value="ALL">{trStatic('All villages', 'ସମସ୍ତ ଗ୍ରାମ')}</option>
+                      {locationVillageOptions.map((opt) => (
+                        <option key={`road-village-${opt.value}`} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
               </div>
               </>
             ) : (
@@ -558,7 +587,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                     className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm shadow-sm outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
                   />
                 </label>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div
+                  className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${
+                    summaryVillageFilterVisible ? 'lg:grid-cols-4' : 'lg:grid-cols-3'
+                  }`}
+                >
                   <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     {isArcsDept
                       ? tr('dept.summary.table.jurisdictionType')
@@ -587,7 +620,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                               const key = drainageTypeMessageKey(opt);
                               return key ? tr(key) : opt;
                             })()
-                            : opt}
+                            : categoryDisplayLabel(opt)}
                         </option>
                       ))}
                     </select>
@@ -631,24 +664,26 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                       ))}
                     </select>
                   </label>
-                  <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    {trStatic('Village', 'ଗ୍ରାମ')}
-                    <select
-                      value={locationVillageFilter}
-                      onChange={(e) => {
-                        setLocationVillageFilter(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
-                    >
-                      <option value="ALL">{trStatic('All villages', 'ସମସ୍ତ ଗ୍ରାମ')}</option>
-                      {locationVillageOptions.map((opt) => (
-                        <option key={`loc-village-${opt.value}`} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  {summaryVillageFilterVisible ? (
+                    <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      {trStatic('Village', 'ଗ୍ରାମ')}
+                      <select
+                        value={locationVillageFilter}
+                        onChange={(e) => {
+                          setLocationVillageFilter(e.target.value);
+                          setCurrentPage(1);
+                        }}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-800 shadow-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
+                      >
+                        <option value="ALL">{trStatic('All villages', 'ସମସ୍ତ ଗ୍ରାମ')}</option>
+                        {locationVillageOptions.map((opt) => (
+                          <option key={`loc-village-${opt.value}`} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
                 </div>
               </>
             )}
@@ -704,9 +739,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                           <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                             {trStatic('GP/Ward', 'ଜିପି/ୱାର୍ଡ')}
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            {trStatic('Village', 'ଗ୍ରାମ')}
-                          </th>
+                          {summaryVillageFilterVisible ? (
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                              {trStatic('Village', 'ଗ୍ରାମ')}
+                            </th>
+                          ) : null}
                         </>
                       )}
                     {isRoadsDept ? (
@@ -759,7 +796,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                               const key = drainageTypeMessageKey(kind);
                               return key ? tr(key) : kind || '—';
                             })()
-                            : organizationListingCategory(org, department.code) || '—'}
+                            : categoryDisplayLabel(organizationListingCategory(org, department.code)) || '—'}
                         </td>
                         {isArcsDept
                           ? ARCS_SUMMARY_TABLE_COLUMNS.map((col) => (
@@ -784,9 +821,11 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                               <td className="px-4 py-3 text-sm text-slate-600">
                                 <span className="line-clamp-1">{summaryOrgGpWard(org) || '—'}</span>
                               </td>
-                              <td className="px-4 py-3 text-sm text-slate-600">
-                                <span className="line-clamp-1">{summaryOrgVillage(org) || '—'}</span>
-                              </td>
+                              {summaryVillageFilterVisible ? (
+                                <td className="px-4 py-3 text-sm text-slate-600">
+                                  <span className="line-clamp-1">{summaryOrgVillage(org) || '—'}</span>
+                                </td>
+                              ) : null}
                             </>
                           )}
                         {isRoadsDept ? (
