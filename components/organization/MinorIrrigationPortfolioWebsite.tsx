@@ -4,6 +4,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import type { Organization } from '../../services/api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
+import { irrigationOrgStatsForPortfolio } from '../../lib/irrigationOrgStats';
 import { getMinorIrrigationProfileLabel } from '../../lib/profileLabels';
 import {
   PsHeroSection,
@@ -70,6 +71,8 @@ export interface MinorIrrigationPortfolioWebsiteProps {
   profile: Record<string, unknown>;
   departmentName?: string | null;
   images?: string[];
+  /** Irrigation reuses this layout; shows org summary stat cards when set. */
+  variant?: 'minor' | 'irrigation';
 }
 
 export function MinorIrrigationPortfolioWebsite({
@@ -77,6 +80,7 @@ export function MinorIrrigationPortfolioWebsite({
   profile,
   departmentName,
   images = [],
+  variant = 'minor',
 }: MinorIrrigationPortfolioWebsiteProps) {
   const { language } = useLanguage();
   const tr = (en: string, or: string) => (language === 'or' ? or : en);
@@ -230,6 +234,22 @@ export function MinorIrrigationPortfolioWebsite({
   );
   const activeRows = detailData[detailTab].filter(([, v]) => v != null && String(v).trim() !== '');
 
+  const irrigationOrgStats =
+    variant === 'irrigation' ? irrigationOrgStatsForPortfolio(rec, language) : [];
+
+  const highlightCards =
+    variant === 'irrigation'
+      ? [
+          ...irrigationOrgStats.map((row) => [row.label, formatVal(row.value)] as const),
+          [t('minor.stat.catchment', language), formatVal(catchment)],
+          [t('minor.stat.storage', language), formatVal(storage)],
+        ].filter(([, v]) => v !== '—' && String(v).trim() !== '')
+      : [
+          [t('minor.stat.catchment', language), formatVal(catchment)],
+          [t('minor.stat.ayacut', language), formatVal(ayacut)],
+          [t('minor.stat.storage', language), formatVal(storage)],
+        ].filter(([, v]) => v !== '—' && String(v).trim() !== '');
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 via-slate-50 to-white text-slate-800">
       <PsHeroSection org={org} profile={psProfile} language={lang} sliderImages={heroSlides} />
@@ -301,14 +321,11 @@ export function MinorIrrigationPortfolioWebsite({
         </section>
         ) : null}
 
+        {highlightCards.length > 0 ? (
         <section className="rounded-[28px] border border-slate-200/70 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-md md:p-7">
           <h2 className="text-xl font-bold sm:text-2xl">{tr('Key highlights', 'ମୁଖ୍ୟ ହାଇଲାଇଟ୍')}</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              [t('minor.stat.catchment', language), formatVal(catchment)],
-              [t('minor.stat.ayacut', language), formatVal(ayacut)],
-              [t('minor.stat.storage', language), formatVal(storage)],
-            ].map(([k, v]) => (
+            {highlightCards.map(([k, v]) => (
               <div key={String(k)} className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{k}</p>
                 <p className="mt-1 text-2xl font-bold text-slate-900">{v}</p>
@@ -316,6 +333,7 @@ export function MinorIrrigationPortfolioWebsite({
             ))}
           </div>
         </section>
+        ) : null}
 
         {activeRows.length > 0 ? (
         <section className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 shadow-sm md:p-5">
