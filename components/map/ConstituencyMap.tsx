@@ -43,6 +43,11 @@ import {
   normalizeConstituencyBlock,
   normalizeRoadLocationKey,
 } from '../../lib/roadsOrganization';
+import {
+  normalizeWatcoSubDepartment,
+  WATCO_SUB_DEPARTMENTS,
+  watcoOrgMatchesLegendFilter,
+} from '../../lib/watcoOrganization';
 
 const EDUCATION_TYPE_KEYS: Record<string, MessageKey> = {
   PRIMARY_SCHOOL: 'map.edu.primarySchool',
@@ -76,8 +81,6 @@ const HEALTH_TYPE_KEYS: Record<string, MessageKey> = {
   HEALTH_CENTRE: 'map.health.healthCentre',
   OTHER: 'map.health.other',
 };
-
-const WATCO_SUB_DEPARTMENTS = ['WATCO', 'RWSS'] as const;
 
 const ROAD_LEGEND_COLORS = [
   '#ea4335',
@@ -143,13 +146,7 @@ const WATCO_LEGEND_LABEL_KEYS: Record<(typeof WATCO_SUB_DEPARTMENTS)[number], Me
   RWSS: 'map.legend.rwss',
 };
 
-function normalizeWatcoLegendType(raw: string | null | undefined): (typeof WATCO_SUB_DEPARTMENTS)[number] | null {
-  const v = (raw || '').trim().toUpperCase();
-  if (!v) return null;
-  if (v === 'WATCO') return 'WATCO';
-  if (v === 'RWSS') return 'RWSS';
-  return null;
-}
+const normalizeWatcoLegendType = normalizeWatcoSubDepartment;
 
 const EDUCATION_SUB_DEPT_DOT_COLORS: Record<string, string> = {
   PS: '#ea4335',
@@ -1236,9 +1233,7 @@ export function ConstituencyMap({
             return jt === legendFilterType;
           });
         } else if (code === 'WATCO_RWSS') {
-          result = result.filter(
-            (org) => normalizeWatcoLegendType(org.sub_department as string) === legendFilterType,
-          );
+          result = result.filter((org) => watcoOrgMatchesLegendFilter(org, legendFilterType));
         } else {
           result = result.filter((org) => org.type === legendFilterType);
         }
