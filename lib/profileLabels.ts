@@ -366,6 +366,11 @@ const MINOR_IRRIGATION_LABELS: Record<string, { en: string; or: string }> = {
   // CSV variant with underscores between "mgnregs", "state", "central"
   funding_scheme_mgnregs_state_central: { en: 'Funding scheme', or: 'ଅର୍ଥାୟନ ଯୋଜନା' },
   remarks_historical_background: { en: 'Remarks / historical background', or: 'ମନ୍ତବ୍ୟ / ଐତିହାସିକ ପୃଷ୍ଠଭୂମି' },
+  total_panchayat_covered: { en: 'Total panchayat covered', or: 'ମୋଟ ପଞ୍ଚାୟତ ଆବୃତ' },
+  total_ayacut: { en: 'Total ayacut', or: 'ମୋଟ ଆୟାକଟ୍' },
+  total_ayacut_area: { en: 'Total ayacut area', or: 'ମୋଟ ଆୟାକଟ୍ କ୍ଷେତ୍ର' },
+  total_beneficiaries: { en: 'Total beneficiaries', or: 'ମୋଟ ଲାଭାନ୍ବିତ' },
+  total_crops: { en: 'Total crops', or: 'ମୋଟ ଫସଲ' },
 };
 
 export function getMinorIrrigationProfileLabel(
