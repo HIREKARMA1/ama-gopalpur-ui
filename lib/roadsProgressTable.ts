@@ -4,15 +4,38 @@ export type { RoadsProgressRow };
 
 export const ROADS_PROGRESS_COLUMNS = [
   { key: 'sl_no' as const, en: 'Sl. No.', or: 'କ୍ରମିକ ନং' },
-  { key: 'total_pwd_road' as const, en: 'Total PWD road', or: 'ମୋଟ PWD ରୋଡ୍' },
-  { key: 'total_rd_road' as const, en: 'Total RD road', or: 'ମୋଟ RD ରୋଡ୍' },
-  { key: 'total_gp_road' as const, en: 'Total GP road', or: 'ମୋଟ GP ରୋଡ୍' },
-  { key: 'upgraded_gp_to_rd' as const, en: 'Upgraded GP → RD', or: 'GP ରୁ RD ଉନ୍ନତ' },
-  { key: 'upgraded_rd_to_pwd' as const, en: 'Upgraded RD → PWD', or: 'RD ରୁ PWD ଉନ୍ନତ' },
   { key: 'fy' as const, en: 'FY', or: 'ଆର୍ଥିକ ବର୍ଷ' },
-  { key: 'proposal_sent' as const, en: 'Proposal sent', or: 'ପ୍ରସ୍ତାବ ପଠାଯାଇଛି' },
-  { key: 'proposal_approved' as const, en: 'Proposal approved', or: 'ପ୍ରସ୍ତାବ ଅନୁମୋଦିତ' },
+  {
+    key: 'upgraded_gp_to_rd' as const,
+    en: 'Total km of Upgraded GP → RD',
+    or: 'GP ରୁ RD ଉନ୍ନତ ମୋଟ କି.ମି.',
+  },
+  {
+    key: 'upgraded_rd_to_pwd' as const,
+    en: 'Total km of Upgraded RD → PWD',
+    or: 'RD ରୁ PWD ଉନ୍ନତ ମୋଟ କି.ମି.',
+  },
+  { key: 'proposal_l_no' as const, en: 'Proposal LNo', or: 'ପ୍ରସ୍ତାବ LNo' },
+  {
+    key: 'proposal_sent_date' as const,
+    en: 'Proposal sent date',
+    or: 'ପ୍ରସ୍ତାବ ପଠାଇବା ତାରିଖ',
+  },
+  {
+    key: 'proposal_approved' as const,
+    en: 'Proposal approved',
+    or: 'ପ୍ରସ୍ତାବ ଅନୁମୋଦିତ',
+  },
 ] as const;
+
+const ROADS_PROGRESS_VALUE_KEYS = [
+  'fy',
+  'upgraded_gp_to_rd',
+  'upgraded_rd_to_pwd',
+  'proposal_l_no',
+  'proposal_sent_date',
+  'proposal_approved',
+] as const satisfies readonly (keyof RoadsProgressRow)[];
 
 function asCell(value: unknown): string {
   if (value === null || value === undefined) return '';
@@ -20,14 +43,19 @@ function asCell(value: unknown): string {
 }
 
 function rowHasData(row: RoadsProgressRow): boolean {
-  return ROADS_PROGRESS_COLUMNS.some((col) => asCell(row[col.key]) !== '');
+  return ROADS_PROGRESS_VALUE_KEYS.some((key) => asCell(row[key]) !== '');
 }
 
 function normalizeRow(raw: Record<string, unknown>): RoadsProgressRow {
   const row: RoadsProgressRow = {};
-  for (const col of ROADS_PROGRESS_COLUMNS) {
-    const v = asCell(raw[col.key]);
-    if (v) row[col.key] = v;
+  const keys = new Set<string>(['sl_no', ...ROADS_PROGRESS_VALUE_KEYS]);
+  for (const key of keys) {
+    const v = asCell(raw[key]);
+    if (v) row[key as keyof RoadsProgressRow] = v;
+  }
+  if (!row.proposal_sent_date) {
+    const legacySent = asCell(raw.proposal_sent);
+    if (legacySent) row.proposal_sent_date = legacySent;
   }
   return row;
 }
