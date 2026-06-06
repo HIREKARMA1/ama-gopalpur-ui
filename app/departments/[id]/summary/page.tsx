@@ -7,6 +7,7 @@ import { Loader } from '../../../../components/common/Loader';
 import { departmentsApi, organizationsApi, type Department, type Organization } from '../../../../services/api';
 import { extractDepartmentIdFromParam } from '../../../../lib/departmentRoute';
 import { enrichArcsOrganizationsForListing } from '../../../../lib/departmentSummaryHighlights';
+import { isRevenueLandParcel } from '../../../../lib/revenueLandHighlights';
 
 export default function DepartmentSummaryRoutePage() {
   const params = useParams<{ id: string }>();
@@ -36,7 +37,11 @@ export default function DepartmentSummaryRoutePage() {
           skip += pageSize;
           if (skip > 100000) break; // hard safety guard
         }
-        setOrganizationCount(total);
+        setOrganizationCount(
+          (dept.code || '').toUpperCase() === 'REVENUE_LAND'
+            ? all.filter(isRevenueLandParcel).length
+            : total,
+        );
         const listingOrgs =
           (dept.code || '').toUpperCase() === 'ARCS'
             ? await enrichArcsOrganizationsForListing(all)

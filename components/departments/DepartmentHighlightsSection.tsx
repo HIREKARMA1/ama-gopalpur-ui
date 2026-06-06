@@ -1,4 +1,6 @@
+import type { RevenueLandHighlightTreeNode } from '../../lib/revenueLandHighlights';
 import { HighlightsCyclicDiagram } from './HighlightsCyclicDiagram';
+import { HighlightsTreeDiagram } from './HighlightsTreeDiagram';
 import { DepartmentSummarySection } from './DepartmentSummarySection';
 
 type HighlightCard = {
@@ -14,6 +16,7 @@ export function DepartmentHighlightsSection({
   departmentName,
   departmentCode,
   highlightCards,
+  highlightTree,
 }: {
   sectionTitle: string;
   emptyText: string;
@@ -21,22 +24,29 @@ export function DepartmentHighlightsSection({
   departmentName: string;
   departmentCode: string;
   highlightCards: HighlightCard[];
+  highlightTree?: RevenueLandHighlightTreeNode | null;
 }) {
+  const emptyNode = (
+    <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center text-sm text-slate-500">
+      {emptyText}
+    </p>
+  );
+
   return (
     <DepartmentSummarySection title={sectionTitle} subtitle={infoText}>
-      <HighlightsCyclicDiagram
-        items={highlightCards}
-        centerLabel={departmentName}
-        infoText={infoText}
-        emptyText={
-          <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center text-sm text-slate-500">
-            {emptyText}
-          </p>
-        }
-        makeHref={(item) =>
-          `/?dept=${encodeURIComponent(departmentCode || '')}&legend=${encodeURIComponent(item.legendKey)}`
-        }
-      />
+      {highlightTree ? (
+        <HighlightsTreeDiagram tree={highlightTree} emptyText={emptyNode} />
+      ) : (
+        <HighlightsCyclicDiagram
+          items={highlightCards}
+          centerLabel={departmentName}
+          infoText={infoText}
+          emptyText={emptyNode}
+          makeHref={(item) =>
+            `/?dept=${encodeURIComponent(departmentCode || '')}&legend=${encodeURIComponent(item.legendKey)}`
+          }
+        />
+      )}
     </DepartmentSummarySection>
   );
 }

@@ -640,6 +640,7 @@ export type MessageKey =
   | 'dept.summary.section.ministers'
   | 'dept.summary.section.highlights'
   | 'dept.summary.section.organizationListing'
+  | 'dept.summary.section.landParcelDetails'
   | 'dept.summary.empty.highlights'
   | 'dept.summary.empty.organizations'
   | 'dept.summary.search.placeholder'
@@ -1405,6 +1406,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'dept.summary.section.organizationListing': {
     en: 'Department organization listing',
     or: 'ବିଭାଗୀୟ ସଂସ୍ଥା ତାଲିକା',
+  },
+  'dept.summary.section.landParcelDetails': {
+    en: 'Land parcel details table',
+    or: 'ଜମି ପ୍ଲଟ୍ ବିବରଣୀ ତାଲିକା',
   },
   'dept.summary.empty.highlights': {
     en: 'No highlight data available.',
