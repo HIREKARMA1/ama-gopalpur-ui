@@ -102,6 +102,8 @@ export interface RoadsProgressRow {
   fy?: string | null;
   upgraded_gp_to_rd?: string | null;
   upgraded_rd_to_pwd?: string | null;
+  total_no_upgraded_gp_to_rd?: string | null;
+  total_no_upgraded_rd_to_pwd?: string | null;
   proposal_l_no?: string | null;
   proposal_sent_date?: string | null;
   proposal_approved?: string | null;
@@ -113,6 +115,7 @@ export interface RoadsNetworkTotalsRow {
   total_pwd_road?: string | null;
   total_rd_road?: string | null;
   total_gp_road?: string | null;
+  total_municipality_road?: string | null;
 }
 
 /** Irrigation department summary — panchayat/ayacut/beneficiaries/crops totals (admin-edited). */

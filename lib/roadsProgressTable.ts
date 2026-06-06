@@ -15,6 +15,16 @@ export const ROADS_PROGRESS_COLUMNS = [
     en: 'Total km of Upgraded RD → PWD',
     or: 'RD ରୁ PWD ଉନ୍ନତ ମୋଟ କି.ମି.',
   },
+  {
+    key: 'total_no_upgraded_gp_to_rd' as const,
+    en: 'Total no of Upgraded GP → RD',
+    or: 'GP ରୁ RD ଉନ୍ନତ ମୋଟ ସଂଖ୍ୟା',
+  },
+  {
+    key: 'total_no_upgraded_rd_to_pwd' as const,
+    en: 'Total no of Upgraded RD → PWD',
+    or: 'RD ରୁ PWD ଉନ୍ନତ ମୋଟ ସଂଖ୍ୟା',
+  },
   { key: 'proposal_l_no' as const, en: 'Proposal LNo', or: 'ପ୍ରସ୍ତାବ LNo' },
   {
     key: 'proposal_sent_date' as const,
@@ -32,6 +42,8 @@ const ROADS_PROGRESS_VALUE_KEYS = [
   'fy',
   'upgraded_gp_to_rd',
   'upgraded_rd_to_pwd',
+  'total_no_upgraded_gp_to_rd',
+  'total_no_upgraded_rd_to_pwd',
   'proposal_l_no',
   'proposal_sent_date',
   'proposal_approved',

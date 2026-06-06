@@ -7,6 +7,11 @@ export const ROADS_NETWORK_TOTALS_COLUMNS = [
   { key: 'total_pwd_road' as const, en: 'Total PWD road', or: 'ମୋଟ PWD ରୋଡ୍' },
   { key: 'total_rd_road' as const, en: 'Total RD road', or: 'ମୋଟ RD ରୋଡ୍' },
   { key: 'total_gp_road' as const, en: 'Total GP road', or: 'ମୋଟ GP ରୋଡ୍' },
+  {
+    key: 'total_municipality_road' as const,
+    en: 'Total Municipality road',
+    or: 'ମୋଟ ପୌରସଭା ରୋଡ୍',
+  },
 ] as const;
 
 function asCell(value: unknown): string {
