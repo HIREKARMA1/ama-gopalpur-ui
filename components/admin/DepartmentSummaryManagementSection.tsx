@@ -9,6 +9,7 @@ import {
 } from '../../lib/departmentSummaryHighlights';
 import { DepartmentHighlightsEditor } from './DepartmentHighlightsEditor';
 import { RevenueLandHighlightsEditor } from './RevenueLandHighlightsEditor';
+import { WatcoRwssHighlightsEditor } from './WatcoRwssHighlightsEditor';
 import { DepartmentMapSummaryEditor } from './DepartmentMapSummaryEditor';
 import { DepartmentSummaryEditor } from './DepartmentSummaryEditor';
 import { DepartmentSummaryMinistersEditor } from './DepartmentSummaryMinistersEditor';
@@ -61,6 +62,7 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
   const isMinorIrrigationDept = deptCode === 'MINOR_IRRIGATION';
   const isRoadsDept = deptCode === 'ROADS';
   const isRevenueLandDept = deptCode === 'REVENUE_LAND';
+  const isWatcoRwssDept = deptCode === 'WATCO_RWSS';
   const electricityConsumerStatsRows = useMemo(
     () => parseElectricityConsumerStatsRows(department.department_summary),
     [department.department_summary],
@@ -131,6 +133,12 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
       {isRevenueLandDept ? (
         <RevenueLandHighlightsEditor
           departmentName={department.name}
+          departmentCode={department.code || ''}
+          organizations={organizations}
+          loading={orgsLoading}
+        />
+      ) : isWatcoRwssDept ? (
+        <WatcoRwssHighlightsEditor
           departmentCode={department.code || ''}
           organizations={organizations}
           loading={orgsLoading}
