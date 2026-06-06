@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import type { RoadsProgressRow } from '../../lib/roadsProgressTable';
 import { ROADS_PROGRESS_COLUMNS } from '../../lib/roadsProgressTable';
 
@@ -29,9 +29,12 @@ function toPayload(rows: RowState[]): RoadsProgressRow[] {
       const out: RoadsProgressRow = {};
       for (const col of ROADS_PROGRESS_COLUMNS) {
         const v = String(row[col.key] ?? '').trim();
+        if (col.key === 'sl_no') {
+          out.sl_no = v || String(index + 1);
+          continue;
+        }
         if (v) out[col.key] = v;
       }
-      if (!out.sl_no) out.sl_no = String(index + 1);
       return out;
     })
     .filter((row) =>
@@ -46,10 +49,11 @@ export function RoadsProgressTableEditor({ departmentId, initialRows, onSave }: 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const initialRowsKey = useMemo(() => JSON.stringify(initialRows), [initialRows]);
 
   useEffect(() => {
     setRows(initialRows.length ? toRowState(initialRows) : [newRowState()]);
-  }, [departmentId, initialRows]);
+  }, [departmentId, initialRowsKey, initialRows]);
 
   const updateCell = (clientId: string, key: keyof RoadsProgressRow, value: string) => {
     setRows((prev) =>
@@ -68,7 +72,9 @@ export function RoadsProgressTableEditor({ departmentId, initialRows, onSave }: 
     setError(null);
     setSaving(true);
     try {
-      await onSave({ roads_progress_rows: toPayload(rows) });
+      const payload = toPayload(rows);
+      await onSave({ roads_progress_rows: payload });
+      setRows(toRowState(payload.length ? payload : [newRowState()]));
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2000);
     } catch (err: unknown) {

@@ -6,24 +6,24 @@ export const ROADS_PROGRESS_COLUMNS = [
   { key: 'sl_no' as const, en: 'Sl. No.', or: 'କ୍ରମିକ ନং' },
   { key: 'fy' as const, en: 'FY', or: 'ଆର୍ଥିକ ବର୍ଷ' },
   {
-    key: 'upgraded_gp_to_rd' as const,
-    en: 'Total km of Upgraded GP → RD',
-    or: 'GP ରୁ RD ଉନ୍ନତ ମୋଟ କି.ମି.',
-  },
-  {
-    key: 'upgraded_rd_to_pwd' as const,
-    en: 'Total km of Upgraded RD → PWD',
-    or: 'RD ରୁ PWD ଉନ୍ନତ ମୋଟ କି.ମି.',
-  },
-  {
     key: 'total_no_upgraded_gp_to_rd' as const,
     en: 'Total no of Upgraded GP → RD',
     or: 'GP ରୁ RD ଉନ୍ନତ ମୋଟ ସଂଖ୍ୟା',
   },
   {
+    key: 'upgraded_gp_to_rd' as const,
+    en: 'Total km of Upgraded GP → RD',
+    or: 'GP ରୁ RD ଉନ୍ନତ ମୋଟ କି.ମି.',
+  },
+  {
     key: 'total_no_upgraded_rd_to_pwd' as const,
     en: 'Total no of Upgraded RD → PWD',
     or: 'RD ରୁ PWD ଉନ୍ନତ ମୋଟ ସଂଖ୍ୟା',
+  },
+  {
+    key: 'upgraded_rd_to_pwd' as const,
+    en: 'Total km of Upgraded RD → PWD',
+    or: 'RD ରୁ PWD ଉନ୍ନତ ମୋଟ କି.ମି.',
   },
   { key: 'proposal_l_no' as const, en: 'Proposal LNo', or: 'ପ୍ରସ୍ତାବ LNo' },
   {
@@ -40,14 +40,20 @@ export const ROADS_PROGRESS_COLUMNS = [
 
 const ROADS_PROGRESS_VALUE_KEYS = [
   'fy',
-  'upgraded_gp_to_rd',
-  'upgraded_rd_to_pwd',
   'total_no_upgraded_gp_to_rd',
+  'upgraded_gp_to_rd',
   'total_no_upgraded_rd_to_pwd',
+  'upgraded_rd_to_pwd',
   'proposal_l_no',
   'proposal_sent_date',
   'proposal_approved',
 ] as const satisfies readonly (keyof RoadsProgressRow)[];
+
+/** Legacy/alternate keys that may exist in stored JSON. */
+const ROADS_PROGRESS_FIELD_ALIASES: Partial<Record<(typeof ROADS_PROGRESS_VALUE_KEYS)[number], string[]>> = {
+  total_no_upgraded_gp_to_rd: ['total_no_gp_to_rd', 'no_upgraded_gp_to_rd'],
+  total_no_upgraded_rd_to_pwd: ['total_no_rd_to_pwd', 'no_upgraded_rd_to_pwd'],
+};
 
 function asCell(value: unknown): string {
   if (value === null || value === undefined) return '';
@@ -58,12 +64,25 @@ function rowHasData(row: RoadsProgressRow): boolean {
   return ROADS_PROGRESS_VALUE_KEYS.some((key) => asCell(row[key]) !== '');
 }
 
+function readCell(raw: Record<string, unknown>, key: string): string {
+  const direct = asCell(raw[key]);
+  if (direct) return direct;
+  const aliases = ROADS_PROGRESS_FIELD_ALIASES[key as keyof typeof ROADS_PROGRESS_FIELD_ALIASES];
+  if (!aliases) return '';
+  for (const alias of aliases) {
+    const v = asCell(raw[alias]);
+    if (v) return v;
+  }
+  return '';
+}
+
 function normalizeRow(raw: Record<string, unknown>): RoadsProgressRow {
   const row: RoadsProgressRow = {};
-  const keys = new Set<string>(['sl_no', ...ROADS_PROGRESS_VALUE_KEYS]);
-  for (const key of keys) {
-    const v = asCell(raw[key]);
-    if (v) row[key as keyof RoadsProgressRow] = v;
+  const slNo = readCell(raw, 'sl_no');
+  if (slNo) row.sl_no = slNo;
+  for (const key of ROADS_PROGRESS_VALUE_KEYS) {
+    const v = readCell(raw, key);
+    if (v) row[key] = v;
   }
   if (!row.proposal_sent_date) {
     const legacySent = asCell(raw.proposal_sent);

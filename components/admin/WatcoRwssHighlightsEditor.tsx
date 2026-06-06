@@ -28,9 +28,9 @@ export function WatcoRwssHighlightsEditor({
       {loading ? (
         <p className="mt-3 text-xs text-text-muted">Loading WATCO and RWSS organization counts…</p>
       ) : (
-        <div className="mt-4 space-y-8">
+        <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
           {groups.map((group) => (
-            <div key={group.id}>
+            <div key={group.id} className="min-w-0">
               <h3 className="mb-3 text-sm font-semibold text-text">{group.centerLabel}</h3>
               <HighlightsCyclicDiagram
                 items={group.cards}
