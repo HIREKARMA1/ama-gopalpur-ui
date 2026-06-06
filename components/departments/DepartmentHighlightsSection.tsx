@@ -41,9 +41,9 @@ export function DepartmentHighlightsSection({
       {highlightTree ? (
         <HighlightsTreeDiagram tree={highlightTree} emptyText={emptyNode} />
       ) : watcoHighlightGroups?.length ? (
-        <div className="space-y-10">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
           {watcoHighlightGroups.map((group) => (
-            <div key={group.id}>
+            <div key={group.id} className="min-w-0">
               <h3 className="mb-4 text-center text-sm font-bold uppercase tracking-wide text-slate-600 sm:text-base">
                 {group.centerLabel}
               </h3>
