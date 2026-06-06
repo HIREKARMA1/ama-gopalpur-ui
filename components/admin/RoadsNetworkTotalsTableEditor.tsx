@@ -82,7 +82,7 @@ export function RoadsNetworkTotalsTableEditor({ departmentId, initialRows, onSav
     <section className="rounded-lg border border-border bg-background p-4 text-sm">
       <h2 className="font-semibold text-text">Road network summary table</h2>
       <p className="mt-1 text-xs text-text-muted">
-        Shown on the public Roads department summary page. Enter total PWD, RD, and GP road counts.
+        Shown on the public Roads department summary page. Enter total PWD, RD, GP, and Municipality road counts.
       </p>
       <form onSubmit={submit} className="mt-3 space-y-3">
         <div className="overflow-x-auto rounded border border-border">

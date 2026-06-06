@@ -29,6 +29,17 @@ export function watcoOrgMatchesLegendFilter(org: WatcoLegendOrg, legendFilterTyp
   const filter = legendFilterType.trim().toUpperCase();
   if (!filter) return true;
 
+  const compoundIdx = filter.indexOf('__');
+  if (compoundIdx > 0) {
+    const subPart = filter.slice(0, compoundIdx);
+    const stationPart = filter.slice(compoundIdx + 2);
+    const subDepartment = normalizeWatcoSubDepartment(org.sub_department as string);
+    const stationType = normalizeWatcoStationType((org.attributes?.station_type as string) || '');
+    if (subPart === 'WATCO' || subPart === 'RWSS') {
+      return subDepartment === subPart && stationType === stationPart;
+    }
+  }
+
   const subDepartment = normalizeWatcoSubDepartment(org.sub_department as string);
   if (filter === 'WATCO' || filter === 'RWSS') {
     return subDepartment === filter;

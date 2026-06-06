@@ -21,8 +21,8 @@ export function RoadsNetworkTotalsTableSection({ rows, language }: Props) {
   const title = language === 'or' ? 'ରୋଡ୍ ନେଟୱାର୍କ ସାରାଂଶ' : 'Road network summary';
   const subtitle =
     language === 'or'
-      ? 'PWD, RD ଏବଂ GP ରୋଡ୍ ମୋଟ ସଂଖ୍ୟା'
-      : 'Total counts of PWD, RD, and GP roads';
+      ? 'PWD, RD, GP ଏବଂ ପୌରସଭା ରୋଡ୍ ମୋଟ ସଂଖ୍ୟା'
+      : 'Total counts of PWD, RD, GP, and Municipality roads';
 
   return (
     <DepartmentSummarySection title={title} subtitle={subtitle} flush>
