@@ -66,6 +66,7 @@ import {
   buildRevenueLandHighlightTree,
   isRevenueLandParcel,
 } from '../../lib/revenueLandHighlights';
+import { buildWatcoRwssHighlightGroups } from '../../lib/watcoHighlights';
 
 type Props = {
   department: Department;
@@ -84,6 +85,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const isAgricultureDept = deptCode === 'AGRICULTURE';
   const isDrainageDept = deptCode === 'DRAINAGE';
   const isRevenueLandDept = deptCode === 'REVENUE_LAND';
+  const isWatcoRwssDept = deptCode === 'WATCO_RWSS';
   const showPortfolioColumn = !isDrainageDept && !isRoadsDept && !isRevenueLandDept;
   const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
   const localizedSummaryText = (en?: string | null, od?: string | null) => {
@@ -167,6 +169,10 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
           )
         : null,
     [isRevenueLandDept, organizations, localizedDepartmentName, department.code, summaryLangCode],
+  );
+  const watcoHighlightGroups = useMemo(
+    () => (isWatcoRwssDept ? buildWatcoRwssHighlightGroups(organizations, summaryLangCode) : null),
+    [isWatcoRwssDept, organizations, summaryLangCode],
   );
   const listingSourceOrganizations = useMemo(
     () => (isRevenueLandDept ? organizations.filter(isRevenueLandParcel) : organizations),
@@ -473,12 +479,18 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                   'Tahasil offices branch from the department; click a Tahasil office to view on the map.',
                   'ତହସିଲ କାର୍ଯ୍ୟାଳୟଗୁଡ଼ିକ ବିଭାଗରୁ ଶାଖା ଭଳି ଦେଖାଯାଏ; ମାନଚିତ୍ରରେ ଦେଖିବା ପାଇଁ ତହସିଲ କାର୍ଯ୍ୟାଳୟ ଉପରେ କ୍ଲିକ୍ କରନ୍ତୁ।',
                 )
-              : tr('dept.summary.highlights.clickHint')
+              : isWatcoRwssDept
+                ? trStatic(
+                    'WATCO and RWSS each have their own diagram. Click a station type to view matching schemes on the map.',
+                    'WATCO ଓ RWSS ପାଇଁ ଅଲଗ ଅଲଗ ଚିତ୍ର। ମାନଚିତ୍ରରେ ସମ୍ବନ୍ଧିତ ଯୋଜନା ଦେଖିବା ପାଇଁ ଷ୍ଟେସନ୍ ପ୍ରକାର ଉପରେ କ୍ଲିକ୍ କରନ୍ତୁ।',
+                  )
+                : tr('dept.summary.highlights.clickHint')
           }
           departmentName={localizedDepartmentName}
           departmentCode={department.code || ''}
           highlightCards={highlightCards}
           highlightTree={revenueHighlightTree}
+          watcoHighlightGroups={watcoHighlightGroups}
         />
 
         {isElectricityDept ? (
