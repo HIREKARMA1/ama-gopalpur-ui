@@ -62,6 +62,10 @@ import {
   summaryOrgGpWard,
   summaryOrgVillage,
 } from '../../lib/summaryLocationFilters';
+import {
+  buildRevenueLandHighlightTree,
+  isRevenueLandParcel,
+} from '../../lib/revenueLandHighlights';
 
 type Props = {
   department: Department;
@@ -79,7 +83,8 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const isArcsDept = deptCode === 'ARCS';
   const isAgricultureDept = deptCode === 'AGRICULTURE';
   const isDrainageDept = deptCode === 'DRAINAGE';
-  const showPortfolioColumn = !isDrainageDept && !isRoadsDept;
+  const isRevenueLandDept = deptCode === 'REVENUE_LAND';
+  const showPortfolioColumn = !isDrainageDept && !isRoadsDept && !isRevenueLandDept;
   const trStatic = (en: string, or: string) => (language === 'or' ? or : en);
   const localizedSummaryText = (en?: string | null, od?: string | null) => {
     const enText = (en || '').trim();
@@ -150,7 +155,24 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
       legendKey: normalizeLegendParam(card.legend_key || card.title),
     }),
   );
-  const topOrganizations = [...organizations].sort((a, b) => a.name.localeCompare(b.name));
+  const summaryLangCode = language === 'or' ? 'or' : 'en';
+  const revenueHighlightTree = useMemo(
+    () =>
+      isRevenueLandDept
+        ? buildRevenueLandHighlightTree(
+            organizations,
+            localizedDepartmentName,
+            department.code || '',
+            summaryLangCode,
+          )
+        : null,
+    [isRevenueLandDept, organizations, localizedDepartmentName, department.code, summaryLangCode],
+  );
+  const listingSourceOrganizations = useMemo(
+    () => (isRevenueLandDept ? organizations.filter(isRevenueLandParcel) : organizations),
+    [organizations, isRevenueLandDept],
+  );
+  const topOrganizations = [...listingSourceOrganizations].sort((a, b) => a.name.localeCompare(b.name));
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [roadTypeFilter, setRoadTypeFilter] = useState('ALL');
@@ -390,10 +412,17 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
   const hasOverview = summaryParagraphs.length > 0 && overviewText !== '—';
   const listingTitle = isRoadsDept
     ? trStatic('Road listing', 'ରୋଡ୍ ତାଲିକା')
-    : tr('dept.summary.section.organizationListing');
+    : isRevenueLandDept
+      ? tr('dept.summary.section.landParcelDetails')
+      : tr('dept.summary.section.organizationListing');
   const listingSubtitle = isRoadsDept
     ? trStatic('Search and filter constituency roads by type, block, GP, and village.', 'ରୋଡ୍ ପ୍ରକାର, ବ୍ଲକ୍, ଜିପି ଓ ଗ୍ରାମ ଅନୁସାରେ ଖୋଜନ୍ତୁ।')
-    : tr('dept.summary.search.placeholder');
+    : isRevenueLandDept
+      ? trStatic(
+          'Search and filter land parcels by name, land type, block, GP, and village.',
+          'ନାମ, ଜମି ପ୍ରକାର, ବ୍ଲକ୍, ଜିପି ଓ ଗ୍ରାମ ଅନୁସାରେ ଜମି ପ୍ଲଟ୍ ଖୋଜନ୍ତୁ।',
+        )
+      : tr('dept.summary.search.placeholder');
 
   return (
     <div className="min-h-screen bg-slate-100/80 text-slate-800">
@@ -438,10 +467,18 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
         <DepartmentHighlightsSection
           sectionTitle={tr('dept.summary.section.highlights')}
           emptyText={tr('dept.summary.empty.highlights')}
-          infoText={tr('dept.summary.highlights.clickHint')}
+          infoText={
+            isRevenueLandDept
+              ? trStatic(
+                  'Tahasil offices branch from the department; click a Tahasil office to view on the map.',
+                  'ତହସିଲ କାର୍ଯ୍ୟାଳୟଗୁଡ଼ିକ ବିଭାଗରୁ ଶାଖା ଭଳି ଦେଖାଯାଏ; ମାନଚିତ୍ରରେ ଦେଖିବା ପାଇଁ ତହସିଲ କାର୍ଯ୍ୟାଳୟ ଉପରେ କ୍ଲିକ୍ କରନ୍ତୁ।',
+                )
+              : tr('dept.summary.highlights.clickHint')
+          }
           departmentName={localizedDepartmentName}
           departmentCode={department.code || ''}
           highlightCards={highlightCards}
+          highlightTree={revenueHighlightTree}
         />
 
         {isElectricityDept ? (

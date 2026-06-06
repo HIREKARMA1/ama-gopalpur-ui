@@ -8,6 +8,7 @@ import {
   resolveEffectiveHighlightCards,
 } from '../../lib/departmentSummaryHighlights';
 import { DepartmentHighlightsEditor } from './DepartmentHighlightsEditor';
+import { RevenueLandHighlightsEditor } from './RevenueLandHighlightsEditor';
 import { DepartmentMapSummaryEditor } from './DepartmentMapSummaryEditor';
 import { DepartmentSummaryEditor } from './DepartmentSummaryEditor';
 import { DepartmentSummaryMinistersEditor } from './DepartmentSummaryMinistersEditor';
@@ -59,6 +60,7 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
   const isIrrigationDept = deptCode === 'IRRIGATION';
   const isMinorIrrigationDept = deptCode === 'MINOR_IRRIGATION';
   const isRoadsDept = deptCode === 'ROADS';
+  const isRevenueLandDept = deptCode === 'REVENUE_LAND';
   const electricityConsumerStatsRows = useMemo(
     () => parseElectricityConsumerStatsRows(department.department_summary),
     [department.department_summary],
@@ -126,17 +128,26 @@ export function DepartmentSummaryManagementSection({ department, onDepartmentUpd
           onDepartmentUpdated(updated);
         }}
       />
-      <DepartmentHighlightsEditor
-        departmentId={department.id}
-        displayCards={displayCards}
-        loading={orgsLoading}
-        onSave={async ({ highlight_cards }) => {
-          const updated = await departmentsApi.updateSummary(department.id, {
-            department_summary: { highlight_cards },
-          });
-          onDepartmentUpdated(updated);
-        }}
-      />
+      {isRevenueLandDept ? (
+        <RevenueLandHighlightsEditor
+          departmentName={department.name}
+          departmentCode={department.code || ''}
+          organizations={organizations}
+          loading={orgsLoading}
+        />
+      ) : (
+        <DepartmentHighlightsEditor
+          departmentId={department.id}
+          displayCards={displayCards}
+          loading={orgsLoading}
+          onSave={async ({ highlight_cards }) => {
+            const updated = await departmentsApi.updateSummary(department.id, {
+              department_summary: { highlight_cards },
+            });
+            onDepartmentUpdated(updated);
+          }}
+        />
+      )}
       {isElectricityDept ? (
         <ElectricityConsumerStatsTableEditor
           departmentId={department.id}
