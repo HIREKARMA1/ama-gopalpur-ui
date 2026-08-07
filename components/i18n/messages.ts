@@ -59,6 +59,7 @@ export type MessageKey =
   | 'map.controls.map'
   | 'map.controls.satellite'
   | 'map.controls.fullscreen'
+  | 'map.controls.viewLand'
   | 'admin.dept.mapSummary.title'
   | 'admin.dept.mapSummary.subtitle'
   | 'admin.dept.mapSummary.label'
@@ -832,6 +833,10 @@ const messages: Record<MessageKey, { en: string; or: string }> = {
   'map.controls.fullscreen': {
     en: 'Full screen',
     or: 'ପୂର୍ଣ୍ଣ ପରଦା',
+  },
+  'map.controls.viewLand': {
+    en: 'View Land',
+    or: 'ଜମି ଦେଖନ୍ତୁ',
   },
   'admin.dept.mapSummary.title': {
     en: 'Constituency map summary',

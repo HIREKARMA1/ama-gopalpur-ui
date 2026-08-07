@@ -2219,6 +2219,11 @@ export function ConstituencyMap({
           mapLabelKey="map.controls.map"
           satelliteLabelKey="map.controls.satellite"
           fullscreenLabelKey="map.controls.fullscreen"
+          viewLandUrl={
+            selectedDepartmentCode?.toUpperCase() === 'REVENUE_LAND'
+              ? 'https://odishakyl.in/mapview.php'
+              : null
+          }
         />
       </div>
       {isStreetViewOpen && streetViewPosition && (

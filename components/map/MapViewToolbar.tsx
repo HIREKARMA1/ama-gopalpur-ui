@@ -21,6 +21,8 @@ export function MapViewToolbar({
   mapLabelKey,
   satelliteLabelKey,
   fullscreenLabelKey,
+  /** External land map (Revenue Govt Land). Shown left of the info button when set. */
+  viewLandUrl,
 }: {
   mapInstance: any;
   mapContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -31,6 +33,7 @@ export function MapViewToolbar({
   mapLabelKey: MessageKey;
   satelliteLabelKey: MessageKey;
   fullscreenLabelKey: MessageKey;
+  viewLandUrl?: string | null;
 }) {
   const { language } = useLanguage();
   const router = useRouter();
@@ -80,6 +83,18 @@ export function MapViewToolbar({
 
   const Controls = (
     <>
+      {viewLandUrl ? (
+        <a
+          href={viewLandUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-9 shrink-0 items-center justify-center rounded-md bg-orange-500 px-3 text-xs font-semibold text-white shadow-md ring-1 ring-orange-800/50 hover:bg-orange-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
+          title={t('map.controls.viewLand', language)}
+          aria-label={t('map.controls.viewLand', language)}
+        >
+          {t('map.controls.viewLand', language)}
+        </a>
+      ) : null}
       {showDepartmentInfo && (
         <div className="relative shrink-0">
           <button
