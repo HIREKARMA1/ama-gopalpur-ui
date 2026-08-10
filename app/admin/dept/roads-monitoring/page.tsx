@@ -14,7 +14,9 @@ import { SuperAdminDashboardLayout } from '../../../../components/layout/SuperAd
 import { useLanguage } from '../../../../components/i18n/LanguageContext';
 import { t } from '../../../../components/i18n/messages';
 import {
+  countRoadPathPoints,
   isSummaryOnlyRoadSector,
+  parseRoadPointNames,
   ROAD_SECTOR_CSV_HEADER_ALIASES,
   roadImportDedupeKey,
   validateSummaryOnlyRoadImportRow,
@@ -743,12 +745,12 @@ export default function RoadsMonitoringPage() {
     setSuccess(null);
     try {
       const existing = await organizationsApi.listByDepartment(departmentId, { skip: 0, limit: 1000 });
-      const existingKeys = new Set(
+      const existingByKey = new Map(
         existing.map((org) => {
           const attrs = (org.attributes ?? {}) as Record<string, unknown>;
           const code = String(attrs.road_code ?? '').trim().toUpperCase();
           const name = String(org.name ?? '').trim().toUpperCase();
-          return `${name}__${code}`;
+          return [`${name}__${code}`, org] as const;
         }),
       );
 
@@ -759,6 +761,7 @@ export default function RoadsMonitoringPage() {
       ] as const;
 
       let imported = 0;
+      let updated = 0;
       const importErrors: string[] = [];
       for (const path of paths) {
         let fc: any = null;
@@ -784,7 +787,11 @@ export default function RoadsMonitoringPage() {
           if (!roadName || first.length < 2 || last.length < 2) continue;
 
           const key = `${roadName.toUpperCase()}__${roadCode.toUpperCase()}`;
-          if (existingKeys.has(key)) continue;
+          const parsedPoints = parseRoadPointNames(roadName);
+          const pointAName =
+            String(p.pointAName ?? p.point_a_name ?? '').trim() || parsedPoints.pointA || null;
+          const pointBName =
+            String(p.pointBName ?? p.point_b_name ?? '').trim() || parsedPoints.pointB || null;
 
           const startLng = String(first[0]);
           const startLat = String(first[1]);
@@ -796,6 +803,66 @@ export default function RoadsMonitoringPage() {
             .filter((c: unknown) => Array.isArray(c) && c.length >= 2)
             .map((c: any) => `${c[0]} ${c[1]}`)
             .join(';');
+          const pathPointCount = coords.filter(
+            (c: unknown) => Array.isArray(c) && c.length >= 2,
+          ).length;
+
+          const geometryAttrs = {
+            block: blockName || null,
+            gp_ward: gpWardName || null,
+            road_code: roadCode || null,
+            path_coordinates: pathCoordinates || null,
+            start_lat: startLat || null,
+            start_lng: startLng || null,
+            end_lat: endLat || null,
+            end_lng: endLng || null,
+            point_a_name: pointAName,
+            point_b_name: pointBName,
+            updated_at: new Date().toISOString(),
+          };
+
+          const existingOrg = existingByKey.get(key);
+          if (existingOrg) {
+            const attrs = (existingOrg.attributes ?? {}) as Record<string, unknown>;
+            const existingPathCount = countRoadPathPoints(attrs.path_coordinates);
+            const missingPointNames =
+              !String(attrs.point_a_name ?? '').trim() || !String(attrs.point_b_name ?? '').trim();
+            const needsGeometryRefresh =
+              pathPointCount >= 2 && (existingPathCount < 2 || existingPathCount < pathPointCount);
+            if (!needsGeometryRefresh && !missingPointNames) continue;
+
+            try {
+              await organizationsApi.update(existingOrg.id, {
+                latitude: centerLat,
+                longitude: centerLng,
+                address: blockName || existingOrg.address || undefined,
+                attributes: {
+                  ...attrs,
+                  ...geometryAttrs,
+                  road_sector:
+                    attrs.road_sector != null
+                      ? String(attrs.road_sector)
+                      : p.type
+                        ? String(p.type)
+                        : null,
+                  name_of_division:
+                    attrs.name_of_division != null
+                      ? String(attrs.name_of_division)
+                      : p.division_name
+                        ? String(p.division_name)
+                        : null,
+                  scheme:
+                    attrs.scheme != null ? String(attrs.scheme) : p.scheme ? String(p.scheme) : null,
+                } as Record<string, string | number | string[] | null>,
+              });
+              updated += 1;
+            } catch (err: unknown) {
+              importErrors.push(
+                `${roadName}: ${err instanceof Error ? err.message : 'failed to update road'}`,
+              );
+            }
+            continue;
+          }
 
           try {
             await organizationsApi.create({
@@ -807,28 +874,24 @@ export default function RoadsMonitoringPage() {
               address: blockName || undefined,
               description: p.type ? `Road sector: ${String(p.type)}` : undefined,
               attributes: {
-                block: blockName || null,
-                gp_ward: gpWardName || null,
-                road_code: roadCode || null,
+                ...geometryAttrs,
                 road_sector: p.type ? String(p.type) : null,
                 length_km: null,
-                path_coordinates: pathCoordinates || null,
-                start_lat: startLat || null,
-                start_lng: startLng || null,
-                end_lat: endLat || null,
-                end_lng: endLng || null,
-                point_a_name: null,
-                point_b_name: null,
                 year_of_construction: null,
                 name_of_division: p.division_name ? String(p.division_name) : null,
                 scheme: p.scheme ? String(p.scheme) : null,
                 last_maintenance_date: null,
                 issues: null,
-                updated_at: new Date().toISOString(),
               },
             });
             imported += 1;
-            existingKeys.add(key);
+            existingByKey.set(key, {
+              id: -1,
+              department_id: departmentId,
+              name: roadName,
+              type: 'OTHER',
+              attributes: geometryAttrs,
+            } as Organization);
           } catch (err: unknown) {
             importErrors.push(
               `${roadName}: ${err instanceof Error ? err.message : 'failed to import road'}`,
@@ -840,12 +903,14 @@ export default function RoadsMonitoringPage() {
       setRefreshTick((v) => v + 1);
       if (importErrors.length) {
         setError(
-          `Imported ${imported} road(s). ${importErrors.length} error(s): ${importErrors.slice(0, 3).join(' | ')}`,
+          `Imported ${imported}, updated ${updated}. ${importErrors.length} error(s): ${importErrors.slice(0, 3).join(' | ')}`,
         );
-      } else if (imported === 0) {
-        setError('No new roads imported. DB already has all map roads or map files are empty.');
+      } else if (imported === 0 && updated === 0) {
+        setSuccess('Map roads already up to date (paths and Point A/B names present).');
       } else {
-        setSuccess(`Imported ${imported} roads from map JSON into DB.`);
+        setSuccess(
+          `Map JSON sync finished. Imported: ${imported}, Updated paths/names: ${updated}.`,
+        );
       }
     } finally {
       setUploading(false);

@@ -42,6 +42,7 @@ import {
   isMunicipalityRoadSector,
   normalizeConstituencyBlock,
   normalizeRoadLocationKey,
+  parseRoadPointNames,
 } from '../../lib/roadsOrganization';
 import {
   normalizeWatcoSubDepartment,
@@ -345,6 +346,15 @@ export interface RoadFeature {
     safetyFeatures?: string | null;
     issues?: string | null;
     remarks?: string | null;
+    conditionBeforeRating?: number | null;
+    conditionAfterRating?: number | null;
+    conditionBeforeNotes?: string | null;
+    conditionAfterNotes?: string | null;
+    beforeImageKeys?: string[];
+    afterImageKeys?: string[];
+    sanctionAmount?: string | null;
+    sanctionDate?: string | null;
+    workCompletedDate?: string | null;
   };
   geometry: { type: 'LineString'; coordinates: [number, number][] };
 }
@@ -962,6 +972,21 @@ export function ConstituencyMap({
         ? coords.slice(1).reduce((sum, c, i) => sum + haversineKm(coords[i], c), 0)
         : null;
     const lengthKm = providedLength ?? computedLength;
+    const beforeRating =
+      typeof props.conditionBeforeRating === 'number' && Number.isFinite(props.conditionBeforeRating)
+        ? props.conditionBeforeRating
+        : null;
+    const afterRating =
+      typeof props.conditionAfterRating === 'number' && Number.isFinite(props.conditionAfterRating)
+        ? props.conditionAfterRating
+        : null;
+    const beforeImages = Array.isArray(props.beforeImageKeys) ? props.beforeImageKeys.filter(Boolean) : [];
+    const afterImages = Array.isArray(props.afterImageKeys) ? props.afterImageKeys.filter(Boolean) : [];
+    const hasCondition =
+      beforeRating != null ||
+      afterRating != null ||
+      beforeImages.length > 0 ||
+      afterImages.length > 0;
 
     return {
       name,
@@ -980,6 +1005,16 @@ export function ConstituencyMap({
       lastMaintenanceDate: String(props.lastMaintenanceDate ?? '').trim(),
       issues: String(props.issues ?? '').trim(),
       remarks: String(props.remarks ?? '').trim(),
+      beforeRating,
+      afterRating,
+      beforeNotes: String(props.conditionBeforeNotes ?? '').trim(),
+      afterNotes: String(props.conditionAfterNotes ?? '').trim(),
+      beforeImages,
+      afterImages,
+      sanctionAmount: String(props.sanctionAmount ?? '').trim(),
+      sanctionDate: String(props.sanctionDate ?? '').trim(),
+      workCompletedDate: String(props.workCompletedDate ?? '').trim(),
+      hasCondition,
     };
   }, [selectedRoad]);
 
@@ -1376,18 +1411,47 @@ export function ConstituencyMap({
       if (!mapInstance) return;
       const coords = road.geometry?.coordinates ?? [];
       if (!coords.length) return;
-      const mid = coords[Math.floor(coords.length / 2)] ?? coords[0];
-      if (!mid) return;
-      const [lng, lat] = mid;
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-      mapInstance.panTo({ lat, lng });
-      if (
-        typeof mapInstance.getZoom === 'function' &&
-        typeof mapInstance.setZoom === 'function'
-      ) {
-        const currentZoom = mapInstance.getZoom() ?? DEFAULT_ZOOM;
-        if (currentZoom < 14) mapInstance.setZoom(14);
+
+      const g = typeof window !== 'undefined' ? (window as any).google?.maps : null;
+      if (g?.LatLngBounds && typeof mapInstance.fitBounds === 'function') {
+        const bounds = new g.LatLngBounds();
+        let added = 0;
+        for (const c of coords) {
+          if (!Array.isArray(c) || c.length < 2) continue;
+          const [lng, lat] = c;
+          if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+          bounds.extend({ lat, lng });
+          added += 1;
+        }
+        if (added >= 2) {
+          mapInstance.fitBounds(bounds, { top: 80, right: 48, bottom: 120, left: 48 });
+        } else {
+          const mid = coords[Math.floor(coords.length / 2)] ?? coords[0];
+          if (mid) {
+            const [lng, lat] = mid;
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+              mapInstance.panTo({ lat, lng });
+              if (typeof mapInstance.setZoom === 'function') {
+                const currentZoom = mapInstance.getZoom?.() ?? DEFAULT_ZOOM;
+                if (currentZoom < 14) mapInstance.setZoom(14);
+              }
+            }
+          }
+        }
+      } else {
+        const mid = coords[Math.floor(coords.length / 2)] ?? coords[0];
+        if (mid) {
+          const [lng, lat] = mid;
+          if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            mapInstance.panTo({ lat, lng });
+            if (typeof mapInstance.setZoom === 'function') {
+              const currentZoom = mapInstance.getZoom?.() ?? DEFAULT_ZOOM;
+              if (currentZoom < 14) mapInstance.setZoom(14);
+            }
+          }
+        }
       }
+
       setSelectedRoad(road);
       setSelectedDrain(null);
       setInfoWindowOrg(null);
@@ -1961,6 +2025,11 @@ export function ConstituencyMap({
               );
               if (roadLegendFilterType != null && roadType !== roadLegendFilterType) return null;
               const color = roadLegendColor(roadType || 'OTHER');
+              const isSelected =
+                selectedRoad != null &&
+                ((selectedRoad.properties?.organizationId != null &&
+                  selectedRoad.properties.organizationId === road.properties?.organizationId) ||
+                  selectedRoad === road);
               // Include filter in key so polylines remount when legend changes (@react-google-maps/api can leave stale overlays).
               const filterKey = roadLegendFilterType ?? 'all';
               return (
@@ -1968,9 +2037,10 @@ export function ConstituencyMap({
                   key={`road-${filterKey}-${idx}-${name}`}
                   path={path}
                   options={{
-                    strokeColor: color,
-                    strokeWeight: 5,
-                    strokeOpacity: 0.9,
+                    strokeColor: isSelected ? '#ea580c' : color,
+                    strokeWeight: isSelected ? 8 : 5,
+                    strokeOpacity: isSelected ? 1 : 0.9,
+                    zIndex: isSelected ? 4 : 2,
                     clickable: true,
                   }}
                   onClick={(e) => {
@@ -2037,6 +2107,7 @@ export function ConstituencyMap({
           {selectedRoad && (() => {
             const coords = selectedRoad.geometry?.coordinates ?? [];
             const first = coords[0];
+            const last = coords.length ? coords[coords.length - 1] : undefined;
             if (!first) return null;
             const [lng, lat] = first;
             const name = selectedRoad.properties?.name ?? selectedRoad.properties?.roadName ?? 'Road';
@@ -2047,19 +2118,47 @@ export function ConstituencyMap({
               String(selectedRoad.properties?.roadSector ?? ''),
               String(selectedRoad.properties?.code ?? ''),
             );
+            const parsedPoints = parseRoadPointNames(name);
+            const pointA =
+              String(selectedRoad.properties?.pointAName ?? '').trim() ||
+              parsedPoints.pointA ||
+              (first ? `${Number(first[1]).toFixed(5)}, ${Number(first[0]).toFixed(5)}` : '');
+            const pointB =
+              String(selectedRoad.properties?.pointBName ?? '').trim() ||
+              parsedPoints.pointB ||
+              (last ? `${Number(last[1]).toFixed(5)}, ${Number(last[0]).toFixed(5)}` : '');
+            const startPos = { lat: Number(first[1]), lng: Number(first[0]) };
+            const endPos =
+              last && Number.isFinite(Number(last[1])) && Number.isFinite(Number(last[0]))
+                ? { lat: Number(last[1]), lng: Number(last[0]) }
+                : null;
             return (
-              <InfoWindow
-                position={{ lat, lng }}
-                onCloseClick={() => {
-                  setSelectedRoad(null);
-                  onRoadSelectionChange?.(null, null);
-                  onRoadStreetViewOpenChange?.(false, null, null);
-                }}
-              >
-                <MapCalloutCard
-                  title={name}
-                  meta={
-                    code || block ? (
+              <>
+                <Marker
+                  position={startPos}
+                  label={{ text: 'A', color: '#fff', fontWeight: '700', fontSize: '12px' }}
+                  title={pointA ? `Start: ${pointA}` : 'Start (Point A)'}
+                  zIndex={5}
+                />
+                {endPos ? (
+                  <Marker
+                    position={endPos}
+                    label={{ text: 'B', color: '#fff', fontWeight: '700', fontSize: '12px' }}
+                    title={pointB ? `End: ${pointB}` : 'End (Point B)'}
+                    zIndex={5}
+                  />
+                ) : null}
+                <InfoWindow
+                  position={{ lat, lng }}
+                  onCloseClick={() => {
+                    setSelectedRoad(null);
+                    onRoadSelectionChange?.(null, null);
+                    onRoadStreetViewOpenChange?.(false, null, null);
+                  }}
+                >
+                  <MapCalloutCard
+                    title={name}
+                    meta={
                       <>
                         {code ? (
                           <MapCalloutMetaRow>
@@ -2077,15 +2176,35 @@ export function ConstituencyMap({
                             {gpWard}
                           </MapCalloutMetaMuted>
                         ) : null}
+                        {pointA ? (
+                          <MapCalloutMetaMuted label="Point A (start):">{pointA}</MapCalloutMetaMuted>
+                        ) : null}
+                        {pointB ? (
+                          <MapCalloutMetaMuted label="Point B (end):">{pointB}</MapCalloutMetaMuted>
+                        ) : null}
+                        {selectedRoadStreetInfo?.hasCondition ? (
+                          <>
+                            {selectedRoadStreetInfo.beforeRating != null ? (
+                              <MapCalloutMetaMuted label="Before rating:">
+                                {selectedRoadStreetInfo.beforeRating}/5
+                              </MapCalloutMetaMuted>
+                            ) : null}
+                            {selectedRoadStreetInfo.afterRating != null ? (
+                              <MapCalloutMetaMuted label="After rating:">
+                                {selectedRoadStreetInfo.afterRating}/5
+                              </MapCalloutMetaMuted>
+                            ) : null}
+                          </>
+                        ) : null}
                       </>
-                    ) : undefined
-                  }
-                  action={{
-                    label: 'Street View',
-                    onClick: openRoadStreetView,
-                  }}
-                />
-              </InfoWindow>
+                    }
+                    action={{
+                      label: 'Street View',
+                      onClick: openRoadStreetView,
+                    }}
+                  />
+                </InfoWindow>
+              </>
             );
           })()}
           {selectedDrain && (() => {
@@ -2300,6 +2419,87 @@ export function ConstituencyMap({
                     <p><span className="font-semibold">Last maintenance:</span> {selectedRoadStreetInfo.lastMaintenanceDate || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Issues observed:</span> {selectedRoadStreetInfo.issues || 'Requested from Road Dept'}</p>
                     <p><span className="font-semibold">Remarks:</span> {selectedRoadStreetInfo.remarks || 'Requested from Road Dept'}</p>
+                    {selectedRoadStreetInfo.hasCondition ? (
+                      <div className="mt-3 space-y-2 border-t border-white/20 pt-2">
+                        <p className="font-semibold text-white">Before / After condition</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="rounded border border-white/15 bg-white/5 p-2">
+                            <p className="font-semibold">Before</p>
+                            <p>
+                              Rating:{' '}
+                              {selectedRoadStreetInfo.beforeRating != null
+                                ? `${selectedRoadStreetInfo.beforeRating}/5`
+                                : '—'}
+                            </p>
+                            {selectedRoadStreetInfo.beforeNotes ? (
+                              <p className="mt-1 opacity-90">{selectedRoadStreetInfo.beforeNotes}</p>
+                            ) : null}
+                            {selectedRoadStreetInfo.beforeImages.length ? (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {selectedRoadStreetInfo.beforeImages.slice(0, 4).map((url) => (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    key={url}
+                                    src={url}
+                                    alt="Before condition"
+                                    className="h-14 w-20 rounded object-cover border border-white/20"
+                                  />
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="rounded border border-white/15 bg-white/5 p-2">
+                            <p className="font-semibold">After</p>
+                            <p>
+                              Rating:{' '}
+                              {selectedRoadStreetInfo.afterRating != null
+                                ? `${selectedRoadStreetInfo.afterRating}/5`
+                                : '—'}
+                            </p>
+                            {selectedRoadStreetInfo.afterNotes ? (
+                              <p className="mt-1 opacity-90">{selectedRoadStreetInfo.afterNotes}</p>
+                            ) : null}
+                            {selectedRoadStreetInfo.afterImages.length ? (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {selectedRoadStreetInfo.afterImages.slice(0, 4).map((url) => (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    key={url}
+                                    src={url}
+                                    alt="After condition"
+                                    className="h-14 w-20 rounded object-cover border border-white/20"
+                                  />
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                        {selectedRoadStreetInfo.sanctionAmount ||
+                        selectedRoadStreetInfo.sanctionDate ||
+                        selectedRoadStreetInfo.workCompletedDate ? (
+                          <div className="space-y-1 text-[11px] text-white/85">
+                            {selectedRoadStreetInfo.sanctionAmount ? (
+                              <p>
+                                <span className="font-semibold">Sanction amount:</span>{' '}
+                                {selectedRoadStreetInfo.sanctionAmount}
+                              </p>
+                            ) : null}
+                            {selectedRoadStreetInfo.sanctionDate ? (
+                              <p>
+                                <span className="font-semibold">Sanction date:</span>{' '}
+                                {selectedRoadStreetInfo.sanctionDate}
+                              </p>
+                            ) : null}
+                            {selectedRoadStreetInfo.workCompletedDate ? (
+                              <p>
+                                <span className="font-semibold">Work completed:</span>{' '}
+                                {selectedRoadStreetInfo.workCompletedDate}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               )}
@@ -2307,6 +2507,48 @@ export function ConstituencyMap({
           )}
         </div>
       )}
+      {!isStreetViewOpen && selectedRoadStreetInfo?.hasCondition ? (
+        <div className="pointer-events-auto absolute bottom-4 left-4 z-[60] w-[min(420px,calc(100%-2rem))] rounded-xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur-sm">
+          <h3 className="text-sm font-semibold text-slate-900">Before / After condition</h3>
+          <p className="mt-0.5 text-[11px] text-slate-500">{selectedRoadStreetInfo.name}</p>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-slate-700">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+              <p className="font-semibold text-slate-800">Before</p>
+              <p>
+                Rating:{' '}
+                {selectedRoadStreetInfo.beforeRating != null
+                  ? `${selectedRoadStreetInfo.beforeRating}/5`
+                  : '—'}
+              </p>
+              {selectedRoadStreetInfo.beforeImages[0] ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={selectedRoadStreetInfo.beforeImages[0]}
+                  alt="Before"
+                  className="mt-2 h-20 w-full rounded object-cover"
+                />
+              ) : null}
+            </div>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+              <p className="font-semibold text-slate-800">After</p>
+              <p>
+                Rating:{' '}
+                {selectedRoadStreetInfo.afterRating != null
+                  ? `${selectedRoadStreetInfo.afterRating}/5`
+                  : '—'}
+              </p>
+              {selectedRoadStreetInfo.afterImages[0] ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={selectedRoadStreetInfo.afterImages[0]}
+                  alt="After"
+                  className="mt-2 h-20 w-full rounded object-cover"
+                />
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
       {selectedDepartmentCode?.toUpperCase() === 'EDUCATION' && (
         <MapLegendPanel className="md:max-w-[300px]">
           {Object.keys(EDUCATION_SUB_DEPT_LABELS).map((type) => {
