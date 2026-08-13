@@ -143,6 +143,7 @@ function orgToRoadFeature(org: Organization): RoadFeature | null {
       conditionAfterNotes: String(attrs.condition_after_notes ?? ''),
       beforeImageKeys: parseRoadImageKeys(attrs.before_image_keys),
       afterImageKeys: parseRoadImageKeys(attrs.after_image_keys),
+      roadImageKeys: parseRoadImageKeys(attrs.road_image_keys),
       sanctionAmount: String(attrs.sanction_amount ?? ''),
       sanctionDate: String(attrs.sanction_date ?? ''),
       workCompletedDate: String(attrs.work_completed_date ?? ''),

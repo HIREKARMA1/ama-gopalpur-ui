@@ -745,12 +745,12 @@ export default function RoadsMonitoringPage() {
     setSuccess(null);
     try {
       const existing = await organizationsApi.listByDepartment(departmentId, { skip: 0, limit: 1000 });
-      const existingByKey = new Map(
+      const existingByKey = new Map<string, Organization>(
         existing.map((org) => {
           const attrs = (org.attributes ?? {}) as Record<string, unknown>;
           const code = String(attrs.road_code ?? '').trim().toUpperCase();
           const name = String(org.name ?? '').trim().toUpperCase();
-          return [`${name}__${code}`, org] as const;
+          return [`${name}__${code}`, org];
         }),
       );
 

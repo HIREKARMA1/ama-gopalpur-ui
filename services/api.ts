@@ -289,8 +289,12 @@ export const organizationsApi = {
       body: form,
     });
   },
-  /** Roads before/after condition image; appends to attributes.before_image_keys / after_image_keys */
-  uploadRoadsConditionAsset: (id: number, file: File, assetType: 'roads_before' | 'roads_after') => {
+  /** Roads before/after/sidebar gallery image; appends to attributes.*_image_keys */
+  uploadRoadsConditionAsset: (
+    id: number,
+    file: File,
+    assetType: 'roads_before' | 'roads_after' | 'roads_gallery',
+  ) => {
     const form = new FormData();
     form.append('file', file);
     form.append('asset_type', assetType);
