@@ -6,18 +6,25 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { t } from '../i18n/messages';
 
 const PANEL_CLASS =
-  'absolute bottom-4 left-4 right-4 md:right-auto rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 z-10';
+  'absolute bottom-4 rounded-md bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 z-10';
 
 export function MapLegendPanel({
   children,
   className = 'md:max-w-[280px]',
+  align = 'left',
 }: {
   children: ReactNode;
   className?: string;
+  /** Roads type legend sits bottom-right to avoid Details / Before / After. */
+  align?: 'left' | 'right';
 }) {
   const { language } = useLanguage();
+  const positionClass =
+    align === 'right'
+      ? 'left-auto right-4'
+      : 'left-4 right-4 md:right-auto';
   return (
-    <div className={`${PANEL_CLASS} ${className}`}>
+    <div className={`${PANEL_CLASS} ${positionClass} ${className}`}>
       <p className="font-semibold text-slate-900 mb-1">{t('map.legend', language)}</p>
       <ul className="flex flex-wrap gap-x-3 gap-y-1 text-slate-700">{children}</ul>
     </div>
