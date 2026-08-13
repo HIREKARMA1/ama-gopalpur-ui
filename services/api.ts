@@ -259,7 +259,7 @@ export const organizationsApi = {
     description?: string;
     address?: string;
     sub_department?: string | null;
-    attributes?: Record<string, string | number | null>;
+    attributes?: Record<string, string | number | string[] | null>;
   }) =>
     apiFetch<Organization>('/api/v1/organizations', {
       method: 'POST',
@@ -274,7 +274,7 @@ export const organizationsApi = {
       description?: string;
       address?: string;
       sub_department?: string | null;
-      attributes?: Record<string, string | number | null>;
+      attributes?: Record<string, string | number | string[] | null>;
     },
   ) =>
     apiFetch<Organization>(`/api/v1/organizations/${id}`, {
@@ -285,6 +285,20 @@ export const organizationsApi = {
     const form = new FormData();
     form.append('file', file);
     return apiFetch<Organization>(`/api/v1/organizations/${id}/cover-image`, {
+      method: 'POST',
+      body: form,
+    });
+  },
+  /** Roads before/after/sidebar gallery image; appends to attributes.*_image_keys */
+  uploadRoadsConditionAsset: (
+    id: number,
+    file: File,
+    assetType: 'roads_before' | 'roads_after' | 'roads_gallery',
+  ) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('asset_type', assetType);
+    return apiFetch<Organization>(`/api/v1/organizations/${id}/roads-condition-asset`, {
       method: 'POST',
       body: form,
     });

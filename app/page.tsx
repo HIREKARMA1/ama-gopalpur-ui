@@ -22,6 +22,7 @@ import {
 } from '../services/api';
 import { orgToDrainFeature } from '../lib/drainageOrganization';
 import { fetchAllOrganizationsForDepartment } from '../lib/departmentSummaryHighlights';
+import { parseRoadImageKeys } from '../lib/roadsOrganization';
 
 function parsePathCoordinates(raw: string | null | undefined): [number, number][] {
   const s = (raw || '').trim();
@@ -132,6 +133,20 @@ function orgToRoadFeature(org: Organization): RoadFeature | null {
       lastMaintenanceDate: String(attrs.last_maintenance_date ?? ''),
       issues: String(attrs.issues ?? ''),
       remarks: String(attrs.remarks ?? ''),
+      conditionBeforeRating: Number.isFinite(Number(attrs.condition_before_rating))
+        ? Number(attrs.condition_before_rating)
+        : null,
+      conditionAfterRating: Number.isFinite(Number(attrs.condition_after_rating))
+        ? Number(attrs.condition_after_rating)
+        : null,
+      conditionBeforeNotes: String(attrs.condition_before_notes ?? ''),
+      conditionAfterNotes: String(attrs.condition_after_notes ?? ''),
+      beforeImageKeys: parseRoadImageKeys(attrs.before_image_keys),
+      afterImageKeys: parseRoadImageKeys(attrs.after_image_keys),
+      roadImageKeys: parseRoadImageKeys(attrs.road_image_keys),
+      sanctionAmount: String(attrs.sanction_amount ?? ''),
+      sanctionDate: String(attrs.sanction_date ?? ''),
+      workCompletedDate: String(attrs.work_completed_date ?? ''),
     },
     geometry: { type: 'LineString', coordinates },
   };

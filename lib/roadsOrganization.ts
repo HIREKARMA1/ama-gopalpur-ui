@@ -109,6 +109,44 @@ export function parseRoadPathCoordinates(raw: string): [number, number][] {
   return inferred.length >= 2 ? inferred : [];
 }
 
+/** Parse "A to B" / "A - B" road names into start/end labels. */
+export function parseRoadPointNames(roadName: unknown): { pointA: string; pointB: string } {
+  const name = String(roadName ?? '').trim();
+  if (!name) return { pointA: '', pointB: '' };
+  const match = name.match(/^\s*(.+?)\s+(?:to|-|–|—)\s+(.+?)\s*$/i);
+  if (!match) return { pointA: '', pointB: '' };
+  return { pointA: match[1].trim(), pointB: match[2].trim() };
+}
+
+/** Count usable points in a path_coordinates attribute string. */
+export function countRoadPathPoints(raw: unknown): number {
+  return parseRoadPathCoordinates(String(raw ?? '')).length;
+}
+
+/** Normalize before/after image URL lists from road attributes. */
+export function parseRoadImageKeys(raw: unknown): string[] {
+  if (raw == null) return [];
+  if (Array.isArray(raw)) {
+    return raw.map((u) => String(u).trim()).filter(Boolean);
+  }
+  const s = String(raw).trim();
+  if (!s) return [];
+  if (s.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(s) as unknown;
+      if (Array.isArray(parsed)) {
+        return parsed.map((u) => String(u).trim()).filter(Boolean);
+      }
+    } catch {
+      /* fall through */
+    }
+  }
+  return s
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
+}
+
 /** Organization can be drawn as a road polyline on the map. */
 export function organizationHasRoadMapGeometry(org: Organization): boolean {
   const attrs = (org.attributes ?? {}) as Record<string, unknown>;

@@ -2,13 +2,20 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { organizationsApi, type Organization } from '../../services/api';
-import { isPwdOrRdRoadSector, isSummaryOnlyRoadSector } from '../../lib/roadsOrganization';
+import {
+  isPwdOrRdRoadSector,
+  isSummaryOnlyRoadSector,
+  parseRoadImageKeys,
+} from '../../lib/roadsOrganization';
 
 type Props = {
   departmentId: number;
   onCreated?: (org: Organization) => void;
   editingRoad?: Organization | null;
+  /** Full form save — parent should exit edit mode. */
   onUpdated?: (org: Organization) => void;
+  /** Mid-edit image upload/remove — parent should stay in edit mode. */
+  onPatched?: (org: Organization) => void;
   onCancelEdit?: () => void;
 };
 
@@ -33,12 +40,14 @@ function parsePathCoordinatePairs(value: string): Array<[number, number]> {
 }
 
 const ROAD_SECTOR_OPTIONS = ['NH', 'SH', 'PWD', 'RD', 'PS', 'GP', 'MUNICIPALITY'] as const;
+const RATING_OPTIONS = ['', '1', '2', '3', '4', '5'] as const;
 
 export function RoadsDataEntryForm({
   departmentId,
   onCreated,
   editingRoad = null,
   onUpdated,
+  onPatched,
   onCancelEdit,
 }: Props) {
   const [roadName, setRoadName] = useState('');
@@ -62,6 +71,17 @@ export function RoadsDataEntryForm({
   const [presentCondition, setPresentCondition] = useState('');
   const [issues, setIssues] = useState('');
   const [remarks, setRemarks] = useState('');
+  const [conditionBeforeRating, setConditionBeforeRating] = useState('');
+  const [conditionAfterRating, setConditionAfterRating] = useState('');
+  const [conditionBeforeNotes, setConditionBeforeNotes] = useState('');
+  const [conditionAfterNotes, setConditionAfterNotes] = useState('');
+  const [sanctionAmount, setSanctionAmount] = useState('');
+  const [sanctionDate, setSanctionDate] = useState('');
+  const [workCompletedDate, setWorkCompletedDate] = useState('');
+  const [beforeImageKeys, setBeforeImageKeys] = useState<string[]>([]);
+  const [afterImageKeys, setAfterImageKeys] = useState<string[]>([]);
+  const [roadImageKeys, setRoadImageKeys] = useState<string[]>([]);
+  const [uploadingPhase, setUploadingPhase] = useState<'before' | 'after' | 'gallery' | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -94,6 +114,16 @@ export function RoadsDataEntryForm({
     setPresentCondition('');
     setIssues('');
     setRemarks('');
+    setConditionBeforeRating('');
+    setConditionAfterRating('');
+    setConditionBeforeNotes('');
+    setConditionAfterNotes('');
+    setSanctionAmount('');
+    setSanctionDate('');
+    setWorkCompletedDate('');
+    setBeforeImageKeys([]);
+    setAfterImageKeys([]);
+    setRoadImageKeys([]);
   };
 
   useEffect(() => {
@@ -129,9 +159,85 @@ export function RoadsDataEntryForm({
     setPresentCondition(String(attrs.present_condition ?? ''));
     setIssues(String(attrs.issues ?? ''));
     setRemarks(String(attrs.remarks ?? ''));
+    setConditionBeforeRating(String(attrs.condition_before_rating ?? ''));
+    setConditionAfterRating(String(attrs.condition_after_rating ?? ''));
+    setConditionBeforeNotes(String(attrs.condition_before_notes ?? ''));
+    setConditionAfterNotes(String(attrs.condition_after_notes ?? ''));
+    setSanctionAmount(String(attrs.sanction_amount ?? ''));
+    setSanctionDate(String(attrs.sanction_date ?? ''));
+    setWorkCompletedDate(String(attrs.work_completed_date ?? ''));
+    setBeforeImageKeys(parseRoadImageKeys(attrs.before_image_keys));
+    setAfterImageKeys(parseRoadImageKeys(attrs.after_image_keys));
+    setRoadImageKeys(parseRoadImageKeys(attrs.road_image_keys));
     setError(null);
     setSaved(false);
-  }, [editingRoad]);
+    // Hydrate only when switching roads (or entering/leaving edit), not when
+    // parent refreshes the same org after a mid-edit image patch.
+  }, [editingRoad?.id]);
+
+  const syncImageKeysFromAttrs = (attrs: Record<string, unknown>) => {
+    setBeforeImageKeys(parseRoadImageKeys(attrs.before_image_keys));
+    setAfterImageKeys(parseRoadImageKeys(attrs.after_image_keys));
+    setRoadImageKeys(parseRoadImageKeys(attrs.road_image_keys));
+  };
+
+  const uploadConditionImages = async (
+    phase: 'before' | 'after' | 'gallery',
+    files: FileList | null,
+  ) => {
+    if (!editingRoad || !files?.length) return;
+    const list = Array.from(files);
+    setUploadingPhase(phase);
+    setError(null);
+    try {
+      let last: Organization | null = null;
+      const assetType =
+        phase === 'before' ? 'roads_before' : phase === 'after' ? 'roads_after' : 'roads_gallery';
+      for (const file of list) {
+        last = await organizationsApi.uploadRoadsConditionAsset(
+          editingRoad.id,
+          file,
+          assetType,
+        );
+        syncImageKeysFromAttrs((last.attributes ?? {}) as Record<string, unknown>);
+      }
+      if (last) onPatched?.(last);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to upload image(s).');
+    } finally {
+      setUploadingPhase(null);
+    }
+  };
+
+  const removeConditionImage = async (phase: 'before' | 'after' | 'gallery', url: string) => {
+    if (!editingRoad) return;
+    const nextBefore =
+      phase === 'before' ? beforeImageKeys.filter((u) => u !== url) : beforeImageKeys;
+    const nextAfter =
+      phase === 'after' ? afterImageKeys.filter((u) => u !== url) : afterImageKeys;
+    const nextRoad =
+      phase === 'gallery' ? roadImageKeys.filter((u) => u !== url) : roadImageKeys;
+    setBeforeImageKeys(nextBefore);
+    setAfterImageKeys(nextAfter);
+    setRoadImageKeys(nextRoad);
+    setError(null);
+    try {
+      const attrs = {
+        ...((editingRoad.attributes ?? {}) as Record<string, unknown>),
+        before_image_keys: nextBefore.length ? nextBefore : null,
+        after_image_keys: nextAfter.length ? nextAfter : null,
+        road_image_keys: nextRoad.length ? nextRoad : null,
+        updated_at: new Date().toISOString(),
+      };
+      const updated = await organizationsApi.update(editingRoad.id, { attributes: attrs });
+      syncImageKeysFromAttrs((updated.attributes ?? {}) as Record<string, unknown>);
+      onPatched?.(updated);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to remove image.');
+      const attrs = (editingRoad.attributes ?? {}) as Record<string, unknown>;
+      syncImageKeysFromAttrs(attrs);
+    }
+  };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -219,6 +325,16 @@ export function RoadsDataEntryForm({
           last_maintenance_date: showsMaintenanceFields ? lastRepairedDate.trim() || null : null,
           issues: issues.trim() || null,
           remarks: remarks.trim() || null,
+          condition_before_rating: conditionBeforeRating.trim() || null,
+          condition_after_rating: conditionAfterRating.trim() || null,
+          condition_before_notes: conditionBeforeNotes.trim() || null,
+          condition_after_notes: conditionAfterNotes.trim() || null,
+          sanction_amount: sanctionAmount.trim() || null,
+          sanction_date: sanctionDate.trim() || null,
+          work_completed_date: workCompletedDate.trim() || null,
+          before_image_keys: beforeImageKeys.length ? beforeImageKeys : null,
+          after_image_keys: afterImageKeys.length ? afterImageKeys : null,
+          road_image_keys: roadImageKeys.length ? roadImageKeys : null,
           summary_only: isSummaryOnlySector ? 'true' : null,
           updated_at: new Date().toISOString(),
         },
@@ -421,6 +537,222 @@ export function RoadsDataEntryForm({
           value={remarks}
           onChange={(e) => setRemarks(e.target.value)}
         />
+
+        <div className="md:col-span-2 rounded-lg border border-border/80 bg-slate-50/60 p-3 space-y-3">
+          <div>
+            <h3 className="text-xs font-semibold text-text">Before / After condition</h3>
+            <p className="mt-0.5 text-[11px] text-text-muted">
+              Ratings are 1 (worst) to 5 (best). Upload photos after saving the road (edit mode).
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-medium text-text">Before rating</span>
+              <select
+                className="rounded border border-border bg-background px-3 py-2"
+                value={conditionBeforeRating}
+                onChange={(e) => setConditionBeforeRating(e.target.value)}
+              >
+                {RATING_OPTIONS.map((opt) => (
+                  <option key={`before-${opt || 'empty'}`} value={opt}>
+                    {opt ? `${opt} / 5` : 'Not set'}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-medium text-text">After rating</span>
+              <select
+                className="rounded border border-border bg-background px-3 py-2"
+                value={conditionAfterRating}
+                onChange={(e) => setConditionAfterRating(e.target.value)}
+              >
+                {RATING_OPTIONS.map((opt) => (
+                  <option key={`after-${opt || 'empty'}`} value={opt}>
+                    {opt ? `${opt} / 5` : 'Not set'}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <input
+              className="rounded border border-border px-3 py-2"
+              placeholder="Before notes"
+              value={conditionBeforeNotes}
+              onChange={(e) => setConditionBeforeNotes(e.target.value)}
+            />
+            <input
+              className="rounded border border-border px-3 py-2"
+              placeholder="After notes"
+              value={conditionAfterNotes}
+              onChange={(e) => setConditionAfterNotes(e.target.value)}
+            />
+            <input
+              className="rounded border border-border px-3 py-2"
+              placeholder="Sanction amount"
+              value={sanctionAmount}
+              onChange={(e) => setSanctionAmount(e.target.value)}
+            />
+            <label className="flex flex-col gap-1 text-[11px] text-text-muted">
+              <span>Sanction date</span>
+              <input
+                type="date"
+                className="rounded border border-border px-3 py-2 text-xs text-text"
+                value={sanctionDate}
+                onChange={(e) => setSanctionDate(e.target.value)}
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-[11px] text-text-muted md:col-span-2">
+              <span>Work completed date</span>
+              <input
+                type="date"
+                className="rounded border border-border px-3 py-2 text-xs text-text"
+                value={workCompletedDate}
+                onChange={(e) => setWorkCompletedDate(e.target.value)}
+              />
+            </label>
+          </div>
+
+          {isEditing ? (
+            <div className="space-y-3">
+              <div className="grid gap-3 md:grid-cols-3">
+                <div>
+                  <label className="flex flex-col gap-1 text-[11px] text-text-muted">
+                    <span>Upload before images</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={uploadingPhase != null || saving}
+                      onChange={(e) => {
+                        void uploadConditionImages('before', e.target.files);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                  <p className="mt-0.5 text-[10px] text-text-muted">Shown on Before map control only</p>
+                  {uploadingPhase === 'before' ? (
+                    <p className="mt-1 text-[11px] text-text-muted">Uploading…</p>
+                  ) : null}
+                  {beforeImageKeys.length ? (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {beforeImageKeys.map((url) => (
+                        <div key={url} className="relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={url}
+                            alt="Before condition"
+                            className="h-14 w-20 rounded object-cover border border-border"
+                          />
+                          <button
+                            type="button"
+                            disabled={uploadingPhase != null || saving}
+                            onClick={() => void removeConditionImage('before', url)}
+                            className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow hover:bg-red-700 disabled:opacity-50"
+                            aria-label="Remove before image"
+                            title="Remove"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+                <div>
+                  <label className="flex flex-col gap-1 text-[11px] text-text-muted">
+                    <span>Upload after images</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={uploadingPhase != null || saving}
+                      onChange={(e) => {
+                        void uploadConditionImages('after', e.target.files);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                  <p className="mt-0.5 text-[10px] text-text-muted">Shown on After map control only</p>
+                  {uploadingPhase === 'after' ? (
+                    <p className="mt-1 text-[11px] text-text-muted">Uploading…</p>
+                  ) : null}
+                  {afterImageKeys.length ? (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {afterImageKeys.map((url) => (
+                        <div key={url} className="relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={url}
+                            alt="After condition"
+                            className="h-14 w-20 rounded object-cover border border-border"
+                          />
+                          <button
+                            type="button"
+                            disabled={uploadingPhase != null || saving}
+                            onClick={() => void removeConditionImage('after', url)}
+                            className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow hover:bg-red-700 disabled:opacity-50"
+                            aria-label="Remove after image"
+                            title="Remove"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+                <div>
+                  <label className="flex flex-col gap-1 text-[11px] text-text-muted">
+                    <span>Upload road images (sidebar)</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={uploadingPhase != null || saving}
+                      onChange={(e) => {
+                        void uploadConditionImages('gallery', e.target.files);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                  <p className="mt-0.5 text-[10px] text-text-muted">Shown in sidebar top carousel only</p>
+                  {uploadingPhase === 'gallery' ? (
+                    <p className="mt-1 text-[11px] text-text-muted">Uploading…</p>
+                  ) : null}
+                  {roadImageKeys.length ? (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {roadImageKeys.map((url) => (
+                        <div key={url} className="relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={url}
+                            alt="Road sidebar"
+                            className="h-14 w-20 rounded object-cover border border-border"
+                          />
+                          <button
+                            type="button"
+                            disabled={uploadingPhase != null || saving}
+                            onClick={() => void removeConditionImage('gallery', url)}
+                            className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow hover:bg-red-700 disabled:opacity-50"
+                            aria-label="Remove road image"
+                            title="Remove"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-[11px] text-text-muted">
+              Save the road first, then edit it to upload before / after / sidebar photos.
+            </p>
+          )}
+        </div>
+
         <div className="md:col-span-2 flex items-center gap-3">
           <button
             type="submit"

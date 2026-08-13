@@ -7,15 +7,13 @@
         "name": "Badakusthali to Palligumula",
         "roadName": "Badakusthali to Palligumula",
         "code": "RR(VR)L-044",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Badakusthali",
+        "pointBName": "Palligumula"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [
-            84.85408788400008,
-            19.340684931000055
-          ],
           [
             84.85408788400008,
             19.340684931000055
@@ -29,24 +27,12 @@
             19.340349181000022
           ],
           [
-            84.85404799600008,
-            19.340349181000022
-          ],
-          [
-            84.85406121200003,
-            19.340126613000052
-          ],
-          [
             84.85406121200003,
             19.340126613000052
           ],
           [
             84.85409230700003,
             19.33980003000005
-          ],
-          [
-            84.85412805300007,
-            19.33965557500005
           ],
           [
             84.85412805300007,
@@ -129,7 +115,9 @@
         "name": "N.H-217 TO NARENDRAUR VIA SANAKUSTALI",
         "roadName": "N.H-217 TO NARENDRAUR VIA SANAKUSTALI",
         "code": "RR(VR)L-045",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "N.H-217",
+        "pointBName": "NARENDRAUR VIA SANAKUSTALI"
       },
       "geometry": {
         "type": "LineString",
@@ -311,10 +299,6 @@
             19.322968795000065
           ],
           [
-            84.85720337400005,
-            19.322968795000065
-          ],
-          [
             84.85739253200006,
             19.32294322200005
           ],
@@ -379,16 +363,8 @@
             19.32876242100002
           ],
           [
-            84.86004778100005,
-            19.32876242100002
-          ],
-          [
             84.85980511300005,
             19.330070464000073
-          ],
-          [
-            84.85982374100007,
-            19.330343463000077
           ],
           [
             84.85982374100007,
@@ -411,16 +387,8 @@
             19.33147224000004
           ],
           [
-            84.86025189800006,
-            19.33147224000004
-          ],
-          [
             84.86031084100006,
             19.331605472000035
-          ],
-          [
-            84.86036980300008,
-            19.331904398000063
           ],
           [
             84.86036980300008,
@@ -447,24 +415,12 @@
             19.332145343000036
           ],
           [
-            84.85921427300008,
-            19.332145343000036
-          ],
-          [
-            84.85921427300008,
-            19.332145343000036
-          ],
-          [
             84.85918306000008,
             19.33240552700005
           ],
           [
             84.85912123600008,
             19.332587440000054
-          ],
-          [
-            84.85907639000004,
-            19.332662036000045
           ],
           [
             84.85907639000004,
@@ -515,7 +471,9 @@
         "name": "Gopalpur PWDroad to Bahadurpeta to Defence colony Mandiapali",
         "roadName": "Gopalpur PWDroad to Bahadurpeta to Defence colony Mandiapali",
         "code": "RR(VR)L-047",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Gopalpur PWDroad",
+        "pointBName": "Bahadurpeta to Defence colony Mandiapali"
       },
       "geometry": {
         "type": "LineString",
@@ -713,7 +671,9 @@
         "name": "Gopalpur to Mansurkota via Olipur",
         "roadName": "Gopalpur to Mansurkota via Olipur",
         "code": "RR(VR)75",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Gopalpur",
+        "pointBName": "Mansurkota via Olipur"
       },
       "geometry": {
         "type": "LineString",
@@ -863,7 +823,9 @@
         "name": "PWD road to Parbatipur",
         "roadName": "PWD road to Parbatipur",
         "code": "RR(VR)L-049",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD road",
+        "pointBName": "Parbatipur"
       },
       "geometry": {
         "type": "LineString",
@@ -929,7 +891,9 @@
         "name": "DHARAMPUR TO GOPALPUR CHAKKA VIA VENKATRAIPUR  NUABAXIPALLI",
         "roadName": "DHARAMPUR TO GOPALPUR CHAKKA VIA VENKATRAIPUR  NUABAXIPALLI",
         "code": "RR(VR)L-051",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "DHARAMPUR",
+        "pointBName": "GOPALPUR CHAKKA VIA VENKATRAIPUR  NUABAXIPALLI"
       },
       "geometry": {
         "type": "LineString",
@@ -1175,7 +1139,9 @@
         "name": "BOXIPALLI SANTINAGAR TO BIKRAMPUR",
         "roadName": "BOXIPALLI SANTINAGAR TO BIKRAMPUR",
         "code": "RR(VR)L-052",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "BOXIPALLI SANTINAGAR",
+        "pointBName": "BIKRAMPUR"
       },
       "geometry": {
         "type": "LineString",
@@ -1199,10 +1165,6 @@
           [
             84.88206817900004,
             19.25613287400006
-          ],
-          [
-            84.88284729100008,
-            19.255741512000043
           ],
           [
             84.88284729100008,
@@ -1249,10 +1211,6 @@
             19.253664478000076
           ],
           [
-            84.88707332400008,
-            19.253664478000076
-          ],
-          [
             84.88764194000004,
             19.25324937700003
           ],
@@ -1267,10 +1225,6 @@
           [
             84.88911957000005,
             19.252029979000042
-          ],
-          [
-            84.88943813200007,
-            19.251478985000062
           ],
           [
             84.88943813200007,
@@ -1293,7 +1247,9 @@
         "name": "RD road Ganju to mes road via putipadar",
         "roadName": "RD road Ganju to mes road via putipadar",
         "code": "RR(VR)L-053",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "RD road Ganju",
+        "pointBName": "mes road via putipadar"
       },
       "geometry": {
         "type": "LineString",
@@ -1487,7 +1443,9 @@
         "name": "Karapali Dhabaleswar to Hatipada Road",
         "roadName": "Karapali Dhabaleswar to Hatipada Road",
         "code": "RR(VR)L-054",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Karapali Dhabaleswar",
+        "pointBName": "Hatipada Road"
       },
       "geometry": {
         "type": "LineString",
@@ -1589,7 +1547,9 @@
         "name": "PWD road to Ganju road via Kardapaii",
         "roadName": "PWD road to Ganju road via Kardapaii",
         "code": "RR(VR)L-055",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD road",
+        "pointBName": "Ganju road via Kardapaii"
       },
       "geometry": {
         "type": "LineString",
@@ -1647,7 +1607,9 @@
         "name": "NH-5 to Khajuria",
         "roadName": "NH-5 to Khajuria",
         "code": "RR(VR)L-056",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "NH-5",
+        "pointBName": "Khajuria"
       },
       "geometry": {
         "type": "LineString",
@@ -1729,7 +1691,9 @@
         "name": "PWD Road to Keluapalli",
         "roadName": "PWD Road to Keluapalli",
         "code": "RR(VR)L-057",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD Road",
+        "pointBName": "Keluapalli"
       },
       "geometry": {
         "type": "LineString",
@@ -1855,7 +1819,9 @@
         "name": "PWD  Dumidumi road to Silabindha",
         "roadName": "PWD  Dumidumi road to Silabindha",
         "code": "RR(VR)L-058",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD  Dumidumi road",
+        "pointBName": "Silabindha"
       },
       "geometry": {
         "type": "LineString",
@@ -1933,7 +1899,9 @@
         "name": "Indrakhi to Nakram road",
         "roadName": "Indrakhi to Nakram road",
         "code": "RR(VR)L-059",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Indrakhi",
+        "pointBName": "Nakram road"
       },
       "geometry": {
         "type": "LineString",
@@ -2247,7 +2215,9 @@
         "name": "PWD road to Patapur",
         "roadName": "PWD road to Patapur",
         "code": "RR(VR)L-060",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD road",
+        "pointBName": "Patapur"
       },
       "geometry": {
         "type": "LineString",
@@ -2393,7 +2363,9 @@
         "name": "Patapur to Chikarada Mini Stadium",
         "roadName": "Patapur to Chikarada Mini Stadium",
         "code": "RR(VR)L-061",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Patapur",
+        "pointBName": "Chikarada Mini Stadium"
       },
       "geometry": {
         "type": "LineString",
@@ -2407,24 +2379,12 @@
             19.23345905000002
           ],
           [
-            84.78189979000007,
-            19.23345905000002
-          ],
-          [
             84.78174735900006,
             19.233470586000067
           ],
           [
             84.78162272000003,
             19.233508251000046
-          ],
-          [
-            84.78162272000003,
-            19.233508251000046
-          ],
-          [
-            84.78148697100005,
-            19.233552245000055
           ],
           [
             84.78148697100005,
@@ -2441,10 +2401,6 @@
           [
             84.78096786500004,
             19.23343331700005
-          ],
-          [
-            84.78083969300008,
-            19.233381918000077
           ],
           [
             84.78083969300008,
@@ -2483,10 +2439,6 @@
             19.23412636300003
           ],
           [
-            84.77812831900007,
-            19.23412636300003
-          ],
-          [
             84.77792949200006,
             19.234191304000035
           ],
@@ -2499,40 +2451,12 @@
             19.234195235000072
           ],
           [
-            84.77760550500005,
-            19.234195235000072
-          ],
-          [
-            84.77746743900008,
-            19.23409754900007
-          ],
-          [
             84.77746743900008,
             19.23409754900007
           ],
           [
             84.77732613900008,
             19.234034988000076
-          ],
-          [
-            84.77732613900008,
-            19.234034988000076
-          ],
-          [
-            84.77732613900008,
-            19.234034988000076
-          ],
-          [
-            84.77732613900008,
-            19.234034988000076
-          ],
-          [
-            84.77732613900008,
-            19.234034988000076
-          ],
-          [
-            84.77724719200006,
-            19.233922421000045
           ],
           [
             84.77724719200006,
@@ -2591,16 +2515,8 @@
             19.23141923700007
           ],
           [
-            84.77430549900004,
-            19.23141923700007
-          ],
-          [
             84.77427092200008,
             19.231554680000045
-          ],
-          [
-            84.77426309600008,
-            19.231724420000035
           ],
           [
             84.77426309600008,
@@ -2619,16 +2535,8 @@
             19.23204448200005
           ],
           [
-            84.77420009000008,
-            19.23204448200005
-          ],
-          [
             84.77409800300006,
             19.232076348000078
-          ],
-          [
-            84.77400125800006,
-            19.232111730000042
           ],
           [
             84.77400125800006,
@@ -2679,7 +2587,9 @@
         "name": "Sasanapadar to Mantridi",
         "roadName": "Sasanapadar to Mantridi",
         "code": "RR(VR)L-063",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Sasanapadar",
+        "pointBName": "Mantridi"
       },
       "geometry": {
         "type": "LineString",
@@ -2981,7 +2891,9 @@
         "name": "PWD road near Hardanga HS to Mahasahipentho",
         "roadName": "PWD road near Hardanga HS to Mahasahipentho",
         "code": "RR(VR)L-064",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD road near Hardanga HS",
+        "pointBName": "Mahasahipentho"
       },
       "geometry": {
         "type": "LineString",
@@ -3107,7 +3019,9 @@
         "name": "Biswanathpur to Firojpentho",
         "roadName": "Biswanathpur to Firojpentho",
         "code": "RR(VR)L-065",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Biswanathpur",
+        "pointBName": "Firojpentho"
       },
       "geometry": {
         "type": "LineString",
@@ -3293,7 +3207,9 @@
         "name": "PWD road to Sana Biswanathpur",
         "roadName": "PWD road to Sana Biswanathpur",
         "code": "RR(VR)L-066",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD road",
+        "pointBName": "Sana Biswanathpur"
       },
       "geometry": {
         "type": "LineString",
@@ -3451,7 +3367,9 @@
         "name": "NH-16 Golonthara PS to Ghadakanala via Totadapalli",
         "roadName": "NH-16 Golonthara PS to Ghadakanala via Totadapalli",
         "code": "RR(VR)L-067",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "NH-16 Golonthara PS",
+        "pointBName": "Ghadakanala via Totadapalli"
       },
       "geometry": {
         "type": "LineString",
@@ -3825,7 +3743,9 @@
         "name": "Sunadei to Mantridi via Chikara",
         "roadName": "Sunadei to Mantridi via Chikara",
         "code": "RR(VR)74",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Sunadei",
+        "pointBName": "Mantridi via Chikara"
       },
       "geometry": {
         "type": "LineString",
@@ -3853,10 +3773,6 @@
           [
             84.73475998000004,
             19.238585735000072
-          ],
-          [
-            84.73530300000004,
-            19.238936961000036
           ],
           [
             84.73530300000004,
@@ -3943,10 +3859,6 @@
             19.23887263100005
           ],
           [
-            84.74337260600004,
-            19.23887263100005
-          ],
-          [
             84.74357139200004,
             19.23896180500003
           ],
@@ -4001,10 +3913,6 @@
           [
             84.74652642900008,
             19.239984794000065
-          ],
-          [
-            84.74655684100009,
-            19.239987808000024
           ],
           [
             84.74655684100009,
@@ -4087,18 +3995,6 @@
             19.237744473000078
           ],
           [
-            84.75132135300004,
-            19.237744473000078
-          ],
-          [
-            84.75132135300004,
-            19.237744473000078
-          ],
-          [
-            84.75141777200008,
-            19.237617706000037
-          ],
-          [
             84.75141777200008,
             19.237617706000037
           ],
@@ -4121,10 +4017,6 @@
           [
             84.75273707700006,
             19.23704871900003
-          ],
-          [
-            84.75277180700004,
-            19.236970576000033
           ],
           [
             84.75277180700004,
@@ -4159,10 +4051,6 @@
             19.236116765000077
           ],
           [
-            84.75268586200008,
-            19.236116765000077
-          ],
-          [
             84.75259430900007,
             19.236011274000077
           ],
@@ -4173,10 +4061,6 @@
           [
             84.75256575500003,
             19.235887541000068
-          ],
-          [
-            84.75256575500003,
-            19.235803418000046
           ],
           [
             84.75256575500003,
@@ -4219,10 +4103,6 @@
             19.23393582600005
           ],
           [
-            84.75283129400003,
-            19.23393582600005
-          ],
-          [
             84.75289901400004,
             19.233879238000043
           ],
@@ -4259,15 +4139,13 @@
         "name": "RD road to Chandanpur",
         "roadName": "RD road to Chandanpur",
         "code": "RR(VR)L-069",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "RD road",
+        "pointBName": "Chandanpur"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [
-            84.75127697600004,
-            19.25114742100004
-          ],
           [
             84.75127697600004,
             19.25114742100004
@@ -4349,7 +4227,9 @@
         "name": "NH-5 to Rangipur via Kanisi Tahasil office",
         "roadName": "NH-5 to Rangipur via Kanisi Tahasil office",
         "code": "RR(VR)L-071",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "NH-5",
+        "pointBName": "Rangipur via Kanisi Tahasil office"
       },
       "geometry": {
         "type": "LineString",
@@ -4611,7 +4491,9 @@
         "name": "NH-5 to Haldiapadar",
         "roadName": "NH-5 to Haldiapadar",
         "code": "RR(VR)L-073",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "NH-5",
+        "pointBName": "Haldiapadar"
       },
       "geometry": {
         "type": "LineString",
@@ -4777,15 +4659,13 @@
         "name": "PWD to Antarbatia",
         "roadName": "PWD to Antarbatia",
         "code": "L-021",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD",
+        "pointBName": "Antarbatia"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [
-            84.88131317200003,
-            19.29464374500003
-          ],
           [
             84.88131317200003,
             19.29464374500003
@@ -4871,7 +4751,9 @@
         "name": "Venkataripur to Baxipali road",
         "roadName": "Venkataripur to Baxipali road",
         "code": "L-023",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Venkataripur",
+        "pointBName": "Baxipali road"
       },
       "geometry": {
         "type": "LineString",
@@ -5329,7 +5211,9 @@
         "name": "Tulu Indrakhi to Dhepanapada road",
         "roadName": "Tulu Indrakhi to Dhepanapada road",
         "code": "L-026",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Tulu Indrakhi",
+        "pointBName": "Dhepanapada road"
       },
       "geometry": {
         "type": "LineString",
@@ -5579,7 +5463,9 @@
         "name": "PWD road to Biswanathapur  road",
         "roadName": "PWD road to Biswanathapur  road",
         "code": "L-027",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD road",
+        "pointBName": "Biswanathapur  road"
       },
       "geometry": {
         "type": "LineString",
@@ -5837,7 +5723,9 @@
         "name": "PWD road Bayali near Mantridi via Haradanga road",
         "roadName": "PWD road Bayali near Mantridi via Haradanga road",
         "code": "L-028",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": null,
+        "pointBName": null
       },
       "geometry": {
         "type": "LineString",
@@ -5971,7 +5859,9 @@
         "name": "PWD road to Paluru Hill road",
         "roadName": "PWD road to Paluru Hill road",
         "code": "L-029",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD road",
+        "pointBName": "Paluru Hill road"
       },
       "geometry": {
         "type": "LineString",
@@ -6037,7 +5927,9 @@
         "name": "PWD road to Palur",
         "roadName": "PWD road to Palur",
         "code": "L-030",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD road",
+        "pointBName": "Palur"
       },
       "geometry": {
         "type": "LineString",
@@ -6049,14 +5941,6 @@
           [
             84.75446132200005,
             19.19022961400003
-          ],
-          [
-            84.75427196700008,
-            19.189798315000075
-          ],
-          [
-            84.75427196700008,
-            19.189798315000075
           ],
           [
             84.75427196700008,
@@ -6127,24 +6011,12 @@
             19.183948540000074
           ],
           [
-            84.75357069500006,
-            19.183948540000074
-          ],
-          [
             84.75322650800007,
             19.184006198000077
           ],
           [
             84.75293693700007,
             19.18405572000006
-          ],
-          [
-            84.75293693700007,
-            19.18405572000006
-          ],
-          [
-            84.75247268800007,
-            19.184122410000043
           ],
           [
             84.75247268800007,
@@ -6223,10 +6095,6 @@
             19.187478484000053
           ],
           [
-            84.74666986000005,
-            19.187478484000053
-          ],
-          [
             84.74608779900007,
             19.187792170000023
           ]
@@ -6239,7 +6107,9 @@
         "name": "PWD Road to Majhigaon to Gunupur Via Padmapur",
         "roadName": "PWD Road to Majhigaon to Gunupur Via Padmapur",
         "code": "L-034",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD Road",
+        "pointBName": "Majhigaon to Gunupur Via Padmapur"
       },
       "geometry": {
         "type": "LineString",
@@ -6709,7 +6579,9 @@
         "name": "PWD road Gunupur to Belakudi road",
         "roadName": "PWD road Gunupur to Belakudi road",
         "code": "L-035",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD road Gunupur",
+        "pointBName": "Belakudi road"
       },
       "geometry": {
         "type": "LineString",
@@ -6863,7 +6735,9 @@
         "name": "Pathara to Ganju road",
         "roadName": "Pathara to Ganju road",
         "code": "L-040",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Pathara",
+        "pointBName": "Ganju road"
       },
       "geometry": {
         "type": "LineString",
@@ -7293,7 +7167,9 @@
         "name": "PWD road to Satakutuni via Badagumula",
         "roadName": "PWD road to Satakutuni via Badagumula",
         "code": "L-041",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD road",
+        "pointBName": "Satakutuni via Badagumula"
       },
       "geometry": {
         "type": "LineString",
@@ -8071,7 +7947,9 @@
         "name": "Nagardiha Jn to Sitalapalli",
         "roadName": "Nagardiha Jn to Sitalapalli",
         "code": "L-042",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Nagardiha Jn",
+        "pointBName": "Sitalapalli"
       },
       "geometry": {
         "type": "LineString",
@@ -8225,7 +8103,9 @@
         "name": "Ganju to Kamalapur",
         "roadName": "Ganju to Kamalapur",
         "code": "L-043",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Ganju",
+        "pointBName": "Kamalapur"
       },
       "geometry": {
         "type": "LineString",
@@ -8499,7 +8379,9 @@
         "name": "NH 5 to Mishrapalli",
         "roadName": "NH 5 to Mishrapalli",
         "code": "L039",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "NH 5",
+        "pointBName": "Mishrapalli"
       },
       "geometry": {
         "type": "LineString",
@@ -8661,7 +8543,9 @@
         "name": "Chikiti RD Road to Bahadurpentho",
         "roadName": "Chikiti RD Road to Bahadurpentho",
         "code": "RR(VR)L-080",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Chikiti RD Road",
+        "pointBName": "Bahadurpentho"
       },
       "geometry": {
         "type": "LineString",
@@ -8799,7 +8683,9 @@
         "name": "Maheswarpentho Nuapalli",
         "roadName": "Maheswarpentho Nuapalli",
         "code": "RR(VR)L-079",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": null,
+        "pointBName": null
       },
       "geometry": {
         "type": "LineString",
@@ -8893,7 +8779,9 @@
         "name": "NH-5 to Aruapalli",
         "roadName": "NH-5 to Aruapalli",
         "code": "RR(VR)L-077",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "NH-5",
+        "pointBName": "Aruapalli"
       },
       "geometry": {
         "type": "LineString",
@@ -9159,7 +9047,9 @@
         "name": "NH-16 to Pallurhill",
         "roadName": "NH-16 to Pallurhill",
         "code": "RR(VR)L-078",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "NH-16",
+        "pointBName": "Pallurhill"
       },
       "geometry": {
         "type": "LineString",
@@ -9329,7 +9219,9 @@
         "name": "Nuapalli to Biswanathpur",
         "roadName": "Nuapalli to Biswanathpur",
         "code": "RR(VR)L-076",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Nuapalli",
+        "pointBName": "Biswanathpur"
       },
       "geometry": {
         "type": "LineString",
@@ -9463,7 +9355,9 @@
         "name": "PWD ROAD JHADANKULI TO GURUNTHI VIA SATAKHUTUNI",
         "roadName": "PWD ROAD JHADANKULI TO GURUNTHI VIA SATAKHUTUNI",
         "code": "RR(VR)L-046",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD ROAD JHADANKULI",
+        "pointBName": "GURUNTHI VIA SATAKHUTUNI"
       },
       "geometry": {
         "type": "LineString",
@@ -9593,7 +9487,9 @@
         "name": "Digipur vill road to karapalli PWD road",
         "roadName": "Digipur vill road to karapalli PWD road",
         "code": "RR(VR)L-050",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Digipur vill road",
+        "pointBName": "karapalli PWD road"
       },
       "geometry": {
         "type": "LineString",
@@ -9907,7 +9803,9 @@
         "name": "NH-5 to Mantridi via Kanisi and Chikarada",
         "roadName": "NH-5 to Mantridi via Kanisi and Chikarada",
         "code": "RR(VR)L-062",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "NH-5",
+        "pointBName": "Mantridi via Kanisi and Chikarada"
       },
       "geometry": {
         "type": "LineString",
@@ -10169,7 +10067,9 @@
         "name": "Chikarada PWD Road to Mantridi",
         "roadName": "Chikarada PWD Road to Mantridi",
         "code": "RR(VR)L-068",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Chikarada PWD Road",
+        "pointBName": "Mantridi"
       },
       "geometry": {
         "type": "LineString",
@@ -10619,7 +10519,9 @@
         "name": "RD road to Govindapur",
         "roadName": "RD road to Govindapur",
         "code": "RR(VR)L-070",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "RD road",
+        "pointBName": "Govindapur"
       },
       "geometry": {
         "type": "LineString",
@@ -10741,7 +10643,9 @@
         "name": "PWD Road to Kukudakhandi Block Boundry Via Govindapur",
         "roadName": "PWD Road to Kukudakhandi Block Boundry Via Govindapur",
         "code": "RR(VR)L-048",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD Road",
+        "pointBName": "Kukudakhandi Block Boundry Via Govindapur"
       },
       "geometry": {
         "type": "LineString",
@@ -10907,7 +10811,9 @@
         "name": "Kanisi to Chikiti PWD Road",
         "roadName": "Kanisi to Chikiti PWD Road",
         "code": "RR(ODR)T-06",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Kanisi",
+        "pointBName": "Chikiti PWD Road"
       },
       "geometry": {
         "type": "LineString",
@@ -11169,7 +11075,9 @@
         "name": "Ralab RD road to Dubapalli via B.Nuagaon",
         "roadName": "Ralab RD road to Dubapalli via B.Nuagaon",
         "code": "RR(VR)L-072",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Ralab RD road",
+        "pointBName": "Dubapalli via B.Nuagaon"
       },
       "geometry": {
         "type": "LineString",
@@ -11259,7 +11167,9 @@
         "name": "Karapalli Golabandha to Hatipada Dhabaleswar road",
         "roadName": "Karapalli Golabandha to Hatipada Dhabaleswar road",
         "code": "L-022",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Karapalli Golabandha",
+        "pointBName": "Hatipada Dhabaleswar road"
       },
       "geometry": {
         "type": "LineString",
@@ -11441,10 +11351,6 @@
             19.24916160300006
           ],
           [
-            84.86499072100008,
-            19.24916160300006
-          ],
-          [
             84.86487174700005,
             19.249244884000063
           ],
@@ -11545,10 +11451,6 @@
             19.258616414000073
           ],
           [
-            84.86547578200003,
-            19.258616414000073
-          ],
-          [
             84.86560253200008,
             19.259075173000042
           ],
@@ -11571,10 +11473,6 @@
           [
             84.86603083400007,
             19.262219035000044
-          ],
-          [
-            84.86610119200003,
-            19.26233157000007
           ],
           [
             84.86610119200003,
@@ -11627,10 +11525,6 @@
           [
             84.87084260100005,
             19.264621384000066
-          ],
-          [
-            84.87118234400003,
-            19.26528364400008
           ],
           [
             84.87118234400003,
@@ -11805,7 +11699,9 @@
         "name": "PWD rod to Kirtipur via Keluapalli",
         "roadName": "PWD rod to Kirtipur via Keluapalli",
         "code": "L-024",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD rod",
+        "pointBName": "Kirtipur via Keluapalli"
       },
       "geometry": {
         "type": "LineString",
@@ -12175,7 +12071,9 @@
         "name": "Kanisi Mandrajpur road",
         "roadName": "Kanisi Mandrajpur road",
         "code": "T-04",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": null,
+        "pointBName": null
       },
       "geometry": {
         "type": "LineString",
@@ -13077,7 +12975,9 @@
         "name": "Markandi Hantulu",
         "roadName": "Markandi Hantulu",
         "code": "L-025",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": null,
+        "pointBName": null
       },
       "geometry": {
         "type": "LineString",
@@ -13363,7 +13263,9 @@
         "name": "NH Mandiapalli Jn to Golanthara Jn",
         "roadName": "NH Mandiapalli Jn to Golanthara Jn",
         "code": "T-01",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "NH Mandiapalli Jn",
+        "pointBName": "Golanthara Jn"
       },
       "geometry": {
         "type": "LineString",
@@ -14345,7 +14247,9 @@
         "name": "ODR to N H 5",
         "roadName": "ODR to N H 5",
         "code": "L-033",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "ODR",
+        "pointBName": "N H 5"
       },
       "geometry": {
         "type": "LineString",
@@ -14569,14 +14473,6 @@
           [
             84.73528105200006,
             19.232662024000035
-          ],
-          [
-            84.73528105200006,
-            19.232662024000035
-          ],
-          [
-            84.73528105200006,
-            19.232662024000035
           ]
         ]
       }
@@ -14587,7 +14483,9 @@
         "name": "PWD road Randha to Sasanapadar road",
         "roadName": "PWD road Randha to Sasanapadar road",
         "code": "L-031",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "PWD road Randha",
+        "pointBName": "Sasanapadar road"
       },
       "geometry": {
         "type": "LineString",
@@ -14797,10 +14695,6 @@
             19.21207012600007
           ],
           [
-            84.78337656000008,
-            19.21207012600007
-          ],
-          [
             84.78321094400007,
             19.211959810000053
           ],
@@ -14817,14 +14711,6 @@
             19.211914456000045
           ],
           [
-            84.78268387900005,
-            19.211914456000045
-          ],
-          [
-            84.78268387900005,
-            19.211914456000045
-          ],
-          [
             84.78264391800008,
             19.211885809000023
           ],
@@ -14835,10 +14721,6 @@
           [
             84.78257848300007,
             19.211720437000054
-          ],
-          [
-            84.78255766300003,
-            19.21167939000003
           ],
           [
             84.78255766300003,
@@ -14907,10 +14789,6 @@
           [
             84.77987204800007,
             19.21251617100006
-          ],
-          [
-            84.77985157200004,
-            19.212553469000056
           ],
           [
             84.77985157200004,
@@ -15141,10 +15019,6 @@
             19.227635575000022
           ],
           [
-            84.76904459600007,
-            19.227635575000022
-          ],
-          [
             84.76890205800004,
             19.22789719000008
           ],
@@ -15241,7 +15115,9 @@
         "name": "Golanthara to Sorala ODR",
         "roadName": "Golanthara to Sorala ODR",
         "code": "T-05",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Golanthara",
+        "pointBName": "Sorala ODR"
       },
       "geometry": {
         "type": "LineString",
@@ -15389,10 +15265,6 @@
           [
             84.76461762000008,
             19.16362806500007
-          ],
-          [
-            84.76462043500004,
-            19.16442156200003
           ],
           [
             84.76462043500004,
@@ -15643,10 +15515,6 @@
             19.188759278000077
           ],
           [
-            84.76292526800006,
-            19.188759278000077
-          ],
-          [
             84.76258144100007,
             19.18888344000004
           ],
@@ -15855,10 +15723,6 @@
             19.20119742600008
           ],
           [
-            84.75622938500004,
-            19.20119742600008
-          ],
-          [
             84.75631870100005,
             19.201703975000044
           ],
@@ -15931,10 +15795,6 @@
             19.207317063000062
           ],
           [
-            84.75378952000005,
-            19.207317063000062
-          ],
-          [
             84.75360050300003,
             19.207969582000032
           ],
@@ -15995,7 +15855,9 @@
         "name": "PWD road Tulu Markandi",
         "roadName": "PWD road Tulu Markandi",
         "code": "L-032",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": null,
+        "pointBName": null
       },
       "geometry": {
         "type": "LineString",
@@ -16265,10 +16127,6 @@
             19.201735410000026
           ],
           [
-            84.81104567600005,
-            19.201735410000026
-          ],
-          [
             84.81091623400005,
             19.20179252400004
           ],
@@ -16325,7 +16183,9 @@
         "name": "Dhepuapada to Block Boundry",
         "roadName": "Dhepuapada to Block Boundry",
         "code": "RR(VR)L-081",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Dhepuapada",
+        "pointBName": "Block Boundry"
       },
       "geometry": {
         "type": "LineString",
@@ -16419,7 +16279,9 @@
         "name": "NH 5 to Burukudi",
         "roadName": "NH 5 to Burukudi",
         "code": "L-038",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "NH 5",
+        "pointBName": "Burukudi"
       },
       "geometry": {
         "type": "LineString",
@@ -16495,10 +16357,6 @@
           [
             84.80986266500008,
             19.27286627700005
-          ],
-          [
-            84.80976881800007,
-            19.27297044100004
           ],
           [
             84.80976881800007,
@@ -16677,7 +16535,9 @@
         "name": "Dasapur to Kolathigam",
         "roadName": "Dasapur to Kolathigam",
         "code": "L-037",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Dasapur",
+        "pointBName": "Kolathigam"
       },
       "geometry": {
         "type": "LineString",
@@ -16931,7 +16791,9 @@
         "name": "Haladiapadar to Solabindha road",
         "roadName": "Haladiapadar to Solabindha road",
         "code": "L-036",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Haladiapadar",
+        "pointBName": "Solabindha road"
       },
       "geometry": {
         "type": "LineString",
@@ -17405,10 +17267,6 @@
             19.258102688000065
           ],
           [
-            84.78835774200007,
-            19.258102688000065
-          ],
-          [
             84.78837021600003,
             19.25815291300006
           ],
@@ -17621,7 +17479,9 @@
         "name": "Pakudibandha Junction to Firstgate",
         "roadName": "Pakudibandha Junction to Firstgate",
         "code": "T-07",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Pakudibandha Junction",
+        "pointBName": "Firstgate"
       },
       "geometry": {
         "type": "LineString",
@@ -17637,10 +17497,6 @@
           [
             84.86172443400005,
             19.320365955000057
-          ],
-          [
-            84.86134973000009,
-            19.32043453700004
           ],
           [
             84.86134973000009,
@@ -17987,10 +17843,6 @@
             19.307478162000052
           ],
           [
-            84.79517782200008,
-            19.307478162000052
-          ],
-          [
             84.79467432300004,
             19.30807928200005
           ],
@@ -18063,10 +17915,6 @@
             19.314255977000073
           ],
           [
-            84.79439625900005,
-            19.314255977000073
-          ],
-          [
             84.79441223700007,
             19.314372392000053
           ],
@@ -18081,10 +17929,6 @@
           [
             84.79441937500007,
             19.314610338000023
-          ],
-          [
-            84.79437711800006,
-            19.314700712000047
           ],
           [
             84.79437711800006,
@@ -18183,10 +18027,6 @@
             19.319457897000063
           ],
           [
-            84.78103942600006,
-            19.319457897000063
-          ],
-          [
             84.78051279000005,
             19.31948605200006
           ],
@@ -18257,10 +18097,6 @@
           [
             84.77119380200008,
             19.32063807700007
-          ],
-          [
-            84.77089762200006,
-            19.320732104000058
           ],
           [
             84.77089762200006,
@@ -18343,10 +18179,6 @@
             19.32783526700007
           ],
           [
-            84.76919536000008,
-            19.32783526700007
-          ],
-          [
             84.76912843100007,
             19.32887577200006
           ],
@@ -18415,7 +18247,9 @@
         "name": "Berhampur to Gopalpur",
         "roadName": "Berhampur to Gopalpur",
         "code": "T-03",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Berhampur",
+        "pointBName": "Gopalpur"
       },
       "geometry": {
         "type": "LineString",
@@ -18599,10 +18433,6 @@
           [
             84.89908237000003,
             19.26688616000007
-          ],
-          [
-            84.89903779400004,
-            19.267058891000033
           ],
           [
             84.89903779400004,
@@ -19081,10 +18911,6 @@
             19.306003489000034
           ],
           [
-            84.84738508800007,
-            19.306003489000034
-          ],
-          [
             84.84629146000003,
             19.306979908000073
           ],
@@ -19103,14 +18929,6 @@
           [
             84.84536624200007,
             19.30787786600007
-          ],
-          [
-            84.84536624200007,
-            19.30787786600007
-          ],
-          [
-            84.84528999800006,
-            19.30793987000004
           ],
           [
             84.84528999800006,
@@ -19169,7 +18987,9 @@
         "name": "Karapalli  Purusotampur Jayntpur Portion from Karapalli",
         "roadName": "Karapalli  Purusotampur Jayntpur Portion from Karapalli",
         "code": "T-02",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": null,
+        "pointBName": null
       },
       "geometry": {
         "type": "LineString",
@@ -19197,10 +19017,6 @@
           [
             84.88158673700008,
             19.291465062000043
-          ],
-          [
-            84.88146453000007,
-            19.29287917000005
           ],
           [
             84.88146453000007,
@@ -19307,15 +19123,13 @@
         "name": "NH-16 To Dura via Kalinganagar",
         "roadName": "NH-16 To Dura via Kalinganagar",
         "code": "RR(VR)L-082",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "NH-16",
+        "pointBName": "Dura via Kalinganagar"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [
-            84.84264182700008,
-            19.306128814000033
-          ],
           [
             84.84264182700008,
             19.306128814000033
@@ -19377,7 +19191,9 @@
         "name": "Dura to Biswanathpur via Ramachandrapur, Putipadar",
         "roadName": "Dura to Biswanathpur via Ramachandrapur, Putipadar",
         "code": "RR(VR)L-083",
-        "block": "Rangailunda"
+        "block": "Rangailunda",
+        "pointAName": "Dura",
+        "pointBName": "Biswanathpur via Ramachandrapur, Putipadar"
       },
       "geometry": {
         "type": "LineString",

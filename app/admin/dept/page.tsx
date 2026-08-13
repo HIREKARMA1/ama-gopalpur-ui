@@ -2057,6 +2057,10 @@ export default function DepartmentAdminPage() {
                 onCreated={(created) => {
                   setOrgs((prev) => [created, ...prev]);
                 }}
+                onPatched={(updated) => {
+                  setOrgs((prev) => prev.map((org) => (org.id === updated.id ? updated : org)));
+                  setEditingRoadOrg(updated);
+                }}
                 onUpdated={(updated) => {
                   setOrgs((prev) => prev.map((org) => (org.id === updated.id ? updated : org)));
                   setEditingRoadOrg(null);
