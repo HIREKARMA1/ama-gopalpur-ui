@@ -16,7 +16,7 @@ The frontend is a Next.js application designed around a **map-first** interactio
 ## Theming
 
 - Colors and fonts are driven by CSS variables in `app/globals.css`.
-- Primary color is orange for Gopalpur, and dark mode is supported via `next-themes`.
+- Primary color is orange for Gopalpur. The UI is light-only; `next-themes` runs with `forcedTheme="light"`.
 - To change brand color or font globally, edit the variables in `globals.css`.
 
 ## API Integration
