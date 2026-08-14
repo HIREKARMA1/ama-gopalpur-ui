@@ -22,133 +22,93 @@ import {
 } from '../services/api';
 import { orgToDrainFeature } from '../lib/drainageOrganization';
 import { fetchAllOrganizationsForDepartment } from '../lib/departmentSummaryHighlights';
-import { parseRoadImageKeys } from '../lib/roadsOrganization';
-
-function parsePathCoordinates(raw: string | null | undefined): [number, number][] {
-  const s = (raw || '').trim();
-  if (!s) return [];
-
-  // 1) GeoJSON-like array string: [[lng,lat],[lng,lat],...]
-  try {
-    const parsed = JSON.parse(s);
-    if (Array.isArray(parsed)) {
-      const coords = parsed
-        .filter((pt) => Array.isArray(pt) && pt.length >= 2)
-        .map((pt) => [Number(pt[0]), Number(pt[1])] as [number, number])
-        .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
-      if (coords.length >= 2) return coords;
-    }
-  } catch {
-    // fallback parsers below
-  }
-
-  // 2) WKT LINESTRING(lng lat, lng lat, ...)
-  const linestringMatch = s.match(/LINESTRING\s*\(([^)]+)\)/i);
-  if (linestringMatch?.[1]) {
-    const coords = linestringMatch[1]
-      .split(',')
-      .map((pair) => pair.trim())
-      .filter(Boolean)
-      .map((pair) => {
-        const [lngStr = '', latStr = ''] = pair.split(/\s+/);
-        return [Number(lngStr), Number(latStr)] as [number, number];
-      })
-      .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
-    if (coords.length >= 2) return coords;
-  }
-
-  // 3) Existing legacy format: "lng lat;lng lat;..."
-  const legacyCoords = s
-    .split(';')
-    .map((pair) => pair.trim())
-    .filter(Boolean)
-    .map((pair) => {
-      const [lngStr = '', latStr = ''] = pair.split(/\s+/);
-      return [Number(lngStr), Number(latStr)] as [number, number];
-    })
-    .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
-  if (legacyCoords.length >= 2) return legacyCoords;
-
-  // 4) Fallback numeric extraction (supports mixed delimiters)
-  const nums = (s.match(/-?\d+(?:\.\d+)?/g) || []).map((n) => Number(n));
-  if (nums.length < 4) return [];
-  const inferred: [number, number][] = [];
-  for (let i = 0; i + 1 < nums.length; i += 2) {
-    const lng = nums[i];
-    const lat = nums[i + 1];
-    if (!Number.isFinite(lng) || !Number.isFinite(lat)) continue;
-    inferred.push([lng, lat]);
-  }
-  return inferred.length >= 2 ? inferred : [];
-}
+import { getRoadMapGeometry, parseRoadImageKeys } from '../lib/roadsOrganization';
 
 function orgToRoadFeature(org: Organization): RoadFeature | null {
   const attrs = (org.attributes ?? {}) as Record<string, unknown>;
-  const pathCoordinates = parsePathCoordinates(String(attrs.path_coordinates ?? ''));
-  const startLat = Number(attrs.start_lat ?? NaN);
-  const startLng = Number(attrs.start_lng ?? NaN);
-  const endLat = Number(attrs.end_lat ?? NaN);
-  const endLng = Number(attrs.end_lng ?? NaN);
+  const mapGeometry = getRoadMapGeometry(org);
+  if (!mapGeometry) return null;
 
-  const fallbackCoords: [number, number][] =
-    Number.isFinite(startLat) &&
-      Number.isFinite(startLng) &&
-      Number.isFinite(endLat) &&
-      Number.isFinite(endLng)
-      ? [[startLng, startLat], [endLng, endLat]]
-      : [];
+  let resolvedStartLat: number | null = null;
+  let resolvedStartLng: number | null = null;
+  let resolvedEndLat: number | null = null;
+  let resolvedEndLng: number | null = null;
 
-  const coordinates = pathCoordinates.length >= 2 ? pathCoordinates : fallbackCoords;
-  if (coordinates.length < 2) return null;
+  if (mapGeometry.kind === 'point') {
+    const [lng, lat] = mapGeometry.coordinates;
+    resolvedStartLat = lat;
+    resolvedStartLng = lng;
+  } else {
+    const first = mapGeometry.coordinates[0];
+    const last = mapGeometry.coordinates[mapGeometry.coordinates.length - 1];
+    if (first) {
+      resolvedStartLng = first[0];
+      resolvedStartLat = first[1];
+    }
+    if (last && mapGeometry.coordinates.length > 1) {
+      resolvedEndLng = last[0];
+      resolvedEndLat = last[1];
+    }
+  }
+
+  const properties = {
+    organizationId: org.id,
+    name: org.name,
+    roadName: org.name,
+    code: String(attrs.road_code ?? ''),
+    block: String(
+      attrs.block ??
+        attrs.block_name ??
+        attrs.blockName ??
+        attrs.block_ulb ??
+        attrs.ulb_block ??
+        '',
+    ),
+    gpWard: String(attrs.gp_ward ?? attrs.gpward ?? attrs.gp_ward_name ?? ''),
+    roadSector: String(attrs.road_sector ?? ''),
+    nameOfDivision: String(attrs.name_of_division ?? attrs.division_name ?? attrs.division ?? ''),
+    scheme: String(attrs.scheme ?? attrs.scheme_name ?? ''),
+    lengthKm: Number.isFinite(Number(attrs.length_km)) ? Number(attrs.length_km) : null,
+    yearOfConstruction: Number.isFinite(Number(attrs.year_of_construction))
+      ? Number(attrs.year_of_construction)
+      : null,
+    pointAName: String(attrs.point_a_name ?? ''),
+    pointBName: String(attrs.point_b_name ?? ''),
+    startLat: resolvedStartLat,
+    startLng: resolvedStartLng,
+    endLat: resolvedEndLat,
+    endLng: resolvedEndLng,
+    lastMaintenanceDate: String(attrs.last_maintenance_date ?? ''),
+    issues: String(attrs.issues ?? ''),
+    remarks: String(attrs.remarks ?? ''),
+    conditionBeforeRating: Number.isFinite(Number(attrs.condition_before_rating))
+      ? Number(attrs.condition_before_rating)
+      : null,
+    conditionAfterRating: Number.isFinite(Number(attrs.condition_after_rating))
+      ? Number(attrs.condition_after_rating)
+      : null,
+    conditionBeforeNotes: String(attrs.condition_before_notes ?? ''),
+    conditionAfterNotes: String(attrs.condition_after_notes ?? ''),
+    beforeImageKeys: parseRoadImageKeys(attrs.before_image_keys),
+    afterImageKeys: parseRoadImageKeys(attrs.after_image_keys),
+    roadImageKeys: parseRoadImageKeys(attrs.road_image_keys),
+    sanctionAmount: String(attrs.sanction_amount ?? ''),
+    sanctionDate: String(attrs.sanction_date ?? ''),
+    workCompletedDate: String(attrs.work_completed_date ?? ''),
+  };
+
+  if (mapGeometry.kind === 'line') {
+    return {
+      type: 'Feature',
+      properties,
+      geometry: { type: 'LineString', coordinates: mapGeometry.coordinates },
+    };
+  }
 
   return {
     type: 'Feature',
-    properties: {
-      organizationId: org.id,
-      name: org.name,
-      roadName: org.name,
-      code: String(attrs.road_code ?? ''),
-      block: String(
-        attrs.block ??
-          attrs.block_name ??
-          attrs.blockName ??
-          attrs.block_ulb ??
-          attrs.ulb_block ??
-          '',
-      ),
-      gpWard: String(attrs.gp_ward ?? attrs.gpward ?? attrs.gp_ward_name ?? ''),
-      roadSector: String(attrs.road_sector ?? ''),
-      nameOfDivision: String(attrs.name_of_division ?? attrs.division_name ?? attrs.division ?? ''),
-      scheme: String(attrs.scheme ?? attrs.scheme_name ?? ''),
-      lengthKm: Number.isFinite(Number(attrs.length_km)) ? Number(attrs.length_km) : null,
-      yearOfConstruction: Number.isFinite(Number(attrs.year_of_construction))
-        ? Number(attrs.year_of_construction)
-        : null,
-      pointAName: String(attrs.point_a_name ?? ''),
-      pointBName: String(attrs.point_b_name ?? ''),
-      startLat: Number.isFinite(startLat) ? startLat : null,
-      startLng: Number.isFinite(startLng) ? startLng : null,
-      endLat: Number.isFinite(endLat) ? endLat : null,
-      endLng: Number.isFinite(endLng) ? endLng : null,
-      lastMaintenanceDate: String(attrs.last_maintenance_date ?? ''),
-      issues: String(attrs.issues ?? ''),
-      remarks: String(attrs.remarks ?? ''),
-      conditionBeforeRating: Number.isFinite(Number(attrs.condition_before_rating))
-        ? Number(attrs.condition_before_rating)
-        : null,
-      conditionAfterRating: Number.isFinite(Number(attrs.condition_after_rating))
-        ? Number(attrs.condition_after_rating)
-        : null,
-      conditionBeforeNotes: String(attrs.condition_before_notes ?? ''),
-      conditionAfterNotes: String(attrs.condition_after_notes ?? ''),
-      beforeImageKeys: parseRoadImageKeys(attrs.before_image_keys),
-      afterImageKeys: parseRoadImageKeys(attrs.after_image_keys),
-      roadImageKeys: parseRoadImageKeys(attrs.road_image_keys),
-      sanctionAmount: String(attrs.sanction_amount ?? ''),
-      sanctionDate: String(attrs.sanction_date ?? ''),
-      workCompletedDate: String(attrs.work_completed_date ?? ''),
-    },
-    geometry: { type: 'LineString', coordinates },
+    properties,
+    geometry: { type: 'Point', coordinates: mapGeometry.coordinates },
   };
 }
 
@@ -294,7 +254,7 @@ function HomePageContent() {
             .filter((feature): feature is RoadFeature => feature != null);
           setRoads(mapRoads);
           setDrains([]);
-          // Keep full org list for GP road legend counts (summary-only roads have no map line).
+          // Keep full org list for road department filters and listing counts.
           setOrganizations(data);
           setCountByDepartmentId((prev) => ({ ...prev, [dept.id]: data.length }));
         })

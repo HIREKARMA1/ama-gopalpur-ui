@@ -1,6 +1,6 @@
 import type { Organization } from '../services/api';
 
-/** True when road sector is GP (summary listing; map line optional). */
+/** True when road sector is GP (may appear as map pin or line when coordinates exist). */
 export function isGpRoadSector(raw: unknown): boolean {
   const s = String(raw ?? '')
     .trim()
@@ -12,7 +12,7 @@ export function isGpRoadSector(raw: unknown): boolean {
   return s.split(/[/,|]/).some((part) => part.trim() === 'GP');
 }
 
-/** True when road sector is Municipality (summary listing; map line optional). */
+/** True when road sector is Municipality (may appear as map pin or line when coordinates exist). */
 export function isMunicipalityRoadSector(raw: unknown): boolean {
   const s = String(raw ?? '')
     .trim()
@@ -29,7 +29,7 @@ export function isMunicipalityRoadSector(raw: unknown): boolean {
   });
 }
 
-/** GP or Municipality roads may be listed without map geometry. */
+/** GP or Municipality roads may be listed without map geometry; start lat/lng enables a map pin. */
 export function isSummaryOnlyRoadSector(raw: unknown): boolean {
   return isGpRoadSector(raw) || isMunicipalityRoadSector(raw);
 }
@@ -147,29 +147,166 @@ export function parseRoadImageKeys(raw: unknown): string[] {
     .filter(Boolean);
 }
 
-/** Organization can be drawn as a road polyline on the map. */
-export function organizationHasRoadMapGeometry(org: Organization): boolean {
+export type RoadMapGeometry =
+  | { kind: 'line'; coordinates: [number, number][] }
+  | { kind: 'point'; coordinates: [number, number] };
+
+function parseRoadCoordNumber(raw: unknown): number | null {
+  const s = String(raw ?? '').trim();
+  if (!s) return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** True when lat/lng are non-blank, in range, and not zero (invalid for this constituency). */
+export function isUsableRoadLatLng(lat: number | null, lng: number | null): boolean {
+  if (lat == null || lng == null) return false;
+  if (lat === 0 || lng === 0) return false;
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return false;
+  return true;
+}
+
+function isDistinctRoadEndpointPair(
+  startLat: number,
+  startLng: number,
+  endLat: number,
+  endLng: number,
+): boolean {
+  return Math.abs(startLat - endLat) > 1e-6 || Math.abs(startLng - endLng) > 1e-6;
+}
+
+/** Resolved map geometry for an organization (line track or start pin). */
+export function getRoadMapGeometry(org: Organization): RoadMapGeometry | null {
   const attrs = (org.attributes ?? {}) as Record<string, unknown>;
   const pathCoordinates = parseRoadPathCoordinates(String(attrs.path_coordinates ?? ''));
-  const startLat = Number(attrs.start_lat ?? NaN);
-  const startLng = Number(attrs.start_lng ?? NaN);
-  const endLat = Number(attrs.end_lat ?? NaN);
-  const endLng = Number(attrs.end_lng ?? NaN);
+  const startLat = parseRoadCoordNumber(attrs.start_lat);
+  const startLng = parseRoadCoordNumber(attrs.start_lng);
+  const endLat = parseRoadCoordNumber(attrs.end_lat);
+  const endLng = parseRoadCoordNumber(attrs.end_lng);
+  const hasStart = isUsableRoadLatLng(startLat, startLng);
+  const hasEnd = isUsableRoadLatLng(endLat, endLng);
 
-  if (pathCoordinates.length >= 2) return true;
-  return (
-    Number.isFinite(startLat) &&
-    Number.isFinite(startLng) &&
-    Number.isFinite(endLat) &&
-    Number.isFinite(endLng)
-  );
+  if (pathCoordinates.length >= 2) {
+    return { kind: 'line', coordinates: pathCoordinates };
+  }
+  if (
+    hasStart &&
+    hasEnd &&
+    isDistinctRoadEndpointPair(startLat!, startLng!, endLat!, endLng!)
+  ) {
+    return { kind: 'line', coordinates: [[startLng!, startLat!], [endLng!, endLat!]] };
+  }
+  if (hasStart) {
+    return { kind: 'point', coordinates: [startLng!, startLat!] };
+  }
+  const orgLat = parseRoadCoordNumber(org.latitude);
+  const orgLng = parseRoadCoordNumber(org.longitude);
+  if (isUsableRoadLatLng(orgLat, orgLng)) {
+    return { kind: 'point', coordinates: [orgLng!, orgLat!] };
+  }
+  return null;
+}
+
+/** Organization can be drawn on the map (polyline or start pin). */
+export function organizationHasRoadMapGeometry(org: Organization): boolean {
+  return getRoadMapGeometry(org) != null;
+}
+
+export type RoadImportGeometryFields = {
+  pathCoordinates?: string | null;
+  startLat?: string | null;
+  startLng?: string | null;
+  endLat?: string | null;
+  endLng?: string | null;
+};
+
+/** CSV / admin row has enough data to place the road on the map. */
+export function roadImportRowHasMapGeometry(row: RoadImportGeometryFields): boolean {
+  const path = parseRoadPathCoordinates(String(row.pathCoordinates ?? ''));
+  if (path.length >= 2) return true;
+  const startLat = parseRoadCoordNumber(row.startLat);
+  const startLng = parseRoadCoordNumber(row.startLng);
+  const endLat = parseRoadCoordNumber(row.endLat);
+  const endLng = parseRoadCoordNumber(row.endLng);
+  const hasStart = isUsableRoadLatLng(startLat, startLng);
+  const hasEnd = isUsableRoadLatLng(endLat, endLng);
+  if (
+    hasStart &&
+    hasEnd &&
+    isDistinctRoadEndpointPair(startLat!, startLng!, endLat!, endLng!)
+  ) {
+    return true;
+  }
+  return hasStart;
+}
+
+/** Normalize lat/lng + summary_only from import/manual road rows. */
+export function resolveRoadImportGeometry(row: RoadImportGeometryFields) {
+  const path = parseRoadPathCoordinates(String(row.pathCoordinates ?? ''));
+  const sLat = parseRoadCoordNumber(row.startLat);
+  const sLng = parseRoadCoordNumber(row.startLng);
+  const eLat = parseRoadCoordNumber(row.endLat);
+  const eLng = parseRoadCoordNumber(row.endLng);
+  const hasStart = isUsableRoadLatLng(sLat, sLng);
+  const hasEnd = isUsableRoadLatLng(eLat, eLng);
+  const hasDistinctEnd =
+    hasStart && hasEnd && isDistinctRoadEndpointPair(sLat!, sLng!, eLat!, eLng!);
+  const hasMapGeometry = roadImportRowHasMapGeometry(row);
+  const pathRaw = String(row.pathCoordinates ?? '').trim();
+
+  let start_lat: string | null = null;
+  let start_lng: string | null = null;
+  let end_lat: string | null = null;
+  let end_lng: string | null = null;
+  let path_coordinates: string | null = null;
+  let latitude: number | null = null;
+  let longitude: number | null = null;
+
+  if (path.length >= 2) {
+    path_coordinates = pathRaw || null;
+    start_lat = hasStart ? String(sLat) : String(path[0][1]);
+    start_lng = hasStart ? String(sLng) : String(path[0][0]);
+    end_lat = String(path[path.length - 1][1]);
+    end_lng = String(path[path.length - 1][0]);
+    latitude = Number(
+      (((parseRoadCoordNumber(start_lat) ?? 0) + (parseRoadCoordNumber(end_lat) ?? 0)) / 2).toFixed(6),
+    );
+    longitude = Number(
+      (((parseRoadCoordNumber(start_lng) ?? 0) + (parseRoadCoordNumber(end_lng) ?? 0)) / 2).toFixed(6),
+    );
+  } else if (hasDistinctEnd) {
+    start_lat = String(sLat);
+    start_lng = String(sLng);
+    end_lat = String(eLat);
+    end_lng = String(eLng);
+    latitude = Number(((sLat! + eLat!) / 2).toFixed(6));
+    longitude = Number(((sLng! + eLng!) / 2).toFixed(6));
+  } else if (hasStart) {
+    start_lat = String(sLat);
+    start_lng = String(sLng);
+    latitude = sLat;
+    longitude = sLng;
+  }
+
+  return {
+    hasMapGeometry,
+    latitude,
+    longitude,
+    start_lat,
+    start_lng,
+    end_lat,
+    end_lng,
+    path_coordinates,
+    summary_only: hasMapGeometry ? null : ('true' as const),
+  };
 }
 
 /** GP, Municipality, or flagged roads listed on summary only — not shown on map. */
 export function isSummaryOnlyGpRoad(org: Organization): boolean {
+  if (organizationHasRoadMapGeometry(org)) return false;
   const attrs = (org.attributes ?? {}) as Record<string, unknown>;
   if (String(attrs.summary_only ?? '').toLowerCase() === 'true') return true;
-  return isSummaryOnlyRoadSector(attrs.road_sector) && !organizationHasRoadMapGeometry(org);
+  return isSummaryOnlyRoadSector(attrs.road_sector);
 }
 
 function normKeyPart(value: unknown): string {

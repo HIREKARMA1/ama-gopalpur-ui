@@ -7,7 +7,7 @@ This is the **Next.js frontend** for the AMA Gopalpur constituency dashboard. It
 - Next.js (App Router)
 - React 18
 - Tailwind CSS
-- next-themes (light/dark mode)
+- next-themes (locked to light mode)
 - Docker + docker-compose
 
 ## Project Structure

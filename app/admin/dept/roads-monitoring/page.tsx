@@ -16,7 +16,11 @@ import { t } from '../../../../components/i18n/messages';
 import {
   countRoadPathPoints,
   isSummaryOnlyRoadSector,
+  isUsableRoadLatLng,
+  organizationHasRoadMapGeometry,
   parseRoadPointNames,
+  resolveRoadImportGeometry,
+  roadImportRowHasMapGeometry,
   ROAD_SECTOR_CSV_HEADER_ALIASES,
   roadImportDedupeKey,
   validateSummaryOnlyRoadImportRow,
@@ -46,6 +50,7 @@ type RoadEntry = {
   issues: string;
   latitude: number | null;
   longitude: number | null;
+  onMap: boolean;
   updatedAt: string;
 };
 
@@ -251,9 +256,9 @@ const parseRoadCsv = (text: string): { rows: RoadCsvRow[]; errors: string[] } =>
       }
     }
 
-    if (!summaryOnlyRoad && (!startLat || !startLng || !endLat || !endLng)) {
+    if (!summaryOnlyRoad && !roadImportRowHasMapGeometry({ pathCoordinates, startLat, startLng, endLat, endLng })) {
       errors.push(
-        `Row ${rowNumber}: provide start/end coordinates, or a valid PATH COORDINATES value (not required for GP or Municipality roads).`,
+        `Row ${rowNumber}: provide start/end coordinates, start coordinates only, or a valid PATH COORDINATES value (not required for GP or Municipality listing-only rows).`,
       );
       continue;
     }
@@ -387,8 +392,8 @@ export default function RoadsMonitoringPage() {
           pathCoordinates: String(attrs.path_coordinates ?? ''),
           startLat: String(attrs.start_lat ?? orgLat),
           startLng: String(attrs.start_lng ?? orgLng),
-          endLat: String(attrs.end_lat ?? orgLat),
-          endLng: String(attrs.end_lng ?? orgLng),
+          endLat: String(attrs.end_lat ?? ''),
+          endLng: String(attrs.end_lng ?? ''),
           pointAName: String(attrs.point_a_name ?? ''),
           pointBName: String(attrs.point_b_name ?? ''),
           yearOfConstruction: String(attrs.year_of_construction ?? ''),
@@ -398,6 +403,7 @@ export default function RoadsMonitoringPage() {
           issues: String(attrs.issues ?? ''),
           latitude: org.latitude ?? null,
           longitude: org.longitude ?? null,
+          onMap: organizationHasRoadMapGeometry(org),
           updatedAt: (attrs.updated_at as string) ?? '',
         };
       })
@@ -465,31 +471,20 @@ export default function RoadsMonitoringPage() {
     const departmentId = me?.department_id;
     if (!departmentId) throw new Error('Department not set for this user');
 
-    const summaryOnlyRoad = isSummaryOnlyRoadSector(row.roadSector);
-    const sLat = toNumberOrNull(row.startLat);
-    const sLng = toNumberOrNull(row.startLng);
-    const eLat = toNumberOrNull(row.endLat);
-    const eLng = toNumberOrNull(row.endLng);
-
-    const centerLat =
-      !summaryOnlyRoad && sLat != null && eLat != null
-        ? Number(((sLat + eLat) / 2).toFixed(6))
-        : summaryOnlyRoad
-          ? null
-          : sLat ?? eLat ?? null;
-    const centerLng =
-      !summaryOnlyRoad && sLng != null && eLng != null
-        ? Number(((sLng + eLng) / 2).toFixed(6))
-        : summaryOnlyRoad
-          ? null
-          : sLng ?? eLng ?? null;
+    const geometry = resolveRoadImportGeometry({
+      pathCoordinates: row.pathCoordinates,
+      startLat: row.startLat,
+      startLng: row.startLng,
+      endLat: row.endLat,
+      endLng: row.endLng,
+    });
 
     return {
       department_id: departmentId,
       name: row.roadName,
       type: 'OTHER',
-      latitude: centerLat,
-      longitude: centerLng,
+      latitude: geometry.latitude,
+      longitude: geometry.longitude,
       address: row.block || undefined,
       description: row.roadSector ? `Road sector: ${row.roadSector}` : undefined,
       attributes: {
@@ -501,11 +496,11 @@ export default function RoadsMonitoringPage() {
         name_of_division: row.nameOfDivision || null,
         scheme: row.scheme || null,
         length_km: row.lengthKm || null,
-        path_coordinates: summaryOnlyRoad ? null : row.pathCoordinates || null,
-        start_lat: summaryOnlyRoad ? null : row.startLat || null,
-        start_lng: summaryOnlyRoad ? null : row.startLng || null,
-        end_lat: summaryOnlyRoad ? null : row.endLat || null,
-        end_lng: summaryOnlyRoad ? null : row.endLng || null,
+        path_coordinates: geometry.path_coordinates,
+        start_lat: geometry.start_lat,
+        start_lng: geometry.start_lng,
+        end_lat: geometry.end_lat,
+        end_lng: geometry.end_lng,
         point_a_name: row.pointAName || null,
         point_b_name: row.pointBName || null,
         year_of_construction: row.yearOfConstruction || null,
@@ -513,7 +508,7 @@ export default function RoadsMonitoringPage() {
         present_condition: row.presentCondition || null,
         last_maintenance_date: row.lastRepairedDate || row.lastMaintenanceDate || null,
         issues: row.issues || null,
-        summary_only: summaryOnlyRoad ? 'true' : null,
+        summary_only: geometry.summary_only,
         updated_at: new Date().toISOString(),
       },
     };
@@ -541,8 +536,40 @@ export default function RoadsMonitoringPage() {
       setError('ROAD NAME is required.');
       return;
     }
-    if (!startLat.trim() || !startLng.trim() || !endLat.trim() || !endLng.trim()) {
-      setError('Start and end coordinates are required.');
+
+    const summaryOnlyRoad = isSummaryOnlyRoadSector(roadSector);
+    const sLat = toNumberOrNull(startLat);
+    const sLng = toNumberOrNull(startLng);
+    const eLat = toNumberOrNull(endLat);
+    const eLng = toNumberOrNull(endLng);
+    const hasMapGeometry = roadImportRowHasMapGeometry({
+      pathCoordinates,
+      startLat,
+      startLng,
+      endLat,
+      endLng,
+    });
+
+    if ((startLat.trim() || startLng.trim()) && !isUsableRoadLatLng(sLat, sLng)) {
+      setError('Start coordinates look invalid. Provide both lat and lng.');
+      return;
+    }
+    if ((endLat.trim() || endLng.trim()) && !isUsableRoadLatLng(eLat, eLng)) {
+      setError(
+        'End coordinates look invalid. Provide both lat and lng, or leave end blank for a map pin only.',
+      );
+      return;
+    }
+
+    if (!summaryOnlyRoad && !hasMapGeometry) {
+      setError(
+        'Provide start/end coordinates, start coordinates only, or a valid PATH COORDINATES value.',
+      );
+      return;
+    }
+
+    if (summaryOnlyRoad && hasMapGeometry && !isUsableRoadLatLng(sLat, sLng) && !pathCoordinates.trim()) {
+      setError('Provide both start latitude and start longitude for map placement.');
       return;
     }
 
@@ -606,8 +633,8 @@ export default function RoadsMonitoringPage() {
     const fallbackLng = row.longitude != null ? String(row.longitude) : '';
     setStartLat(row.startLat || fallbackLat);
     setStartLng(row.startLng || fallbackLng);
-    setEndLat(row.endLat || fallbackLat);
-    setEndLng(row.endLng || fallbackLng);
+    setEndLat(row.endLat);
+    setEndLng(row.endLng);
     setPointAName(row.pointAName);
     setPointBName(row.pointBName);
     setYearOfConstruction(row.yearOfConstruction);
@@ -1006,20 +1033,20 @@ export default function RoadsMonitoringPage() {
               <input className="w-full rounded border px-3 py-2" value={pathCoordinates} onChange={(e) => setPathCoordinates(e.target.value)} />
             </label>
             <label className="space-y-1">
-              <span className="font-medium text-slate-700">start_lat *</span>
-              <input className="w-full rounded border px-3 py-2" value={startLat} onChange={(e) => setStartLat(e.target.value)} required />
+              <span className="font-medium text-slate-700">start_lat</span>
+              <input className="w-full rounded border px-3 py-2" value={startLat} onChange={(e) => setStartLat(e.target.value)} />
             </label>
             <label className="space-y-1">
-              <span className="font-medium text-slate-700">start_lng *</span>
-              <input className="w-full rounded border px-3 py-2" value={startLng} onChange={(e) => setStartLng(e.target.value)} required />
+              <span className="font-medium text-slate-700">start_lng</span>
+              <input className="w-full rounded border px-3 py-2" value={startLng} onChange={(e) => setStartLng(e.target.value)} />
             </label>
             <label className="space-y-1">
-              <span className="font-medium text-slate-700">end_lat *</span>
-              <input className="w-full rounded border px-3 py-2" value={endLat} onChange={(e) => setEndLat(e.target.value)} required />
+              <span className="font-medium text-slate-700">end_lat</span>
+              <input className="w-full rounded border px-3 py-2" value={endLat} onChange={(e) => setEndLat(e.target.value)} />
             </label>
             <label className="space-y-1">
-              <span className="font-medium text-slate-700">end_lng *</span>
-              <input className="w-full rounded border px-3 py-2" value={endLng} onChange={(e) => setEndLng(e.target.value)} required />
+              <span className="font-medium text-slate-700">end_lng</span>
+              <input className="w-full rounded border px-3 py-2" value={endLng} onChange={(e) => setEndLng(e.target.value)} />
             </label>
             <label className="space-y-1">
               <span className="font-medium text-slate-700">Starting point name</span>
@@ -1069,9 +1096,9 @@ export default function RoadsMonitoringPage() {
         <section className="rounded-xl border border-slate-200 bg-slate-50 p-4">
           <h3 className="mb-2 text-sm font-semibold text-slate-800">Bulk Upload Roads (CSV)</h3>
           <p className="mb-3 text-xs text-slate-600">
-            Map roads (NH/SH/PWD/RD/PS) need coordinates. GP roads need block, GP/WARD, VILLAGE, ROAD NAME,
-            and ROAD SECTOR=GP. Municipality roads need block, GP/WARD, ROAD NAME, and ROAD SECTOR=Municipality
-            (village optional).
+            Map roads (NH/SH/PWD/RD/PS) need path, start/end, or start-only coordinates. GP and
+            Municipality rows need block, GP/WARD, ROAD NAME, and ROAD SECTOR; add start_lat/start_lng
+            for a map pin (village required for GP).
           </p>
           <form onSubmit={handleBulkUpload} className="flex flex-wrap items-center gap-3 text-xs">
             <button
@@ -1217,13 +1244,14 @@ export default function RoadsMonitoringPage() {
                   <th className="px-3 py-2 text-left">Construction year</th>
                   <th className="px-3 py-2 text-left">Last repaired date</th>
                   <th className="px-3 py-2 text-left">Present condition</th>
+                  <th className="px-3 py-2 text-left">Map</th>
                   <th className="px-3 py-2 text-left">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {paginated.length === 0 && (
                   <tr>
-                    <td colSpan={20} className="px-4 py-10 text-center italic text-slate-400">
+                    <td colSpan={21} className="px-4 py-10 text-center italic text-slate-400">
                       No road records found.
                     </td>
                   </tr>
@@ -1231,7 +1259,14 @@ export default function RoadsMonitoringPage() {
                 {paginated.map((row, idx) => (
                   <tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
                     <td className="px-3 py-2">{start + idx + 1}</td>
-                    <td className="px-3 py-2 font-medium text-slate-800">{row.name || '—'}</td>
+                    <td className="px-3 py-2 font-medium text-slate-800">
+                      {row.name || '—'}
+                      {row.onMap ? (
+                        <span className="ml-1.5 inline-flex rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                          On map
+                        </span>
+                      ) : null}
+                    </td>
                     <td className="px-3 py-2">{row.block || '—'}</td>
                     <td className="px-3 py-2">{row.gpWard || '—'}</td>
                     <td className="px-3 py-2">{row.roadCode || '—'}</td>
@@ -1248,6 +1283,20 @@ export default function RoadsMonitoringPage() {
                     <td className="px-3 py-2">{row.yearOfConstruction || '—'}</td>
                     <td className="px-3 py-2">{row.lastRepairedDate || '—'}</td>
                     <td className="px-3 py-2">{row.presentCondition || '—'}</td>
+                    <td className="px-3 py-2">
+                      {row.onMap ? (
+                        <a
+                          href={`/?dept=ROADS&road=${row.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] font-semibold text-blue-700 hover:underline"
+                        >
+                          View
+                        </a>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
                         <button

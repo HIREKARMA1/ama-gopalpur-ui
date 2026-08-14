@@ -41,6 +41,7 @@ import {
   roadTypeFilterIsGp,
   roadTypeFilterIsMunicipality,
   roadLastRepairedDate,
+  organizationHasRoadMapGeometry,
   roadOrgShowsMaintenanceColumns,
   roadPresentCondition,
   roadsSummaryFilterShowsMaintenanceColumns,
@@ -213,7 +214,7 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
 
   const listingTableColSpan = useMemo(() => {
     if (isRoadsDept) {
-      return 5 + (roadsVillageColumnVisible ? 1 : 0) + (roadsMaintenanceColumnsVisible ? 3 : 0);
+      return 6 + (roadsVillageColumnVisible ? 1 : 0) + (roadsMaintenanceColumnsVisible ? 3 : 0);
     }
     if (isDrainageDept) {
       return 3 + locationColumnCount + DRAINAGE_SUMMARY_TABLE_COLUMNS.length + (showPortfolioColumn ? 1 : 0);
@@ -831,6 +832,9 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                             </th>
                           </>
                         ) : null}
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          {trStatic('Map', 'ମ୍ୟାପ୍')}
+                        </th>
                       </>
                     ) : null}
                     {showPortfolioColumn ? (
@@ -931,6 +935,18 @@ export function DepartmentSummaryPage({ department, organizationCount, organizat
                                 </td>
                               </>
                             ) : null}
+                            <td className="px-4 py-3 text-sm">
+                              {organizationHasRoadMapGeometry(org) ? (
+                                <Link
+                                  href={`/?dept=ROADS&road=${org.id}`}
+                                  className="inline-flex font-semibold text-orange-600 underline-offset-2 transition hover:text-orange-800 hover:underline"
+                                >
+                                  {trStatic('On map', 'ମ୍ୟାପ୍ରେ')}
+                                </Link>
+                              ) : (
+                                <span className="text-slate-400">—</span>
+                              )}
+                            </td>
                           </>
                         ) : null}
                         {showPortfolioColumn ? (
