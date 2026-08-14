@@ -44,6 +44,8 @@ import {
 } from '../../../lib/drainageOrganization';
 import {
   isSummaryOnlyRoadSector,
+  resolveRoadImportGeometry,
+  roadImportRowHasMapGeometry,
   ROAD_SECTOR_CSV_HEADER_ALIASES,
   roadDedupeKeyFromOrg,
   roadImportDedupeKey,
@@ -1731,8 +1733,8 @@ export default function DepartmentAdminPage() {
             continue;
           }
 
-          if (!summaryOnlyRoad && (!startLat || !startLng || !endLat || !endLng)) {
-            errors.push(`Row ${i + 1}: provide start/end coordinates, or a valid PATH COORDINATES value (not required for GP or Municipality roads).`);
+          if (!summaryOnlyRoad && !roadImportRowHasMapGeometry({ pathCoordinates, startLat, startLng, endLat, endLng })) {
+            errors.push(`Row ${i + 1}: provide start/end coordinates, start coordinates only, or a valid PATH COORDINATES value (not required for GP or Municipality listing-only rows).`);
             continue;
           }
           const dedupeKey = roadImportDedupeKey({
@@ -1748,29 +1750,20 @@ export default function DepartmentAdminPage() {
             continue;
           }
 
-          const sLat = toNumberOrNull(startLat);
-          const sLng = toNumberOrNull(startLng);
-          const eLat = toNumberOrNull(endLat);
-          const eLng = toNumberOrNull(endLng);
-          const centerLat =
-            !summaryOnlyRoad && sLat != null && eLat != null
-              ? Number(((sLat + eLat) / 2).toFixed(6))
-              : summaryOnlyRoad
-                ? null
-                : sLat ?? eLat ?? null;
-          const centerLng =
-            !summaryOnlyRoad && sLng != null && eLng != null
-              ? Number(((sLng + eLng) / 2).toFixed(6))
-              : summaryOnlyRoad
-                ? null
-                : sLng ?? eLng ?? null;
+          const geometry = resolveRoadImportGeometry({
+            pathCoordinates,
+            startLat,
+            startLng,
+            endLat,
+            endLng,
+          });
           try {
             await organizationsApi.create({
               department_id: me.department_id,
               name: roadName,
               type: 'OTHER',
-              latitude: centerLat,
-              longitude: centerLng,
+              latitude: geometry.latitude,
+              longitude: geometry.longitude,
               address: get(cols, indexes.block) || undefined,
               description: roadSector ? `Road sector: ${roadSector}` : undefined,
               attributes: {
@@ -1784,18 +1777,18 @@ export default function DepartmentAdminPage() {
                 length_km: get(cols, indexes.lengthKm) || null,
                 last_repaired_date: get(cols, indexes.lastRepairedDate) || null,
                 present_condition: get(cols, indexes.presentCondition) || null,
-                path_coordinates: summaryOnlyRoad ? null : pathCoordinates || null,
-                start_lat: summaryOnlyRoad ? null : startLat || null,
-                start_lng: summaryOnlyRoad ? null : startLng || null,
-                end_lat: summaryOnlyRoad ? null : endLat || null,
-                end_lng: summaryOnlyRoad ? null : endLng || null,
+                path_coordinates: geometry.path_coordinates,
+                start_lat: geometry.start_lat,
+                start_lng: geometry.start_lng,
+                end_lat: geometry.end_lat,
+                end_lng: geometry.end_lng,
                 point_a_name: get(cols, indexes.pointAName) || null,
                 point_b_name: get(cols, indexes.pointBName) || null,
                 year_of_construction: get(cols, indexes.yearOfConstruction) || null,
                 last_maintenance_date: get(cols, indexes.lastRepairedDate) || null,
                 issues: get(cols, indexes.issues) || null,
                 remarks: get(cols, indexes.remarks) || null,
-                summary_only: summaryOnlyRoad ? 'true' : null,
+                summary_only: geometry.summary_only,
                 updated_at: new Date().toISOString(),
               },
             });

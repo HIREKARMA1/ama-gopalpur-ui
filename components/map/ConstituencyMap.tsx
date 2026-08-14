@@ -44,8 +44,6 @@ import { RoadPlaceSidebar } from './RoadPlaceSidebar';
 import { RoadBeforeAfterLayersControl } from './RoadBeforeAfterLayersControl';
 import {
   buildDedupedRoadFilterOptions,
-  isGpRoadSector,
-  isMunicipalityRoadSector,
   normalizeConstituencyBlock,
   normalizeRoadLocationKey,
   parseRoadPointNames,
@@ -141,6 +139,25 @@ function roadLegendLabel(typeKey: string, lang: 'en' | 'or'): string {
   const canonical = normalizeRoadLegendSector(typeKey);
   const msgKey = ROAD_LEGEND_LABEL_KEYS[canonical];
   return msgKey ? t(msgKey, lang) : canonical;
+}
+
+/** GeoJSON coordinate pairs for a road (handles Point and LineString). */
+function getRoadCoordinatePairs(road: RoadFeature): [number, number][] {
+  const g = road.geometry;
+  if (g.type === 'Point') {
+    const [lng, lat] = g.coordinates;
+    return Number.isFinite(lng) && Number.isFinite(lat) ? [[lng, lat]] : [];
+  }
+  return (g.coordinates ?? []).filter(
+    (c) => Array.isArray(c) && c.length >= 2 && Number.isFinite(c[0]) && Number.isFinite(c[1]),
+  );
+}
+
+function roadPointMarkerIconUrl(color: string): string {
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">` +
+    `<circle cx="10" cy="10" r="7" fill="${color}" stroke="#ffffff" stroke-width="2"/></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
 const WATCO_MARKER_HEX: Record<(typeof WATCO_SUB_DEPARTMENTS)[number], string> = {
@@ -363,7 +380,9 @@ export interface RoadFeature {
     sanctionDate?: string | null;
     workCompletedDate?: string | null;
   };
-  geometry: { type: 'LineString'; coordinates: [number, number][] };
+  geometry:
+    | { type: 'LineString'; coordinates: [number, number][] }
+    | { type: 'Point'; coordinates: [number, number] };
 }
 
 /** Drain segment from GeoJSON (point A to B path) for Drainage department map */
@@ -810,33 +829,6 @@ export function ConstituencyMap({
     );
   }, [roadsByBlock, selectedGpWardFilter]);
 
-  /** Road orgs for legend GP count (summary listing; many have no map geometry). */
-  const roadOrganizationsScoped = useMemo(() => {
-    if (selectedDepartmentCode?.toUpperCase() !== 'ROADS') return [] as MapOrganization[];
-    if (selectedGpWardFilter === 'ALL') return organizationsByBlock;
-    const filterKey = normalizeRoadLocationKey(selectedGpWardFilter);
-    return organizationsByBlock.filter((org) => {
-      const attrs = (org.attributes ?? {}) as Record<string, unknown>;
-      const gp = String(attrs.gp_ward ?? attrs.gpward ?? attrs.gp_ward_name ?? '');
-      return normalizeRoadLocationKey(gp) === filterKey;
-    });
-  }, [selectedDepartmentCode, organizationsByBlock, selectedGpWardFilter]);
-
-  const summaryOnlyRoadCounts = useMemo(() => {
-    if (selectedDepartmentCode?.toUpperCase() !== 'ROADS') {
-      return { GP: 0, MUNICIPALITY: 0 };
-    }
-    let gp = 0;
-    let municipality = 0;
-    for (const org of roadOrganizationsScoped) {
-      const attrs = (org.attributes ?? {}) as Record<string, unknown>;
-      const sector = attrs.road_sector;
-      if (isGpRoadSector(sector)) gp += 1;
-      else if (isMunicipalityRoadSector(sector)) municipality += 1;
-    }
-    return { GP: gp, MUNICIPALITY: municipality };
-  }, [selectedDepartmentCode, roadOrganizationsScoped]);
-
   const roadLegendTypes = useMemo(() => {
     if (selectedDepartmentCode?.toUpperCase() !== 'ROADS') return [] as string[];
     const types = new Set(
@@ -847,12 +839,10 @@ export function ConstituencyMap({
             road.properties?.code as string,
           ),
         )
-        .filter((v) => v.length > 0 && v !== 'GP' && v !== 'MUNICIPALITY'),
+        .filter((v) => v.length > 0),
     );
-    if (summaryOnlyRoadCounts.GP > 0) types.add('GP');
-    if (summaryOnlyRoadCounts.MUNICIPALITY > 0) types.add('MUNICIPALITY');
     return Array.from(types).sort();
-  }, [roadsByBlockAndGpWard, selectedDepartmentCode, summaryOnlyRoadCounts]);
+  }, [roadsByBlockAndGpWard, selectedDepartmentCode]);
 
   const roadTypeCounts = useMemo(() => {
     const acc: Record<string, number> = {};
@@ -861,15 +851,11 @@ export function ConstituencyMap({
         road.properties?.roadSector as string,
         road.properties?.code as string,
       );
-      if (!type || type === 'GP' || type === 'MUNICIPALITY') continue;
+      if (!type) continue;
       acc[type] = (acc[type] ?? 0) + 1;
     }
-    if (summaryOnlyRoadCounts.GP > 0) acc.GP = summaryOnlyRoadCounts.GP;
-    if (summaryOnlyRoadCounts.MUNICIPALITY > 0) {
-      acc.MUNICIPALITY = summaryOnlyRoadCounts.MUNICIPALITY;
-    }
     return acc;
-  }, [roadsByBlockAndGpWard, summaryOnlyRoadCounts]);
+  }, [roadsByBlockAndGpWard]);
 
   const isRoadsDept = selectedDepartmentCode?.toUpperCase() === 'ROADS';
   const isDrainageDept = selectedDepartmentCode?.toUpperCase() === 'DRAINAGE';
@@ -927,17 +913,17 @@ export function ConstituencyMap({
   const roadPaths = useMemo(
     () =>
       roadsByBlockAndGpWard.map((f) => {
-        const coords = f.geometry?.coordinates ?? [];
-        return coords.map(([lng, lat]) => ({ lat, lng }));
+        const pairs = getRoadCoordinatePairs(f);
+        return pairs.map(([lng, lat]) => ({ lat, lng }));
       }),
-    [roadsByBlockAndGpWard]
+    [roadsByBlockAndGpWard],
   );
 
   const selectedRoadStreetViewPosition = useMemo(() => {
     if (!selectedRoad) return null;
-    const coords = selectedRoad.geometry?.coordinates ?? [];
-    if (!coords.length) return null;
-    const mid = coords[Math.floor(coords.length / 2)];
+    const pairs = getRoadCoordinatePairs(selectedRoad);
+    if (!pairs.length) return null;
+    const mid = pairs[Math.floor(pairs.length / 2)] ?? pairs[0];
     if (!mid) return null;
     const [lng, lat] = mid;
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
@@ -947,7 +933,8 @@ export function ConstituencyMap({
   const selectedRoadStreetInfo = useMemo(() => {
     if (!selectedRoad) return null;
     const props = selectedRoad.properties ?? {};
-    const coords = selectedRoad.geometry?.coordinates ?? [];
+    const pairs = getRoadCoordinatePairs(selectedRoad);
+    const coords = pairs;
     const name = String(props.name ?? props.roadName ?? 'Road');
     const code = String(props.code ?? '');
     const block = String(props.block ?? '');
@@ -1427,15 +1414,23 @@ export function ConstituencyMap({
   const focusRoad = useCallback(
     (road: RoadFeature) => {
       if (!mapInstance) return;
-      const coords = road.geometry?.coordinates ?? [];
-      if (!coords.length) return;
+      const pairs = getRoadCoordinatePairs(road);
+      if (!pairs.length) return;
 
       const g = typeof window !== 'undefined' ? (window as any).google?.maps : null;
-      if (g?.LatLngBounds && typeof mapInstance.fitBounds === 'function') {
+      if (pairs.length === 1) {
+        const [lng, lat] = pairs[0];
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          mapInstance.panTo({ lat, lng });
+          if (typeof mapInstance.setZoom === 'function') {
+            const currentZoom = mapInstance.getZoom?.() ?? DEFAULT_ZOOM;
+            if (currentZoom < 15) mapInstance.setZoom(15);
+          }
+        }
+      } else if (g?.LatLngBounds && typeof mapInstance.fitBounds === 'function') {
         const bounds = new g.LatLngBounds();
         let added = 0;
-        for (const c of coords) {
-          if (!Array.isArray(c) || c.length < 2) continue;
+        for (const c of pairs) {
           const [lng, lat] = c;
           if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
           bounds.extend({ lat, lng });
@@ -1443,21 +1438,9 @@ export function ConstituencyMap({
         }
         if (added >= 2) {
           mapInstance.fitBounds(bounds, { top: 80, right: 48, bottom: 120, left: 48 });
-        } else {
-          const mid = coords[Math.floor(coords.length / 2)] ?? coords[0];
-          if (mid) {
-            const [lng, lat] = mid;
-            if (Number.isFinite(lat) && Number.isFinite(lng)) {
-              mapInstance.panTo({ lat, lng });
-              if (typeof mapInstance.setZoom === 'function') {
-                const currentZoom = mapInstance.getZoom?.() ?? DEFAULT_ZOOM;
-                if (currentZoom < 14) mapInstance.setZoom(14);
-              }
-            }
-          }
         }
       } else {
-        const mid = coords[Math.floor(coords.length / 2)] ?? coords[0];
+        const mid = pairs[Math.floor(pairs.length / 2)] ?? pairs[0];
         if (mid) {
           const [lng, lat] = mid;
           if (Number.isFinite(lat) && Number.isFinite(lng)) {
@@ -2035,10 +2018,7 @@ export function ConstituencyMap({
         >
           {showContent && isRoadsDept &&
             roadsByBlockAndGpWard.map((road, idx) => {
-              const path = roadPaths[idx] ?? [];
-              if (path.length < 2) return null;
               const name = road.properties?.name ?? road.properties?.roadName ?? 'Road';
-              const code = road.properties?.code ?? '';
               const roadType = normalizeRoadLegendSector(
                 String(road.properties?.roadSector ?? ''),
                 String(road.properties?.code ?? ''),
@@ -2050,8 +2030,34 @@ export function ConstituencyMap({
                 ((selectedRoad.properties?.organizationId != null &&
                   selectedRoad.properties.organizationId === road.properties?.organizationId) ||
                   selectedRoad === road);
-              // Include filter in key so polylines remount when legend changes (@react-google-maps/api can leave stale overlays).
               const filterKey = roadLegendFilterType ?? 'all';
+
+              if (road.geometry.type === 'Point') {
+                const [lng, lat] = road.geometry.coordinates;
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+                return (
+                  <Marker
+                    key={`road-pin-${filterKey}-${idx}-${name}`}
+                    position={{ lat, lng }}
+                    icon={{ url: roadPointMarkerIconUrl(isSelected ? '#ea580c' : color) }}
+                    title={name}
+                    zIndex={isSelected ? 5 : 3}
+                    onClick={(e) => {
+                      if (
+                        e?.domEvent &&
+                        'stopPropagation' in e.domEvent &&
+                        typeof e.domEvent.stopPropagation === 'function'
+                      ) {
+                        e.domEvent.stopPropagation();
+                      }
+                      focusRoad(road);
+                    }}
+                  />
+                );
+              }
+
+              const path = roadPaths[idx] ?? [];
+              if (path.length < 2) return null;
               return (
                 <Polyline
                   key={`road-${filterKey}-${idx}-${name}`}
@@ -2064,7 +2070,11 @@ export function ConstituencyMap({
                     clickable: true,
                   }}
                   onClick={(e) => {
-                    if (e?.domEvent && 'stopPropagation' in e.domEvent && typeof e.domEvent.stopPropagation === 'function') {
+                    if (
+                      e?.domEvent &&
+                      'stopPropagation' in e.domEvent &&
+                      typeof e.domEvent.stopPropagation === 'function'
+                    ) {
                       e.domEvent.stopPropagation();
                     }
                     focusRoad(road);
@@ -2125,9 +2135,9 @@ export function ConstituencyMap({
               />
             ))}
           {selectedRoad && (() => {
-            const coords = selectedRoad.geometry?.coordinates ?? [];
-            const first = coords[0];
-            const last = coords.length ? coords[coords.length - 1] : undefined;
+            const pairs = getRoadCoordinatePairs(selectedRoad);
+            const first = pairs[0];
+            const last = pairs.length > 1 ? pairs[pairs.length - 1] : undefined;
             if (!first) return null;
             const name = selectedRoad.properties?.name ?? selectedRoad.properties?.roadName ?? 'Road';
             const parsedPoints = parseRoadPointNames(name);
@@ -2880,11 +2890,7 @@ export function ConstituencyMap({
           })}
         </MapLegendPanel>
       )}
-      {isRoadsDept &&
-        (roadsByBlockAndGpWard.length > 0 ||
-          summaryOnlyRoadCounts.GP > 0 ||
-          summaryOnlyRoadCounts.MUNICIPALITY > 0) &&
-        roadLegendTypes.length > 0 && (
+      {isRoadsDept && roadsByBlockAndGpWard.length > 0 && roadLegendTypes.length > 0 && (
         <MapLegendPanel align="right" className="pointer-events-auto z-[45] md:max-w-[220px]">
           {roadLegendTypes.map((type) => {
             const isSelected = roadLegendFilterType === type;

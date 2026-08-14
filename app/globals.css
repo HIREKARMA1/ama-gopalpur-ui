@@ -4,6 +4,9 @@
 
 /* Figma design tokens */
 :root {
+  /* Light-only UI: stops browsers auto-darkening native controls and scrollbars */
+  color-scheme: light;
+
   --color-primary: #f97316;
   --color-primary-dark: #ea580c;
   --color-primary-foreground: #111827;
@@ -12,8 +15,8 @@
   --color-sidebar-solid: #020617;
   --color-selected: #166534; /* Green for selected department card */
 
-  --color-background: #f9fafb;
-  --color-background-muted: #e5e7eb;
+  --color-background: #ffffff;
+  --color-background-muted: #f1f5f9;
 
   --color-border: #d1d5db;
 
@@ -21,19 +24,6 @@
   --color-text-muted: #6b7280;
 
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-.dark {
-  --color-primary: #fb923c;
-  --color-primary-foreground: #020617;
-
-  --color-background: #020617;
-  --color-background-muted: #111827;
-
-  --color-border: #1f2937;
-
-  --color-text: #e5e7eb;
-  --color-text-muted: #9ca3af;
 }
 
 body {

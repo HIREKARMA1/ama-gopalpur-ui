@@ -3,9 +3,13 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { organizationsApi, type Organization } from '../../services/api';
 import {
+  isGpRoadSector,
   isPwdOrRdRoadSector,
   isSummaryOnlyRoadSector,
+  isUsableRoadLatLng,
   parseRoadImageKeys,
+  resolveRoadImportGeometry,
+  roadImportRowHasMapGeometry,
 } from '../../lib/roadsOrganization';
 
 type Props = {
@@ -20,7 +24,9 @@ type Props = {
 };
 
 function toNumberOrNull(value: string): number | null {
-  const n = Number(value.trim());
+  const s = value.trim();
+  if (!s) return null;
+  const n = Number(s);
   return Number.isFinite(n) ? n : null;
 }
 
@@ -147,8 +153,8 @@ export function RoadsDataEntryForm({
     setLengthKm(String(attrs.length_km ?? ''));
     setStartLat(String(attrs.start_lat ?? fallbackLat));
     setStartLng(String(attrs.start_lng ?? fallbackLng));
-    setEndLat(String(attrs.end_lat ?? fallbackLat));
-    setEndLng(String(attrs.end_lng ?? fallbackLng));
+    setEndLat(String(attrs.end_lat ?? ''));
+    setEndLng(String(attrs.end_lng ?? ''));
     setPathCoordinates(String(attrs.path_coordinates ?? ''));
     setPointAName(String(attrs.point_a_name ?? ''));
     setPointBName(String(attrs.point_b_name ?? ''));
@@ -257,8 +263,44 @@ export function RoadsDataEntryForm({
     const sLng = toNumberOrNull(startLng);
     const eLat = toNumberOrNull(endLat);
     const eLng = toNumberOrNull(endLng);
-    const hasStartEnd = sLat != null && sLng != null && eLat != null && eLng != null;
+    const hasStart = isUsableRoadLatLng(sLat, sLng);
+    const hasEnd = isUsableRoadLatLng(eLat, eLng);
+    const hasStartEnd = hasStart && hasEnd;
+    const hasStartOnly = hasStart && !hasEnd;
     const hasPath = parsedPath.length >= 2;
+    const hasMapGeometry = roadImportRowHasMapGeometry({
+      pathCoordinates,
+      startLat,
+      startLng,
+      endLat,
+      endLng,
+    });
+
+    if ((startLat.trim() || startLng.trim()) && !hasStart) {
+      setError('Start coordinates look invalid. Provide both lat and lng.');
+      return;
+    }
+    if ((endLat.trim() || endLng.trim()) && !hasEnd) {
+      setError(
+        'End coordinates look invalid. Provide both lat and lng, or leave end blank for a map pin only.',
+      );
+      return;
+    }
+
+    if (isSummaryOnlySector) {
+      if (!block.trim()) {
+        setError('Block is required for GP / Municipality roads.');
+        return;
+      }
+      if (!gpWard.trim()) {
+        setError('GP/Ward is required for GP / Municipality roads.');
+        return;
+      }
+      if (isGpRoadSector(roadSector) && !village.trim()) {
+        setError('Village is required for GP roads.');
+        return;
+      }
+    }
 
     let finalStartLat: number | null = null;
     let finalStartLng: number | null = null;
@@ -268,29 +310,40 @@ export function RoadsDataEntryForm({
     let longitude: number | null = null;
 
     if (!isSummaryOnlySector) {
-      if (!hasStartEnd && !hasPath) {
-        setError('Provide start/end coordinates or a valid path coordinates value.');
+      if (!hasStartEnd && !hasPath && !hasStartOnly) {
+        setError(
+          'Provide start/end coordinates, start coordinates only, or a valid path coordinates value.',
+        );
         return;
       }
-      const derivedStart = hasStartEnd ? [sLng as number, sLat as number] : parsedPath[0];
-      const derivedEnd = hasStartEnd
-        ? [eLng as number, eLat as number]
-        : parsedPath[parsedPath.length - 1];
-      finalStartLng = derivedStart?.[0] ?? null;
-      finalStartLat = derivedStart?.[1] ?? null;
-      finalEndLng = derivedEnd?.[0] ?? null;
-      finalEndLat = derivedEnd?.[1] ?? null;
-      if (
-        finalStartLat == null ||
-        finalStartLng == null ||
-        finalEndLat == null ||
-        finalEndLng == null
-      ) {
+    } else if (hasMapGeometry && !hasStart) {
+      setError('Provide both start latitude and start longitude for map placement.');
+      return;
+    }
+
+    const resolved = resolveRoadImportGeometry({
+      pathCoordinates,
+      startLat,
+      startLng,
+      endLat,
+      endLng,
+    });
+    finalStartLat = resolved.start_lat != null ? Number(resolved.start_lat) : null;
+    finalStartLng = resolved.start_lng != null ? Number(resolved.start_lng) : null;
+    finalEndLat = resolved.end_lat != null ? Number(resolved.end_lat) : null;
+    finalEndLng = resolved.end_lng != null ? Number(resolved.end_lng) : null;
+    latitude = resolved.latitude;
+    longitude = resolved.longitude;
+
+    if (!isSummaryOnlySector && hasMapGeometry) {
+      if (finalStartLat == null || finalStartLng == null) {
         setError('Unable to derive valid road coordinates.');
         return;
       }
-      latitude = Number(((finalStartLat + finalEndLat) / 2).toFixed(6));
-      longitude = Number(((finalStartLng + finalEndLng) / 2).toFixed(6));
+      if (hasStartEnd && (finalEndLat == null || finalEndLng == null)) {
+        setError('Unable to derive valid road coordinates.');
+        return;
+      }
     }
 
     setSaving(true);
@@ -312,11 +365,11 @@ export function RoadsDataEntryForm({
           name_of_division: nameOfDivision.trim() || null,
           scheme: scheme.trim() || null,
           length_km: showsMaintenanceFields ? lengthKm.trim() || null : null,
-          path_coordinates: isSummaryOnlySector ? null : pathCoordinates.trim() || null,
-          start_lat: finalStartLat != null ? String(finalStartLat) : null,
-          start_lng: finalStartLng != null ? String(finalStartLng) : null,
-          end_lat: finalEndLat != null ? String(finalEndLat) : null,
-          end_lng: finalEndLng != null ? String(finalEndLng) : null,
+          path_coordinates: resolved.path_coordinates,
+          start_lat: resolved.start_lat,
+          start_lng: resolved.start_lng,
+          end_lat: resolved.end_lat,
+          end_lng: resolved.end_lng,
           point_a_name: pointAName.trim() || null,
           point_b_name: pointBName.trim() || null,
           year_of_construction: yearOfConstruction.trim() || null,
@@ -335,7 +388,7 @@ export function RoadsDataEntryForm({
           before_image_keys: beforeImageKeys.length ? beforeImageKeys : null,
           after_image_keys: afterImageKeys.length ? afterImageKeys : null,
           road_image_keys: roadImageKeys.length ? roadImageKeys : null,
-          summary_only: isSummaryOnlySector ? 'true' : null,
+          summary_only: resolved.summary_only,
           updated_at: new Date().toISOString(),
         },
       };
@@ -375,8 +428,8 @@ export function RoadsDataEntryForm({
       </p>
       <p className="mt-1 text-[11px] text-text-muted">
         {isSummaryOnlySector
-          ? 'GP and Municipality roads are summary-only (not on map). Required: road name, road type, Block, GP/Ward (village required for GP only). Road code, length, and point names are optional.'
-          : 'For NH/SH/PWD/RD/PS roads shown on the map, provide path coordinates or start/end coordinates.'}
+          ? 'GP and Municipality roads list in the summary table. Add start lat/lng to show a map pin; optional end/path upgrades to a line track. Required: road name, road type, Block, GP/Ward (village required for GP).'
+          : 'For NH/SH/PWD/RD/PS roads on the map, provide path coordinates, start/end coordinates, or start coordinates only.'}
       </p>
       <form onSubmit={submit} className="mt-3 grid gap-3 text-xs md:grid-cols-2">
         <input
@@ -385,14 +438,12 @@ export function RoadsDataEntryForm({
           value={roadName}
           onChange={(e) => setRoadName(e.target.value)}
         />
-        {!isSummaryOnlySector ? (
-          <input
-            className="rounded border border-border px-3 py-2"
-            placeholder="Road code"
-            value={roadCode}
-            onChange={(e) => setRoadCode(e.target.value)}
-          />
-        ) : null}
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder="Road code"
+          value={roadCode}
+          onChange={(e) => setRoadCode(e.target.value)}
+        />
         <label className="flex flex-col gap-1">
           <span className="text-[11px] font-medium text-text">Road type *</span>
           <select
@@ -403,11 +454,7 @@ export function RoadsDataEntryForm({
             <option value="">Select type</option>
             {ROAD_SECTOR_OPTIONS.map((opt) => (
               <option key={opt} value={opt}>
-                {opt === 'GP'
-                  ? 'GP (summary listing only)'
-                  : opt === 'MUNICIPALITY'
-                    ? 'Municipality (summary listing only)'
-                    : opt}
+                {opt}
               </option>
             ))}
           </select>
@@ -450,56 +497,48 @@ export function RoadsDataEntryForm({
             onChange={(e) => setLengthKm(e.target.value)}
           />
         ) : null}
-        {!isSummaryOnlySector ? (
-          <>
-            <input
-              className="rounded border border-border px-3 py-2"
-              placeholder="Starting point name (optional)"
-              value={pointAName}
-              onChange={(e) => setPointAName(e.target.value)}
-            />
-            <input
-              className="rounded border border-border px-3 py-2"
-              placeholder="Ending point name (optional)"
-              value={pointBName}
-              onChange={(e) => setPointBName(e.target.value)}
-            />
-          </>
-        ) : null}
-        {!isSummaryOnlySector ? (
-          <>
-            <input
-              className="rounded border border-border px-3 py-2"
-              placeholder="Start latitude *"
-              value={startLat}
-              onChange={(e) => setStartLat(e.target.value)}
-            />
-            <input
-              className="rounded border border-border px-3 py-2"
-              placeholder="Start longitude *"
-              value={startLng}
-              onChange={(e) => setStartLng(e.target.value)}
-            />
-            <input
-              className="rounded border border-border px-3 py-2"
-              placeholder="End latitude *"
-              value={endLat}
-              onChange={(e) => setEndLat(e.target.value)}
-            />
-            <input
-              className="rounded border border-border px-3 py-2"
-              placeholder="End longitude *"
-              value={endLng}
-              onChange={(e) => setEndLng(e.target.value)}
-            />
-            <input
-              className="rounded border border-border px-3 py-2 md:col-span-2"
-              placeholder="Path coordinates (optional)"
-              value={pathCoordinates}
-              onChange={(e) => setPathCoordinates(e.target.value)}
-            />
-          </>
-        ) : null}
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder="Starting point name (optional)"
+          value={pointAName}
+          onChange={(e) => setPointAName(e.target.value)}
+        />
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder="Ending point name (optional)"
+          value={pointBName}
+          onChange={(e) => setPointBName(e.target.value)}
+        />
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder={isSummaryOnlySector ? 'Start latitude (for map pin)' : 'Start latitude *'}
+          value={startLat}
+          onChange={(e) => setStartLat(e.target.value)}
+        />
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder={isSummaryOnlySector ? 'Start longitude (for map pin)' : 'Start longitude *'}
+          value={startLng}
+          onChange={(e) => setStartLng(e.target.value)}
+        />
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder="End latitude (optional)"
+          value={endLat}
+          onChange={(e) => setEndLat(e.target.value)}
+        />
+        <input
+          className="rounded border border-border px-3 py-2"
+          placeholder="End longitude (optional)"
+          value={endLng}
+          onChange={(e) => setEndLng(e.target.value)}
+        />
+        <input
+          className="rounded border border-border px-3 py-2 md:col-span-2"
+          placeholder="Path coordinates (optional)"
+          value={pathCoordinates}
+          onChange={(e) => setPathCoordinates(e.target.value)}
+        />
         <input
           className="rounded border border-border px-3 py-2"
           placeholder="Year of construction"

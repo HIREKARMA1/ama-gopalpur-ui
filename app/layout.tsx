@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light">
           <LanguageProvider>
             <div className="page-container">{children}</div>
           </LanguageProvider>
