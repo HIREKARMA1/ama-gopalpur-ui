@@ -2049,13 +2049,20 @@ export default function DepartmentAdminPage() {
                 editingRoad={editingRoadOrg}
                 onCreated={(created) => {
                   setOrgs((prev) => [created, ...prev]);
+                  setAllSearchOrgs((prev) => (prev ? [created, ...prev] : prev));
                 }}
                 onPatched={(updated) => {
                   setOrgs((prev) => prev.map((org) => (org.id === updated.id ? updated : org)));
+                  setAllSearchOrgs((prev) =>
+                    prev ? prev.map((org) => (org.id === updated.id ? updated : org)) : prev,
+                  );
                   setEditingRoadOrg(updated);
                 }}
                 onUpdated={(updated) => {
                   setOrgs((prev) => prev.map((org) => (org.id === updated.id ? updated : org)));
+                  setAllSearchOrgs((prev) =>
+                    prev ? prev.map((org) => (org.id === updated.id ? updated : org)) : prev,
+                  );
                   setEditingRoadOrg(null);
                 }}
                 onCancelEdit={() => setEditingRoadOrg(null)}

@@ -7,6 +7,7 @@ import {
   isPwdOrRdRoadSector,
   isSummaryOnlyRoadSector,
   isUsableRoadLatLng,
+  mergeRoadEditAttributes,
   parseRoadImageKeys,
   resolveRoadImportGeometry,
   roadImportRowHasMapGeometry,
@@ -138,8 +139,6 @@ export function RoadsDataEntryForm({
       return;
     }
     const attrs = (editingRoad.attributes ?? {}) as Record<string, unknown>;
-    const fallbackLat = editingRoad.latitude != null ? String(editingRoad.latitude) : '';
-    const fallbackLng = editingRoad.longitude != null ? String(editingRoad.longitude) : '';
     setRoadName(editingRoad.name ?? '');
     setRoadCode(String(attrs.road_code ?? ''));
     setRoadSector(String(attrs.road_sector ?? ''));
@@ -151,8 +150,8 @@ export function RoadsDataEntryForm({
     setGpWard(String(attrs.gp_ward ?? attrs.gpward ?? ''));
     setVillage(String(attrs.village ?? attrs.village_name ?? ''));
     setLengthKm(String(attrs.length_km ?? ''));
-    setStartLat(String(attrs.start_lat ?? fallbackLat));
-    setStartLng(String(attrs.start_lng ?? fallbackLng));
+    setStartLat(String(attrs.start_lat ?? ''));
+    setStartLng(String(attrs.start_lng ?? ''));
     setEndLat(String(attrs.end_lat ?? ''));
     setEndLng(String(attrs.end_lng ?? ''));
     setPathCoordinates(String(attrs.path_coordinates ?? ''));
@@ -348,15 +347,7 @@ export function RoadsDataEntryForm({
 
     setSaving(true);
     try {
-      const payload = {
-        department_id: departmentId,
-        name: roadName.trim(),
-        type: 'OTHER',
-        latitude,
-        longitude,
-        address: block.trim() || undefined,
-        description: roadSector.trim() ? `Road sector: ${roadSector.trim()}` : undefined,
-        attributes: {
+      const attributeUpdates = {
           block: block.trim() || null,
           gp_ward: gpWard.trim() || null,
           village: village.trim() || null,
@@ -364,7 +355,7 @@ export function RoadsDataEntryForm({
           road_sector: roadSector.trim() || null,
           name_of_division: nameOfDivision.trim() || null,
           scheme: scheme.trim() || null,
-          length_km: showsMaintenanceFields ? lengthKm.trim() || null : null,
+          length_km: lengthKm.trim() || null,
           path_coordinates: resolved.path_coordinates,
           start_lat: resolved.start_lat,
           start_lng: resolved.start_lng,
@@ -390,7 +381,19 @@ export function RoadsDataEntryForm({
           road_image_keys: roadImageKeys.length ? roadImageKeys : null,
           summary_only: resolved.summary_only,
           updated_at: new Date().toISOString(),
-        },
+        };
+      const payload = {
+        department_id: departmentId,
+        name: roadName.trim(),
+        type: 'OTHER',
+        latitude,
+        longitude,
+        address: block.trim() || undefined,
+        description: roadSector.trim() ? `Road sector: ${roadSector.trim()}` : undefined,
+        attributes: mergeRoadEditAttributes(
+          (editingRoad?.attributes ?? {}) as Record<string, unknown>,
+          attributeUpdates,
+        ),
       };
 
       if (editingRoad) {
@@ -489,14 +492,15 @@ export function RoadsDataEntryForm({
           value={village}
           onChange={(e) => setVillage(e.target.value)}
         />
-        {showsMaintenanceFields ? (
+        <label className="flex flex-col gap-1 text-[11px] text-text-muted md:col-span-2">
+          <span>Length (in km)</span>
           <input
-            className="rounded border border-border px-3 py-2"
-            placeholder="Length (in km)"
+            className="rounded border border-border px-3 py-2 text-xs text-text"
+            placeholder="Leave blank to calculate from path"
             value={lengthKm}
             onChange={(e) => setLengthKm(e.target.value)}
           />
-        ) : null}
+        </label>
         <input
           className="rounded border border-border px-3 py-2"
           placeholder="Starting point name (optional)"

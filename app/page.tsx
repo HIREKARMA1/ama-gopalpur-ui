@@ -22,7 +22,7 @@ import {
 } from '../services/api';
 import { orgToDrainFeature } from '../lib/drainageOrganization';
 import { fetchAllOrganizationsForDepartment } from '../lib/departmentSummaryHighlights';
-import { getRoadMapGeometry, parseRoadImageKeys } from '../lib/roadsOrganization';
+import { getRoadMapGeometry, parseRoadImageKeys, parseRoadLengthKm } from '../lib/roadsOrganization';
 
 function orgToRoadFeature(org: Organization): RoadFeature | null {
   const attrs = (org.attributes ?? {}) as Record<string, unknown>;
@@ -68,7 +68,7 @@ function orgToRoadFeature(org: Organization): RoadFeature | null {
     roadSector: String(attrs.road_sector ?? ''),
     nameOfDivision: String(attrs.name_of_division ?? attrs.division_name ?? attrs.division ?? ''),
     scheme: String(attrs.scheme ?? attrs.scheme_name ?? ''),
-    lengthKm: Number.isFinite(Number(attrs.length_km)) ? Number(attrs.length_km) : null,
+    lengthKm: parseRoadLengthKm(attrs.length_km),
     yearOfConstruction: Number.isFinite(Number(attrs.year_of_construction))
       ? Number(attrs.year_of_construction)
       : null,

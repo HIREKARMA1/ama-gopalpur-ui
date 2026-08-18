@@ -17,6 +17,7 @@ import {
   countRoadPathPoints,
   isSummaryOnlyRoadSector,
   isUsableRoadLatLng,
+  mergeRoadEditAttributes,
   organizationHasRoadMapGeometry,
   parseRoadPointNames,
   resolveRoadImportGeometry,
@@ -390,8 +391,8 @@ export default function RoadsMonitoringPage() {
           scheme: String(attrs.scheme ?? attrs.scheme_name ?? ''),
           lengthKm: String(attrs.length_km ?? ''),
           pathCoordinates: String(attrs.path_coordinates ?? ''),
-          startLat: String(attrs.start_lat ?? orgLat),
-          startLng: String(attrs.start_lng ?? orgLng),
+          startLat: String(attrs.start_lat ?? ''),
+          startLng: String(attrs.start_lng ?? ''),
           endLat: String(attrs.end_lat ?? ''),
           endLng: String(attrs.end_lng ?? ''),
           pointAName: String(attrs.point_a_name ?? ''),
@@ -467,7 +468,7 @@ export default function RoadsMonitoringPage() {
     setEditingRoadId(null);
   };
 
-  const buildRoadPayload = (row: RoadCsvRow) => {
+  const buildRoadPayload = (row: RoadCsvRow, existing?: Organization | null) => {
     const departmentId = me?.department_id;
     if (!departmentId) throw new Error('Department not set for this user');
 
@@ -479,6 +480,31 @@ export default function RoadsMonitoringPage() {
       endLng: row.endLng,
     });
 
+    const attributeUpdates = {
+      block: row.block || null,
+      gp_ward: row.gpWard || null,
+      village: row.village || null,
+      road_code: row.roadCode || null,
+      road_sector: row.roadSector || null,
+      name_of_division: row.nameOfDivision || null,
+      scheme: row.scheme || null,
+      length_km: row.lengthKm || null,
+      path_coordinates: geometry.path_coordinates,
+      start_lat: geometry.start_lat,
+      start_lng: geometry.start_lng,
+      end_lat: geometry.end_lat,
+      end_lng: geometry.end_lng,
+      point_a_name: row.pointAName || null,
+      point_b_name: row.pointBName || null,
+      year_of_construction: row.yearOfConstruction || null,
+      last_repaired_date: row.lastRepairedDate || null,
+      present_condition: row.presentCondition || null,
+      last_maintenance_date: row.lastRepairedDate || row.lastMaintenanceDate || null,
+      issues: row.issues || null,
+      summary_only: geometry.summary_only,
+      updated_at: new Date().toISOString(),
+    };
+
     return {
       department_id: departmentId,
       name: row.roadName,
@@ -487,30 +513,10 @@ export default function RoadsMonitoringPage() {
       longitude: geometry.longitude,
       address: row.block || undefined,
       description: row.roadSector ? `Road sector: ${row.roadSector}` : undefined,
-      attributes: {
-        block: row.block || null,
-        gp_ward: row.gpWard || null,
-        village: row.village || null,
-        road_code: row.roadCode || null,
-        road_sector: row.roadSector || null,
-        name_of_division: row.nameOfDivision || null,
-        scheme: row.scheme || null,
-        length_km: row.lengthKm || null,
-        path_coordinates: geometry.path_coordinates,
-        start_lat: geometry.start_lat,
-        start_lng: geometry.start_lng,
-        end_lat: geometry.end_lat,
-        end_lng: geometry.end_lng,
-        point_a_name: row.pointAName || null,
-        point_b_name: row.pointBName || null,
-        year_of_construction: row.yearOfConstruction || null,
-        last_repaired_date: row.lastRepairedDate || null,
-        present_condition: row.presentCondition || null,
-        last_maintenance_date: row.lastRepairedDate || row.lastMaintenanceDate || null,
-        issues: row.issues || null,
-        summary_only: geometry.summary_only,
-        updated_at: new Date().toISOString(),
-      },
+      attributes: mergeRoadEditAttributes(
+        (existing?.attributes ?? {}) as Record<string, unknown>,
+        attributeUpdates,
+      ),
     };
   };
 
@@ -519,7 +525,8 @@ export default function RoadsMonitoringPage() {
   };
 
   const updateRoadOrganization = async (roadId: number, row: RoadCsvRow) => {
-    const payload = buildRoadPayload(row);
+    const existing = roads.find((road) => road.id === roadId) ?? null;
+    const payload = buildRoadPayload(row, existing);
     await organizationsApi.update(roadId, {
       name: payload.name,
       latitude: payload.latitude,
@@ -629,10 +636,8 @@ export default function RoadsMonitoringPage() {
     setScheme(row.scheme);
     setLengthKm(row.lengthKm);
     setPathCoordinates(row.pathCoordinates);
-    const fallbackLat = row.latitude != null ? String(row.latitude) : '';
-    const fallbackLng = row.longitude != null ? String(row.longitude) : '';
-    setStartLat(row.startLat || fallbackLat);
-    setStartLng(row.startLng || fallbackLng);
+    setStartLat(row.startLat);
+    setStartLng(row.startLng);
     setEndLat(row.endLat);
     setEndLng(row.endLng);
     setPointAName(row.pointAName);
@@ -903,7 +908,6 @@ export default function RoadsMonitoringPage() {
               attributes: {
                 ...geometryAttrs,
                 road_sector: p.type ? String(p.type) : null,
-                length_km: null,
                 year_of_construction: null,
                 name_of_division: p.division_name ? String(p.division_name) : null,
                 scheme: p.scheme ? String(p.scheme) : null,
