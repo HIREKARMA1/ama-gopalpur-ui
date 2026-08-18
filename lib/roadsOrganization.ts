@@ -123,6 +123,16 @@ export function countRoadPathPoints(raw: unknown): number {
   return parseRoadPathCoordinates(String(raw ?? '')).length;
 }
 
+/** Parse stored length_km; blank/null/zero are treated as missing. */
+export function parseRoadLengthKm(raw: unknown): number | null {
+  if (raw == null) return null;
+  const s = String(raw).trim();
+  if (!s) return null;
+  const n = Number(s.replace(',', '.'));
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n;
+}
+
 /** Normalize before/after image URL lists from road attributes. */
 export function parseRoadImageKeys(raw: unknown): string[] {
   if (raw == null) return [];
@@ -175,6 +185,19 @@ function isDistinctRoadEndpointPair(
   return Math.abs(startLat - endLat) > 1e-6 || Math.abs(startLng - endLng) > 1e-6;
 }
 
+/** True when a path has at least two distinct endpoint vertices. */
+export function pathFormsValidLine(coords: [number, number][]): boolean {
+  if (coords.length < 2) return false;
+  const start = coords[0];
+  const end = coords[coords.length - 1];
+  return Math.abs(start[0] - end[0]) > 1e-6 || Math.abs(start[1] - end[1]) > 1e-6;
+}
+
+/** Serialize path coordinates in legacy `lng lat;lng lat` format. */
+export function serializeRoadPathCoordinates(coords: [number, number][]): string {
+  return coords.map(([lng, lat]) => `${lng} ${lat}`).join(';');
+}
+
 /** Resolved map geometry for an organization (line track or start pin). */
 export function getRoadMapGeometry(org: Organization): RoadMapGeometry | null {
   const attrs = (org.attributes ?? {}) as Record<string, unknown>;
@@ -186,7 +209,7 @@ export function getRoadMapGeometry(org: Organization): RoadMapGeometry | null {
   const hasStart = isUsableRoadLatLng(startLat, startLng);
   const hasEnd = isUsableRoadLatLng(endLat, endLng);
 
-  if (pathCoordinates.length >= 2) {
+  if (pathCoordinates.length >= 2 && pathFormsValidLine(pathCoordinates)) {
     return { kind: 'line', coordinates: pathCoordinates };
   }
   if (
@@ -223,7 +246,7 @@ export type RoadImportGeometryFields = {
 /** CSV / admin row has enough data to place the road on the map. */
 export function roadImportRowHasMapGeometry(row: RoadImportGeometryFields): boolean {
   const path = parseRoadPathCoordinates(String(row.pathCoordinates ?? ''));
-  if (path.length >= 2) return true;
+  if (pathFormsValidLine(path)) return true;
   const startLat = parseRoadCoordNumber(row.startLat);
   const startLng = parseRoadCoordNumber(row.startLng);
   const endLat = parseRoadCoordNumber(row.endLat);
@@ -242,7 +265,7 @@ export function roadImportRowHasMapGeometry(row: RoadImportGeometryFields): bool
 
 /** Normalize lat/lng + summary_only from import/manual road rows. */
 export function resolveRoadImportGeometry(row: RoadImportGeometryFields) {
-  const path = parseRoadPathCoordinates(String(row.pathCoordinates ?? ''));
+  let path = parseRoadPathCoordinates(String(row.pathCoordinates ?? ''));
   const sLat = parseRoadCoordNumber(row.startLat);
   const sLng = parseRoadCoordNumber(row.startLng);
   const eLat = parseRoadCoordNumber(row.endLat);
@@ -252,7 +275,6 @@ export function resolveRoadImportGeometry(row: RoadImportGeometryFields) {
   const hasDistinctEnd =
     hasStart && hasEnd && isDistinctRoadEndpointPair(sLat!, sLng!, eLat!, eLng!);
   const hasMapGeometry = roadImportRowHasMapGeometry(row);
-  const pathRaw = String(row.pathCoordinates ?? '').trim();
 
   let start_lat: string | null = null;
   let start_lng: string | null = null;
@@ -263,33 +285,55 @@ export function resolveRoadImportGeometry(row: RoadImportGeometryFields) {
   let longitude: number | null = null;
 
   if (path.length >= 2) {
-    path_coordinates = pathRaw || null;
-    start_lat = hasStart ? String(sLat) : String(path[0][1]);
-    start_lng = hasStart ? String(sLng) : String(path[0][0]);
-    end_lat = String(path[path.length - 1][1]);
-    end_lng = String(path[path.length - 1][0]);
-    latitude = Number(
-      (((parseRoadCoordNumber(start_lat) ?? 0) + (parseRoadCoordNumber(end_lat) ?? 0)) / 2).toFixed(6),
-    );
-    longitude = Number(
-      (((parseRoadCoordNumber(start_lng) ?? 0) + (parseRoadCoordNumber(end_lng) ?? 0)) / 2).toFixed(6),
-    );
-  } else if (hasDistinctEnd) {
+    if (hasStart) {
+      path[0] = [sLng!, sLat!];
+    }
+    if (hasDistinctEnd) {
+      path[path.length - 1] = [eLng!, eLat!];
+    }
+    if (pathFormsValidLine(path)) {
+      path_coordinates = serializeRoadPathCoordinates(path);
+      start_lat = String(path[0][1]);
+      start_lng = String(path[0][0]);
+      end_lat = String(path[path.length - 1][1]);
+      end_lng = String(path[path.length - 1][0]);
+      latitude = Number(
+        (((parseRoadCoordNumber(start_lat) ?? 0) + (parseRoadCoordNumber(end_lat) ?? 0)) / 2).toFixed(6),
+      );
+      longitude = Number(
+        (((parseRoadCoordNumber(start_lng) ?? 0) + (parseRoadCoordNumber(end_lng) ?? 0)) / 2).toFixed(6),
+      );
+    } else {
+      path = [];
+    }
+  }
+
+  if (!path_coordinates && hasDistinctEnd) {
+    const line: [number, number][] = [
+      [sLng!, sLat!],
+      [eLng!, eLat!],
+    ];
+    path_coordinates = serializeRoadPathCoordinates(line);
     start_lat = String(sLat);
     start_lng = String(sLng);
     end_lat = String(eLat);
     end_lng = String(eLng);
     latitude = Number(((sLat! + eLat!) / 2).toFixed(6));
     longitude = Number(((sLng! + eLng!) / 2).toFixed(6));
-  } else if (hasStart) {
+  } else if (!path_coordinates && hasStart) {
     start_lat = String(sLat);
     start_lng = String(sLng);
     latitude = sLat;
     longitude = sLng;
   }
 
+  const resolvedHasMapGeometry =
+    path_coordinates != null ||
+    (hasStart && hasDistinctEnd) ||
+    hasStart;
+
   return {
-    hasMapGeometry,
+    hasMapGeometry: resolvedHasMapGeometry || hasMapGeometry,
     latitude,
     longitude,
     start_lat,
@@ -297,8 +341,31 @@ export function resolveRoadImportGeometry(row: RoadImportGeometryFields) {
     end_lat,
     end_lng,
     path_coordinates,
-    summary_only: hasMapGeometry ? null : ('true' as const),
+    summary_only: resolvedHasMapGeometry || hasMapGeometry ? null : ('true' as const),
   };
+}
+
+/** Merge controlled road edits over existing attributes without dropping unknown keys. */
+export function mergeRoadEditAttributes(
+  existing: Record<string, unknown> | null | undefined,
+  updates: Record<string, unknown>,
+): Record<string, string | number | string[] | null> {
+  const base = { ...(existing ?? {}) };
+  const merged: Record<string, unknown> = { ...base, ...updates };
+  for (const key of [
+    'path_coordinates',
+    'start_lat',
+    'start_lng',
+    'end_lat',
+    'end_lng',
+  ] as const) {
+    if (!(key in updates)) continue;
+    const value = updates[key];
+    if (value == null || (typeof value === 'string' && !value.trim())) {
+      merged[key] = base[key] ?? null;
+    }
+  }
+  return merged as Record<string, string | number | string[] | null>;
 }
 
 /** GP, Municipality, or flagged roads listed on summary only — not shown on map. */

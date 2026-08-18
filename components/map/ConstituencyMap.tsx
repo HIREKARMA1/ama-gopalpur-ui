@@ -963,7 +963,9 @@ export function ConstituencyMap({
       (end ? `${end[1].toFixed(5)}, ${end[0].toFixed(5)}` : 'Requested from Road Dept');
 
     const providedLength =
-      typeof props.lengthKm === 'number' && Number.isFinite(props.lengthKm) ? props.lengthKm : null;
+      typeof props.lengthKm === 'number' && Number.isFinite(props.lengthKm) && props.lengthKm > 0
+        ? props.lengthKm
+        : null;
     const computedLength =
       coords.length > 1
         ? coords.slice(1).reduce((sum, c, i) => sum + haversineKm(coords[i], c), 0)
