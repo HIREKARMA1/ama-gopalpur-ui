@@ -69,6 +69,10 @@ function orgToRoadFeature(org: Organization): RoadFeature | null {
     nameOfDivision: String(attrs.name_of_division ?? attrs.division_name ?? attrs.division ?? ''),
     scheme: String(attrs.scheme ?? attrs.scheme_name ?? ''),
     lengthKm: parseRoadLengthKm(attrs.length_km),
+    lengthKmRaw:
+      attrs.length_km != null && String(attrs.length_km).trim()
+        ? String(attrs.length_km).trim()
+        : null,
     yearOfConstruction: Number.isFinite(Number(attrs.year_of_construction))
       ? Number(attrs.year_of_construction)
       : null,

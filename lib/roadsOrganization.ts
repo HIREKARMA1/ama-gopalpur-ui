@@ -133,6 +133,19 @@ export function parseRoadLengthKm(raw: unknown): number | null {
   return n;
 }
 
+/** Display road length with every entered decimal digit (classic, no 2/3-dp cap). */
+export function formatRoadLengthKm(raw: unknown): string | null {
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim().replace(',', '.');
+    const parsed = parseRoadLengthKm(trimmed);
+    if (parsed == null) return null;
+    return trimmed;
+  }
+  if (typeof raw !== 'number' || !Number.isFinite(raw) || raw <= 0) return null;
+  const text = raw.toFixed(6).replace(/\.?0+$/, '');
+  return text && text !== '0' ? text : null;
+}
+
 /** Normalize before/after image URL lists from road attributes. */
 export function parseRoadImageKeys(raw: unknown): string[] {
   if (raw == null) return [];

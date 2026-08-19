@@ -46,6 +46,7 @@ import {
   buildDedupedRoadFilterOptions,
   normalizeConstituencyBlock,
   normalizeRoadLocationKey,
+  formatRoadLengthKm,
   parseRoadPointNames,
 } from '../../lib/roadsOrganization';
 import {
@@ -355,6 +356,7 @@ export interface RoadFeature {
     nameOfDivision?: string | null;
     scheme?: string | null;
     lengthKm?: number | null;
+    lengthKmRaw?: string | null;
     yearOfConstruction?: number | null;
     pointAName?: string;
     pointBName?: string;
@@ -971,6 +973,8 @@ export function ConstituencyMap({
         ? coords.slice(1).reduce((sum, c, i) => sum + haversineKm(coords[i], c), 0)
         : null;
     const lengthKm = providedLength ?? computedLength;
+    const lengthKmLabel =
+      formatRoadLengthKm(props.lengthKmRaw) ?? formatRoadLengthKm(lengthKm);
     const beforeRating =
       typeof props.conditionBeforeRating === 'number' && Number.isFinite(props.conditionBeforeRating)
         ? props.conditionBeforeRating
@@ -998,7 +1002,7 @@ export function ConstituencyMap({
       year,
       pointA,
       pointB,
-      lengthKm: lengthKm != null ? lengthKm.toFixed(2) : 'N/A',
+      lengthKm: lengthKmLabel ?? 'N/A',
       pointsCount: coords.length,
       type: String(props.roadSector ?? '').trim(),
       nameOfDivision: String(props.nameOfDivision ?? '').trim(),
